@@ -782,3 +782,23 @@ AutoPrevias/
   - `src/compat.py` provee implementaciones vectorizadas nativas en NumPy C-loops para las funciones de librosa (`abs2` y `phasor`), eliminando la necesidad de que Numba recompile bytecode en tiempo de ejecución.
   - Habilitado `sys.frozen = True` para la resolución de rutas virtuales internas de Numba.
   - Suite de pruebas completa verificada con éxito: 20 passed, 1 skipped (21 tests).
+
+### Sesión 13 — 2026-10-04: Compilación Nativa Exitosa, Empaquetado DMG ARM64 y Release GitHub
+
+- **Compilación Standalone Nuitka y Bundle macOS ARM64**:
+  - Se resolvió la inclusión de dependencias de tiempo de ejecución de `librosa` y `lazy_loader` creando `scripts/bundle_runtime_deps.py`, sincronizando recursivamente los paquetes de Python requeridos (`librosa`, `numba`, `llvmlite`, `decorator`, `joblib`, `msgpack`, `cloudpickle`, `pooch`, `platformdirs`, `requests`, `urllib3`, `certifi`, `idna`, `charset_normalizer`, `packaging`, `sklearn`, `threadpoolctl`, `narwhals`).
+  - **Corrección de codesign en macOS para dependencias de sklearn**:
+    - Se renombró la carpeta conflictiva `.dylibs` a `dylibs` dentro de `sklearn` y se reescribieron los comandos de carga dinámica en los binarios `.so` con `install_name_tool -change`.
+    - La firma ad-hoc con `codesign --force --deep --sign -` finaliza con código de salida 0 sin advertencias de bundle inválido.
+  - **Validación del diagnóstico interno (`--selftest`)**:
+    - Ejecutado directamente sobre el binario compilado nativo `dist/AutoPrevias.app/Contents/MacOS/AutoPrevias --selftest`.
+    - 5/5 pasos superados al 100%: carga de dependencias de audio (NumPy 2.2.6, SciPy 1.17.1, SoundFile 0.14.0, Pedalboard 0.9.25, Librosa 0.11.0, PySide6 6.11.2, FFmpeg autónomo), síntesis acústica, detección de BPM y downbeats, HPSS, generación de plan de 3 cortes, limitador suave y exportación simultánea a WAV y MP3 con carátula oficial y metadatos.
+  - **Generación del Instalador DMG para macOS ARM64**:
+    - Empaquetado final mediante `create-dmg` con volumen estilizado `AutoPrevias`, icono en ventana a (175, 190) y acceso directo con enlace a `/Applications` a (425, 190).
+    - Archivo generado: `dist/AutoPrevias-1.0.0-macOS-arm64.dmg` (208 MB).
+    - Suma criptográfica SHA-256: `5af5723f8c093610a5583f011cbb7fb4f565c9d2cdeb49afe19ffb4c135dcde9`.
+
+- **Pipeline Multi-Plataforma y Release en GitHub**:
+  - Configurado `scripts/build_windows.bat` e `installer/windows/setup.iss` para la arquitectura Windows de 64 bits (`AutoPrevias-1.0.0-Windows-x64-Setup.exe`).
+  - Pipeline `.github/workflows/release.yml` actualizado y sincronizado para compilar en paralelo Windows x64, macOS Apple Silicon (arm64) y macOS Intel (x86_64).
+  - Publicación del release oficial y subida de artefactos a GitHub Releases en el repositorio privado `borjacandeel/auto-previas`.

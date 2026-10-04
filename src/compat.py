@@ -14,6 +14,14 @@ def apply_librosa_patches():
     código C nativo, lo que impide a Numba inspeccionar co_code para JIT en tiempo de ejecución.
     """
     try:
+        import librosa
+        import librosa.version
+        if not hasattr(librosa, "__version__"):
+            setattr(librosa, "__version__", librosa.version.version)
+    except Exception:
+        pass
+
+    try:
         import librosa.util.utils as _lu
         import librosa.util as _lutil
 

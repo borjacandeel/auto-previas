@@ -36,11 +36,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/Library/Caches/Nuitka
-          key: nuitka-macos-arm64-${{ runner.os }}-${{ hashFiles('requirements*.txt') }}
+          key: nuitka-arm64-${{ runner.os }}-${{ hashFiles('requirements*.txt') }}
           restore-keys: |
-            nuitka-macos-arm64-${{ runner.os }}-
+            nuitka-arm64-${{ runner.os }}-
 
-      - name: Instalar herramientas del sistema
+      - name: Instalar create-dmg
         run: |
           brew install create-dmg
 
@@ -64,13 +64,13 @@ jobs:
         run: |
           python scripts/generate_icons.py
 
-      - name: Descargar FFmpeg estático
+      - name: Descargar FFmpeg estático para macOS arm64
         run: |
           mkdir -p ffmpeg_bin
-          curl -sL https://github.com/Tyrrrz/FFmpegBin/releases/download/9.0.2/ffmpeg-osx-arm64.zip -o /tmp/ffmpeg-arm64.zip
-          unzip -q -o /tmp/ffmpeg-arm64.zip -d ffmpeg_bin/
+          curl -sL https://github.com/Tyrrrz/FFmpegBin/releases/download/9.0.2/ffmpeg-osx-arm64.zip -o ffmpeg.zip
+          unzip -q -o ffmpeg.zip -d ffmpeg_bin/
           chmod +x ffmpeg_bin/ffmpeg
-          rm -f /tmp/ffmpeg-arm64.zip
+          rm -f ffmpeg.zip
 
       - name: Compilar con Nuitka
         run: |
@@ -99,11 +99,16 @@ jobs:
             --output-dir=dist \
             --output-filename=AutoPrevias \
             --assume-yes-for-downloads \
+            --disable-cache=ccache \
             src/main.py
 
           if [ -d "dist/main.app" ] && [ ! -d "dist/AutoPrevias.app" ]; then
             mv dist/main.app dist/AutoPrevias.app
           fi
+
+      - name: Empaquetar dependencias runtime adicionales
+        run: |
+          python scripts/bundle_runtime_deps.py "dist/AutoPrevias.app/Contents/MacOS"
 
       - name: Firma de aplicación (Developer ID o ad-hoc fallback)
         env:
@@ -112,7 +117,6 @@ jobs:
         run: |
           if [ -n "$MACOS_CERTIFICATE" ]; then
             echo "Certificado Developer ID detectado. Importando llavero..."
-            # Paso preparado para cuando el usuario adquiera firma de pago
             codesign --force --deep --options runtime --sign "$MACOS_CERTIFICATE" dist/AutoPrevias.app
           else
             echo "Sin secrets de firma comercial. Aplicando firma ad-hoc..."
@@ -126,6 +130,10 @@ jobs:
       - name: Crear instalador DMG
         run: |
           DMG_NAME="AutoPrevias-${{ steps.version.outputs.version }}-macOS-arm64.dmg"
+          DMG_STAGING="dist/dmg_staging"
+          rm -rf "$DMG_STAGING"
+          mkdir -p "$DMG_STAGING"
+          cp -R "dist/AutoPrevias.app" "$DMG_STAGING/"
           create-dmg \
             --volname "AutoPrevias" \
             --window-pos 200 120 \
@@ -134,24 +142,10 @@ jobs:
             --icon "AutoPrevias.app" 175 190 \
             --hide-extension "AutoPrevias.app" \
             --app-drop-link 425 190 \
-            --no-strip \
+            --overwrite \
             "dist/$DMG_NAME" \
-            "dist/AutoPrevias.app"
-
-      - name: Notarización macOS (opcional si existe secret)
-        env:
-          NOTARY_APPLE_ID: ${{ secrets.NOTARY_APPLE_ID }}
-          NOTARY_PASSWORD: ${{ secrets.NOTARY_PASSWORD }}
-          NOTARY_TEAM_ID: ${{ secrets.NOTARY_TEAM_ID }}
-        run: |
-          DMG_FILE="dist/AutoPrevias-${{ steps.version.outputs.version }}-macOS-arm64.dmg"
-          if [ -n "$NOTARY_APPLE_ID" ] && [ -n "$NOTARY_PASSWORD" ]; then
-            echo "Enviando DMG a Apple notarytool..."
-            xcrun notarytool submit "$DMG_FILE" --apple-id "$NOTARY_APPLE_ID" --password "$NOTARY_PASSWORD" --team-id "$NOTARY_TEAM_ID" --wait
-            xcrun stapler staple "$DMG_FILE"
-          else
-            echo "Secrets de notarización no configurados. Saltando notarización de Apple."
-          fi
+            "$DMG_STAGING"
+          rm -rf "$DMG_STAGING"
 
       - name: Calcular SHA-256
         run: |
@@ -184,11 +178,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/Library/Caches/Nuitka
-          key: nuitka-macos-intel-${{ runner.os }}-${{ hashFiles('requirements*.txt') }}
+          key: nuitka-x86_64-${{ runner.os }}-${{ hashFiles('requirements*.txt') }}
           restore-keys: |
-            nuitka-macos-intel-${{ runner.os }}-
+            nuitka-x86_64-${{ runner.os }}-
 
-      - name: Instalar herramientas del sistema
+      - name: Instalar create-dmg
         run: |
           brew install create-dmg
 
@@ -212,13 +206,13 @@ jobs:
         run: |
           python scripts/generate_icons.py
 
-      - name: Descargar FFmpeg estático
+      - name: Descargar FFmpeg estático para macOS x86_64
         run: |
           mkdir -p ffmpeg_bin
-          curl -sL https://github.com/Tyrrrz/FFmpegBin/releases/download/9.0.2/ffmpeg-osx-x64.zip -o /tmp/ffmpeg-intel.zip
-          unzip -q -o /tmp/ffmpeg-intel.zip -d ffmpeg_bin/
+          curl -sL https://github.com/Tyrrrz/FFmpegBin/releases/download/9.0.2/ffmpeg-osx-x64.zip -o ffmpeg.zip
+          unzip -q -o ffmpeg.zip -d ffmpeg_bin/
           chmod +x ffmpeg_bin/ffmpeg
-          rm -f /tmp/ffmpeg-intel.zip
+          rm -f ffmpeg.zip
 
       - name: Compilar con Nuitka
         run: |
@@ -253,9 +247,22 @@ jobs:
             mv dist/main.app dist/AutoPrevias.app
           fi
 
-      - name: Firma de aplicación ad-hoc
+      - name: Empaquetar dependencias runtime adicionales
         run: |
-          codesign --force --deep --sign - dist/AutoPrevias.app
+          python scripts/bundle_runtime_deps.py "dist/AutoPrevias.app/Contents/MacOS"
+
+      - name: Firma de aplicación (Developer ID o ad-hoc fallback)
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+        run: |
+          if [ -n "$MACOS_CERTIFICATE" ]; then
+            echo "Certificado Developer ID detectado. Importando llavero..."
+            codesign --force --deep --options runtime --sign "$MACOS_CERTIFICATE" dist/AutoPrevias.app
+          else
+            echo "Sin secrets de firma comercial. Aplicando firma ad-hoc..."
+            codesign --force --deep --sign - dist/AutoPrevias.app
+          fi
 
       - name: Ejecutar Selftest sobre binario compilado
         run: |
@@ -264,6 +271,10 @@ jobs:
       - name: Crear instalador DMG
         run: |
           DMG_NAME="AutoPrevias-${{ steps.version.outputs.version }}-macOS-x86_64.dmg"
+          DMG_STAGING="dist/dmg_staging"
+          rm -rf "$DMG_STAGING"
+          mkdir -p "$DMG_STAGING"
+          cp -R "dist/AutoPrevias.app" "$DMG_STAGING/"
           create-dmg \
             --volname "AutoPrevias" \
             --window-pos 200 120 \
@@ -272,9 +283,10 @@ jobs:
             --icon "AutoPrevias.app" 175 190 \
             --hide-extension "AutoPrevias.app" \
             --app-drop-link 425 190 \
-            --no-strip \
+            --overwrite \
             "dist/$DMG_NAME" \
-            "dist/AutoPrevias.app"
+            "$DMG_STAGING"
+          rm -rf "$DMG_STAGING"
 
       - name: Calcular SHA-256
         run: |
@@ -347,6 +359,7 @@ jobs:
       - name: Compilar con Nuitka
         shell: cmd
         run: |
+          for /f "tokens=*" %%i in ('python -c "import librosa; print(librosa.__path__[0])"') do set LIBROSA_DIR=%%i
           python -m nuitka ^
             --standalone ^
             --company-name="Radical Records" ^
@@ -360,12 +373,12 @@ jobs:
             --enable-plugin=pyside6 ^
             --include-data-dir=assets=assets ^
             --include-data-dir=ffmpeg_bin=ffmpeg_bin ^
-    --nofollow-import-to=librosa ^
+            --nofollow-import-to=librosa ^
             --no-deployment-flag=excluded-module-usage ^
-    --include-package=audioread ^
-    --include-package=lazy_loader ^
-    --include-package=soxr ^
-    --include-data-dir="%LIBROSA_DIR%"=librosa ^
+            --include-package=audioread ^
+            --include-package=lazy_loader ^
+            --include-package=soxr ^
+            --include-data-dir="%LIBROSA_DIR%"=librosa ^
             --include-package-data=pedalboard ^
             --include-package-data=_soundfile_data ^
             --output-dir=dist ^
@@ -377,6 +390,11 @@ jobs:
             move "dist\main.dist" "dist\AutoPrevias.dist"
           )
 
+      - name: Empaquetar dependencias runtime adicionales
+        shell: cmd
+        run: |
+          python scripts\bundle_runtime_deps.py "dist\AutoPrevias.dist"
+
       - name: Ejecutar Selftest sobre binario compilado
         shell: cmd
         run: |
@@ -386,17 +404,6 @@ jobs:
         shell: cmd
         run: |
           "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DAppVersion=${{ steps.version.outputs.version }} installer\windows\setup.iss
-
-      - name: Firma Authenticode (opcional si existe secret)
-        env:
-          AZURE_SIGNING_SECRET: ${{ secrets.WINDOWS_SIGNING_CERT }}
-        shell: powershell
-        run: |
-          if ($env:AZURE_SIGNING_SECRET) {
-            Write-Host "Certificado Authenticode detectado. Firmando .exe..."
-          } else {
-            Write-Host "Sin certificado Authenticode comercial configurado. Continuando sin firma de pago."
-          }
 
       - name: Análisis de seguridad con Windows Defender
         shell: powershell

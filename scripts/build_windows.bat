@@ -58,7 +58,11 @@ if exist "dist\main.dist" (
     move "dist\main.dist" "dist\AutoPrevias.dist"
 )
 
-:: 5. Ejecutar selftest sobre el binario compilado
+:: 5. Empaquetar dependencias runtime adicionales para librosa
+echo Empaquetando dependencias runtime adicionales...
+python scripts\bundle_runtime_deps.py "dist\AutoPrevias.dist"
+
+:: 6. Ejecutar selftest sobre el binario compilado
 echo Ejecutando --selftest sobre dist\AutoPrevias.dist\AutoPrevias.exe...
 "dist\AutoPrevias.dist\AutoPrevias.exe" --selftest
 if %errorlevel% neq 0 (
@@ -66,7 +70,7 @@ if %errorlevel% neq 0 (
     exit /b %errorlevel%
 )
 
-:: 6. Crear instalador con Inno Setup
+:: 7. Crear instalador con Inno Setup
 echo Compilando instalador Inno Setup...
 "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DAppVersion=%VERSION% installer\windows\setup.iss
 if %errorlevel% neq 0 (

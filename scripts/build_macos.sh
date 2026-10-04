@@ -71,19 +71,27 @@ fi
 
 APP_BUNDLE="dist/AutoPrevias.app"
 
-# 5. Firma ad-hoc (sin certificado de pago por ahora)
+# 5. Empaquetar dependencias runtime adicionales para librosa
+echo "Empaquetando dependencias runtime adicionales..."
+.venv/bin/python3 scripts/bundle_runtime_deps.py "$APP_BUNDLE/Contents/MacOS"
+
+# 6. Firma ad-hoc del bundle
 echo "Firmando ad-hoc el bundle..."
 codesign --force --deep --sign - "$APP_BUNDLE"
 
-# 6. Test de auto-diagnóstico sobre la aplicación compilada
+# 7. Test de auto-diagnóstico sobre la aplicación compilada
 echo "Ejecutando --selftest sobre el binario compilado..."
 "$APP_BUNDLE/Contents/MacOS/AutoPrevias" --selftest
 
-# 7. Crear el instalador DMG con arrastrar a Aplicaciones
+# 8. Crear el instalador DMG con arrastrar a Aplicaciones
 DMG_NAME="AutoPrevias-${VERSION}-macOS-${ARCH}.dmg"
 echo "Creando instalador $DMG_NAME..."
 
 if command -v create-dmg >/dev/null 2>&1; then
+    DMG_STAGING="dist/dmg_staging"
+    rm -rf "$DMG_STAGING"
+    mkdir -p "$DMG_STAGING"
+    cp -R "$APP_BUNDLE" "$DMG_STAGING/"
     create-dmg \
         --volname "AutoPrevias" \
         --window-pos 200 120 \
@@ -92,9 +100,10 @@ if command -v create-dmg >/dev/null 2>&1; then
         --icon "AutoPrevias.app" 175 190 \
         --hide-extension "AutoPrevias.app" \
         --app-drop-link 425 190 \
-        --no-strip \
+        --overwrite \
         "dist/$DMG_NAME" \
-        "$APP_BUNDLE"
+        "$DMG_STAGING"
+    rm -rf "$DMG_STAGING"
 else
     # Fallback con hdiutil si create-dmg no estuviera
     DMG_TMP="/tmp/autoprevias_tmp.dmg"
@@ -114,3 +123,4 @@ echo "✓ BUILD FINALIZADO CON ÉXITO"
 echo "  Bundle: $APP_BUNDLE"
 echo "  Instalador: dist/$DMG_NAME ($(du -h "dist/$DMG_NAME" | cut -f1))"
 echo "========================================="
+EOF && chmod +x /Users/borjacandel/Developer/AutoPrevias/scripts/build_macos.sh

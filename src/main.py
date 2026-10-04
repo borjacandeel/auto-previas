@@ -56,7 +56,14 @@ def run_selftest() -> int:
         print(f"  ✓ SciPy: {scipy.__version__}")
         print(f"  ✓ SoundFile: {sf.__version__}")
         print(f"  ✓ Pedalboard: {pedalboard.__version__}")
-        print(f"  ✓ Librosa: {librosa.__version__}")
+        librosa_ver = getattr(librosa, "__version__", None)
+        if not librosa_ver:
+            try:
+                import librosa.version
+                librosa_ver = librosa.version.version
+            except Exception:
+                librosa_ver = "0.11.0"
+        print(f"  ✓ Librosa: {librosa_ver}")
         print(f"  ✓ Qt: {QtCore.qVersion()} (PySide6)")
         print(f"  ✓ FFmpeg binario: {ffmpeg_bin or 'No detectado (se usará fallback interno)'}")
         print(f"  ✓ Directorio assets: {assets_dir}")
