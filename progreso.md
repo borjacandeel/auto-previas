@@ -776,3 +776,9 @@ AutoPrevias/
     - Tabla detallada de requisitos mínimos y recomendados del sistema.
   - **`CHANGELOG.md`**: Historial estructurado bajo formato *Keep a Changelog*.
   - **`THIRD_PARTY_LICENSES.txt`**: Documentación de licencias de terceros (FFmpeg, Spotify Pedalboard, Rubber Band Library, PySide6, etc.).
+
+- **Capa de compatibilidad Nuitka / Numba (`src/compat.py`)**:
+  - Resuelto el conflicto de inspección de bytecode en ejecutables compilados con Nuitka (`RuntimeError: Compiled function bytecode used`).
+  - `src/compat.py` provee implementaciones vectorizadas nativas en NumPy C-loops para las funciones de librosa (`abs2` y `phasor`), eliminando la necesidad de que Numba recompile bytecode en tiempo de ejecución.
+  - Habilitado `sys.frozen = True` para la resolución de rutas virtuales internas de Numba.
+  - Suite de pruebas completa verificada con éxito: 20 passed, 1 skipped (21 tests).
