@@ -7,6 +7,7 @@ echo =========================================
 
 for /f "tokens=*" %%i in ('python -c "from src.__version__ import __version__; print(__version__)"') do set VERSION=%%i
 echo Version: %VERSION%
+for /f "tokens=*" %%i in ('python -c "import librosa; print(librosa.__path__[0])"') do set LIBROSA_DIR=%%i
 
 :: 1. Asegurar iconos generados
 if not exist "assets\icon.ico" (
@@ -40,8 +41,11 @@ python -m nuitka ^
     --enable-plugin=pyside6 ^
     --include-data-dir=assets=assets ^
     --include-data-dir=ffmpeg_bin=ffmpeg_bin ^
-    --include-package=librosa ^
-    --include-package-data=librosa ^
+    --nofollow-import-to=librosa ^
+    --include-package=audioread ^
+    --include-package=lazy_loader ^
+    --include-package=soxr ^
+    --include-data-dir="%LIBROSA_DIR%"=librosa ^
     --include-package-data=pedalboard ^
     --include-package-data=_soundfile_data ^
     --output-dir=dist ^

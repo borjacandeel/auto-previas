@@ -35,7 +35,8 @@ fi
 rm -rf dist/AutoPrevias.app dist/main.app dist/AutoPrevias-*.dmg
 
 # 4. Compilación con Nuitka
-echo "Ejecutando Nuitka..."
+LIBROSA_DIR=$(.venv/bin/python3 -c "import librosa; print(librosa.__path__[0])")
+echo "Ejecutando Nuitka (librosa puro en $LIBROSA_DIR)..."
 .venv/bin/nuitka \
     --standalone \
     --macos-create-app-bundle \
@@ -49,8 +50,11 @@ echo "Ejecutando Nuitka..."
     --enable-plugin=pyside6 \
     --include-data-dir=assets=assets \
     --include-data-dir=ffmpeg_bin=ffmpeg_bin \
-    --include-package=librosa \
-    --include-package-data=librosa \
+    --nofollow-import-to=librosa \
+    --include-package=audioread \
+    --include-package=lazy_loader \
+    --include-package=soxr \
+    --include-data-dir="$LIBROSA_DIR"=librosa \
     --include-package-data=pedalboard \
     --include-package-data=_soundfile_data \
     --output-dir=dist \
