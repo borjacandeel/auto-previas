@@ -43,13 +43,14 @@ from PySide6.QtWidgets import (
 )
 
 _ROOT = Path(__file__).parent.parent.parent
-_ASSETS_DIR = _ROOT / "assets"
 sys.path.insert(0, str(_ROOT))
+
+from src.config import load as load_cfg, save as save_cfg, get_output_dir, get_assets_dir
+_ASSETS_DIR = get_assets_dir()
 
 from src.analysis.bpm import detect_beat_grid, SR_ANALYSIS
 from src.analysis.structure import analyze_structure, SectionType
 from src.analysis.segments import build_preview_plan
-from src.config import load as load_cfg, save as save_cfg, get_output_dir
 from src.engine.export import build_preview_audio, export_files, output_paths
 from src.engine.variations import compute_preview_tempo_curve
 

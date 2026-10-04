@@ -71,3 +71,4 @@ temp/
 
 # ── FFmpeg binarios locales (se descargan en CI) ──
 ffmpeg_bin/
+nuitka-crash-report.xml

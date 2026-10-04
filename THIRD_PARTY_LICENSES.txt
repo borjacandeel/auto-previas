@@ -1,0 +1,60 @@
+AutoPrevias — Licencias de Terceros y Componentes de Distribución
+================================================================
+
+Este software incluye o se enlaza con bibliotecas y herramientas de código abierto
+desarrolladas por terceros. A continuación se detallan las licencias correspondientes:
+
+1. FFmpeg
+---------
+- Procedencia: Binario estático compilado a partir del proyecto oficial FFmpeg (https://ffmpeg.org)
+  distribuido mediante https://github.com/Tyrrrz/FFmpegBin.
+- Licencia: GNU Lesser General Public License (LGPL) versión 2.1 o posterior / GNU General Public License (GPL) versión 3.
+- Uso en AutoPrevias: Empaquetado como binario ejecutable externo para la codificación MP3 con etiquetas ID3 y metadatos con carátula.
+
+2. Pedalboard (Spotify)
+-----------------------
+- Sitio web: https://github.com/spotify/pedalboard
+- Licencia: GNU General Public License v3.0 (GPLv3).
+- Nota importante: Incluye procesamiento de señal de audio en tiempo real y efectos de estudio.
+
+3. Rubber Band Library (Breakfast Quay)
+---------------------------------------
+- Sitio web: https://breakfastquay.com/rubberband/
+- Licencia: GNU General Public License v2 o posterior (GPLv2+) / Disponible bajo licencia comercial privativa de Breakfast Quay.
+- Uso: Time-stretching y pitch-shifting de audio de alta fidelidad integrado en componentes de procesamiento.
+
+4. PySide6 / Qt 6
+-----------------
+- Sitio web: https://www.qt.io
+- Licencia: GNU Lesser General Public License (LGPL) versión 3.
+- Uso: Interfaz gráfica de usuario y motor multimedia.
+
+5. SoundFile / libsndfile
+-------------------------
+- Sitio web: https://github.com/bastibe/python-soundfile / http://www.mega-nerd.com/libsndfile/
+- Licencia: BSD 3-Clause (wrapper Python) / LGPL v2.1+ (biblioteca nativa libsndfile).
+- Uso: Lectura y escritura de audio PCM WAV de alta definición.
+
+6. Librosa
+----------
+- Sitio web: https://librosa.org/
+- Licencia: ISC License.
+- Uso: Análisis musical, cromagramas, separación armónica-percusiva (HPSS) y descomposición espectral.
+
+7. NumPy y SciPy
+----------------
+- Sitio web: https://numpy.org / https://scipy.org
+- Licencia: BSD 3-Clause License.
+- Uso: Computación científica y matrices numéricas.
+
+8. PyQtGraph
+------------
+- Sitio web: https://www.pyqtgraph.org
+- Licencia: MIT License.
+- Uso: Visualización de formas de onda interactivas con aceleración gráfica.
+
+9. Soxr (libsoxr)
+-----------------
+- Sitio web: https://sourceforge.net/projects/soxr/
+- Licencia: GNU Lesser General Public License (LGPL) versión 2.1.
+- Uso: Remuestreo de audio de alta calidad.

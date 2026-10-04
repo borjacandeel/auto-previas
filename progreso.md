@@ -733,3 +733,46 @@ AutoPrevias/
 
 
 
+
+### Sesión 12 — 2026-10-04: Migración a Repositorio Propio Independiente, Empaquetado Nuitka y Releases Multi-Plataforma
+
+- **Independización del proyecto en `~/Developer/AutoPrevias`**:
+  - Se creó un espacio de trabajo limpio y aislado en `~/Developer/AutoPrevias`, desvinculado de la carpeta antigua de prototipado.
+  - Repositorio Git privado inicializado y conectado al remoto oficial de GitHub: `borjacandeel/auto-previas` en la rama `main`.
+  - Autenticación segura mediante `gh auth setup-git` (sin credenciales, tokens ni secretos expuestos en archivos, logs ni commits).
+  - Exclusión estricta de archivos de audio comerciales (`*.wav`, `*.mp3`, `ejemplos/`) en `.gitignore`.
+  - Adaptación de pruebas en `tests/test_reference_track.py` con `@pytest.mark.skipif` cuando no se disponga de archivos de audio locales: 21 tests (20 passed, 1 skipped).
+
+- **Reglas operativas permanentes (`CLAUDE.md` y `AGENTS.md`)**:
+  - Establecidas las directrices de sesión, ciclo de publicación de 9 pasos (pruebas unitarias, selftest, versionado semántico, actualización de changelog/progreso y releases), y política de seguridad sobre tokens.
+
+- **Empaquetado profesional y portabilidad nativa (Nuitka)**:
+  - **Versión unificada (`src/__version__.py`)**: Versión centralizada `1.0.0`.
+  - **Directorios estándar de usuario (`src/config.py`)**: Rutas dinámicas para configuración y caché en carpetas nativas del sistema (`~/Library/Application Support/AutoPrevias` en macOS y `%APPDATA%\AutoPrevias` en Windows), evitando fallos por permisos de escritura en la carpeta de instalación.
+  - **FFmpeg portátil integrado (`ffmpeg_bin/`)**: Soporte para binario autónomo de FFmpeg en el bundle empaquetado, garantizando la exportación a MP3 (320 kbps con carátula oficial y tags ID3) sin requerir instalación externa por parte del usuario.
+  - **Modo headless `--selftest` (`src/main.py`)**: Validador interno que genera audio sintético, comprueba el análisis espectral HPSS, transientes, limitador suave y exportación dual (WAV/MP3) en menos de 2 segundos.
+  - **Iconos multi-resolución**: Creados `assets/icon.icns` (macOS de 16x16 a 1024x1024) y `assets/icon.ico` (Windows de 16x16 a 256x256) mediante script generador con `Pillow`.
+  - **Scripts de compilación**:
+    - `scripts/build_macos.sh`: Compilación Nuitka standalone, app bundle `.app`, firma ad-hoc, ejecución de `--selftest` y empaquetado en instalador `.dmg` con ventana de arrastrar a `/Applications`.
+    - `scripts/build_windows.bat` e `installer/windows/setup.iss`: Script de compilación para Windows e instalador asistido con Inno Setup, accesos directos y desinstalador.
+  - **Resolución de incompatibilidades en Nuitka**:
+    - Fijada versión `lazy_loader<=0.4` en `requirements.txt` para corregir incompatibilidad del plugin de `librosa`.
+    - Añadida bandera `--include-package=librosa` para resolver submódulos dinámicos (`example_data`).
+    - Añadida bandera `--disable-cache=ccache` en macOS ARM64 para compilar nativamente con Clang sin dependencias de arquitectura cruzada.
+
+- **Integración Continua con GitHub Actions (`.github/workflows/release.yml`)**:
+  - Matriz de compilación automatizada al publicar tags `v*.*.*`:
+    - macOS Apple Silicon (`macos-14`, arm64).
+    - macOS Intel (`macos-15-intel`, x86_64).
+    - Windows x64 (`windows-latest`).
+  - Pipeline completo: instalación de dependencias, ejecución de `pytest`, compilación Nuitka, validación obligatoria con `--selftest`, generación de `SHA256SUMS.txt` y publicación de release en GitHub con activos descargables.
+
+- **Documentación Completa y Apartado de Releases en GitHub**:
+  - **`README.md` exhaustivo y de nivel profesional**:
+    - Enlaces directos permanentes a la última versión para macOS (Apple Silicon e Intel) y Windows (`releases/latest/download/...`).
+    - Guía paso a paso para sortear Gatekeeper en Mac (`xattr -cr`) y SmartScreen en Windows.
+    - Explicación visual del pipeline acústico (diagrama Mermaid).
+    - Guía de desarrollo y compilación local.
+    - Tabla detallada de requisitos mínimos y recomendados del sistema.
+  - **`CHANGELOG.md`**: Historial estructurado bajo formato *Keep a Changelog*.
+  - **`THIRD_PARTY_LICENSES.txt`**: Documentación de licencias de terceros (FFmpeg, Spotify Pedalboard, Rubber Band Library, PySide6, etc.).

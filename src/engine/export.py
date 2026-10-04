@@ -291,18 +291,20 @@ def export_files(
         mp3_done = False
 
         # Si ya tenemos el WAV exportado, usar FFmpeg con Xing headers y carátula ID3
-        import shutil, subprocess
-        ffmpeg_bin = shutil.which("ffmpeg")
+        import subprocess
+        import os
+        from src.config import get_ffmpeg_path, get_assets_dir, get_cache_dir
+
+        ffmpeg_bin = get_ffmpeg_path()
 
         src_wav = str(paths["wav"]) if "wav" in paths and Path(paths["wav"]).exists() else None
         if not src_wav:
-            import tempfile
-            temp_wav_for_mp3 = str(Path(tempfile.gettempdir()) / "autoprevias_temp_export.wav")
+            temp_wav_for_mp3 = str(get_cache_dir() / f"autoprevias_temp_{os.getpid()}.wav")
             sf.write(temp_wav_for_mp3, audio.T, sr, subtype="PCM_16")
             src_wav = temp_wav_for_mp3
 
         # Ubicar logo para carátula oficial Radical Records
-        assets_dir = Path(__file__).resolve().parent.parent.parent / "assets"
+        assets_dir = get_assets_dir()
         cover_path = assets_dir / "logo_emblem.png"
         if not cover_path.exists():
             cover_path = assets_dir / "logo_emblem_red.png"
