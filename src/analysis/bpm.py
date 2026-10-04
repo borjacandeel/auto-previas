@@ -15,6 +15,8 @@ from dataclasses import dataclass
 
 import numpy as np
 import librosa
+from src.compat import apply_librosa_patches
+apply_librosa_patches()
 import scipy.signal
 from scipy.ndimage import gaussian_filter1d
 

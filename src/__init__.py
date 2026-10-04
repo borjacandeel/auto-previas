@@ -1,6 +1,4 @@
 """AutoPrevias package root."""
-import sys
+from src.compat import apply_librosa_patches
 
-# Asegurar flag frozen para permitir a Numba y librerías nativas resolver rutas virtuales en standalone
-if not hasattr(sys, "frozen"):
-    setattr(sys, "frozen", True)
+apply_librosa_patches()

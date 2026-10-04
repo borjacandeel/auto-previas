@@ -15,6 +15,9 @@ if str(_ROOT) not in sys.path:
 if not hasattr(sys, "frozen"):
     setattr(sys, "frozen", True)
 
+from src.compat import apply_librosa_patches
+apply_librosa_patches()
+
 from src.__version__ import __version__
 
 
