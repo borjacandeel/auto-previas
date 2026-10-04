@@ -40,7 +40,7 @@ python -m nuitka ^
     --enable-plugin=pyside6 ^
     --include-data-dir=assets=assets ^
     --include-data-dir=ffmpeg_bin=ffmpeg_bin ^
-    --include-package=librosa \
+    --include-package=librosa ^
     --include-package-data=librosa ^
     --include-package-data=pedalboard ^
     --include-package-data=_soundfile_data ^
