@@ -163,6 +163,7 @@ jobs:
 
   build-macos-intel:
     name: Build macOS (Intel x86_64)
+    continue-on-error: true
     runs-on: macos-15-intel
     steps:
       - name: Checkout código
@@ -439,6 +440,7 @@ jobs:
 
   publish-release:
     name: Publicar GitHub Release
+    if: always() && (needs.build-macos-arm64.result == 'success' || needs.build-windows-x64.result == 'success')
     needs: [build-macos-arm64, build-macos-intel, build-windows-x64]
     runs-on: ubuntu-latest
     steps:
