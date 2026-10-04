@@ -1,0 +1,4 @@
+-r requirements.txt
+pytest>=8.0.0
+nuitka>=2.6.0
+zstandard>=0.23.0

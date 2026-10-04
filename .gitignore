@@ -1,0 +1,73 @@
+# ── Python ──
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+*.whl
+
+# ── Virtual environments ──
+.venv/
+venv/
+ENV/
+
+# ── IDE / Editor ──
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ── macOS ──
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ── Nuitka builds ──
+*.build/
+*.dist/
+*.onefile-build/
+AutoPrevias.app/
+AutoPrevias.bin
+AutoPrevias.exe
+
+# ── Installers ──
+dist/
+*.dmg
+*.exe
+*.msi
+*.pkg
+
+# ── Audio files (con derechos, pesan mucho) ──
+*.wav
+*.mp3
+*.flac
+*.aiff
+*.aac
+*.ogg
+ejemplos/
+
+# ── Config local y caché ──
+autoprevias_config.json
+*.cache
+.pytest_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+
+# ── Secrets y variables de entorno ──
+.env
+.env.*
+*.pem
+*.key
+
+# ── Scratch / temp ──
+scratch/
+tmp/
+temp/
+
+# ── FFmpeg binarios locales (se descargan en CI) ──
+ffmpeg_bin/
