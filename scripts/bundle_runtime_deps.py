@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 bundle_runtime_deps.py
-Copia dependencias de tiempo de ejecución de librosa al bundle standalone de Nuitka
+Copia dependencias de tiempo de ejecucion de librosa al bundle standalone de Nuitka
 y soluciona paths de bibliotecas nativas para codesign en macOS.
 """
 
@@ -11,6 +11,9 @@ import shutil
 import glob
 import subprocess
 import site
+
+if sys.stdout and hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 PACKAGES_TO_BUNDLE = [
     "librosa",
@@ -70,7 +73,7 @@ def bundle_dependencies(target_dir):
             print(f"    [+] Sincronizando directorio {pkg}...")
             shutil.copytree(src, dest, dirs_exist_ok=True, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
         elif os.path.isfile(src):
-            print(f"    [+] Copiando módulo {base_name}...")
+            print(f"    [+] Copiando modulo {base_name}...")
             shutil.copy2(src, dest)
 
     if sys.platform == "darwin":
@@ -95,7 +98,7 @@ def bundle_dependencies(target_dir):
             except Exception as e:
                 print(f"    [!] Advertencia al actualizar {so}: {e}")
 
-    print("[*] Empaquetado de dependencias completado con éxito.")
+    print("[*] Empaquetado de dependencias completado con exito.")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

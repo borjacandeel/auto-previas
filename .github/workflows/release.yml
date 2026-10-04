@@ -18,6 +18,10 @@ concurrency:
 permissions:
   contents: write
 
+env:
+  PYTHONUTF8: "1"
+  PYTHONIOENCODING: "utf-8"
+
 jobs:
   build-macos-arm64:
     name: Build macOS (Apple Silicon arm64)
@@ -161,148 +165,6 @@ jobs:
             dist/AutoPrevias-*-macOS-arm64.dmg
             dist/checksum.txt
 
-  build-macos-intel:
-    name: Build macOS (Intel x86_64)
-    continue-on-error: true
-    runs-on: macos-15-intel
-    steps:
-      - name: Checkout código
-        uses: actions/checkout@v4
-
-      - name: Configurar Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-
-      - name: Cache Nuitka
-        uses: actions/cache@v4
-        with:
-          path: ~/Library/Caches/Nuitka
-          key: nuitka-x86_64-${{ runner.os }}-${{ hashFiles('requirements*.txt') }}
-          restore-keys: |
-            nuitka-x86_64-${{ runner.os }}-
-
-      - name: Instalar create-dmg
-        run: |
-          brew install create-dmg
-
-      - name: Instalar dependencias Python
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
-          pip install pillow
-
-      - name: Ejecutar Tests
-        run: |
-          pytest tests -v
-
-      - name: Obtener versión del proyecto
-        id: version
-        run: |
-          VER=$(python -c "from src.__version__ import __version__; print(__version__)")
-          echo "version=$VER" >> $GITHUB_OUTPUT
-
-      - name: Generar iconos
-        run: |
-          python scripts/generate_icons.py
-
-      - name: Descargar FFmpeg estático para macOS x86_64
-        run: |
-          mkdir -p ffmpeg_bin
-          curl -sL https://github.com/Tyrrrz/FFmpegBin/releases/download/9.0.2/ffmpeg-osx-x64.zip -o ffmpeg.zip
-          unzip -q -o ffmpeg.zip -d ffmpeg_bin/
-          chmod +x ffmpeg_bin/ffmpeg
-          rm -f ffmpeg.zip
-
-      - name: Compilar con Nuitka
-        run: |
-          LIBROSA_DIR=$(python -c "import librosa; print(librosa.__path__[0])")
-          python -m nuitka \
-            --standalone \
-            --macos-create-app-bundle \
-            --macos-app-name=AutoPrevias \
-            --macos-app-icon=assets/icon.icns \
-            --macos-signed-app-name=com.radicalrecords.autoprevias \
-            --macos-app-version="${{ steps.version.outputs.version }}" \
-            --company-name="Radical Records" \
-            --product-name="AutoPrevias" \
-            --copyright="Copyright © 2026 Radical Records. Todos los derechos reservados." \
-            --enable-plugin=pyside6 \
-            --include-data-dir=assets=assets \
-            --include-data-dir=ffmpeg_bin=ffmpeg_bin \
-            --nofollow-import-to=librosa \
-            --no-deployment-flag=excluded-module-usage \
-            --include-package=audioread \
-            --include-package=lazy_loader \
-            --include-package=soxr \
-            --include-data-dir="$LIBROSA_DIR"=librosa \
-            --include-package-data=pedalboard \
-            --include-package-data=_soundfile_data \
-            --output-dir=dist \
-            --output-filename=AutoPrevias \
-            --assume-yes-for-downloads \
-            src/main.py
-
-          if [ -d "dist/main.app" ] && [ ! -d "dist/AutoPrevias.app" ]; then
-            mv dist/main.app dist/AutoPrevias.app
-          fi
-
-      - name: Empaquetar dependencias runtime adicionales
-        run: |
-          python scripts/bundle_runtime_deps.py "dist/AutoPrevias.app/Contents/MacOS"
-
-      - name: Firma de aplicación (Developer ID o ad-hoc fallback)
-        env:
-          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
-          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
-        run: |
-          if [ -n "$MACOS_CERTIFICATE" ]; then
-            echo "Certificado Developer ID detectado. Importando llavero..."
-            codesign --force --deep --options runtime --sign "$MACOS_CERTIFICATE" dist/AutoPrevias.app
-          else
-            echo "Sin secrets de firma comercial. Aplicando firma ad-hoc..."
-            codesign --force --deep --sign - dist/AutoPrevias.app
-          fi
-
-      - name: Ejecutar Selftest sobre binario compilado
-        run: |
-          dist/AutoPrevias.app/Contents/MacOS/AutoPrevias --selftest
-
-      - name: Crear instalador DMG
-        run: |
-          DMG_NAME="AutoPrevias-${{ steps.version.outputs.version }}-macOS-x86_64.dmg"
-          DMG_STAGING="dist/dmg_staging"
-          rm -rf "$DMG_STAGING"
-          mkdir -p "$DMG_STAGING"
-          cp -R "dist/AutoPrevias.app" "$DMG_STAGING/"
-          create-dmg \
-            --volname "AutoPrevias" \
-            --window-pos 200 120 \
-            --window-size 600 400 \
-            --icon-size 100 \
-            --icon "AutoPrevias.app" 175 190 \
-            --hide-extension "AutoPrevias.app" \
-            --app-drop-link 425 190 \
-            --overwrite \
-            "dist/$DMG_NAME" \
-            "$DMG_STAGING"
-          rm -rf "$DMG_STAGING"
-
-      - name: Calcular SHA-256
-        run: |
-          cd dist
-          shasum -a 256 AutoPrevias-*.dmg > checksum.txt
-          cat checksum.txt
-
-      - name: Subir artefacto macOS intel
-        uses: actions/upload-artifact@v4
-        with:
-          name: installer-macos-x86_64
-          path: |
-            dist/AutoPrevias-*-macOS-x86_64.dmg
-            dist/checksum.txt
-
   build-windows-x64:
     name: Build Windows (x64)
     runs-on: windows-latest
@@ -441,7 +303,7 @@ jobs:
   publish-release:
     name: Publicar GitHub Release
     if: always() && (needs.build-macos-arm64.result == 'success' || needs.build-windows-x64.result == 'success')
-    needs: [build-macos-arm64, build-macos-intel, build-windows-x64]
+    needs: [build-macos-arm64, build-windows-x64]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout código
@@ -457,9 +319,7 @@ jobs:
           mkdir -p release-files
           find release-artifacts -type f \( -name "*.dmg" -o -name "*.exe" \) -exec cp {} release-files/ \;
           cd release-files
-          # Copiar tambien nombres fijos predecibles para enlaces permanentes
           for f in AutoPrevias-*-macOS-arm64.dmg; do [ -f "$f" ] && cp "$f" AutoPrevias-macOS-arm64.dmg; done
-          for f in AutoPrevias-*-macOS-x86_64.dmg; do [ -f "$f" ] && cp "$f" AutoPrevias-macOS-x86_64.dmg; done
           for f in AutoPrevias-*-Windows-x64-Setup.exe; do [ -f "$f" ] && cp "$f" AutoPrevias-Windows-x64-Setup.exe; done
           sha256sum * > SHA256SUMS.txt
           cat SHA256SUMS.txt
@@ -472,16 +332,13 @@ jobs:
             TAG_NAME="${{ github.event.inputs.tag_name }}"
           fi
           CLEAN_VER="${TAG_NAME#v}"
-          
-          # Extraer seccion de CHANGELOG.md entre [x.y.z] y la siguiente version
           awk "/## \[?$CLEAN_VER\]?/{flag=1; next} /## \[?[0-9]/{flag=0} flag" CHANGELOG.md > release_notes.md || true
-          
           if [ ! -s release_notes.md ]; then
             echo "Release $TAG_NAME de AutoPrevias para Radical Records." > release_notes.md
           fi
           cat release_notes.md
 
-      - name: Publicar Release en GitHub
+      - name: Publicar o Actualizar Release en GitHub
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -490,7 +347,12 @@ jobs:
             TAG_NAME="${{ github.event.inputs.tag_name }}"
           fi
           
-          gh release create "$TAG_NAME" \
-            release-files/* \
-            --title "AutoPrevias $TAG_NAME" \
-            --notes-file release_notes.md
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Release $TAG_NAME ya existe, subiendo/actualizando activos..."
+            gh release upload "$TAG_NAME" release-files/* --clobber
+          else
+            gh release create "$TAG_NAME" \
+              release-files/* \
+              --title "AutoPrevias $TAG_NAME" \
+              --notes-file release_notes.md
+          fi

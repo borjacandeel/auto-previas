@@ -10,6 +10,9 @@ import shutil
 import tempfile
 from PIL import Image
 
+if sys.stdout and hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE_PNG = ROOT / "assets" / "logo_emblem.png"
 ICNS_OUT = ROOT / "assets" / "icon.icns"
@@ -40,7 +43,7 @@ def main():
     # 1. Generar .ico para Windows
     ico_sizes = [(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)]
     master.save(ICO_OUT, format="ICO", sizes=ico_sizes)
-    print(f"✓ Creado: {ICO_OUT}")
+    print(f"[OK] Creado: {ICO_OUT}")
 
     # 2. Generar .icns para macOS solo si estamos en macOS
     if sys.platform == "darwin" and shutil.which("iconutil"):
@@ -68,9 +71,9 @@ def main():
             cmd = ["iconutil", "-c", "icns", str(iconset), "-o", str(ICNS_OUT)]
             try:
                 subprocess.run(cmd, check=True)
-                print(f"✓ Creado: {ICNS_OUT}")
+                print(f"[OK] Creado: {ICNS_OUT}")
             except Exception as e:
-                print(f"Aviso: iconutil falló ({e}).")
+                print(f"Aviso: iconutil fallo ({e}).")
 
     return 0
 

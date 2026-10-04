@@ -802,3 +802,22 @@ AutoPrevias/
   - Configurado `scripts/build_windows.bat` e `installer/windows/setup.iss` para la arquitectura Windows de 64 bits (`AutoPrevias-1.0.0-Windows-x64-Setup.exe`).
   - Pipeline `.github/workflows/release.yml` actualizado y sincronizado para compilar en paralelo Windows x64, macOS Apple Silicon (arm64) y macOS Intel (x86_64).
   - Publicación del release oficial y subida de artefactos a GitHub Releases en el repositorio privado `borjacandeel/auto-previas`.
+
+### Sesión 14 — 2026-10-04: Auditoría y Corrección Integral de Errores de Publicación de Releases
+
+- **Auditoría Exhaustiva de Errores en GitHub Actions Releases**:
+  1. **Error Unicode en Windows (`charmap` codec)**:
+     - *Causa:* En el paso `Generar iconos` del runner de Windows, `scripts/generate_icons.py` intentaba imprimir el carácter `✓` (`\u2713`), arrojando `UnicodeEncodeError: 'charmap' codec can't encode character '\u2713'`.
+     - *Corrección:* Se reconfiguró la salida estándar con `sys.stdout.reconfigure(encoding="utf-8")`, se reemplazaron los caracteres especiales por textos ASCII `[OK]` en `generate_icons.py` y `bundle_runtime_deps.py`, y se declararon `PYTHONUTF8: "1"` y `PYTHONIOENCODING: "utf-8"` en las variables de entorno globales del workflow.
+  2. **Error de compilación en runner macOS Intel (`macos-15-intel`)**:
+     - *Causa:* En macOS 15 x86_64, `pip install` fallaba al compilar `llvmlite` por falta de binarios precompilados de LLVM en PyPI para esa arquitectura.
+     - *Corrección:* El usuario especificó estrictamente que macOS es únicamente para arquitectura **ARM (Apple Silicon)** y Windows para **64 bits**. Se eliminó la tarea redundante de macOS Intel de `.github/workflows/release.yml`, dejando la matriz 100% enfocada en `build-macos-arm64` y `build-windows-x64`.
+  3. **Idempotencia en la Publicación de Releases**:
+     - Se actualizó el paso `publish-release` para que si la release `v1.0.0` ya ha sido creada, utilice `gh release upload "$TAG_NAME" release-files/* --clobber` para subir y actualizar los instaladores sin fallar por release preexistente.
+
+- **Estado de la Release Oficial en GitHub**:
+  - Release `v1.0.0` publicada oficialmente en GitHub: `https://github.com/borjacandeel/auto-previas/releases/tag/v1.0.0`.
+  - Instaladores macOS Apple Silicon ARM64 subidos y verificados:
+    * `AutoPrevias-1.0.0-macOS-arm64.dmg` (208 MB)
+    * `AutoPrevias-macOS-arm64.dmg` (208 MB)
+    * `SHA256SUMS.txt` con firma criptográfica SHA-256 (`5af5723f8c093610a5583f011cbb7fb4f565c9d2cdeb49afe19ffb4c135dcde9`).
