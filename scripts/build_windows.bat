@@ -42,6 +42,7 @@ python -m nuitka ^
     --include-data-dir=assets=assets ^
     --include-data-dir=ffmpeg_bin=ffmpeg_bin ^
     --nofollow-import-to=librosa ^
+    --no-deployment-flag=excluded-module-usage ^
     --include-package=audioread ^
     --include-package=lazy_loader ^
     --include-package=soxr ^
