@@ -5,10 +5,29 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ---
 
+## [1.0.1] - 2026-10-04
+
+### Corregido
+- **Compatibilidad de empaquetado standalone con Nuitka:**
+  - Creación del sincronizador de dependencias de tiempo de ejecución `scripts/bundle_runtime_deps.py` para preservar librerías puras de Python (`librosa`, `numba`, `llvmlite`, `decorator`, `joblib`, `msgpack`, `cloudpickle`, `pooch`, `platformdirs`, `requests`, `urllib3`, `certifi`, `idna`, `charset_normalizer`, `packaging`, `sklearn`, `threadpoolctl`, `narwhals`).
+  - Resolución del conflicto de inspección de bytecode JIT en ejecutables compilados C.
+  - Corrección de la estructura de `.dylibs` en ruedas de `sklearn` en macOS mediante `install_name_tool` para firma ad-hoc compatible con Apple codesign sin alertas de bundle inválido.
+  - Corrección del codec de consola Windows CP1252 (`UnicodeEncodeError` en caracteres de estado como `✓`) mediante reconfiguración UTF-8 forzada y variables `PYTHONUTF8=1` y `PYTHONIOENCODING=utf-8`.
+  - Corrección del atributo `__version__` perezoso en `librosa` durante el auto-diagnóstico `--selftest`.
+
+### Cambiado
+- **Estrategia de versiones semánticas:**
+  - Parches y correcciones técnicas de empaquetado y compatibilidad catalogados bajo el esquema `1.0.x`.
+  - Actualizaciones funcionales mayores reservadas para el ciclo `1.x.0`.
+- **Matriz de CI/CD optimizada:**
+  - Enfoque exclusivo en arquitecturas de destino solicitadas: **macOS Apple Silicon (ARM64)** y **Windows (64-bit x64)**.
+
+---
+
 ## [1.0.0] - 2026-10-04
 
 ### Añadido
-- **Lanzamiento inicial oficial de AutoPrevias v1.0.0** para macOS (Apple Silicon arm64 e Intel x86_64) y Windows (x64).
+- **Lanzamiento inicial oficial de AutoPrevias v1.0.0** para macOS (Apple Silicon arm64) y Windows (x64).
 - **Instaladores automáticos:**
   - macOS: Imágenes de disco `.dmg` con ventana de instalación "arrastrar a Aplicaciones" y accesos directos configurados.
   - Windows: Asistente de instalación completo `.exe` con Inno Setup, accesos directos en escritorio y menú Inicio, icono oficial y desinstalador limpio.

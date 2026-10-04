@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v1.0.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v1.0.1-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -47,9 +47,9 @@ Los siguientes enlaces apuntan **siempre y de forma automática a los instalador
 
 | Plataforma | Arquitectura | Tipo de Paquete | Enlace de Descarga Directa | Notas de Versión |
 | :--- | :--- | :--- | :--- | :--- |
-| 🍏 **macOS** | **Apple Silicon (M1 / M2 / M3 / M4)** | Imagen de disco `.dmg` (Drag-to-Applications) | [⬇️ **Descargar AutoPrevias macOS arm64**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-macOS-arm64.dmg) | [Ver Release v1.0.0](https://github.com/borjacandeel/auto-previas/releases/latest) |
-| 🍏 **macOS** | **Intel (x86_64)** | Imagen de disco `.dmg` (Drag-to-Applications) | [⬇️ **Descargar AutoPrevias macOS Intel**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-macOS-x86_64.dmg) | [Ver Release v1.0.0](https://github.com/borjacandeel/auto-previas/releases/latest) |
-| 🪟 **Windows** | **64-bit (x64)** | Instalador Asistido `.exe` (Inno Setup) | [⬇️ **Descargar AutoPrevias Windows x64**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-Windows-x64-Setup.exe) | [Ver Release v1.0.0](https://github.com/borjacandeel/auto-previas/releases/latest) |
+| 🍏 **macOS** | **Apple Silicon (M1 / M2 / M3 / M4)** | Imagen de disco `.dmg` (Drag-to-Applications) | [⬇️ **Descargar AutoPrevias macOS arm64**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-macOS-arm64.dmg) | [Ver Release v1.0.1](https://github.com/borjacandeel/auto-previas/releases/latest) |
+| 🍏 **macOS** | **Intel (x86_64)** | Imagen de disco `.dmg` (Drag-to-Applications) | [⬇️ **Descargar AutoPrevias macOS Intel**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-macOS-x86_64.dmg) | [Ver Release v1.0.1](https://github.com/borjacandeel/auto-previas/releases/latest) |
+| 🪟 **Windows** | **64-bit (x64)** | Instalador Asistido `.exe` (Inno Setup) | [⬇️ **Descargar AutoPrevias Windows x64**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-Windows-x64-Setup.exe) | [Ver Release v1.0.1](https://github.com/borjacandeel/auto-previas/releases/latest) |
 
 ---
 
@@ -60,7 +60,7 @@ Para acceder a versiones anteriores, binarios específicos o al histórico de et
 👉 **[Ir al Apartado Oficial de Releases en GitHub](https://github.com/borjacandeel/auto-previas/releases)**
 
 En dicha sección de GitHub encontrarás:
-1. **Etiquetas por versión (Tags):** Cada publicación está catalogada siguiendo el estándar *Semantic Versioning* (`v1.0.0`, `v1.1.0`, etc.).
+1. **Etiquetas por versión (Tags):** Cada publicación está catalogada siguiendo el estándar *Semantic Versioning* (`v1.0.1`, `v1.1.0`, etc.).
 2. **Desplegable de Assets (Archivos adjuntos):**
    - `AutoPrevias-macOS-arm64.dmg`: Instalador para Mac con procesadores Apple Silicon (M1/M2/M3/M4).
    - `AutoPrevias-macOS-x86_64.dmg`: Instalador para Mac con procesadores Intel.
@@ -183,6 +183,13 @@ graph TD
 ---
 
 ## 📈 Historial de Versiones y Registro de Updates
+
+### 🟢 [v1.0.1] — 2026-10-04 (Parche de Compatibilidad y Empaquetado Multi-Plataforma)
+- **Sincronizador de dependencias en tiempo de ejecución:** Creación de `scripts/bundle_runtime_deps.py` que asegura la inclusión de todas las dependencias científicas y de audio en paquetes autónomos Nuitka (`librosa`, `numba`, `llvmlite`, `decorator`, `joblib`, `msgpack`, `cloudpickle`, `pooch`, `platformdirs`, `requests`, `urllib3`, `certifi`, `idna`, `charset_normalizer`, `packaging`, `sklearn`, `threadpoolctl`, `narwhals`).
+- **Corrección de firma ad-hoc en macOS:** Reubicación de `.dylibs` y actualización de `install_name_tool` para firma ad-hoc sin errores de bundle en Apple codesign.
+- **Soporte UTF-8 en consolas Windows:** Blindaje ante codec CP1252 (`UnicodeEncodeError`) con `PYTHONUTF8=1`, `PYTHONIOENCODING=utf-8` y salidas de log seguras.
+- **Resolución dinámica de versión:** Corrección de carga perezosa de `__version__` en `librosa` para el diagnóstico `--selftest`.
+- **Política de versionado semántico:** Esquema estricto de parches en `1.0.x` y nuevas características mayores en `1.x.0`.
 
 ### 🟢 [v1.0.0] — 2026-10-04 (Lanzamiento Inicial Oficial)
 - **Instaladores oficiales multi-plataforma:**
