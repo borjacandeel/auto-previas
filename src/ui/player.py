@@ -518,6 +518,22 @@ class PlayerWidget(QWidget):
         if not HAS_MEDIA:
             return
 
+        # Asegurar que Qt descubra los plugins multimedia en bundles standalone
+        try:
+            from PySide6.QtCore import QCoreApplication
+            import sys
+            base = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent.parent.parent
+            for p_dir in [
+                base / "PySide6" / "qt-plugins",
+                base / "PySide6" / "plugins",
+                base / "qt-plugins",
+                base / "plugins",
+            ]:
+                if p_dir.is_dir() and str(p_dir) not in QCoreApplication.libraryPaths():
+                    QCoreApplication.addLibraryPath(str(p_dir))
+        except Exception:
+            pass
+
         self._audio_out = QAudioOutput(self)
         self._audio_out.setVolume(self._vol_slider.value() / 100.0)
 
@@ -567,28 +583,39 @@ class PlayerWidget(QWidget):
         """Carga un archivo en QMediaPlayer."""
         if not HAS_MEDIA:
             return
-        if not Path(path).exists():
-            self._set_status(f"❌ Archivo no encontrado: {Path(path).name}", _RED)
+        resolved = Path(path).resolve()
+        if not resolved.exists():
+            self._set_status(f"❌ Archivo no encontrado: {resolved.name}", _RED)
             return
 
         from src.engine.audio_io import repair_wav_header_if_needed
-        repair_wav_header_if_needed(path)
+        repair_wav_header_if_needed(str(resolved))
 
-        self._current_path = path
+        self._current_path = str(resolved)
         self._ready        = False
         self._dur_ms       = 0
         self._autoplay     = autoplay
 
-        self._btn_play.setEnabled(False)
-        self._slider.setEnabled(False)
+        # Obtener duración inmediata mediante SoundFile para no depender únicamente del buffer de Qt
+        try:
+            import soundfile as sf
+            info = sf.info(str(resolved))
+            if info.duration > 0:
+                self._dur_ms = int(info.duration * 1000)
+                self._lbl_time.setText(f"0:00 / {_fmt(self._dur_ms)}")
+                self._ready = True
+        except Exception:
+            self._lbl_time.setText("0:00 / 0:00")
+
+        self._btn_play.setEnabled(True)
+        self._slider.setEnabled(True)
         self._slider.setValue(0)
-        self._lbl_time.setText("0:00 / 0:00")
         self._set_status("Cargando…", _TEXT_DIM)
 
-        self._get_or_load_vu(path)
+        self._get_or_load_vu(str(resolved))
 
         self._player.stop()
-        self._player.setSource(QUrl.fromLocalFile(path))
+        self._player.setSource(QUrl.fromLocalFile(str(resolved)))
 
     # ── Controles de reproducción ─────────────────────────────────────────────
 

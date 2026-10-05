@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v1.0.5-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v1.0.6-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -196,6 +196,11 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 ---
 
 ### 📈 Registro Oficial de Versiones y Parches
+
+#### 🟢 [v1.0.6] — 2026-10-05 (Parche de Backend Multimedia en Bundles y Carga de DLLs en Windows)
+- **Activación del motor de reproducción nativo de PySide6 (`multimedia`):** Inclusión de los plugins de QtMultimedia (`libdarwinmediaplugin.dylib` en macOS y `windowsmediaplugin.dll` en Windows) mediante `--include-qt-plugins=sensible,multimedia` y sincronización con re-enlazado dinámico en `scripts/bundle_runtime_deps.py`, solucionando el fallo del reproductor integrado en las apps compiladas.
+- **Resolución de carga de `llvmlite.dll` en Windows 64-bit:** Registro de directorios DLL mediante `os.add_dll_directory` en `src/compat.py` y copia redundante en la raíz del bundle para satisfacer la carga dinámica de `ctypes.CDLL`.
+- **Selftest ampliado a 6 fases:** Verificación estricta de arranque y enlace de `QMediaPlayer` con el sistema de audio del SO anfitrión previo a la generación de instaladores.
 
 #### 🟢 [v1.0.5] — 2026-10-05 (Parche de Inclusión de Módulos Estándar Críticos en Bundles Standalone)
 - **Resolución de dependencias dinámicas de Numba y Librosa (`uuid`, `dis`, `inspect`, `opcode`):** Corrección del fallo `x ERROR EN SELFTEST: No module named 'uuid'` al ejecutar el binario compilado en macOS y Windows.

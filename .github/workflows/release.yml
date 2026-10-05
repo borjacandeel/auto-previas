@@ -90,6 +90,8 @@ jobs:
             --product-name="AutoPrevias" \
             --copyright="Copyright © 2026 Radical Records. Todos los derechos reservados." \
             --enable-plugin=pyside6 \
+            --include-qt-plugins=sensible,multimedia \
+            --include-package=PySide6.QtMultimedia \
             --include-data-dir=assets=assets \
             --include-data-dir=ffmpeg_bin=ffmpeg_bin \
             --nofollow-import-to=librosa,pytest,unittest,lazy_loader.tests \
@@ -240,6 +242,8 @@ jobs:
             --windows-icon-from-ico=assets\icon.ico ^
             --windows-console-mode=disable ^
             --enable-plugin=pyside6 ^
+            --include-qt-plugins=sensible,multimedia ^
+            --include-package=PySide6.QtMultimedia ^
             --include-data-dir=assets=assets ^
             --include-data-dir=ffmpeg_bin=ffmpeg_bin ^
             --nofollow-import-to=librosa,pytest,unittest,lazy_loader.tests ^
@@ -279,9 +283,10 @@ jobs:
           $llvmlite_dll = Join-Path $llvmlite_src "llvmlite.dll"
           $llvmlite_dest = "dist\AutoPrevias.dist\llvmlite\binding"
           if (Test-Path $llvmlite_dll) {
-            Write-Host "Copiando llvmlite.dll desde $llvmlite_dll a $llvmlite_dest"
+            Write-Host "Copiando llvmlite.dll desde $llvmlite_dll a $llvmlite_dest y raiz"
             New-Item -ItemType Directory -Force -Path $llvmlite_dest | Out-Null
             Copy-Item $llvmlite_dll $llvmlite_dest -Force
+            Copy-Item $llvmlite_dll "dist\AutoPrevias.dist\" -Force
             Write-Host "[OK] llvmlite.dll copiado correctamente."
           } else {
             Write-Host "[WARN] llvmlite.dll no encontrado en $llvmlite_src - buscando en site-packages..."
@@ -289,6 +294,7 @@ jobs:
             $alt = Join-Path $sp "llvmlite\binding\llvmlite.dll"
             if (Test-Path $alt) {
               Copy-Item $alt $llvmlite_dest -Force
+              Copy-Item $alt "dist\AutoPrevias.dist\" -Force
               Write-Host "[OK] llvmlite.dll encontrado en $alt y copiado."
             } else {
               Write-Host "[ERROR] llvmlite.dll no encontrado en ninguna ruta conocida."

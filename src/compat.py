@@ -26,6 +26,36 @@ import pprint
 if not hasattr(sys, "frozen"):
     setattr(sys, "frozen", True)
 
+import os
+from pathlib import Path
+
+# Registrar directorios de DLLs en Windows para ctypes y llvmlite
+if sys.platform == "win32":
+    exe_dir = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent.parent
+    for d in [exe_dir, exe_dir / "llvmlite" / "binding", exe_dir / "PySide6"]:
+        if d.is_dir() and hasattr(os, "add_dll_directory"):
+            try:
+                os.add_dll_directory(str(d))
+            except Exception:
+                pass
+
+# Registrar rutas de plugins de Qt (multimedia, platforms, styles) en standalone
+try:
+    from PySide6.QtCore import QCoreApplication
+    _base_dir = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent.parent
+    for p_dir in [
+        _base_dir / "PySide6" / "qt-plugins",
+        _base_dir / "PySide6" / "plugins",
+        _base_dir / "qt-plugins",
+        _base_dir / "plugins",
+    ]:
+        if p_dir.is_dir():
+            _p_str = str(p_dir)
+            if _p_str not in QCoreApplication.libraryPaths():
+                QCoreApplication.addLibraryPath(_p_str)
+except Exception:
+    pass
+
 
 
 def apply_librosa_patches():

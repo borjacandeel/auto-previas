@@ -3,6 +3,21 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.6] - 2026-10-05
+
+### Corregido
+- **Activación del backend multimedia de PySide6 para el reproductor integrado (`QMediaPlayer` / `QAudioOutput`)**:
+  - Corrección de `Failed to initialize QMediaPlayer: Not available` / `No QtMultimedia backends found` al abrir la aplicación nativa compilada.
+  - Inclusión explícita de la familia de plugins `--include-qt-plugins=sensible,multimedia` y `--include-package=PySide6.QtMultimedia` en Nuitka para macOS y Windows.
+  - Sincronización y re-enlazado dinámico de `libdarwinmediaplugin.dylib` y `windowsmediaplugin.dll` en `scripts/bundle_runtime_deps.py`.
+  - Registro de `QCoreApplication.addLibraryPath` en `src/compat.py` y `src/ui/player.py` para asegurar que Qt descubra inmediatamente los plugins multimedia locales en el bundle ejecutable.
+  - Incorporación del paso de diagnóstico `[6/6] Verificando motor de reproducción de audio (QMediaPlayer)` en `run_selftest()` para verificar la inicialización del reproductor antes de crear el instalador.
+- **Resolución de carga de `llvmlite.dll` en Windows 64-bit**:
+  - Invocación de `os.add_dll_directory` en `src/compat.py` para directorios de DLLs locales en Python 3.8+ Windows.
+  - Duplicación de `llvmlite.dll` tanto en el subdirectorio de recursos `llvmlite\binding` como en la raíz de distribución `AutoPrevias.dist\`.
+
+---
+
 ## [1.0.5] - 2026-10-05
 
 ### Corregido

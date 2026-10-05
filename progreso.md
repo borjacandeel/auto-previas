@@ -891,6 +891,40 @@ AutoPrevias/
   2. Se añadieron `--include-module=uuid`, `--include-module=dis`, `--include-module=inspect` y `--include-module=opcode` a los parámetros de compilación de Nuitka tanto en macOS como en Windows en `.github/workflows/release.yml`.
   3. Se reforzó `scripts/bundle_runtime_deps.py` con una capa defensiva que copia automáticamente `uuid.py`, `dis.py`, `inspect.py`, `opcode.py` y sus extensiones dinámicas C nativas (`_uuid.*`, `_opcode.*`) desde la librería estándar del sistema al directorio destino de ejecución.
   4. `src/__version__.py`, `CHANGELOG.md`, `README.md` y `progreso.md` elevados y sincronizados a la versión `v1.0.5`.
+- **Resultados de Verificación en CI/CD (`v1.0.5` - Run `#37275041743`)**:
+  - **macOS Apple Silicon (arm64)**: **ÉXITO TOTAL (100% SUCCESS)**.
+    - Todos los 21 pasos del runner completados con éxito:
+      * Compilación autónoma con Nuitka (`--standalone`, `--lto=no`, `--jobs=3`): Exitosa (~22 min).
+      * Empaquetado y firma ad-hoc (`codesign`): Exitoso.
+      * **Selftest sobre binario compilado**: Superado con 5/5 fases OK:
+        - `[1/5]` NumPy (2.2.6), SciPy (1.17.1), SoundFile (0.14.0), Pedalboard (0.9.25), Librosa (0.11.0), Qt (6.11.2), FFmpeg empaquetado, Assets y Caché: Detectados.
+        - `[2/5]` Generación de señal sintética 128 BPM: Exitosa.
+        - `[3/5]` Detección rítmica y análisis musical: **BPM detectado a 129.0** (sin error de `uuid`).
+        - `[4/5]` Plan de previa y síntesis de audio (18.32s, 2 canales @ 44.1kHz): Exitoso.
+        - `[5/5]` Exportación de audio a WAV y MP3 con metadatos: Exitoso.
+      * Creación de instalador DMG (`AutoPrevias-1.0.5-macOS-arm64.dmg`): Exitoso.
+      * Cálculo de SHA-256 y subida de artefacto: Exitoso.
+    - **Validación Manual en Entorno Real macOS**: El usuario instaló y ejecutó `AutoPrevias-1.0.5-macOS-arm64.dmg` en macOS Apple Silicon físico, confirmando apertura impecable, arranque de interfaz gráfica Qt y funcionamiento del motor de análisis de audio.
+  - **Windows 64-bit (x64)**:
+    - Compilación Nuitka completada con éxito.
+    - Fallo en el selftest debido a la resolución de `llvmlite.dll` vía `ctypes.CDLL` en Windows (`Could not find/load shared object file 'llvmlite.dll' from resource location: 'llvmlite.binding'`).
+  - **Publicación de Release Automática**:
+    - Gracias a la condición resiliente `if: always() && (...)`, el job `publish-release` se ejecutó con éxito y publicó oficialmente en GitHub la Release `v1.0.5` con los instaladores `.dmg` de macOS y sus sumas criptográficas `SHA256SUMS.txt`.
+
+### Sesión 21 — 2026-10-05: Parche v1.0.6 — Backend Multimedia PySide6 en Standalone y Carga Dinámica de DLLs en Windows
+
+- **Diagnóstico del Fallo del Reproductor en la App Nativa**:
+  - Al abrir la aplicación nativa en macOS, el usuario reportó que el reproductor de audio fallaba / no emitía sonido.
+  - **Causa Raíz:** En Qt 6 / PySide6, `QMediaPlayer` es una interfaz frontend desacoplada del motor de reproducción. Requiere obligatoriamente un backend nativo ubicado en la familia de plugins `multimedia/` (`libdarwinmediaplugin.dylib` en macOS y `windowsmediaplugin.dll` en Windows). El plugin `pyside6` de Nuitka incluye por defecto únicamente la lista "sensible" de Qt 5 (`mediaservice`, `platforms`, `styles`, `imageformats`), omitiendo por completo la familia renombrada `multimedia` de Qt 6. Sin este plugin, Qt devuelve: `No QtMultimedia backends found. Only QMediaDevices, QAudioDevice, QSoundEffect, QAudioSink, and QAudioSource are available. Failed to initialize QMediaPlayer "Not available"`.
+- **Diagnóstico del Fallo de `llvmlite.dll` en Windows**:
+  - `llvmlite.binding.ffi` usa `ctypes.CDLL` para enlazar `llvmlite.dll`. En Windows Python 3.8+, el sistema operativo no busca DLLs en subdirectorios salvo que se registren explícitamente mediante `os.add_dll_directory()`.
+- **Solución Implementada**:
+  1. **Activación de plugins multimedia en Nuitka**: Se añadieron `--include-qt-plugins=sensible,multimedia` y `--include-package=PySide6.QtMultimedia` en `.github/workflows/release.yml` para macOS y Windows.
+  2. **Sincronización robusta en `scripts/bundle_runtime_deps.py`**: Se implementó la copia y re-enlazado dinámico con `install_name_tool` de los plugins de `PySide6/Qt/plugins/multimedia` a `@executable_path/Qt*` para garantizar la firma y ejecución ad-hoc en macOS y la presencia de DLLs en Windows.
+  3. **Descubrimiento de rutas en `src/compat.py` y `src/ui/player.py`**: Registro programático con `QCoreApplication.addLibraryPath` para los directorios `qt-plugins` locales en modo standalone.
+  4. **Resolución DLL en Windows**: Registro de directorios de ejecución y subdirectorios de binding con `os.add_dll_directory` en `src/compat.py`, además de copiar `llvmlite.dll` tanto a `llvmlite\binding` como a la raíz de la distribución.
+  5. **Ampliación de Selftest a 6 fases**: Se incorporó el paso `[6/6] Verificando motor de reproducción de audio (QMediaPlayer / QAudioOutput)` en `src/main.py`, validando que el backend cargue archivos y reporte estado `LoadedMedia` antes de empaquetar instaladores.
+  6. **Sincronización de Versión**: Proyecto elevado a **`v1.0.6`** en `src/__version__.py`, `CHANGELOG.md`, `README.md` y `progreso.md`.
 
 
 

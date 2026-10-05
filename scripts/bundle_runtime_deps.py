@@ -123,6 +123,36 @@ def bundle_dependencies(target_dir):
             except Exception as e:
                 print(f"    [!] Advertencia al actualizar {so}: {e}")
 
+    # Sincronizar plugins multimedia de PySide6 para reproducción nativa de audio
+    print("[*] Sincronizando plugins multimedia de PySide6...")
+    for sp in site.getsitepackages():
+        qt_mm_src = os.path.join(sp, "PySide6", "Qt", "plugins", "multimedia")
+        if os.path.isdir(qt_mm_src):
+            for rel_sub in [os.path.join("PySide6", "qt-plugins", "multimedia"), os.path.join("PySide6", "plugins", "multimedia")]:
+                dest_mm = os.path.join(target_dir, rel_sub)
+                os.makedirs(dest_mm, exist_ok=True)
+                for item in os.listdir(qt_mm_src):
+                    s_file = os.path.join(qt_mm_src, item)
+                    d_file = os.path.join(dest_mm, item)
+                    if os.path.isfile(s_file) and not os.path.exists(d_file):
+                        shutil.copy2(s_file, d_file)
+                        print(f"    [+] Copiado plugin multimedia: {item} -> {rel_sub}")
+
+            if sys.platform == "darwin":
+                qt_mapping = {
+                    "@rpath/QtMultimedia.framework/Versions/A/QtMultimedia": "@executable_path/QtMultimedia",
+                    "@rpath/QtCore.framework/Versions/A/QtCore": "@executable_path/QtCore",
+                    "@rpath/QtGui.framework/Versions/A/QtGui": "@executable_path/QtGui",
+                    "@rpath/QtNetwork.framework/Versions/A/QtNetwork": "@executable_path/QtNetwork",
+                    "@rpath/QtConcurrent.framework/Versions/A/QtConcurrent": "@executable_path/QtConcurrent",
+                }
+                for rel_sub in [os.path.join("PySide6", "qt-plugins", "multimedia"), os.path.join("PySide6", "plugins", "multimedia")]:
+                    dest_mm = os.path.join(target_dir, rel_sub)
+                    for dylib in glob.glob(os.path.join(dest_mm, "*.dylib")):
+                        for old_ref, new_ref in qt_mapping.items():
+                            subprocess.call(["install_name_tool", "-change", old_ref, new_ref, dylib], stderr=subprocess.DEVNULL)
+                        subprocess.call(["install_name_tool", "-add_rpath", "@executable_path", dylib], stderr=subprocess.DEVNULL)
+
     print("[*] Empaquetado de dependencias completado con exito.")
 
 if __name__ == "__main__":

@@ -35,13 +35,14 @@ def run_selftest() -> int:
 
     try:
         # 1. Comprobar imports clave
-        print("[1/5] Verificando dependencias críticas...")
+        print("[1/6] Verificando dependencias críticas...")
         import numpy as np
         import scipy
         import soundfile as sf
         import pedalboard
         import librosa
         from PySide6 import QtCore, QtWidgets, QtGui
+        app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
         from src.config import get_ffmpeg_path, get_assets_dir, get_cache_dir, load as load_cfg
         from src.analysis.bpm import detect_beat_grid
         from src.analysis.structure import analyze_structure
@@ -73,7 +74,7 @@ def run_selftest() -> int:
             tmp_path = Path(tmpdir)
 
             # 2. Generar audio sintético
-            print("\n[2/5] Generando señal sintética de prueba (15s @ 44.1kHz, 128 BPM)...")
+            print("\n[2/6] Generando señal sintética de prueba (15s @ 44.1kHz, 128 BPM)...")
             sr = 44100
             duration = 15.0
             n_samples = int(sr * duration)
@@ -93,14 +94,14 @@ def run_selftest() -> int:
             print(f"  ✓ Archivo fuente sintético: {synth_src_wav.name} ({duration:.1f}s)")
 
             # 3. Análisis rítmico y estructural
-            print("\n[3/5] Analizando BPM, beat grid y estructura musical...")
+            print("\n[3/6] Analizando BPM, beat grid y estructura musical...")
             grid = detect_beat_grid(y, sr)
             print(f"  ✓ BPM detectado: {grid.bpm:.1f}")
             structure = analyze_structure(y, sr, grid)
             print(f"  ✓ Secciones detectadas: {len(structure.sections)}")
 
             # 4. Plan de previa y síntesis de audio
-            print("\n[4/5] Generando plan de previa y procesando cortes...")
+            print("\n[4/6] Generando plan de previa y procesando cortes...")
             plan = build_preview_plan(structure)
             print(f"  ✓ Segmentos en plan: {len(plan.segments)}")
 
@@ -118,7 +119,7 @@ def run_selftest() -> int:
             print(f"  ✓ Audio de previa procesado: {dur_out:.2f}s ({preview_audio.shape[0]} canales @ {preview_sr} Hz)")
 
             # 5. Exportación a WAV y MP3
-            print("\n[5/5] Verificando exportación a WAV y MP3...")
+            print("\n[5/6] Verificando exportación a WAV y MP3...")
             out_stem = tmp_path / "PREVIA - Selftest_Track"
             paths = {
                 "wav": out_stem.with_suffix(".wav"),
@@ -131,6 +132,28 @@ def run_selftest() -> int:
                 if not p.exists() or p.stat().st_size == 0:
                     raise RuntimeError(f"Fallo al exportar formato {fmt.upper()}: archivo vacío o no existe")
                 print(f"  ✓ {fmt.upper()} generado: {p.name} ({p.stat().st_size} bytes)")
+
+            # 6. Motor de reproducción integrado (QMediaPlayer / QAudioOutput)
+            print("\n[6/6] Verificando motor de reproducción de audio (QMediaPlayer / QAudioOutput)...")
+            from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
+            from PySide6.QtCore import QUrl
+            player = QMediaPlayer()
+            audio_out = QAudioOutput()
+            player.setAudioOutput(audio_out)
+            player.setSource(QUrl.fromLocalFile(str(paths["wav"])))
+
+            import time
+            for _ in range(50):
+                app.processEvents()
+                if player.mediaStatus() in (QMediaPlayer.MediaStatus.LoadedMedia, QMediaPlayer.MediaStatus.BufferedMedia, QMediaPlayer.MediaStatus.InvalidMedia):
+                    break
+                time.sleep(0.02)
+
+            status = player.mediaStatus()
+            dev_name = audio_out.device().description() or "Predeterminado"
+            print(f"  ✓ Estado backend QMediaPlayer: {status.name} (dispositivo: {dev_name})")
+            if status == QMediaPlayer.MediaStatus.InvalidMedia:
+                raise RuntimeError("Backend de QtMultimedia reporta InvalidMedia: plugins multimedia no disponibles")
 
         print("\n" + "=" * 60)
         print("✓ SELFTEST EXITOSO: Todos los componentes funcionan correctamente.")
