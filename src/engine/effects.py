@@ -22,29 +22,50 @@ from scipy import signal
 def apply_flanger(
     audio: np.ndarray,
     sr: int,
-    rate_hz: float = 0.4,
-    depth_ms: float = 2.5,
-    base_delay_ms: float = 1.5,
-    feedback: float = 0.5,
-    mix: float = 0.5,
+    rate_hz: float = 0.65,
+    depth_ms: float = 3.8,
+    base_delay_ms: float = 1.0,
+    feedback: float = 0.74,
+    mix: float = 0.75,
+    ramp_in_sec: float = 0.0,
+    hard_stop: bool = False,
 ) -> np.ndarray:
     """
-    Aplica un efecto Flanger analógico estéreo con modulación LFO independiente por canal.
-    audio: array (canales, muestras) float32 [-1, 1]
+    Aplica un efecto Flanger analógico estéreo agresivo de estudio.
+    - Modulación LFO sinusoidal en cuadratura (90 grados de desfase estéreo).
+    - Feedback resonante elevado (0.74) para emular el barrido tipo turbina / jet-plane.
+    - ramp_in_sec: rampa suave de entrada para evitar clicks al activarse en la subida.
+    - hard_stop: corte en seco micro-faded (3ms) en el downbeat exacto del drop.
     """
     if audio.ndim == 1:
         audio = np.stack([audio, audio])
 
     channels, n_samples = audio.shape
+    if n_samples < 16:
+        return audio
+
     out = np.zeros_like(audio, dtype=np.float32)
 
-    max_delay_samples = int((base_delay_ms + depth_ms) * 0.001 * sr) + 5
-    buf_size = max_delay_samples + 2
+    max_delay_samples = int((base_delay_ms + depth_ms) * 0.001 * sr) + 8
+    buf_size = max_delay_samples + 4
 
-    t = np.arange(n_samples) / sr
+    t = np.arange(n_samples, dtype=np.float32) / sr
+
+    # Envolvente dinámica del nivel de mezcla Wet
+    mix_env = np.full(n_samples, mix, dtype=np.float32)
+    if ramp_in_sec > 0.0:
+        n_ramp = min(int(ramp_in_sec * sr), n_samples)
+        if n_ramp > 0:
+            mix_env[:n_ramp] = (np.linspace(0.0, 1.0, n_ramp, dtype=np.float32) ** 1.5) * mix
+
+    if hard_stop:
+        # Micro-fade de 3ms al final para cortar en seco sin generar click digital
+        n_micro = min(int(0.003 * sr), max(1, n_samples // 4))
+        if n_micro > 0:
+            mix_env[-n_micro:] *= np.linspace(1.0, 0.0, n_micro, dtype=np.float32)
 
     for ch in range(channels):
-        # Desfase de 90 grados entre canal izquierdo y derecho para amplitud estéreo
+        # Desfase de 90 grados entre canal izquierdo y derecho para apertura estéreo máxima
         phase_offset = 0.0 if ch == 0 else (np.pi / 2)
         lfo = (np.sin(2 * np.pi * rate_hz * t + phase_offset) + 1.0) * 0.5
         delay_mod = (base_delay_ms + depth_ms * lfo) * 0.001 * sr
@@ -62,14 +83,15 @@ def apply_flanger(
             read_idx_0 = (buf_idx - d_int) % buf_size
             read_idx_1 = (buf_idx - d_int - 1) % buf_size
 
-            # Interpolación lineal entre muestras
             delayed_sample = (1.0 - d_frac) * buffer[read_idx_0] + d_frac * buffer[read_idx_1]
 
-            cur_sample = ch_in[i] + feedback * delayed_sample
+            # Inyección de feedback con saturación suave para evitar auto-oscilación descontrolada
+            cur_sample = ch_in[i] + feedback * np.tanh(delayed_sample)
             buffer[buf_idx] = cur_sample
             buf_idx = (buf_idx + 1) % buf_size
 
-            ch_out[i] = (1.0 - mix) * ch_in[i] + mix * delayed_sample
+            m = mix_env[i]
+            ch_out[i] = (1.0 - m) * ch_in[i] + m * delayed_sample
 
         out[ch] = ch_out
 
@@ -79,12 +101,16 @@ def apply_flanger(
 def apply_filter_sweep(
     audio: np.ndarray,
     sr: int,
-    start_freq: float = 250.0,
-    end_freq: float = 3500.0,
+    start_freq: float = 60.0,
+    end_freq: float = 2800.0,
     kind: str = "highpass",
+    hard_stop: bool = False,
 ) -> np.ndarray:
     """
-    Aplica un barrido de filtro progresivo (útil para generar tensión en subidas).
+    Aplica un barrido de filtro progresivo para acumular tensión en la subida antes del drop.
+    - High-Pass Filter (HPF): arranca en 60Hz (dejando pasar todo) y barre hasta 2800Hz,
+      eliminando el bombo y graves gradualmente.
+    - hard_stop: al llegar al drop, corta en seco en 3ms devolviendo el 100% de pegada de graves.
     """
     if audio.ndim == 1:
         audio = np.stack([audio, audio])
@@ -97,7 +123,7 @@ def apply_filter_sweep(
     block_len = n_samples // num_blocks
     out = np.zeros_like(audio, dtype=np.float32)
 
-    freqs = np.geomspace(max(40.0, start_freq), min(sr * 0.45, end_freq), num_blocks)
+    freqs = np.geomspace(max(30.0, start_freq), min(sr * 0.45, end_freq), num_blocks)
 
     for b in range(num_blocks):
         i0 = b * block_len
@@ -106,7 +132,7 @@ def apply_filter_sweep(
 
         cutoff = freqs[b]
         nyq = sr * 0.5
-        norm_cutoff = np.clip(cutoff / nyq, 0.01, 0.95)
+        norm_cutoff = np.clip(cutoff / nyq, 0.005, 0.95)
 
         try:
             sos = signal.butter(2, norm_cutoff, btype=kind, output="sos")
@@ -115,7 +141,83 @@ def apply_filter_sweep(
         except Exception:
             out[:, i0:i1] = block_audio
 
+    if hard_stop:
+        # Micro-fade al final para volver instantáneamente a la pista limpia y sin filtrar
+        n_micro = min(int(0.003 * sr), max(1, n_samples // 4))
+        if n_micro > 0:
+            for ch in range(channels):
+                fade_dry = np.linspace(0.0, 1.0, n_micro, dtype=np.float32)
+                fade_wet = 1.0 - fade_dry
+                out[ch, -n_micro:] = out[ch, -n_micro:] * fade_wet + audio[ch, -n_micro:] * fade_dry
+
     return np.clip(out, -1.0, 1.0).astype(np.float32)
+
+
+def apply_predrop_effects(
+    block_audio: np.ndarray,
+    sr: int,
+    block_start_sec: float,
+    block_end_sec: float,
+    drop_timestamps: list[float],
+    cfg: dict,
+    pre_drop_sec: float = 5.0,
+) -> np.ndarray:
+    """
+    Aplica automáticamente los efectos seleccionados (Flanger agresivo, Filter Sweep)
+    EXCLUSIVAMENTE durante los 5 segundos previos a cada Drop ('subida').
+    Al llegar exactamente al drop, el efecto se detiene en seco para que el bombo
+    e impacto del drop exploten limpios, contundentes y al 100% de fuerza acústica.
+    """
+    if block_audio.ndim == 1:
+        block_audio = np.stack([block_audio, block_audio])
+
+    has_flanger = bool(cfg.get("fx_flanger"))
+    has_filter  = bool(cfg.get("fx_filter_sweep"))
+
+    if not has_flanger and not has_filter:
+        return block_audio
+
+    out = block_audio.copy()
+    n_samples = out.shape[1]
+
+    for d_t in drop_timestamps:
+        # El drop debe estar dentro de este bloque con al menos 0.5s de margen desde el inicio
+        if block_start_sec + 0.5 < d_t <= block_end_sec + 0.05:
+            drop_sample = min(n_samples, int((d_t - block_start_sec) * sr))
+            bu_start_sample = max(0, int((d_t - pre_drop_sec - block_start_sec) * sr))
+
+            window_len = drop_sample - bu_start_sample
+            if window_len < int(0.5 * sr):
+                continue
+
+            chunk = out[:, bu_start_sample:drop_sample]
+            ramp_in = min(0.8, window_len / (sr * 3.0))
+
+            if has_filter:
+                chunk = apply_filter_sweep(
+                    chunk, sr,
+                    start_freq=60.0,
+                    end_freq=2800.0,
+                    kind="highpass",
+                    hard_stop=True,
+                )
+
+            if has_flanger:
+                flanger_mix = float(cfg.get("flanger_mix", 0.75))
+                chunk = apply_flanger(
+                    chunk, sr,
+                    rate_hz=0.65,
+                    depth_ms=3.8,
+                    base_delay_ms=1.0,
+                    feedback=0.74,
+                    mix=flanger_mix,
+                    ramp_in_sec=ramp_in,
+                    hard_stop=True,
+                )
+
+            out[:, bu_start_sample:drop_sample] = chunk
+
+    return out
 
 
 def inject_voice_drop(

@@ -73,13 +73,18 @@ class WaveformLoader(QThread):
 
     def run(self):
         try:
+            if self.isInterruptionRequested():
+                return
             from src.engine.audio_io import load_audio_file
             y, sr = load_audio_file(self.path, sr=22050, mono=True, dtype=np.float32)
+            if self.isInterruptionRequested():
+                return
             dur = len(y) / max(sr, 1)
 
             N = len(y)
             if N == 0:
-                self.finished.emit(np.zeros(100, dtype=np.float32), 0.0)
+                if not self.isInterruptionRequested():
+                    self.finished.emit(np.zeros(100, dtype=np.float32), 0.0)
                 return
 
             step = max(1, N // MAX_POINTS)
@@ -89,9 +94,11 @@ class WaveformLoader(QThread):
             if mx > 1e-9:
                 rms /= mx
 
-            self.finished.emit(rms, float(dur))
+            if not self.isInterruptionRequested():
+                self.finished.emit(rms, float(dur))
         except Exception as e:
-            self.error.emit(str(e))
+            if not self.isInterruptionRequested():
+                self.error.emit(str(e))
 
 
 # ── Widget principal ──────────────────────────────────────────────────────────
@@ -299,6 +306,21 @@ class WaveformWidget(QWidget):
         self._preview_loader = WaveformLoader(path)
         self._preview_loader.finished.connect(self._on_preview_loaded)
         self._preview_loader.start()
+
+    def cleanup_threads(self):
+        """Detiene de forma limpia e inmediata cualquier hilo de carga de onda activo."""
+        for loader_attr in ["_loader", "_preview_loader"]:
+            ldr = getattr(self, loader_attr, None)
+            if ldr and ldr.isRunning():
+                try:
+                    ldr.finished.disconnect()
+                except Exception:
+                    pass
+                ldr.requestInterruption()
+                ldr.wait(400)
+                if ldr.isRunning():
+                    ldr.terminate()
+                    ldr.wait(200)
 
     def set_sections(self, sections, plan_segments=None):
         """Asigna secciones del análisis original y los segmentos del plan."""

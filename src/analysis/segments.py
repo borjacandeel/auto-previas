@@ -53,6 +53,7 @@ class PreviewPlan:
     segments: List[PreviewSegment] = field(default_factory=list)
     estimated_duration_before_stretch: float = 0.0
     estimated_duration_after_stretch: float = 0.0
+    drop_starts: List[float] = field(default_factory=list)
 
     def total_raw_duration(self) -> float:
         return sum(s.duration for s in self.segments)
@@ -171,6 +172,7 @@ def build_preview_plan(
             segments=segs,
             estimated_duration_before_stretch=raw,
             estimated_duration_after_stretch=raw,
+            drop_starts=[best_drop.start_time],
         )
 
     # ── MODO PRESET RÁPIDO: 30s (Promo) ───────────────────────────────────
@@ -188,18 +190,21 @@ def build_preview_plan(
                 PreviewSegment(section=s1, trimmed_start=0.0, trimmed_end=c1_e - c1_s),
                 PreviewSegment(section=s2, trimmed_start=0.0, trimmed_end=c2_e - c2_s),
             ]
+            preset_drops = [d1.start_time, d2.start_time]
         else:
             d1 = all_drops[0]
             c1_s = max(0.0, d1.start_time - min(4.0 * bar_dur, 6.0))
             c1_e = min(d1.end_time, c1_s + effective_target)
             s1 = Section(type=d1.type, start_time=c1_s, end_time=c1_e, energy=d1.energy)
             segs = [PreviewSegment(section=s1, trimmed_start=0.0, trimmed_end=c1_e - c1_s)]
+            preset_drops = [d1.start_time]
 
         raw = sum(s.duration for s in segs)
         return PreviewPlan(
             segments=segs,
             estimated_duration_before_stretch=raw,
             estimated_duration_after_stretch=raw,
+            drop_starts=preset_drops,
         )
 
     # Filtrar drops principales por impacto acústico (duración y fullness)
@@ -335,8 +340,17 @@ def build_preview_plan(
     raw_total = sum(s.duration for s in segments)
     final_est = _estimated_final(raw_total, stretch_factor)
 
+    # Identificar momentos de impacto de drops incluidos en los segmentos
+    included_drops = [
+        s.start_time for s in all_drops
+        if any(seg.source_start <= s.start_time <= seg.source_end for seg in segments)
+    ]
+    if not included_drops and all_drops:
+        included_drops = [d.start_time for d in all_drops[:3]]
+
     return PreviewPlan(
         segments=segments,
         estimated_duration_before_stretch=raw_total,
         estimated_duration_after_stretch=final_est,
+        drop_starts=included_drops,
     )

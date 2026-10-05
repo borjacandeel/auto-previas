@@ -167,29 +167,43 @@ class AnalysisWorker(QThread):
     def run(self):
         try:
             import gc
+            if self.isInterruptionRequested():
+                return
             from src.engine.audio_io import load_audio_file
             from src.analysis.key import detect_musical_key
             self.progress.emit(5,  "Cargando audio…")
             y, sr = load_audio_file(self.path, sr=SR_ANALYSIS, mono=True, dtype=np.float32)
+            if self.isInterruptionRequested():
+                return
             dur = float(len(y)) / float(sr)
             self.progress.emit(25, "Detectando BPM y beat grid…")
             grid = detect_beat_grid(y, sr)
+            if self.isInterruptionRequested():
+                return
             self.progress.emit(45, "Detectando Tonalidad Armónica y Camelot…")
             key_res = detect_musical_key(y, sr)
+            if self.isInterruptionRequested():
+                return
             self.progress.emit(68, "Analizando estructura musical…")
             analysis = analyze_structure(y, sr, grid)
+            if self.isInterruptionRequested():
+                return
             self.progress.emit(85, "Construyendo plan de previa…")
             plan = build_preview_plan(analysis)
+            if self.isInterruptionRequested():
+                return
             self.progress.emit(100, "¡Análisis completado!")
 
             # Liberar el buffer de audio de análisis inmediatamente
             del y
             gc.collect()
 
-            self.finished.emit(analysis, plan, grid, grid.bpm, dur, key_res)
+            if not self.isInterruptionRequested():
+                self.finished.emit(analysis, plan, grid, grid.bpm, dur, key_res)
         except Exception:
-            import traceback
-            self.error.emit(traceback.format_exc())
+            if not self.isInterruptionRequested():
+                import traceback
+                self.error.emit(traceback.format_exc())
 
 
 class ExportWorker(QThread):
@@ -208,6 +222,8 @@ class ExportWorker(QThread):
     def run(self):
         try:
             import gc
+            if self.isInterruptionRequested():
+                return
             audio, sr, seed_used = build_preview_audio(
                 self.source_path, self.plan, self.beat_grid, self.cfg,
                 progress_cb=self.progress.emit, seed=self.seed,
@@ -3478,6 +3494,32 @@ class MainWindow(QMainWindow):
                 return
         super().keyPressEvent(e)
 
+    def closeEvent(self, event):
+        """Detiene de forma limpia todos los hilos antes del cierre para evitar QThread Destroyed abort."""
+        self._cleanup_threads()
+        super().closeEvent(event)
+
+    def _cleanup_threads(self):
+        for worker_name in ["_worker", "_export_worker"]:
+            w = getattr(self, worker_name, None)
+            if w and w.isRunning():
+                try:
+                    w.progress.disconnect()
+                    w.finished.disconnect()
+                    w.error.disconnect()
+                except Exception:
+                    pass
+                w.requestInterruption()
+                w.wait(600)
+                if w.isRunning():
+                    w.terminate()
+                    w.wait(200)
+
+        if hasattr(self, "_results") and getattr(self._results, "_waveform", None):
+            wf = self._results._waveform
+            if hasattr(wf, "cleanup_threads"):
+                wf.cleanup_threads()
+
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 
@@ -3501,6 +3543,7 @@ def launch(initial_file: str = ""):
     app.setFont(QFont(family_to_use, 12))
 
     win = MainWindow(initial_file=initial_file)
+    app.aboutToQuit.connect(win._cleanup_threads)
     win.show()
     sys.exit(app.exec())
 

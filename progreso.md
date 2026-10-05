@@ -16,6 +16,41 @@
 
 ### Resumen de Mejoras — Sesión 25 (2026-10-05): Lanzamiento Mayor v1.1.0 (Studio Suite)
 
+#### 🎛️ 0. Flanger Agresivo y Efectos Automáticos Pre-Drop con Parada en Seco
+- **Comportamiento solicitado por el usuario:** El flanger debía sonar con mayor carácter y agresividad de estudio, aplicándose **automáticamente en los 5 segundos previos a cada drop** (durante la subida/buildup) y **cortando en seco ("hard stop") justo al impactar el downbeat del drop**, permitiendo que el bombo y la pegada del drop entren 100% limpios y sin modulación.
+- **Flanger de alta resonancia (`apply_flanger`):**
+  - Feedback incrementado a `0.74` con saturación suave tangencial para máxima resonancia metálica tipo turbina / jet-plane.
+  - Profundidad aumentada a `3.8 ms`, retardo base de `1.0 ms` y LFO a `0.65 Hz` para barridos amplios y dinámicos.
+  - Rampa suave de entrada (`ramp_in_sec=0.6s`) que evita transitorios bruscos al comenzar la subida.
+  - Micro-fade de 3 ms en el corte final para garantizar parada en seco sin clicks digitales.
+- **Filter Sweep de tensión (`apply_filter_sweep`):**
+  - Barrido HPF desde 60 Hz hasta 2800 Hz en los 5s previos, filtrando los graves progresivamente.
+  - Al caer el drop, corta en seco devolviendo el 100% del subgrave en el instante exacto del impacto.
+- **Integración automática en el ensamblador (`src/engine/export.py`):**
+  - La función `apply_predrop_effects` analiza los bloques y detecta los puntos de drop (`drop_starts`). Aplica el procesamiento únicamente a la ventana previa de 5 segundos, dejando todo el resto de la pista y los drops 100% libres de modulación.
+
+#### 🎬 0.1 Overhaul del Vídeo MP4 para Redes Sociales (`src/engine/video.py`)
+- **Problema previo:** La visualización de onda era una línea verde plana y simple sin contexto gráfico.
+- **Visualizador dual de estudio:**
+  - Espectro FFT de frecuencias dinámico (`showfreqs` con escala logarítmica y respuesta cúbica `ascale=cbrt`) en gradiente Cyan (`#22d3ee`) y Púrpura (`#a855f7`).
+  - Osciloscopio centrado de onda (`showwaves` en `mode=cline`) en gradiente Rose (`#f43f5e`) y Púrpura.
+  - Ambos visualizadores apilados verticalmente en tiempo real (`vstack`) dentro de una tarjeta dedicada.
+- **Tarjeta Glassmorphism de Analizador:**
+  - Fondo translúcido oscuro con esquinas redondeadas y borde de neón cyan.
+  - Cabecera: `SPECTRUM & DYNAMIC FREQUENCY ANALYZER` con indicador `24-BIT MASTER · 44.1 kHz`.
+  - Regla de frecuencias calibrada en la base: `20Hz · 100Hz · 250Hz · 500Hz · 1kHz · 2.5kHz · 5kHz · 10kHz · 20kHz`.
+- **Marco de carátula iluminado:**
+  - Borde con resplandor cyan y marco blanco nítido, resaltando la carátula frontal sobre el fondo desenfocado atmosférico.
+- **Badges de metadatos renovados:**
+  - Cápsulas estilizadas para BPM, Clave Camelot, Studio Master y Exclusividad.
+
+#### 🛡️ 0.2 Corrección de Seguridad de Hilos (`QThread: Destroyed while thread is still running`)
+- **Problema diagnosticado:** Al cerrar la ventana o abortar el proceso mientras se cargaba la onda o analizaba audio, Qt abortaba con `Abort trap: 6` debido a la destrucción del objeto `QThread` antes de finalizar su ejecución nativa en C++.
+- **Solución implementada:**
+  - Verificaciones periódicas de `isInterruptionRequested()` dentro de los bucles de `WaveformLoader`, `AnalysisWorker` y `ExportWorker`.
+  - Implementación de `closeEvent` en `MainWindow` que solicita interrupción y espera la terminación limpia de todos los hilos (`_worker`, `_export_worker`, `_loader`, `_preview_loader`).
+  - Conexión del evento `aboutToQuit` de `QApplication` para garantizar apagado ordenado en cualquier escenario de salida.
+
 #### 🛠️ Corrección Crítica: Carga de Waveform y Presets de Duración
 - **Problema detectado en `AutoPrevias.command`:**
   - Al soltar un track, no se dibujaba la forma de onda ni se cargaba el reproductor.

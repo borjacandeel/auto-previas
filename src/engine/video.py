@@ -58,70 +58,118 @@ def create_social_overlay_image(
     output_path: Path,
 ) -> Path:
     """
-    Genera una imagen PNG semitransparente con los textos, badges estilizados y degradados.
+    Genera una imagen PNG semitransparente con marco de carátula iluminado,
+    tarjeta de analizador de espectro de estudio, tipografía premium y badges con glow.
     """
     img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
 
-    # 1. Gradiente superior e inferior para legibilidad cinematográfica
-    for y in range(250):
-        alpha = int(180 * (1.0 - y / 250.0))
-        draw.line([(0, y), (width, y)], fill=(10, 10, 15, alpha))
+    is_vertical = height >= 1600
 
-    for y in range(height - 400, height):
-        progress = (y - (height - 400)) / 400.0
-        alpha = int(220 * progress)
-        draw.line([(0, y), (width, y)], fill=(10, 10, 15, alpha))
+    # 1. Gradiente superior e inferior para máxima legibilidad cinematográfica
+    for y in range(260):
+        alpha = int(190 * (1.0 - y / 260.0))
+        draw.line([(0, y), (width, y)], fill=(8, 10, 16, alpha))
+
+    for y in range(height - 450, height):
+        progress = (y - (height - 450)) / 450.0
+        alpha = int(230 * progress)
+        draw.line([(0, y), (width, y)], fill=(8, 10, 16, alpha))
 
     # 2. Tipografías
-    font_brand = _get_font(22, bold=True)
-    font_title = _get_font(46, bold=True)
-    font_artist = _get_font(30, bold=False)
-    font_badge = _get_font(24, bold=True)
+    font_brand = _get_font(20, bold=True)
+    font_title = _get_font(42 if is_vertical else 34, bold=True)
+    font_artist = _get_font(28 if is_vertical else 24, bold=False)
+    font_badge = _get_font(20 if is_vertical else 17, bold=True)
+    font_card_head = _get_font(13 if is_vertical else 11, bold=True)
+    font_ruler = _get_font(11 if is_vertical else 10, bold=True)
 
     # 3. Header de marca superior
     brand_text = "RADICAL RECORDS · STUDIO PREVIEW"
-    draw.text((width // 2, 80), brand_text, font=font_brand, fill=(244, 63, 94, 255), anchor="mm")
+    draw.text((width // 2, 70 if is_vertical else 40), brand_text, font=font_brand, fill=(244, 63, 94, 255), anchor="mm")
 
-    # 4. Posición de textos bajo el cuadro de carátula
-    # En 9:16 (1080x1920), la carátula está en Y: 280 a 1000 (720x720)
-    # El visualizador de onda va de Y: 1040 a 1180
-    text_start_y = 1260 if height >= 1600 else (height - 240)
+    # 4. Geometría según aspecto
+    if is_vertical:
+        cover_size = 680
+        cover_y = 220
+        card_w, card_h = 860, 240
+        card_y = cover_y + cover_size + 35
+        text_start_y = card_y + card_h + 45
+    else:
+        cover_size = 460
+        cover_y = 75
+        card_w, card_h = 840, 170
+        card_y = cover_y + cover_size + 25
+        text_start_y = card_y + card_h + 30
 
-    # Truncar título si es muy extenso
+    cover_x = (width - cover_size) // 2
+    card_x = (width - card_w) // 2
+
+    # 5. Marco exterior brillante y sombra de la carátula
+    draw.rounded_rectangle(
+        [(cover_x - 8, cover_y - 8), (cover_x + cover_size + 8, cover_y + cover_size + 8)],
+        radius=20,
+        outline=(56, 189, 248, 70),
+        width=2,
+    )
+    draw.rounded_rectangle(
+        [(cover_x - 3, cover_y - 3), (cover_x + cover_size + 3, cover_y + cover_size + 3)],
+        radius=16,
+        outline=(255, 255, 255, 120),
+        width=3,
+    )
+
+    # 6. Tarjeta contenedora de estudio para el visualizador
+    draw.rounded_rectangle(
+        [(card_x, card_y), (card_x + card_w, card_y + card_h)],
+        radius=20,
+        fill=(15, 17, 26, 220),
+        outline=(56, 189, 248, 140),
+        width=2,
+    )
+    # Títulos superiores de la tarjeta
+    draw.text((card_x + 22, card_y + 14), "SPECTRUM & DYNAMIC FREQUENCY ANALYZER", font=font_card_head, fill=(56, 189, 248, 240))
+    draw.text((card_x + card_w - 22, card_y + 14), "24-BIT MASTER · 44.1 kHz", font=font_card_head, fill=(148, 163, 184, 210), anchor="ra")
+
+    # Regla de frecuencias inferior
+    freq_scale = "20Hz       100Hz       250Hz       500Hz       1kHz       2.5kHz       5kHz       10kHz       20kHz"
+    draw.text((card_x + card_w // 2, card_y + card_h - 13), freq_scale, font=font_ruler, fill=(125, 211, 252, 170), anchor="mm")
+
+    # 7. Título de pista y Artista
     display_title = title if len(title) <= 32 else title[:29] + "…"
     display_artist = artist if len(artist) <= 38 else artist[:35] + "…"
 
     draw.text((width // 2, text_start_y), display_title, font=font_title, fill=(255, 255, 255, 255), anchor="mm")
-    draw.text((width // 2, text_start_y + 55), display_artist, font=font_artist, fill=(161, 161, 170, 255), anchor="mm")
+    draw.text((width // 2, text_start_y + (52 if is_vertical else 42)), display_artist, font=font_artist, fill=(161, 161, 170, 255), anchor="mm")
 
-    # 5. Badges de metadatos (BPM + Camelot / Clave)
+    # 8. Badges de metadatos (BPM, Clave Camelot, Mastering)
     bpm_txt = f"{int(round(bpm))} BPM" if bpm > 0 else "128 BPM"
     key_txt = key_str if key_str else "8A · Am"
 
     badges = [
-        ("⚡", bpm_txt, (34, 197, 94)),      # Emerald green
-        ("🎵", key_txt, (59, 130, 246)),      # Blue
-        ("🔥", "EXCLUSIVE", (239, 68, 68)),   # Red
+        ("⚡", bpm_txt, (34, 197, 94)),      # Emerald
+        ("🎵", key_txt, (168, 85, 247)),    # Cyber Purple
+        ("🎛️", "STUDIO MASTER", (56, 189, 248)),  # Electric Cyan
+        ("🔥", "EXCLUSIVE", (244, 63, 94)),  # Radical Rose
     ]
 
-    badge_y = text_start_y + 140
-    total_w = sum(150 for _ in badges) + (len(badges) - 1) * 20
+    badge_y = text_start_y + (130 if is_vertical else 90)
+    bw, bh = (175, 46) if is_vertical else (150, 38)
+    spacing = 16 if is_vertical else 12
+    total_w = len(badges) * bw + (len(badges) - 1) * spacing
     cur_x = (width - total_w) // 2
 
     for icon, txt, color in badges:
-        bw, bh = 150, 48
-        # Fondo redondeado semitransparente con borde
         draw.rounded_rectangle(
             [(cur_x, badge_y), (cur_x + bw, badge_y + bh)],
-            radius=24,
-            fill=(24, 24, 27, 230),
+            radius=bh // 2,
+            fill=(22, 24, 34, 230),
             outline=color,
             width=2,
         )
         full_txt = f"{icon} {txt}"
         draw.text((cur_x + bw // 2, badge_y + bh // 2), full_txt, font=font_badge, fill=(255, 255, 255, 255), anchor="mm")
-        cur_x += bw + 20
+        cur_x += bw + spacing
 
     img.save(str(output_path), "PNG")
     return output_path
@@ -139,8 +187,8 @@ def render_social_video(
     progress_cb: Optional[Callable[[int, str], None]] = None,
 ) -> str:
     """
-    Renderiza un vídeo MP4 optimizado para TikTok, Instagram Reels y YouTube Shorts.
-    Retorna la ruta absoluta del archivo generado.
+    Renderiza un vídeo MP4 de estudio optimizado para TikTok, Instagram Reels y YouTube Shorts.
+    Integra analizador dual de espectro de frecuencias + osciloscopio en tiempo real.
     """
     def _prog(pct: int, msg: str):
         if progress_cb:
@@ -150,22 +198,30 @@ def render_social_video(
     if not ffmpeg_bin:
         raise RuntimeError("FFmpeg no encontrado. No es posible generar el vídeo social.")
 
-    _prog(5, "Configurando dimensiones de vídeo…")
+    _prog(5, "Configurando dimensiones de vídeo de estudio…")
     cache_dir = get_cache_dir()
     cache_dir.mkdir(parents=True, exist_ok=True)
 
     if aspect_ratio == "1:1":
         vw, vh = 1080, 1080
-        cover_size = 560
-        cover_y = 120
-        wave_y = 720
-        wave_w, wave_h = 720, 120
+        cover_size = 460
+        cover_y = 75
+        card_w, card_h = 840, 170
+        card_y = cover_y + cover_size + 25
+        wave_w = 800
+        freq_h = 75
+        wave_sub_h = 45
+        wave_y = card_y + 26
     else:  # "9:16" Vertical Reels/TikTok
         vw, vh = 1080, 1920
-        cover_size = 720
-        cover_y = 280
-        wave_y = 1060
-        wave_w, wave_h = 720, 140
+        cover_size = 680
+        cover_y = 220
+        card_w, card_h = 860, 240
+        card_y = cover_y + cover_size + 35
+        wave_w = 820
+        freq_h = 110
+        wave_sub_h = 65
+        wave_y = card_y + 36
 
     cover_x = (vw - cover_size) // 2
     wave_x = (vw - wave_w) // 2
@@ -186,7 +242,7 @@ def render_social_video(
         raise RuntimeError("No se encontró imagen de carátula para el vídeo.")
 
     # Generar overlay gráfico con PIL
-    _prog(15, "Diseñando gráfica y badges de metadatos…")
+    _prog(15, "Diseñando gráfica de estudio y tarjeta de espectro…")
     overlay_png = cache_dir / f"overlay_{os.getpid()}.png"
     create_social_overlay_image(
         width=vw,
@@ -198,7 +254,7 @@ def render_social_video(
         output_path=overlay_png,
     )
 
-    _prog(35, "Renderizando vídeo con visualizador de ondas y desenfoque de fondo…")
+    _prog(35, "Renderizando vídeo con espectro FFT + osciloscopio dinámico…")
 
     # Filtro complejo FFmpeg:
     # 0: audio
@@ -207,7 +263,9 @@ def render_social_video(
     filter_complex = (
         f"[1:v]scale={vw}:{vh}:force_original_aspect_ratio=increase,crop={vw}:{vh},boxblur=30:5[bg];"
         f"[1:v]scale={cover_size}:{cover_size}:force_original_aspect_ratio=decrease[fg];"
-        f"[0:a]showwaves=s={wave_w}x{wave_h}:mode=p2p:rate=30:colors=0x22c55e|0x10b981[waves];"
+        f"[0:a]showfreqs=s={wave_w}x{freq_h}:mode=bar:ascale=cbrt:fscale=log:win_size=2048:averaging=2:colors=0x22d3ee|0xa855f7[fq];"
+        f"[0:a]showwaves=s={wave_w}x{wave_sub_h}:mode=cline:scale=cbrt:colors=0xf43f5e|0xa855f7:rate=30[wv];"
+        f"[fq][wv]vstack[waves];"
         f"[bg][fg]overlay={cover_x}:{cover_y}[v1];"
         f"[v1][waves]overlay={wave_x}:{wave_y}[v2];"
         f"[v2][2:v]overlay=0:0:shortest=1[vfinal]"

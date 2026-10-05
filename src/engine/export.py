@@ -132,6 +132,29 @@ def build_preview_audio(
         f_e = max(f_s + 1, min(int(b_e * SR_OUT), y_src.shape[1]))
         block_audios.append(y_src[:, f_s:f_e])
 
+    # ── paso 1b: Efectos de estudio automáticos en subidas (5s antes de cada drop) ──
+    from src.engine.effects import apply_predrop_effects
+    drop_times = list(getattr(plan, "drop_starts", []))
+    if not drop_times:
+        from src.analysis.structure import SectionType
+        drop_times = [
+            seg.section.start_time for seg in plan.segments
+            if getattr(seg.section, "type", None) == SectionType.DROP
+        ]
+
+    if (cfg.get("fx_flanger") or cfg.get("fx_filter_sweep")) and drop_times:
+        _prog(38, "Aplicando efectos automáticos 5s antes de los drops (Flanger + Filter Sweep)…")
+        for idx, (b_s, b_e) in enumerate(blocks):
+            block_audios[idx] = apply_predrop_effects(
+                block_audios[idx],
+                sr=SR_OUT,
+                block_start_sec=b_s,
+                block_end_sec=b_e,
+                drop_timestamps=drop_times,
+                cfg=cfg,
+                pre_drop_sec=5.0,
+            )
+
     # ── Aplicar en los cortes entre bloques: 1.0s bajada a cero y 1.0s subida a 100% ──
     _prog(45, "Aplicando transición en cortes (1s bajada a 0 y 1s subida)…")
     n_dip = int(1.0 * SR_OUT)  # 1.0 segundo exacto a 44100 Hz
@@ -224,18 +247,7 @@ def build_preview_audio(
     result[0] = _apply_fades(result[0], SR_OUT, actual_fade_in, actual_fade_out)
     result[1] = _apply_fades(result[1], SR_OUT, actual_fade_in, actual_fade_out)
 
-    # ── paso 4: Efectos de estudio (Flanger, Filter Sweep, Voice Drop) ─────────
-    if cfg.get("fx_flanger"):
-        _prog(90, "Aplicando Flanger analógico estéreo…")
-        from src.engine.effects import apply_flanger
-        flanger_mix = float(cfg.get("flanger_mix", 0.4))
-        result = apply_flanger(result, SR_OUT, mix=flanger_mix)
-
-    if cfg.get("fx_filter_sweep"):
-        _prog(92, "Aplicando barrido dinámico de filtros…")
-        from src.engine.effects import apply_filter_sweep
-        result = apply_filter_sweep(result, SR_OUT)
-
+    # ── paso 4: Inserción de firma de voz / Voice Drop ────────────────────────
     voice_drop = cfg.get("voice_drop_path")
     if voice_drop and Path(voice_drop).exists():
         _prog(93, "Incrustando firma de voz / Voice Drop…")
