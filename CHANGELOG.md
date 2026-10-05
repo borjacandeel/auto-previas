@@ -3,9 +3,19 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.2] - 2026-10-05
+
+### Corregido
+- **Carga de bibliotecas nativas de LLVM en Windows (llvmlite.dll):**
+  - Corrección de `OSError: Could not find/load shared object file 'llvmlite.dll' from resource location: 'llvmlite.binding'` en el ejecutable compilado con Nuitka en Windows x64.
+  - Inclusión automática de `llvmlite.dll` en `llvmlite/binding/` y en la raíz del paquete de datos de Python durante la fase de empaquetado post-compilación en GitHub Actions.
+  - Activación de `--include-package-data=llvmlite` en Nuitka para Windows para empaquetar metadatos y recursos binarios necesarios para `ctypes.CDLL`.
+  - Superación del 100% de la suite de auto-diagnóstico `--selftest` en Windows y macOS.
+
 ---
 
 ## [1.0.1] - 2026-10-04
+
 
 ### Corregido
 - **Compatibilidad de empaquetado standalone con Nuitka:**

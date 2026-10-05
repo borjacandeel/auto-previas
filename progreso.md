@@ -799,3 +799,16 @@ AutoPrevias/
   - Release `v1.0.0` y `v1.0.1` publicadas en GitHub.
   - Instalador nativo macOS ARM64 generado y validado al 100% mediante `--selftest` (5/5 pruebas superadas).
   - Pipeline de GitHub Actions ejecutando compilación de Windows x64 e Inno Setup con escaneo Windows Defender.
+
+### Sesión 16 — 2026-10-05: Parche v1.0.2 — Corrección de `llvmlite.dll` en Bundles Autónomos de Windows
+
+- **Diagnóstico del Fallo en Selftest de Windows (`v1.0.1`)**:
+  - Durante el paso de verificación `Ejecutar Selftest sobre binario compilado`, la importación de `librosa` arrojaba:
+    `OSError: Could not find/load shared object file 'llvmlite.dll' from resource location: 'llvmlite.binding'`
+  - **Causa Raíz:** `llvmlite` utiliza `importlib.resources.files("llvmlite.binding").joinpath("llvmlite.dll")` para cargar dinámicamente mediante `ctypes.CDLL` la librería nativa C++ compilada de LLVM. Aunque Nuitka copiaba los scripts `.py`, la biblioteca nativa DLL no quedaba ubicada en la ruta esperada de recursos de paquete dentro del directorio distribuido.
+- **Solución Implementada (Parche v1.0.2)**:
+  1. Se actualizó el pipeline `.github/workflows/release.yml` en el runner de Windows con un paso PowerShell dedicado: `Copiar llvmlite.dll al bundle (fix Windows ctypes resource path)`.
+  2. Dicho paso localiza de manera dinámica la ruta de `llvmlite` en el entorno virtual de Python y copia `llvmlite.dll` a `AutoPrevias.dist/llvmlite/binding/llvmlite.dll` y `AutoPrevias.dist/llvmlite/llvmlite.dll`.
+  3. Se incluyó `--include-package-data=llvmlite` en la invocación de Nuitka en Windows.
+  4. Se generó y publicó el tag `v1.0.2` en GitHub para disparar el flujo de compilación y publicación automatizada de ambos instaladores oficiales (macOS ARM64 DMG e Inno Setup Windows x64 EXE).
+

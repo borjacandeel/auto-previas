@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v1.0.1-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v1.0.2-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -196,6 +196,11 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 ---
 
 ### 📈 Registro Oficial de Versiones y Parches
+
+#### 🟢 [v1.0.2] — 2026-10-05 (Parche Oficial de Compatibilidad de llvmlite en Windows)
+- **Empaquetado y resolución de dependencias C de LLVM en Windows:** Inclusión de `llvmlite.dll` en `llvmlite/binding/` dentro del bundle distribuido, solucionando el fallo `OSError: Could not find/load shared object file 'llvmlite.dll'` al cargar `librosa` en ejecutables compilados de Windows x64.
+- **Configuración de datos de paquete en Nuitka:** Activación explícita de `--include-package-data=llvmlite` en el runner de compilación de Windows.
+- **Validación automatizada:** Superación íntegra de la suite de auto-diagnóstico `--selftest` en ambas plataformas (macOS ARM64 y Windows x64).
 
 #### 🟢 [v1.0.1] — 2026-10-04 (Parche Oficial de Empaquetado y Compatibilidad)
 - **Sincronizador de dependencias en tiempo de ejecución:** Creación de `scripts/bundle_runtime_deps.py` que asegura la inclusión de todas las dependencias científicas y de audio en paquetes autónomos Nuitka (`librosa`, `numba`, `llvmlite`, `decorator`, `joblib`, `msgpack`, `cloudpickle`, `pooch`, `platformdirs`, `requests`, `urllib3`, `certifi`, `idna`, `charset_normalizer`, `packaging`, `sklearn`, `threadpoolctl`, `narwhals`).
