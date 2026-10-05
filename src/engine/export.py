@@ -215,7 +215,7 @@ def build_preview_audio(
     result = apply_rate_envelope(assembled, rate_env)
     del assembled, rate_env
 
-    # ── paso 3: DC blocker + fades de volumen + normalización y limitador ────────
+    # ── paso 3: DC blocker + fades de volumen ──────────────────────────────────
     _prog(88, "Filtrando offset DC y aplicando fades…")
     result = _dc_blocker(result)
 
@@ -224,12 +224,37 @@ def build_preview_audio(
     result[0] = _apply_fades(result[0], SR_OUT, actual_fade_in, actual_fade_out)
     result[1] = _apply_fades(result[1], SR_OUT, actual_fade_in, actual_fade_out)
 
-    # Normalización a -1.0 dBFS y limitador de estudio transparente
-    peak = np.abs(result).max()
-    if peak > 0:
-        result = result * (0.891 / peak)          # -1 dBFS (0.891)
+    # ── paso 4: Efectos de estudio (Flanger, Filter Sweep, Voice Drop) ─────────
+    if cfg.get("fx_flanger"):
+        _prog(90, "Aplicando Flanger analógico estéreo…")
+        from src.engine.effects import apply_flanger
+        flanger_mix = float(cfg.get("flanger_mix", 0.4))
+        result = apply_flanger(result, SR_OUT, mix=flanger_mix)
 
-    result = _soft_limiter(result, ceiling_db=-0.5)
+    if cfg.get("fx_filter_sweep"):
+        _prog(92, "Aplicando barrido dinámico de filtros…")
+        from src.engine.effects import apply_filter_sweep
+        result = apply_filter_sweep(result, SR_OUT)
+
+    voice_drop = cfg.get("voice_drop_path")
+    if voice_drop and Path(voice_drop).exists():
+        _prog(93, "Incrustando firma de voz / Voice Drop…")
+        from src.engine.effects import inject_voice_drop
+        insert_t = float(cfg.get("voice_drop_time_sec", 1.5))
+        v_db = float(cfg.get("voice_drop_volume_db", -1.5))
+        result = inject_voice_drop(result, SR_OUT, voice_drop, insert_time_sec=insert_t, volume_db=v_db)
+
+    # ── paso 5: Masterización de estudio LUFS y limitador ─────────────────────
+    if cfg.get("studio_mastering", True):
+        _prog(94, "Aplicando limitador y masterización de estudio LUFS…")
+        from src.engine.effects import apply_studio_mastering
+        target_lufs = float(cfg.get("target_lufs", -9.0))
+        result = apply_studio_mastering(result, SR_OUT, target_lufs=target_lufs, ceiling_db=-0.3)
+    else:
+        peak = np.abs(result).max()
+        if peak > 0:
+            result = result * (0.891 / peak)          # -1 dBFS (0.891)
+        result = _soft_limiter(result, ceiling_db=-0.5)
 
     _prog(95, "Audio listo.")
     return result, SR_OUT, seed_used
@@ -237,9 +262,16 @@ def build_preview_audio(
 
 # ── nombre de archivo ───────────────────────────────────────────────────────
 
-def output_paths(source_path: str, out_dir: str,
-                 export_wav: bool, export_mp3: bool,
-                 custom_name: str | None = None) -> dict:
+def output_paths(
+    source_path: str,
+    out_dir: str,
+    export_wav: bool,
+    export_mp3: bool,
+    export_flac: bool = False,
+    export_aiff: bool = False,
+    export_video: bool = False,
+    custom_name: str | None = None,
+) -> dict:
     base = custom_name.strip() if custom_name and custom_name.strip() \
            else f"PREVIA - {Path(source_path).stem}"
     paths = {}
@@ -260,6 +292,12 @@ def output_paths(source_path: str, out_dir: str,
         paths["wav"] = _safe(out, f"{base}.wav")
     if export_mp3:
         paths["mp3"] = _safe(out, f"{base}.mp3")
+    if export_flac:
+        paths["flac"] = _safe(out, f"{base}.flac")
+    if export_aiff:
+        paths["aiff"] = _safe(out, f"{base}.aiff")
+    if export_video:
+        paths["video"] = _safe(out, f"{base}.mp4")
 
     return paths
 
@@ -421,6 +459,9 @@ def export_files(
                             cmd_cover.extend(["-metadata", f"TBPM={bpm_int}"])
                         except Exception:
                             pass
+                    key_val = meta.get("key") or meta.get("camelot")
+                    if key_val:
+                        cmd_cover.extend(["-metadata", f"TKEY={key_val}"])
                     cmd_cover.append(mp3_target)
 
                     res = subprocess.run(cmd_cover, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -451,6 +492,9 @@ def export_files(
                             cmd_nopic.extend(["-metadata", f"TBPM={bpm_int}"])
                         except Exception:
                             pass
+                    key_val = meta.get("key") or meta.get("camelot")
+                    if key_val:
+                        cmd_nopic.extend(["-metadata", f"TKEY={key_val}"])
                     cmd_nopic.append(mp3_target)
 
                     res = subprocess.run(cmd_nopic, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -469,6 +513,39 @@ def export_files(
                 generated.append(mp3_target)
             except Exception as e:
                 _prog(98, f"⚠ MP3 no disponible: {e}")
+
+    if "flac" in paths:
+        _prog(98, "Exportando FLAC Lossless…")
+        flac_target = str(paths["flac"])
+        sf.write(flac_target, audio.T, sr, format="FLAC")
+        generated.append(flac_target)
+
+    if "aiff" in paths:
+        _prog(98, "Exportando AIFF 24-bit…")
+        aiff_target = str(paths["aiff"])
+        sf.write(aiff_target, audio.T, sr, format="AIFF", subtype="PCM_24")
+        generated.append(aiff_target)
+
+    if "video" in paths:
+        _prog(99, "Generando vídeo de previa (TikTok / Reels / Shorts)…")
+        try:
+            from src.engine.video import render_social_video
+            video_target = str(paths["video"])
+            audio_for_vid = str(paths.get("wav") or temp_wav_for_mp3 or paths.get("mp3"))
+            track_title = meta.get("title") or "Previa"
+            render_social_video(
+                audio_path=audio_for_vid,
+                cover_image_path=cover_image_path,
+                output_video_path=video_target,
+                title=track_title,
+                artist=artist,
+                bpm=float(bpm_val or 128.0),
+                key_str=str(meta.get("key") or "8A · Am"),
+                aspect_ratio=str(meta.get("aspect_ratio") or "9:16"),
+            )
+            generated.append(video_target)
+        except Exception as e:
+            _prog(99, f"⚠ Vídeo social no generado: {e}")
 
     # Si se creó un WAV temporal y no había WAV de salida de usuario, lo registramos para el reproductor interno
     if temp_wav_for_mp3 and Path(temp_wav_for_mp3).exists():

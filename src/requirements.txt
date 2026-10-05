@@ -1,0 +1,32 @@
+# AutoPrevias - Radical Records
+# Requiere Python 3.11 o 3.12 (numpy no tiene wheels para 3.13+ aún)
+# Versiones fijadas para garantizar wheels ARM64 + x86-64
+# Compatible: macOS (arm64 + x86_64) y Windows (amd64 + ARM64)
+
+# ── GUI ────────────────────────────────────────────────────────────────────────
+PySide6>=6.6.0,<6.9.0
+
+# NOTA: desde PySide6 6.4+, QtMultimedia viene incluido en PySide6_Addons.
+# No es necesario instalar un paquete separado.
+
+# ── Waveform interactiva (Fase C) ──────────────────────────────────────────────
+pyqtgraph>=0.13.3,<0.15.0
+
+# ── Análisis de audio ──────────────────────────────────────────────────────────
+librosa>=0.10.1,<0.12.0
+numpy>=1.24.0,<2.1.0
+scipy>=1.11.0,<1.15.0
+
+# ── Lectura/escritura de audio (WAV 24-bit, FLAC, AIFF) ───────────────────────
+soundfile>=0.12.1,<0.13.0
+
+# ── Time-stretch con keylock (Rubber Band) + encoder MP3 ──────────────────────
+# pedalboard 0.9+ incluye wheels para macOS arm64/x86_64 y Windows amd64/ARM64
+pedalboard>=0.9.4,<0.10.0
+
+# ── TUI interactiva (opcional — análisis y configuración en terminal) ──────────
+textual>=0.80.0,<1.0.0
+
+# ── Generador de vídeo social y gráficos ───────────────────────────────────────
+Pillow>=10.0.0
+

@@ -3,6 +3,36 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.1.0] - 2026-10-05
+
+### Añadido
+- **Compatibilidad Universal con Windows ARM64 (Snapdragon X Elite / Parallels en Apple Silicon)**:
+  - Detección precisa de procesadores ARM mediante llamadas directas a `GetNativeSystemInfo` e `IsWow64Process2` vía `ctypes` en `src/compat.py`.
+  - Configuración automática de renderizado por software seguro (`QT_OPENGL=software`, `QT_QUICK_BACKEND=software`, `AA_UseSoftwareOpenGL`) eliminando bloqueos de inicialización de la GPU emulada en `qwindows.dll`.
+  - Soporte de instalación universal en Inno Setup (`ArchitecturesInstallIn64BitMode=x64compatible arm64`).
+- **Módulo de Efectos de Estudio y Masterización (`src/engine/effects.py`)**:
+  - **Flanger Analógico Estéreo**: LFO sinusoidal estéreo con desfase de 90° para apertura espacial, modulación de retardo, feedback y control de mezcla Dry/Wet.
+  - **Filter Sweep Dinámico**: Barrido de filtro bicuadrático progresivo para generar tensión y clímax en subidas.
+  - **Voice Drop / Audio Tag con Auto-Ducking Inteligente**: Inserción de firma de voz con atenuación de la pista base (-4 dB) y rampas suaves de 80 ms para inteligibilidad absoluta.
+  - **Masterizador LUFS & Limitador Soft**: Normalización comercial a -9.0 LUFS (Club/Beatport) con limitador analógico de codo suave y compresión hiperbólica (`tanh soft-clipping`) a -0.3 dB True Peak.
+- **Detección Tonal Armónica y Rueda Camelot (`src/analysis/key.py`)**:
+  - Algoritmo Krumhansl-Schmuckler sobre perfiles de cromagrama (12 notas) con correlación de Pearson y confianza estadística.
+  - Visualización en panel de estadísticas (`CLAVE / CAMELOT`, ej. `8A · Am`).
+  - Inyección automática en metadatos ID3v2 (`TKEY`, `TBPM`) para Pioneer CDJ, Rekordbox, Serato y Traktor.
+- **Generador de Vídeos Sociales para TikTok, Reels y Shorts (`src/engine/video.py`)**:
+  - Renderizado automático en formato vertical 9:16 (1080x1920) y cuadrado 1:1 con fondo desenfocado atmosférico, carátula nítida central, visualizador interactivo de onda de audio reactivo y cartelería tipográfica.
+- **Procesamiento por Lote (Batch Engine) (`src/ui/batch.py`)**:
+  - Diálogo especializado para procesar carpetas completas o listas de múltiples canciones.
+  - Detección automática al arrastrar varios archivos a la ventana de la aplicación.
+- **Modo Bucle Infinito (Loop Mode) en Reproductor (`src/ui/player.py`)**:
+  - Botón `🔁` para reproducción continua sin pausas ni clics.
+- **Presets Rápidos de Duración**:
+  - ⚡ 15s (Teaser / Stories) · 📻 30s (Promo Estándar) · 🚀 60s (Extended Showcase).
+- **Formatos Profesionales de Exportación**:
+  - WAV 24-bit PCM, MP3 320 kbps con carátula oficial y metadatos ID3 completos, FLAC Lossless, AIFF 24-bit y Vídeo Social MP4.
+
+---
+
 ## [1.0.8] - 2026-10-05
 
 ### Corregido

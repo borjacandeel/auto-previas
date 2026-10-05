@@ -8,9 +8,81 @@
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-05 (Sesión 24 — Versión v1.0.8: Corrección de Bloqueo de Archivos en Windows y Sanitización Total de Privacidad en Repositorio Público)
-**Fase activa:** Fase D completada ✅ — Instaladores Multiplataforma (macOS arm64 DMG + Windows x64 Inno Setup EXE) y CI/CD Automático
-**Versión Actual:** **v1.0.8**
+**Fecha última actualización:** 2026-10-05 (Sesión 25 — Versión v1.1.0: Lanzamiento Mayor de Estudio con Efectos Flanger/Sweep/Limiter, Compatibilidad Universal Windows ARM64, Clave Camelot, Vídeo Social 9:16 y Modo Lote)
+**Fase activa:** Fase E completada ✅ — Motor de Estudio v1.1 (Efectos de Audio, Vídeo Social, Modo Lote, Rueda Camelot y Soporte Windows ARM64)
+**Versión Actual:** **v1.1.0**
+
+---
+
+### Resumen de Mejoras — Sesión 25 (2026-10-05): Lanzamiento Mayor v1.1.0 (Studio Suite)
+
+#### 💻 1. Compatibilidad Universal con Windows ARM64 (Snapdragon X Elite / Parallels en Apple Silicon)
+- **Problema resuelto:** En entornos Windows 11 ARM64 (ejecución x64 emulada), Qt 6 intentaba sondear controladores de hardware Direct3D/OpenGL incompatibles, provocando un bloqueo infinito de inicialización de la ventana en `qwindows.dll` o finalización silenciosa.
+- **Detección nativa de hardware emulado:** Implementación en `src/compat.py` mediante llamadas directas a la API de Windows con `ctypes`:
+  - `kernel32.GetNativeSystemInfo`: Detecta arquitectura física `PROCESSOR_ARCHITECTURE_ARM64` (12) o `ARM` (5).
+  - `kernel32.IsWow64Process2`: Detecta máquina nativa `IMAGE_FILE_MACHINE_ARM64` (0xAA64).
+  - Inspección de variables de entorno (`PROCESSOR_ARCHITECTURE`, `PROCESSOR_ARCHITEW6432`, `PROCESSOR_IDENTIFIER`).
+- **Renderizado por software seguro:** Activación automática de `QT_OPENGL=software`, `QT_QUICK_BACKEND=software`, `QMLSCENE_DEVICE=softwarecontext`, `QSG_RHI_BACKEND=software` y `AA_UseSoftwareOpenGL` antes de instanciar `QApplication`.
+- **Registro de plugins y DLLs:** Se añaden las rutas de plugins `platforms` a `QT_PLUGIN_PATH`, `PATH` y `add_dll_directory` para garantizar carga instantánea.
+- **Inno Setup:** Configurado con `ArchitecturesInstallIn64BitMode=x64compatible arm64` para instalación transparente en todas las arquitecturas de Windows.
+
+#### 🎛️ 2. Módulo de Efectos de Estudio y Masterización (`src/engine/effects.py`)
+- **Flanger Analógico Estéreo:**
+  - LFO sinusoidal continuo con desfase de 90° entre canal izquierdo y derecho para generar máxima amplitud estéreo.
+  - Modulación dinámica de retardo (`depth_ms`, `base_delay_ms`), feedback y control de mezcla Dry/Wet sin distorsión digital.
+- **Filter Sweep Dinámico:**
+  - Barrido de filtro bicuadrático (Butterworth) progresivo para transiciones y subidas.
+  - Aumenta la tensión acústica antes de los drops principales.
+- **Voice Drop / Audio Tag con Auto-Ducking Inteligente:**
+  - Superposición de firmas de voz de DJs o sellos ("Radical Records Exclusive").
+  - Auto-ducking transparente: atenúa suavemente la pista de fondo (-4 dB) durante la locución con rampa de fade-in/fade-out de 80 ms para inteligibilidad absoluta.
+- **Masterizador LUFS & Limitador Transparente:**
+  - Medición y escalado hacia target comercial (-9.0 LUFS Club / Beatport o -14.0 LUFS Streaming).
+  - Limitador analógico con compresión suave tangencial hiperbólica (`tanh soft-clipping`) a -0.3 dBFS True-Peak ceiling.
+
+#### 🎵 3. Detección de Clave Armónica y Rueda Camelot (`src/analysis/key.py`)
+- Algoritmo Krumhansl-Schmuckler sobre perfiles de cromagrama promediados (12 notas) con correlación de Pearson.
+- Mapeo bidireccional a notación clásica (ej. `Am`, `C`) y códigos de la rueda Camelot para DJs (ej. `8A`, `8B`).
+- Cálculo de confianza estadística normalizada (0.1 a 0.99).
+- Tarjeta de estadísticas `CLAVE / CAMELOT` añadida en el panel principal con acento púrpura `#a855f7`.
+- Metadatos ID3v2 inyectados automáticamente (`TKEY`, `TBPM`) para Pioneer CDJ, Rekordbox, Serato y Traktor.
+
+#### 🎬 4. Generador de Vídeo para Redes Sociales (`src/engine/video.py`)
+- Creación automatizada de vídeos `.mp4` en formato vertical 9:16 (1080x1920) para TikTok, Instagram Reels y YouTube Shorts, y cuadrado 1:1 (1080x1080).
+- Fondo atmosférico con la carátula desenfocada (`boxblur=30:5`).
+- Carátula frontal nítida en alta resolución centrada.
+- Visualizador interactivo de onda de audio reactivo (`showwaves=mode=p2p`).
+- Cartelería gráfica tipográfica generada dinámicamente con Pillow: Título, Artista, Badge de BPM (`128 BPM`), Badge Camelot (`8A · Am`) y firma de Radical Records.
+
+#### 📁 5. Motor de Procesamiento por Lote (Batch Engine) (`src/ui/batch.py`)
+- Diálogo especializado para procesar carpetas completas o listas de múltiples pistas.
+- Detección automática al arrastrar varios archivos a la ventana principal de AutoPrevias.
+- Procesamiento secuencial multihilo en segundo plano sin congelar la interfaz.
+- Reporte detallado en tiempo real con estado por pista y resultados consolidados.
+
+#### 🔁 6. Modo Bucle Infinito (Loop Mode) en Reproductor (`src/ui/player.py`)
+- Nuevo botón `🔁` en la botonera de transporte del reproductor.
+- Reinicio instantáneo al alcanzar el final de la previa sin pausas ni clics.
+
+#### ⚡ 7. Presets Rápidos de Duración de Previa
+- ⚡ **15s (Teaser / Instagram Stories / TikTok)**: Selección compacta de la subida clave y el impacto del drop.
+- 📻 **30s (Promo Estándar)**: Formato estándar para podcasts y redes sociales.
+- 🚀 **60s (Extended Showcase)**: Muestra extendida con transición completa entre secciones.
+
+#### 💾 8. Formatos Profesionales de Exportación
+- WAV 24-bit PCM de estudio.
+- MP3 320 kbps con carátula incrustada y tags ID3 completos.
+- FLAC Lossless de alta fidelidad.
+- AIFF 24-bit PCM compatible con hardware Pioneer CDJ.
+- Vídeo Social MP4 listo para publicar.
+
+#### 🧪 9. Pruebas y Validación Técnica
+- **24/24 tests pasados en pytest al 100%:**
+  - `test_detect_musical_key` PASSED
+  - `test_audio_effects` PASSED (Flanger, Filter Sweep, Master Limiter)
+  - `test_social_overlay_image` PASSED
+  - 21 tests de análisis, BPM, estructura, VU-meter y UI PASSED
+- `--selftest` de diagnóstico validado exitosamente en terminal.
 
 ---
 

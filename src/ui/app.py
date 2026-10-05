@@ -157,7 +157,7 @@ def preview_filename(source_path: str) -> str:
 
 class AnalysisWorker(QThread):
     progress = Signal(int, str)
-    finished = Signal(object, object, object, float, float)
+    finished = Signal(object, object, object, float, float, object)
     error    = Signal(str)
 
     def __init__(self, path: str):
@@ -168,12 +168,15 @@ class AnalysisWorker(QThread):
         try:
             import gc
             from src.engine.audio_io import load_audio_file
+            from src.analysis.key import detect_musical_key
             self.progress.emit(5,  "Cargando audio…")
             y, sr = load_audio_file(self.path, sr=SR_ANALYSIS, mono=True, dtype=np.float32)
             dur = float(len(y)) / float(sr)
             self.progress.emit(25, "Detectando BPM y beat grid…")
             grid = detect_beat_grid(y, sr)
-            self.progress.emit(55, "Analizando estructura musical…")
+            self.progress.emit(45, "Detectando Tonalidad Armónica y Camelot…")
+            key_res = detect_musical_key(y, sr)
+            self.progress.emit(68, "Analizando estructura musical…")
             analysis = analyze_structure(y, sr, grid)
             self.progress.emit(85, "Construyendo plan de previa…")
             plan = build_preview_plan(analysis)
@@ -183,7 +186,7 @@ class AnalysisWorker(QThread):
             del y
             gc.collect()
 
-            self.finished.emit(analysis, plan, grid, grid.bpm, dur)
+            self.finished.emit(analysis, plan, grid, grid.bpm, dur, key_res)
         except Exception:
             import traceback
             self.error.emit(traceback.format_exc())
@@ -214,11 +217,16 @@ class ExportWorker(QThread):
                 self.source_path, out_dir,
                 export_wav=self.cfg.get("export_wav", True),
                 export_mp3=self.cfg.get("export_mp3", True),
+                export_flac=self.cfg.get("export_flac", False),
+                export_aiff=self.cfg.get("export_aiff", False),
+                export_video=self.cfg.get("export_video", False),
                 custom_name=self.cfg.get("custom_name"),
             )
             metadata = dict(self.cfg.get("metadata") or {})
             if self.beat_grid and hasattr(self.beat_grid, "bpm"):
                 metadata["bpm"] = self.beat_grid.bpm
+            if self.cfg.get("key_str"):
+                metadata["key"] = self.cfg.get("key_str")
 
             cover_path = self.cfg.get("cover_path")
 
@@ -1085,6 +1093,9 @@ class ResultPanel(QWidget):
         self._tempo_plot       = None
         self._tempo_curve_item = None
         self._tempo_base_line  = None
+        self._key_res          = None
+        self._key_str          = ""
+        self._voice_drop_path  = ""
         self._build_ui()
 
     def _build_ui(self):
@@ -1150,15 +1161,47 @@ class ResultPanel(QWidget):
 
         self._card_file  = StatCard("ARCHIVO",   "—",   TEXT)
         self._card_bpm   = StatCard("BPM",       "—",   ACCENT)
+        self._card_key   = StatCard("CLAVE / CAMELOT", "—", "#a855f7")
         self._card_dur   = StatCard("DURACIÓN",  "—",   TEXT)
         self._card_drops = StatCard("DROPS",     "—",   GREEN)
         self._card_pv    = StatCard("PREVIA EST.", "—", WARN)
 
-        for card in (self._card_file, self._card_bpm, self._card_dur,
+        for card in (self._card_file, self._card_bpm, self._card_key, self._card_dur,
                      self._card_drops, self._card_pv):
             stats_row.addWidget(card)
 
         root.addLayout(stats_row)
+
+        # ── 3.1 PRESETS DE DURACIÓN ───────────────────────────────────────
+        preset_frame = QFrame()
+        preset_frame.setStyleSheet(f"""
+            QFrame {{
+                background: {BG2};
+                border: 1px solid {BORDER};
+                border-radius: 8px;
+            }}
+        """)
+        p_lay = QHBoxLayout(preset_frame)
+        p_lay.setContentsMargins(10, 5, 10, 5)
+        p_lay.setSpacing(8)
+
+        lbl_pre = QLabel("⚡ PRESETS:")
+        lbl_pre.setStyleSheet(f"color: {TEXT_DIM}; font-size: 9px; font-weight: 800; letter-spacing: 0.8px; border: none; background: transparent;")
+        p_lay.addWidget(lbl_pre)
+
+        self._btn_p15 = QPushButton("⚡ 15s (Teaser / Stories)")
+        self._btn_p30 = QPushButton("📻 30s (Promo Estándar)")
+        self._btn_p60 = QPushButton("🚀 60s (Extended)")
+
+        for btn, sec in [(self._btn_p15, 15), (self._btn_p30, 30), (self._btn_p60, 60)]:
+            btn.setFixedHeight(24)
+            btn.setCursor(Qt.PointingHandCursor)
+            btn.setStyleSheet(_btn(BG3, TEXT_MID, BG4, radius=4, fs=10))
+            btn.clicked.connect(lambda _, s=sec: self._apply_duration_preset(s))
+            p_lay.addWidget(btn)
+
+        p_lay.addStretch()
+        root.addWidget(preset_frame)
 
         # ── 4. PANEL SIMPLE POR DEFECTO + TOGGLE MODO AVANZADO ────────────
         self._simple_box = QFrame()
@@ -1285,12 +1328,36 @@ class ResultPanel(QWidget):
                 border-color: {ACCENT};
             }}
         """
-        self._chk_wav = QCheckBox("WAV 24-bit")
+        self._chk_wav = QCheckBox("WAV 24b")
         self._chk_wav.setStyleSheet(chk_style)
         self._chk_wav.setChecked(True)
         self._chk_mp3 = QCheckBox("MP3 320k")
         self._chk_mp3.setStyleSheet(chk_style)
         self._chk_mp3.setChecked(True)
+        self._chk_flac = QCheckBox("FLAC")
+        self._chk_flac.setStyleSheet(chk_style)
+        self._chk_flac.setChecked(False)
+        self._chk_video = QCheckBox("🎬 Vídeo 9:16 (TikTok/Reels)")
+        self._chk_video.setStyleSheet(f"""
+            QCheckBox {{
+                color: #c084fc;
+                font-size: 11px;
+                font-weight: 700;
+                spacing: 5px;
+                background: transparent;
+            }}
+            QCheckBox::indicator {{
+                width: 14px; height: 14px;
+                border: 1px solid #9333ea;
+                border-radius: 3px;
+                background: {BG3};
+            }}
+            QCheckBox::indicator:checked {{
+                background: #a855f7;
+                border-color: #a855f7;
+            }}
+        """)
+        self._chk_video.setChecked(False)
 
         row_name.addWidget(lbl_n)
         row_name.addWidget(self._edit_name, stretch=1)
@@ -1298,7 +1365,70 @@ class ResultPanel(QWidget):
         row_name.addWidget(self._chk_wav)
         row_name.addSpacing(4)
         row_name.addWidget(self._chk_mp3)
+        row_name.addSpacing(4)
+        row_name.addWidget(self._chk_flac)
+        row_name.addSpacing(4)
+        row_name.addWidget(self._chk_video)
         exp_lay.addLayout(row_name)
+
+        # Fila Efectos de Estudio
+        row_fx = QHBoxLayout()
+        row_fx.setSpacing(10)
+        lbl_fx = QLabel("Efectos")
+        lbl_fx.setFixedWidth(52)
+        lbl_fx.setStyleSheet(
+            f"color: {TEXT_DIM}; font-size: 9.5px; font-weight: 700;"
+            "letter-spacing: 0.8px; background: transparent; border: none;"
+        )
+        self._chk_fx_flanger = QCheckBox("🎛️ Flanger")
+        self._chk_fx_flanger.setStyleSheet(chk_style)
+        self._chk_fx_flanger.setToolTip("Aplica un efecto Flanger analógico estéreo con modulación LFO")
+
+        self._chk_fx_filter = QCheckBox("🌊 Filter Sweep")
+        self._chk_fx_filter.setStyleSheet(chk_style)
+        self._chk_fx_filter.setToolTip("Aplica un barrido de filtro dinámico para generar tensión en las subidas")
+
+        self._chk_fx_master = QCheckBox("🔊 Master LUFS")
+        self._chk_fx_master.setStyleSheet(f"""
+            QCheckBox {{
+                color: {GREEN};
+                font-size: 11px;
+                font-weight: 700;
+                spacing: 5px;
+                background: transparent;
+            }}
+            QCheckBox::indicator {{
+                width: 14px; height: 14px;
+                border: 1px solid {BORDER};
+                border-radius: 3px;
+                background: {BG3};
+            }}
+            QCheckBox::indicator:checked {{
+                background: {GREEN};
+                border-color: {GREEN};
+            }}
+        """)
+        self._chk_fx_master.setChecked(True)
+        self._chk_fx_master.setToolTip("Normalización y limitador analógico transparente (-9 LUFS Club / Beatport)")
+
+        self._btn_voice_drop = QPushButton("🎙️ Drop / Audio Tag…")
+        self._btn_voice_drop.setFixedHeight(22)
+        self._btn_voice_drop.setStyleSheet(_btn(BG4, TEXT_MID, BG5, radius=4, fs=10))
+        self._btn_voice_drop.setCursor(Qt.PointingHandCursor)
+        self._btn_voice_drop.setToolTip("Superponer firma de voz o jingle de DJ sobre la previa")
+        self._btn_voice_drop.clicked.connect(self._select_voice_drop)
+
+        self._lbl_voice_drop = QLabel("")
+        self._lbl_voice_drop.setStyleSheet(f"color: {GREEN}; font-size: 10px; font-weight: 600; background: transparent; border: none;")
+
+        row_fx.addWidget(lbl_fx)
+        row_fx.addWidget(self._chk_fx_flanger)
+        row_fx.addWidget(self._chk_fx_filter)
+        row_fx.addWidget(self._chk_fx_master)
+        row_fx.addWidget(self._btn_voice_drop)
+        row_fx.addWidget(self._lbl_voice_drop)
+        row_fx.addStretch()
+        exp_lay.addLayout(row_fx)
 
         # Fila carpeta
         row_folder = QHBoxLayout()
@@ -1537,22 +1667,65 @@ class ResultPanel(QWidget):
     # ── API pública ───────────────────────────────────────────────────────
 
     def populate(self, analysis, plan, bpm: float, dur: float,
-                 file_path: str, cfg: dict):
+                 file_path: str, cfg: dict, key_res=None):
         self._analysis    = analysis
         self._plan        = plan
         self._source_path = file_path
         self._bpm         = bpm
+        self._key_res     = key_res
         name = Path(file_path).stem
         max_n = 16
         self._card_file.set_value(name[:max_n] + ("…" if len(name) > max_n else ""))
         self._card_bpm.set_value(f"{bpm:.1f}")
+        if key_res:
+            self._key_str = f"{key_res.camelot} · {key_res.notation}"
+            self._card_key.set_value(f"{key_res.camelot}  {key_res.notation}")
+        else:
+            self._key_str = ""
+            self._card_key.set_value("—")
         self._card_dur.set_value(fmt_time_short(dur))
         self._card_drops.set_value(str(len(analysis.drops())))
 
         est = plan.estimated_duration_after_stretch
-        ok  = 120 <= est <= 180
+        ok  = 15 <= est <= 180
         self._card_pv.set_value(fmt_time_short(est))
         self._card_pv.set_accent(GREEN if ok else WARN)
+
+    def _apply_duration_preset(self, seconds: int):
+        if not self._analysis:
+            return
+        cfg = load_cfg()
+        cfg["preview_min_sec"] = float(max(5, seconds - 2))
+        cfg["preview_max_sec"] = float(seconds + 2)
+        new_plan = build_preview_plan(self._analysis, cfg=cfg)
+        self.update_after_regen(new_plan)
+        self._lbl_simple_desc.setText(f"Preset {seconds}s aplicado ({len(new_plan.segments)} cortes calculados)")
+
+    def _select_voice_drop(self):
+        file, _ = QFileDialog.getOpenFileName(
+            self,
+            "Seleccionar firma de voz / Voice Drop / Jingle",
+            "",
+            "Archivos de Audio (*.wav *.mp3 *.aiff *.flac *.m4a)",
+        )
+        if file:
+            self._voice_drop_path = file
+            p = Path(file)
+            self._lbl_voice_drop.setText(f"✓ {p.name[:16]}")
+            self._btn_voice_drop.setText("🎙️ Cambiar Drop")
+
+    def get_export_options(self) -> dict:
+        return {
+            "export_wav": self._chk_wav.isChecked(),
+            "export_mp3": self._chk_mp3.isChecked(),
+            "export_flac": self._chk_flac.isChecked(),
+            "export_video": self._chk_video.isChecked(),
+            "fx_flanger": self._chk_fx_flanger.isChecked(),
+            "fx_filter_sweep": self._chk_fx_filter.isChecked(),
+            "studio_mastering": self._chk_fx_master.isChecked(),
+            "voice_drop_path": self._voice_drop_path,
+            "key_str": self._key_str,
+        }
 
         self._out_path = str(get_output_dir(file_path, cfg))
         self._lbl_folder_path.setText(short_path(self._out_path))
@@ -2876,7 +3049,7 @@ class MainWindow(QMainWindow):
         )
         logo_row.addWidget(self._logo_lbl)
 
-        v_badge = QLabel("PRO RACK")
+        v_badge = QLabel("PRO RACK v1.1")
         v_badge.setStyleSheet("""
             color: #ffffff;
             background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
@@ -2889,6 +3062,15 @@ class MainWindow(QMainWindow):
             padding: 2px 5px;
         """)
         logo_row.addWidget(v_badge)
+
+        self._btn_batch_hdr = QPushButton("📁 Modo Lote (Batch)")
+        self._btn_batch_hdr.setFixedHeight(22)
+        self._btn_batch_hdr.setCursor(Qt.PointingHandCursor)
+        self._btn_batch_hdr.setStyleSheet(_btn(BG3, TEXT_MID, BG4, radius=4, fs=10))
+        self._btn_batch_hdr.setToolTip("Procesar múltiples pistas en lote automáticamente")
+        self._btn_batch_hdr.clicked.connect(lambda: self._open_batch_dialog())
+        logo_row.addWidget(self._btn_batch_hdr)
+
         logo_col.addLayout(logo_row)
 
         sub_lbl = QLabel("RADICAL RECORDS · HARDWARE SYNTH & PREVIEW ENGINE")
@@ -3074,11 +3256,12 @@ class MainWindow(QMainWindow):
         self._worker.error.connect(self._on_error)
         self._worker.start()
 
-    def _on_analysis_done(self, analysis, plan, grid, bpm: float, dur: float):
+    def _on_analysis_done(self, analysis, plan, grid, bpm: float, dur: float, key_res=None):
         self._stop_dots()
         self._analysis  = analysis
         self._plan      = plan
         self._beat_grid = grid
+        self._key_res   = key_res
 
         # Mostrar la página de resultados ANTES de populate() para que el
         # WaveformWidget tenga geometría real cuando el loader dispare el dibujado
@@ -3086,12 +3269,13 @@ class MainWindow(QMainWindow):
         self._fade_in_results()
 
         self._results.populate(analysis, plan, bpm, dur,
-                               self._current_file, self._cfg)
+                               self._current_file, self._cfg, key_res=key_res)
 
         drops = len(analysis.drops())
+        key_str = f"  ·  {key_res.camelot} ({key_res.notation})" if key_res else ""
         self._set_progress(100,
             f"✅  {Path(self._current_file).name}  ·  "
-            f"{bpm:.1f} BPM  ·  {drops} drop{'s' if drops != 1 else ''}"
+            f"{bpm:.1f} BPM{key_str}  ·  {drops} drop{'s' if drops != 1 else ''}"
         )
 
     def _on_error(self, msg: str):
@@ -3170,9 +3354,13 @@ class MainWindow(QMainWindow):
             return
 
         custom_name = self._results.get_export_name()
-        wav, mp3    = self._results.get_export_formats()
-        if not wav and not mp3:
-            self._set_progress(0, "⚠  Selecciona al menos un formato (WAV o MP3)")
+        options = self._results.get_export_options()
+        wav = options.get("export_wav", True)
+        mp3 = options.get("export_mp3", True)
+        flac = options.get("export_flac", False)
+        video = options.get("export_video", False)
+        if not any([wav, mp3, flac, video]):
+            self._set_progress(0, "⚠  Selecciona al menos un formato para exportar")
             return
 
         seed = self._results.get_seed()
@@ -3181,13 +3369,14 @@ class MainWindow(QMainWindow):
         self._results.persist_branding_if_requested()
 
         cfg = dict(self._cfg)
-        cfg["export_wav"]   = wav
-        cfg["export_mp3"]   = mp3
+        cfg.update(options)
         cfg["custom_name"]  = custom_name
         cfg["tempo_mode"]   = self._results.get_tempo_mode()
         cfg["tempo_events"] = self._results.get_tempo_events()
         cfg["metadata"]     = metadata
         cfg["cover_path"]   = cover_path
+        if hasattr(self, "_key_res") and self._key_res:
+            cfg["key_str"] = f"{self._key_res.camelot} · {self._key_res.notation}"
 
         self._results.on_export_start()
         self._set_progress(0, "Generando previa")
@@ -3237,12 +3426,24 @@ class MainWindow(QMainWindow):
         if e.mimeData().hasUrls():
             e.acceptProposedAction()
 
-    def dropEvent(self, e: QDropEvent):
+        audio_files = []
         for url in e.mimeData().urls():
             path = url.toLocalFile()
             if Path(path).suffix.lower() in AUDIO_EXTS:
-                self._load_file(path)
-                break
+                audio_files.append(path)
+
+        if len(audio_files) > 1:
+            self._open_batch_dialog(audio_files)
+        elif len(audio_files) == 1:
+            self._load_file(audio_files[0])
+
+    def _open_batch_dialog(self, initial_files: list | None = None):
+        try:
+            from src.ui.batch import BatchDialog
+            dlg = BatchDialog(initial_files=initial_files, parent=self)
+            dlg.exec()
+        except Exception as ex:
+            self._set_progress(0, f"❌ Error abriendo Modo Lote: {ex}")
 
     def keyPressEvent(self, e):
         # Atajos de reproducción para DJs cuando no se está editando un campo de texto
@@ -3281,6 +3482,17 @@ class MainWindow(QMainWindow):
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 def launch(initial_file: str = ""):
+    if sys.platform == "win32":
+        import os
+        arch = os.environ.get("PROCESSOR_ARCHITECTURE", "").upper()
+        arch_w64 = os.environ.get("PROCESSOR_ARCHITEW6432", "").upper()
+        if arch == "ARM64" or arch_w64 == "ARM64":
+            try:
+                from PySide6.QtCore import Qt, QCoreApplication
+                QCoreApplication.setAttribute(Qt.ApplicationAttribute.AA_UseSoftwareOpenGL, True)
+            except Exception:
+                pass
+
     app = QApplication.instance() or QApplication(sys.argv)
     app.setStyle("Fusion")
 

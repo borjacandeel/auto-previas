@@ -22,8 +22,7 @@ SetupIconFile=..\..\assets\icon.ico
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
-ArchitecturesAllowed=x64compatible
-ArchitecturesInstallIn64BitMode=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible arm64
 UninstallDisplayIcon={app}\AutoPrevias.exe
 
 [Languages]

@@ -185,7 +185,21 @@ def run_selftest() -> int:
         return 1
 
 
+def _log_startup(msg: str):
+    if sys.platform == "win32":
+        try:
+            log_dir = Path(os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData" / "Local"))) / "AutoPrevias"
+            log_dir.mkdir(parents=True, exist_ok=True)
+            import time
+            with open(log_dir / "startup.log", "a", encoding="utf-8") as f:
+                f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}\n")
+        except Exception:
+            pass
+
+
 def main():
+    _log_startup(f"Iniciando AutoPrevias v{__version__} (argv={sys.argv})")
+
     if "--version" in sys.argv or "-v" in sys.argv:
         print(f"AutoPrevias {__version__}")
         sys.exit(0)
@@ -199,8 +213,25 @@ def main():
             target = arg
             break
 
-    from src.ui.app import launch
-    launch(target)
+    try:
+        from src.ui.app import launch
+        _log_startup("Invocando launch()...")
+        launch(target)
+    except Exception as e:
+        err_msg = f"Error fatal al iniciar AutoPrevias:\n{e}\n\n{traceback.format_exc()}"
+        _log_startup(err_msg)
+        if sys.platform == "win32":
+            try:
+                import ctypes
+                ctypes.windll.user32.MessageBoxW(
+                    0,
+                    f"Error al iniciar AutoPrevias:\n\n{e}\n\nConsulta el registro en %LOCALAPPDATA%\\AutoPrevias\\startup.log",
+                    "AutoPrevias - Error de arranque",
+                    0x10,
+                )
+            except Exception:
+                pass
+        raise
 
 
 if __name__ == "__main__":

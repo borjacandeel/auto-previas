@@ -221,6 +221,7 @@ class PlayerWidget(QWidget):
         self._ready        = False
         self._dur_ms       = 0
         self._autoplay     = False
+        self._loop_enabled = False
 
         # Datos para el medidor VU estéreo
         self._vu_cache: dict[str, tuple[np.ndarray, np.ndarray]] = {}
@@ -382,6 +383,12 @@ class PlayerWidget(QWidget):
         self._btn_fwd.setToolTip("Avanzar 10s (Flecha Derecha: +5s)")
         self._btn_fwd.clicked.connect(self._forward)
         ctrl_row.addWidget(self._btn_fwd)
+
+        # Botón LOOP 🔁
+        self._btn_loop = self._mk_btn("🔁", _BG3, _TEXT_DIM, w=30)
+        self._btn_loop.setToolTip("Modo Bucle continuo (Loop infinito)")
+        self._btn_loop.clicked.connect(self._toggle_loop)
+        ctrl_row.addWidget(self._btn_loop)
 
         ctrl_row.addStretch()
 
@@ -779,8 +786,42 @@ class PlayerWidget(QWidget):
             self._ready = False
             self._set_status("❌ Formato no compatible", _RED)
         elif status == MS.EndOfMedia:
+            if self._loop_enabled and self._ready and HAS_MEDIA:
+                self._player.setPosition(0)
+                self._player.play()
+                return
             self._set_status("⏹ Fin", _TEXT_DIM)
             self._slider.setValue(1000)
+
+    def _toggle_loop(self):
+        self._loop_enabled = not self._loop_enabled
+        if self._loop_enabled:
+            self._btn_loop.setStyleSheet(f"""
+                QPushButton {{
+                    background: {_GREEN}28;
+                    color: {_GREEN};
+                    border: 1px solid {_GREEN}88;
+                    border-radius: 5px;
+                    font-size: 11px;
+                    font-weight: 800;
+                }}
+            """)
+            self._btn_loop.setToolTip("Bucle activo: se reproducirá continuamente (Click para desactivar)")
+        else:
+            self._btn_loop.setStyleSheet(f"""
+                QPushButton {{
+                    background: {_BG3};
+                    color: {_TEXT_DIM};
+                    border: 1px solid {_BORDER};
+                    border-radius: 5px;
+                    font-size: 11px;
+                }}
+                QPushButton:hover {{
+                    background: {_BG5};
+                    border-color: {_ACCENT}44;
+                }}
+            """)
+            self._btn_loop.setToolTip("Modo Bucle continuo (Loop infinito)")
 
     def _on_error(self, error, error_string: str):
         if error_string:

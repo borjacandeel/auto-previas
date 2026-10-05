@@ -4,8 +4,8 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v1.0.8-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
-  [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
+  [![Release](https://img.shields.io/badge/Release-v1.1.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
   [![CI/CD](https://img.shields.io/badge/Build-GitHub%20Actions-2088FF.svg?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/borjacandeel/auto-previas/actions)
@@ -48,7 +48,7 @@ Los siguientes enlaces apuntan **siempre y de forma automática a los instalador
 | Plataforma | Arquitectura | Tipo de Paquete | Enlace de Descarga Directa | Notas de Versión |
 | :--- | :--- | :--- | :--- | :--- |
 | 🍏 **macOS** | **Apple Silicon (M1 / M2 / M3 / M4)** | Imagen de disco `.dmg` (Drag-to-Applications) | [⬇️ **Descargar AutoPrevias macOS arm64**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-macOS-arm64.dmg) | [Ver Release Oficial](https://github.com/borjacandeel/auto-previas/releases/latest) |
-| 🪟 **Windows** | **64-bit (x64)** | Instalador Asistido `.exe` (Inno Setup) | [⬇️ **Descargar AutoPrevias Windows x64**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-Windows-x64-Setup.exe) | [Ver Release Oficial](https://github.com/borjacandeel/auto-previas/releases/latest) |
+| 🪟 **Windows** | **64-bit (x64) y ARM64 (Snapdragon X / Parallels)** | Instalador Asistido Universal `.exe` (Inno Setup) | [⬇️ **Descargar AutoPrevias Windows Setup**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-Windows-x64-Setup.exe) | [Ver Release Oficial](https://github.com/borjacandeel/auto-previas/releases/latest) |
 
 ---
 
@@ -196,6 +196,38 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 ---
 
 ### 📈 Registro Oficial de Versiones y Parches
+
+#### 🚀 [v1.1.0] — 2026-10-05 (Lanzamiento Mayor de Estudio: Efectos Flanger/Sweep/Limiter, Windows ARM64, Clave Camelot, Vídeo Social 9:16 y Modo Lote)
+- **Compatibilidad Universal con Windows ARM64 (Snapdragon X Elite / Parallels en Apple Silicon):**
+  - Detección precisa de máquinas ARM mediante `GetNativeSystemInfo` y `IsWow64Process2` vía `ctypes` de Windows.
+  - Activación automática de renderizado por software seguro (`QT_OPENGL=software`, `QT_QUICK_BACKEND=software`, `AA_UseSoftwareOpenGL`) eliminando cuelgues del controlador GPU emulado en `qwindows.dll`.
+  - Instalador Inno Setup universal (`ArchitecturesInstallIn64BitMode=x64compatible arm64`).
+- **Suite de Efectos de Estudio y Masterización (`src/engine/effects.py`):**
+  - **Flanger Analógico Estéreo:** LFO sinusoidal continuo con desfase estéreo de 90°, modulación de delay, feedback y mezcla dry/wet.
+  - **Filter Sweep Dinámico:** Barrido de filtro bicuadrático progresivo para tensión acústica en subidas.
+  - **Voice Drop / Audio Tag:** Inserción de firma de voz con auto-ducking inteligente (-4 dB en pista base).
+  - **Masterizador LUFS & Limitador Soft:** Normalización a -9 LUFS (Club/Beatport) con soft-clipping tangencial hiperbólico a -0.3 dB True Peak.
+- **Detección Tonal Armónica y Rueda Camelot (`src/analysis/key.py`):**
+  - Algoritmo Krumhansl-Schmuckler sobre perfiles cromáticos con correlación de Pearson y cálculo de confianza.
+  - Visualización en panel de estadísticas (`CLAVE / CAMELOT`, ej. `8A · Am`).
+  - Inyección en metadatos ID3v2 (`TKEY`, `TBPM`).
+- **Generador de Vídeos Sociales para TikTok, Reels y Shorts (`src/engine/video.py`):**
+  - Renderizado automático en formato vertical 9:16 (1080x1920) y cuadrado 1:1 con fondo desenfocado, carátula central nítida, visualizador interactivo de onda de audio reactivo y cartelería tipográfica.
+- **Procesamiento por Lote (Batch Engine) (`src/ui/batch.py`):**
+  - Encolado de carpetas o múltiples archivos para generación de previas en segundo plano.
+  - Detección automática al arrastrar múltiples archivos al programa.
+- **Modo Bucle Continuo (Loop Infinito) en Reproductor (`src/ui/player.py`):**
+  - Botón `🔁` para reproducción ininterrumpida sin cortes.
+- **Presets Rápidos de Duración:**
+  - ⚡ 15s (Teaser / Stories) · 📻 30s (Promo Estándar) · 🚀 60s (Extended Showcase).
+- **Formatos Profesionales de Exportación:**
+  - WAV 24b, MP3 320k, FLAC Lossless, AIFF 24b y Vídeo Social MP4.
+
+#### 🟢 [v1.0.8] — 2026-10-05 (Corrección de Bloqueo de Archivos en Windows y Sanitización Total de Repositorio Público)
+- **Liberación explícita de descriptores de archivo en Windows:** Cierre inmediato de `QMediaPlayer` (`player.stop()`, desvinculación de URL y recolección de basura) para evitar bloqueos `PermissionError [WinError 32]` en Windows al procesar archivos temporales.
+- **Empaquetado de plugins de QtMultimedia en bundles:** Inclusión de `libffmpegmediaplugin.dylib` y `windowsmediaplugin.dll` con resolución de rutas en `src/compat.py`.
+- **Sanitización exhaustiva de privacidad:** Eliminación absoluta de nombres personales, rutas locales privadas y títulos privados en todo el repositorio público, documentación y commits para garantizar la privacidad institucional de Radical Records.
+- **Diagnóstico y Selftest:** Superación al 100% de la suite de auto-diagnóstico en macOS y Windows.
 
 #### 🟢 [v1.0.7] — 2026-10-05 (Estudio de Firma & Carátula y Carga Directa llvmlite en Windows)
 - **Firma de Temas & Carátula Personalizada (Branding Studio):** Selector con Drag & Drop directo para imágenes (`.jpg`, `.jpeg`, `.png`, `.webp`) y panel de metadatos completos (Artista, Sello, Álbum, Género, Comentarios de promo y BPM automático `TBPM`). Normalizador `prepare_cover_art` que transforma cualquier arte a 1000x1000 JPEG cuadrado optimizado para Pioneer CDJ, Rekordbox, Serato, Apple Music y smartphones.

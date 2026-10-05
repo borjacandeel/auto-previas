@@ -29,15 +29,91 @@ if not hasattr(sys, "frozen"):
 import os
 from pathlib import Path
 
-# Registrar directorios de DLLs en Windows para ctypes y llvmlite
+# Registrar directorios de DLLs y configurar renderizado seguro en Windows (especialmente ARM64 emulado)
 if sys.platform == "win32":
+    import platform
+
+    def _check_is_arm() -> bool:
+        # 1. Variables de entorno comunes
+        for k in ("PROCESSOR_ARCHITECTURE", "PROCESSOR_ARCHITEW6432", "PROCESSOR_IDENTIFIER"):
+            val = os.environ.get(k, "").upper()
+            if "ARM" in val or "SNAPDRAGON" in val or "QUALCOMM" in val:
+                return True
+        # 2. ctypes: GetNativeSystemInfo
+        try:
+            import ctypes
+            from ctypes import wintypes
+
+            class _SYSTEM_INFO(ctypes.Structure):
+                _fields_ = [
+                    ("wProcessorArchitecture", wintypes.WORD),
+                    ("wReserved", wintypes.WORD),
+                    ("dwPageSize", wintypes.DWORD),
+                    ("lpMinimumApplicationAddress", wintypes.LPVOID),
+                    ("lpMaximumApplicationAddress", wintypes.LPVOID),
+                    ("dwActiveProcessorMask", ctypes.c_size_t),
+                    ("dwNumberOfProcessors", wintypes.DWORD),
+                    ("dwProcessorType", wintypes.DWORD),
+                    ("dwAllocationGranularity", wintypes.DWORD),
+                    ("wProcessorLevel", wintypes.WORD),
+                    ("wProcessorRevision", wintypes.WORD),
+                ]
+
+            sys_info = _SYSTEM_INFO()
+            ctypes.windll.kernel32.GetNativeSystemInfo(ctypes.byref(sys_info))
+            # PROCESSOR_ARCHITECTURE_ARM64 = 12, PROCESSOR_ARCHITECTURE_ARM = 5
+            if sys_info.wProcessorArchitecture in (12, 5):
+                return True
+        except Exception:
+            pass
+        # 3. ctypes: IsWow64Process2
+        try:
+            import ctypes
+            from ctypes import wintypes
+            kernel32 = ctypes.windll.kernel32
+            if hasattr(kernel32, "IsWow64Process2"):
+                proc_mach = wintypes.USHORT()
+                native_mach = wintypes.USHORT()
+                if kernel32.IsWow64Process2(kernel32.GetCurrentProcess(), ctypes.byref(proc_mach), ctypes.byref(native_mach)):
+                    # IMAGE_FILE_MACHINE_ARM64 = 0xAA64 (43620)
+                    if native_mach.value in (0xAA64, 0x01C4, 0x01C0):
+                        return True
+        except Exception:
+            pass
+        # 4. platform string inspection
+        mach = platform.machine().lower()
+        proc = platform.processor().lower()
+        return "arm" in mach or "arm" in proc
+
+    is_arm = _check_is_arm()
+    if is_arm:
+        # En Windows ARM64 (ej. Snapdragon X o Parallels en Apple Silicon),
+        # los controladores OpenGL/Direct3D emulados pueden bloquear la inicialización de la ventana.
+        # Forzar modo de renderizado por software seguro garantiza arranque instantáneo de la GUI.
+        os.environ["QT_OPENGL"] = "software"
+        os.environ["QT_QUICK_BACKEND"] = "software"
+        os.environ["QMLSCENE_DEVICE"] = "softwarecontext"
+        os.environ["QSG_RHI_BACKEND"] = "software"
+
     exe_dir = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent.parent
-    for d in [exe_dir, exe_dir / "llvmlite" / "binding", exe_dir / "PySide6"]:
-        if d.is_dir() and hasattr(os, "add_dll_directory"):
-            try:
-                os.add_dll_directory(str(d))
-            except Exception:
-                pass
+    for d in [
+        exe_dir,
+        exe_dir / "llvmlite" / "binding",
+        exe_dir / "PySide6",
+        exe_dir / "PySide6" / "plugins" / "platforms",
+        exe_dir / "PySide6" / "qt-plugins" / "platforms",
+        exe_dir / "qt-plugins" / "platforms",
+    ]:
+        if d.is_dir():
+            if hasattr(os, "add_dll_directory"):
+                try:
+                    os.add_dll_directory(str(d))
+                except Exception:
+                    pass
+            # Asegurar en PATH del proceso
+            cur_path = os.environ.get("PATH", "")
+            if str(d) not in cur_path:
+                os.environ["PATH"] = f"{d};{cur_path}"
 
 # Parche de carga directa para llvmlite en ejecutables standalone (evita fallo de importlib.resources)
 try:

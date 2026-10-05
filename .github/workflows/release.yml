@@ -103,6 +103,7 @@ jobs:
             --include-module=inspect \
             --include-module=opcode \
             --include-package=soxr \
+            --include-package=PIL \
             --include-data-dir="$LIBROSA_DIR"=librosa \
             --include-package-data=pedalboard \
             --include-package-data=_soundfile_data \
@@ -255,6 +256,7 @@ jobs:
             --include-module=inspect ^
             --include-module=opcode ^
             --include-package=soxr ^
+            --include-package=PIL ^
             --include-data-dir="%LIBROSA_DIR%"=librosa ^
             --include-package-data=pedalboard ^
             --include-package-data=_soundfile_data ^
