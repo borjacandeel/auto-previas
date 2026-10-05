@@ -1,5 +1,11 @@
 # AutoPrevias - Radical Records · Progreso del proyecto
 
+> ⚠️ **AVISO DE MUDANZA DEL PROYECTO (2026-10-04):**
+> Este directorio (`/Users/borjacandel/Documents/AutoPrevias`) queda **CONGELADO Y EN DESUSO**.
+> Todo el desarrollo activo, repositorio Git, empaquetado, pruebas e historial se han trasladado de forma definitiva a:
+> **`~/Developer/AutoPrevias`**
+> No modificar este directorio ni sus archivos.
+
 > **Regla permanente obligatoria:** Este archivo se lee al inicio de cada sesión y **SE ACTUALIZA SIEMPRE al terminar cualquier cambio, corrección o mejora solicitada por el usuario**, registrando con detalle todo lo implementado, testeado y el estado del proyecto.
 
 ---
@@ -734,55 +740,6 @@ AutoPrevias/
 
 
 
-### Sesión 12 — 2026-10-04: Migración a Repositorio Propio Independiente, Empaquetado Nuitka y Releases Multi-Plataforma
-
-- **Independización del proyecto en `~/Developer/AutoPrevias`**:
-  - Se creó un espacio de trabajo limpio y aislado en `~/Developer/AutoPrevias`, desvinculado de la carpeta antigua de prototipado.
-  - Repositorio Git privado inicializado y conectado al remoto oficial de GitHub: `borjacandeel/auto-previas` en la rama `main`.
-  - Autenticación segura mediante `gh auth setup-git` (sin credenciales, tokens ni secretos expuestos en archivos, logs ni commits).
-  - Exclusión estricta de archivos de audio comerciales (`*.wav`, `*.mp3`, `ejemplos/`) en `.gitignore`.
-  - Adaptación de pruebas en `tests/test_reference_track.py` con `@pytest.mark.skipif` cuando no se disponga de archivos de audio locales: 21 tests (20 passed, 1 skipped).
-
-- **Reglas operativas permanentes (`CLAUDE.md` y `AGENTS.md`)**:
-  - Establecidas las directrices de sesión, ciclo de publicación de 9 pasos (pruebas unitarias, selftest, versionado semántico, actualización de changelog/progreso y releases), y política de seguridad sobre tokens.
-
-- **Empaquetado profesional y portabilidad nativa (Nuitka)**:
-  - **Versión unificada (`src/__version__.py`)**: Versión centralizada `1.0.0`.
-  - **Directorios estándar de usuario (`src/config.py`)**: Rutas dinámicas para configuración y caché en carpetas nativas del sistema (`~/Library/Application Support/AutoPrevias` en macOS y `%APPDATA%\AutoPrevias` en Windows), evitando fallos por permisos de escritura en la carpeta de instalación.
-  - **FFmpeg portátil integrado (`ffmpeg_bin/`)**: Soporte para binario autónomo de FFmpeg en el bundle empaquetado, garantizando la exportación a MP3 (320 kbps con carátula oficial y tags ID3) sin requerir instalación externa por parte del usuario.
-  - **Modo headless `--selftest` (`src/main.py`)**: Validador interno que genera audio sintético, comprueba el análisis espectral HPSS, transientes, limitador suave y exportación dual (WAV/MP3) en menos de 2 segundos.
-  - **Iconos multi-resolución**: Creados `assets/icon.icns` (macOS de 16x16 a 1024x1024) y `assets/icon.ico` (Windows de 16x16 a 256x256) mediante script generador con `Pillow`.
-  - **Scripts de compilación**:
-    - `scripts/build_macos.sh`: Compilación Nuitka standalone, app bundle `.app`, firma ad-hoc, ejecución de `--selftest` y empaquetado en instalador `.dmg` con ventana de arrastrar a `/Applications`.
-    - `scripts/build_windows.bat` e `installer/windows/setup.iss`: Script de compilación para Windows e instalador asistido con Inno Setup, accesos directos y desinstalador.
-  - **Resolución de incompatibilidades en Nuitka**:
-    - Fijada versión `lazy_loader<=0.4` en `requirements.txt` para corregir incompatibilidad del plugin de `librosa`.
-    - Añadida bandera `--include-package=librosa` para resolver submódulos dinámicos (`example_data`).
-    - Añadida bandera `--disable-cache=ccache` en macOS ARM64 para compilar nativamente con Clang sin dependencias de arquitectura cruzada.
-
-- **Integración Continua con GitHub Actions (`.github/workflows/release.yml`)**:
-  - Matriz de compilación automatizada al publicar tags `v*.*.*`:
-    - macOS Apple Silicon (`macos-14`, arm64).
-    - macOS Intel (`macos-15-intel`, x86_64).
-    - Windows x64 (`windows-latest`).
-  - Pipeline completo: instalación de dependencias, ejecución de `pytest`, compilación Nuitka, validación obligatoria con `--selftest`, generación de `SHA256SUMS.txt` y publicación de release en GitHub con activos descargables.
-
-- **Documentación Completa y Apartado de Releases en GitHub**:
-  - **`README.md` exhaustivo y de nivel profesional**:
-    - Enlaces directos permanentes a la última versión para macOS (Apple Silicon e Intel) y Windows (`releases/latest/download/...`).
-    - Guía paso a paso para sortear Gatekeeper en Mac (`xattr -cr`) y SmartScreen en Windows.
-    - Explicación visual del pipeline acústico (diagrama Mermaid).
-    - Guía de desarrollo y compilación local.
-    - Tabla detallada de requisitos mínimos y recomendados del sistema.
-  - **`CHANGELOG.md`**: Historial estructurado bajo formato *Keep a Changelog*.
-  - **`THIRD_PARTY_LICENSES.txt`**: Documentación de licencias de terceros (FFmpeg, Spotify Pedalboard, Rubber Band Library, PySide6, etc.).
-
-- **Capa de compatibilidad Nuitka / Numba (`src/compat.py`)**:
-  - Resuelto el conflicto de inspección de bytecode en ejecutables compilados con Nuitka (`RuntimeError: Compiled function bytecode used`).
-  - `src/compat.py` provee implementaciones vectorizadas nativas en NumPy C-loops para las funciones de librosa (`abs2` y `phasor`), eliminando la necesidad de que Numba recompile bytecode en tiempo de ejecución.
-  - Habilitado `sys.frozen = True` para la resolución de rutas virtuales internas de Numba.
-  - Suite de pruebas completa verificada con éxito: 20 passed, 1 skipped (21 tests).
-
 ### Sesión 13 — 2026-10-04: Compilación Nativa Exitosa, Empaquetado DMG ARM64 y Release GitHub
 
 - **Compilación Standalone Nuitka y Bundle macOS ARM64**:
@@ -821,3 +778,24 @@ AutoPrevias/
     * `AutoPrevias-1.0.0-macOS-arm64.dmg` (208 MB)
     * `AutoPrevias-macOS-arm64.dmg` (208 MB)
     * `SHA256SUMS.txt` con firma criptográfica SHA-256 (`5af5723f8c093610a5583f011cbb7fb4f565c9d2cdeb49afe19ffb4c135dcde9`).
+
+### Sesión 15 — 2026-10-04: Formalización de la Política de Versionado Semántico (1.0.x Parches vs 1.x Updates Mayores) y Documentación Oficial de Parches
+
+- **Política de Versionado Oficial (SemVer 2.0.0)**:
+  - **Versiones de Parche (`1.0.x`)**:
+    - Reservadas estrictamente para correcciones de bugs, estabilidad de empaquetado autónomo (Nuitka), sincronización de dependencias científicas en tiempo de ejecución (runtime), codecs de consola y soporte de instaladores.
+    - Garantizan total retrocompatibilidad y estabilidad sin alterar los flujos de trabajo de usuario.
+    - Ejemplo: `v1.0.1` (Parche de dependencias runtime, codesigning macOS y codepage Windows CP1252).
+  - **Actualizaciones Mayores (`1.x` o `1.x.0`)**:
+    - Reservadas para nuevas funcionalidades del motor acústico (mejoras en algoritmos de detección de drop vs descanso, separación armónica/percusiva avanzada), expansiones de la interfaz de usuario, nuevas opciones de exportación y soporte de hardware o DAWs.
+- **Documentación Completa de Parches Oficiales**:
+  - `README.md` actualizado con:
+    * Tabla de descargas depurada a las arquitecturas oficiales solicitadas (**macOS Apple Silicon ARM64** y **Windows 64-bit x64**).
+    * Eliminación definitiva de binarios y menciones a macOS Intel para cumplir con la directriz estricta de plataformas.
+    * Sección formal de política de versionado oficial (SemVer) e historial detallado de parches.
+  - `CHANGELOG.md` actualizado con el desglose técnico exhaustivo de los parches incluidos en la serie `1.0.x`.
+  - `src/__version__.py` fijado en `1.0.1`.
+- **Estado de Compilación y Releases en GitHub**:
+  - Release `v1.0.0` y `v1.0.1` publicadas en GitHub.
+  - Instalador nativo macOS ARM64 generado y validado al 100% mediante `--selftest` (5/5 pruebas superadas).
+  - Pipeline de GitHub Actions ejecutando compilación de Windows x64 e Inno Setup con escaneo Windows Defender.

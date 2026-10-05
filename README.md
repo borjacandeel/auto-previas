@@ -25,11 +25,11 @@
    - [Historial de Releases por Versión en GitHub](#-historial-de-releases-por-versión-en-github)
    - [Comprobación de Integridad Criptográfica (SHA-256)](#-comprobación-de-integridad-criptográfica-sha-256)
 2. [🚀 Guía de Instalación Paso a Paso](#-guía-de-instalación-paso-a-paso)
-   - [Instalación en macOS (Apple Silicon e Intel)](#-instalación-en-macos)
+   - [Instalación en macOS (Apple Silicon arm64)](#-instalación-en-macos)
    - [Instalación en Windows (10 y 11 de 64 bits)](#-instalación-en-windows)
 3. [✨ Características Principales](#-características-principales)
 4. [🎧 Funcionamiento del Motor Acústico](#-funcionamiento-del-motor-acústico)
-5. [📈 Historial de Versiones y Registro de Updates](#-historial-de-versiones-y-registro-de-updates)
+5. [🏷️ Política de Versionado (SemVer) e Historial](#-política-de-versionado-semver-e-historial)
 6. [🛠️ Guía de Desarrollo y Compilación Local](#️-guía-de-desarrollo-y-compilación-local)
 7. [💻 Requisitos del Sistema](#-requisitos-del-sistema)
 8. [⚖️ Licencias y Componentes de Terceros](#️-licencias-y-componentes-de-terceros)
@@ -47,9 +47,8 @@ Los siguientes enlaces apuntan **siempre y de forma automática a los instalador
 
 | Plataforma | Arquitectura | Tipo de Paquete | Enlace de Descarga Directa | Notas de Versión |
 | :--- | :--- | :--- | :--- | :--- |
-| 🍏 **macOS** | **Apple Silicon (M1 / M2 / M3 / M4)** | Imagen de disco `.dmg` (Drag-to-Applications) | [⬇️ **Descargar AutoPrevias macOS arm64**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-macOS-arm64.dmg) | [Ver Release v1.0.1](https://github.com/borjacandeel/auto-previas/releases/latest) |
-| 🍏 **macOS** | **Intel (x86_64)** | Imagen de disco `.dmg` (Drag-to-Applications) | [⬇️ **Descargar AutoPrevias macOS Intel**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-macOS-x86_64.dmg) | [Ver Release v1.0.1](https://github.com/borjacandeel/auto-previas/releases/latest) |
-| 🪟 **Windows** | **64-bit (x64)** | Instalador Asistido `.exe` (Inno Setup) | [⬇️ **Descargar AutoPrevias Windows x64**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-Windows-x64-Setup.exe) | [Ver Release v1.0.1](https://github.com/borjacandeel/auto-previas/releases/latest) |
+| 🍏 **macOS** | **Apple Silicon (M1 / M2 / M3 / M4)** | Imagen de disco `.dmg` (Drag-to-Applications) | [⬇️ **Descargar AutoPrevias macOS arm64**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-macOS-arm64.dmg) | [Ver Release Oficial](https://github.com/borjacandeel/auto-previas/releases/latest) |
+| 🪟 **Windows** | **64-bit (x64)** | Instalador Asistido `.exe` (Inno Setup) | [⬇️ **Descargar AutoPrevias Windows x64**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-Windows-x64-Setup.exe) | [Ver Release Oficial](https://github.com/borjacandeel/auto-previas/releases/latest) |
 
 ---
 
@@ -63,8 +62,7 @@ En dicha sección de GitHub encontrarás:
 1. **Etiquetas por versión (Tags):** Cada publicación está catalogada siguiendo el estándar *Semantic Versioning* (`v1.0.1`, `v1.1.0`, etc.).
 2. **Desplegable de Assets (Archivos adjuntos):**
    - `AutoPrevias-macOS-arm64.dmg`: Instalador para Mac con procesadores Apple Silicon (M1/M2/M3/M4).
-   - `AutoPrevias-macOS-x86_64.dmg`: Instalador para Mac con procesadores Intel.
-   - `AutoPrevias-Windows-x64-Setup.exe`: Instalador ejecutable para Windows 10/11.
+   - `AutoPrevias-Windows-x64-Setup.exe`: Instalador ejecutable asistido para Windows 10/11 (64 bits).
    - `SHA256SUMS.txt`: Archivo de texto con las sumas de verificación criptográficas oficiales de cada instalador.
 3. **Registro de cambios (Release Notes):** Resumen detallado con las correcciones, mejoras y novedades incluidas en cada compilación.
 
@@ -90,7 +88,7 @@ El valor hexadecimal devuelto debe coincidir exactamente con el hash publicado e
 
 ### 🍏 Instalación en macOS
 
-1. Descarga el archivo `.dmg` correspondiente a la arquitectura de tu Mac (Apple Silicon o Intel).
+1. Descarga el archivo de imagen de disco `.dmg` para Apple Silicon (`AutoPrevias-macOS-arm64.dmg`).
 2. Haz doble clic en el archivo `.dmg` descargado para montar la imagen de disco.
 3. En la ventana emergente, arrastra el icono de **AutoPrevias** a la carpeta de **Aplicaciones**.
 4. Expulsa la imagen de disco desde el Finder o el Escritorio.
@@ -182,27 +180,41 @@ graph TD
 
 ---
 
-## 📈 Historial de Versiones y Registro de Updates
+## 🏷️ Política de Versionado (SemVer) e Historial
 
-### 🟢 [v1.0.1] — 2026-10-04 (Parche de Compatibilidad y Empaquetado Multi-Plataforma)
+### 📌 Política Oficial de Versionado
+AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/es/):
+
+- **Versiones de Parche (`1.0.x`)**:
+  - Incrementan el tercer dígito (`1.0.0` ➔ `1.0.1` ➔ `1.0.2`...).
+  - Reservadas exclusivamente para **correcciones técnicas de bugs, hotfixes, optimización de empaquetado autónomo (Nuitka), compatibilidad de dependencias de tiempo de ejecución (runtime), codecs de consola y soporte de instaladores**.
+  - Garantizan total retrocompatibilidad y estabilidad sin alterar los flujos de trabajo de usuario.
+- **Actualizaciones Mayores (`1.x` o `1.x.0`)**:
+  - Incrementan el segundo dígito (`1.0.x` ➔ `1.1.0` ➔ `1.2.0`...).
+  - Reservadas para **nuevas funcionalidades del motor acústico (mejoras en detección de drops vs descansos, algoritmos armónicos avanzados), expansiones de la interfaz de usuario, nuevas opciones de exportación y soporte de hardware o DAWs**.
+
+---
+
+### 📈 Registro Oficial de Versiones y Parches
+
+#### 🟢 [v1.0.1] — 2026-10-04 (Parche Oficial de Empaquetado y Compatibilidad)
 - **Sincronizador de dependencias en tiempo de ejecución:** Creación de `scripts/bundle_runtime_deps.py` que asegura la inclusión de todas las dependencias científicas y de audio en paquetes autónomos Nuitka (`librosa`, `numba`, `llvmlite`, `decorator`, `joblib`, `msgpack`, `cloudpickle`, `pooch`, `platformdirs`, `requests`, `urllib3`, `certifi`, `idna`, `charset_normalizer`, `packaging`, `sklearn`, `threadpoolctl`, `narwhals`).
-- **Corrección de firma ad-hoc en macOS:** Reubicación de `.dylibs` y actualización de `install_name_tool` para firma ad-hoc sin errores de bundle en Apple codesign.
-- **Soporte UTF-8 en consolas Windows:** Blindaje ante codec CP1252 (`UnicodeEncodeError`) con `PYTHONUTF8=1`, `PYTHONIOENCODING=utf-8` y salidas de log seguras.
-- **Resolución dinámica de versión:** Corrección de carga perezosa de `__version__` en `librosa` para el diagnóstico `--selftest`.
-- **Política de versionado semántico:** Esquema estricto de parches en `1.0.x` y nuevas características mayores en `1.x.0`.
+- **Corrección de firma ad-hoc en macOS:** Reubicación de carpetas `.dylibs` y reescritura de dependencias dinámicas con `install_name_tool` para firma ad-hoc sin errores de bundle en Apple codesign.
+- **Soporte UTF-8 en consolas Windows:** Blindaje ante el codec CP1252 (`UnicodeEncodeError`) con `PYTHONUTF8=1`, `PYTHONIOENCODING=utf-8` y eliminación de caracteres no ASCII en scripts de empaquetado.
+- **Resolución dinámica de versión:** Corrección de carga perezosa de `__version__` en `librosa` para el diagnóstico autónomo `--selftest`.
+- **Especialización de matriz CI/CD:** Optimización de compilación automatizada enfocada exclusivamente en **macOS Apple Silicon (ARM64)** y **Windows 64-bit (x64)**.
 
-### 🟢 [v1.0.0] — 2026-10-04 (Lanzamiento Inicial Oficial)
+#### 🟢 [v1.0.0] — 2026-10-04 (Lanzamiento Inicial Oficial)
 - **Instaladores oficiales multi-plataforma:**
   - Build nativa macOS arm64 (Apple Silicon) en DMG con ventana drag-and-drop a Aplicaciones.
-  - Build nativa macOS x86_64 (Intel) en DMG.
-  - Asistente de instalación profesional para Windows x64 con Inno Setup y accesos directos.
+  - Asistente de instalación profesional para Windows x64 con Inno Setup, accesos directos y desinstalador limpio.
 - **Motor HPSS avanzado:** Clasificación precisa entre descansos con bombos/vocales y drops melódicos densos.
-- **FFmpeg integrado:** Binario autónomo para exportación MP3 a 320 kbps con carátula y tags ID3 sin dependencias externas.
+- **FFmpeg integrado:** Binario autónomo para exportación MP3 a 320 kbps con carátula oficial de Radical Records y tags ID3 sin dependencias externas.
 - **Rutas estándar del sistema:** Configuración y caché ubicadas en carpetas nativas de usuario (`Application Support` en Mac, `%APPDATA%` en Windows).
 - **Modo `--selftest`:** Verificación completa de integridad del software en un único comando.
 - **CI/CD con GitHub Actions:** Pipeline de compilación paralela, tests unitarios automatizados y releases con sumas SHA-256.
 
-> Para revisar el historial exhaustivo de cambios técnicos, consulta el archivo [CHANGELOG.md](CHANGELOG.md).
+> Para revisar el historial técnico detallado de cada commit y parche, consulta el archivo [CHANGELOG.md](CHANGELOG.md).
 
 ---
 

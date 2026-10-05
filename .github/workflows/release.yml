@@ -244,6 +244,8 @@ jobs:
             --include-data-dir="%LIBROSA_DIR%"=librosa ^
             --include-package-data=pedalboard ^
             --include-package-data=_soundfile_data ^
+            --include-package-data=llvmlite ^
+            --include-package-data=numba ^
             --output-dir=dist ^
             --output-filename=AutoPrevias.exe ^
             --assume-yes-for-downloads ^
@@ -257,6 +259,30 @@ jobs:
         shell: cmd
         run: |
           python scripts\bundle_runtime_deps.py "dist\AutoPrevias.dist"
+
+      - name: Copiar llvmlite.dll al bundle (fix Windows ctypes resource path)
+        shell: pwsh
+        run: |
+          $llvmlite_src = python -c "import llvmlite; import os; print(os.path.join(llvmlite.__path__[0], 'binding'))"
+          $llvmlite_dll = Join-Path $llvmlite_src "llvmlite.dll"
+          $llvmlite_dest = "dist\AutoPrevias.dist\llvmlite\binding"
+          if (Test-Path $llvmlite_dll) {
+            Write-Host "Copiando llvmlite.dll desde $llvmlite_dll a $llvmlite_dest"
+            New-Item -ItemType Directory -Force -Path $llvmlite_dest | Out-Null
+            Copy-Item $llvmlite_dll $llvmlite_dest -Force
+            Write-Host "[OK] llvmlite.dll copiado correctamente."
+          } else {
+            Write-Host "[WARN] llvmlite.dll no encontrado en $llvmlite_src - buscando en site-packages..."
+            $sp = python -c "import site; print([p for p in site.getsitepackages() if 'site-packages' in p][0])"
+            $alt = Join-Path $sp "llvmlite\binding\llvmlite.dll"
+            if (Test-Path $alt) {
+              Copy-Item $alt $llvmlite_dest -Force
+              Write-Host "[OK] llvmlite.dll encontrado en $alt y copiado."
+            } else {
+              Write-Host "[ERROR] llvmlite.dll no encontrado en ninguna ruta conocida."
+              exit 1
+            }
+          }
 
       - name: Ejecutar Selftest sobre binario compilado
         shell: cmd
