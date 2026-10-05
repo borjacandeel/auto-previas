@@ -3044,6 +3044,12 @@ class GlowProgressBar(QProgressBar):
 class MainWindow(QMainWindow):
     def __init__(self, initial_file: str = ""):
         super().__init__()
+        try:
+            from src.main import _log_startup
+        except Exception:
+            def _log_startup(msg): pass
+
+        _log_startup("MainWindow: configurando título y dimensiones...")
         self.setWindowTitle("AutoPrevias — Radical Records")
         self.setMinimumSize(980, 640)
 
@@ -3072,6 +3078,7 @@ class MainWindow(QMainWindow):
             from PySide6.QtGui import QIcon
             self.setWindowIcon(QIcon(str(icon_path)))
 
+        _log_startup("MainWindow: cargando configuración de usuario...")
         self._cfg           = load_cfg()
         self._current_file  = ""
         self._analysis      = None
@@ -3085,10 +3092,15 @@ class MainWindow(QMainWindow):
         self._dot_timer    = QTimer(self)
         self._dot_timer.timeout.connect(self._tick_dots)
 
+        _log_startup("MainWindow: aplicando paleta y estilos de color...")
         self._apply_palette()
+
+        _log_startup("MainWindow: construyendo widgets de interfaz de usuario...")
         self._build_ui()
+        _log_startup("MainWindow: interfaz de usuario lista.")
 
         if initial_file:
+            _log_startup(f"MainWindow: cargando archivo inicial: {initial_file}")
             self._load_file(initial_file)
 
     # ── Paleta ────────────────────────────────────────────────────────────

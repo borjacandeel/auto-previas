@@ -234,7 +234,12 @@ def build_preview_plan(
         prev_d1 = sections[idx_d1 - 1] if idx_d1 > 0 else None
         if prev_d1 and prev_d1.type == SectionType.BUILDUP:
             bu_s = prev_d1.start_time
-            c1_start = max(0.0, bu_s - 8.0 * bar_dur) if bu_s >= 8.0 * bar_dur else 0.0
+            # Si la intro antes de la subida es concisa (<= 16 compases), empezar desde el inicio (0.0s)
+            # para capturar la melodía y gancho temático de apertura completo (aprendido de PREVIA 2)
+            if bu_s <= 16.0 * bar_dur:
+                c1_start = 0.0
+            else:
+                c1_start = max(0.0, bu_s - 8.0 * bar_dur)
         else:
             c1_start = max(0.0, d1.start_time - bu_dur)
 
@@ -242,10 +247,24 @@ def build_preview_plan(
         c1_end = d1.start_time + drop1_bars * bar_dur
         raw_cuts.append((c1_start, c1_end, d1))
 
-        # Corte 2: Subida 2 + Drop 2 Clímax
+        # Corte 2: Parón Melódico Central + Subida 2 + Drop 2 Clímax
+        # (Aprendido de PREVIA 2: el clímax central debe incluir los compases melódicos del breakdown)
         idx_d2 = sections.index(d2)
         prev_d2 = sections[idx_d2 - 1] if idx_d2 > 0 else None
-        if prev_d2 and prev_d2.type == SectionType.BUILDUP:
+        bu2_start = prev_d2.start_time if (prev_d2 and prev_d2.type == SectionType.BUILDUP) else max(c1_end + 2.0, d2.start_time - bu_dur)
+
+        # Buscar breakdown melódico entre el final del Corte 1 y la Subida 2
+        candidate_bd = None
+        for s in sections:
+            if s.type == SectionType.BREAKDOWN and c1_end <= s.start_time < bu2_start:
+                candidate_bd = s
+                break
+
+        if candidate_bd:
+            # Tomar hasta 12-16 compases de breakdown melódico antes de la subida
+            bd_len = min(candidate_bd.duration, 12.0 * bar_dur)
+            c2_start = max(candidate_bd.start_time, bu2_start - bd_len)
+        elif prev_d2 and prev_d2.type == SectionType.BUILDUP:
             c2_start = prev_d2.start_time
         else:
             c2_start = max(c1_end + 2.0, d2.start_time - bu_dur)

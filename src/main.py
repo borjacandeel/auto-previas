@@ -6,26 +6,45 @@ import os
 import tempfile
 import traceback
 from pathlib import Path
-
 import time
 
-def _log_startup(msg: str):
-    if sys.platform == "win32":
-        try:
-            log_dir = Path(os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData" / "Local"))) / "AutoPrevias"
-            log_dir.mkdir(parents=True, exist_ok=True)
-            with open(log_dir / "startup.log", "a", encoding="utf-8") as f:
-                f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}\n")
-                f.flush()
-        except Exception:
-            pass
+# Prevenir escritura de .pyc en runtime (crucial para instalaciones en C:\Program Files)
+sys.dont_write_bytecode = True
 
-# Configuración defensiva de renderizado en Windows
+def _log_startup(msg: str):
+    ts = time.strftime('%Y-%m-%d %H:%M:%S')
+    formatted = f"[{ts}] {msg}"
+    try:
+        print(formatted, flush=True)
+    except Exception:
+        pass
+    if sys.platform == "win32":
+        # Escribir a dos ubicaciones seguras: TEMP y LOCALAPPDATA
+        targets = []
+        temp_dir = os.environ.get("TEMP") or os.environ.get("TMP")
+        if temp_dir:
+            targets.append(Path(temp_dir) / "autoprevias_startup.log")
+        local_app = os.environ.get("LOCALAPPDATA")
+        if local_app:
+            targets.append(Path(local_app) / "AutoPrevias" / "startup.log")
+        for target in targets:
+            try:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                with open(target, "a", encoding="utf-8", errors="replace") as f:
+                    f.write(formatted + "\n")
+                    f.flush()
+            except Exception:
+                pass
+
+# Configuración defensiva de renderizado en Windows (Software OpenGL garantizado para x64 y ARM64 Parallels)
 if sys.platform == "win32":
-    os.environ.setdefault("QT_OPENGL", "software")
-    os.environ.setdefault("QT_QUICK_BACKEND", "software")
-    os.environ.setdefault("QMLSCENE_DEVICE", "softwarecontext")
-    os.environ.setdefault("QSG_RHI_BACKEND", "software")
+    os.environ["QT_OPENGL"] = "software"
+    os.environ["QT_QUICK_BACKEND"] = "software"
+    os.environ["QMLSCENE_DEVICE"] = "softwarecontext"
+    os.environ["QSG_RHI_BACKEND"] = "software"
+    os.environ["LIBGL_ALWAYS_SOFTWARE"] = "1"
+    os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
+    os.environ["PYTHONUNBUFFERED"] = "1"
     _log_startup(f"AutoPrevias proceso iniciado (pid={os.getpid()})")
 
 # Capturador global de excepciones para evitar cierre silencioso sin consola
@@ -37,7 +56,7 @@ def _global_exception_handler(exc_type, exc_value, exc_tb):
             import ctypes
             ctypes.windll.user32.MessageBoxW(
                 0,
-                f"Error inesperado al ejecutar AutoPrevias:\n\n{exc_value}\n\nDetalles técnicos guardados en:\n%LOCALAPPDATA%\\AutoPrevias\\startup.log",
+                f"Error inesperado al ejecutar AutoPrevias:\n\n{exc_value}\n\nDetalles técnicos guardados en:\n%TEMP%\\autoprevias_startup.log\n%LOCALAPPDATA%\\AutoPrevias\\startup.log",
                 "AutoPrevias - Error crítico",
                 0x10,
             )
@@ -256,7 +275,7 @@ def main():
                 import ctypes
                 ctypes.windll.user32.MessageBoxW(
                     0,
-                    f"Error al iniciar AutoPrevias:\n\n{e}\n\nConsulta el registro en %LOCALAPPDATA%\\AutoPrevias\\startup.log",
+                    f"Error al iniciar AutoPrevias:\n\n{e}\n\nDetalles técnicos guardados en:\n%TEMP%\\autoprevias_startup.log\n%LOCALAPPDATA%\\AutoPrevias\\startup.log",
                     "AutoPrevias - Error de arranque",
                     0x10,
                 )

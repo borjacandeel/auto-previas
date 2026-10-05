@@ -1244,3 +1244,44 @@ AutoPrevias/
   - `SHA256SUMS.txt`.
 - Disponible públicamente en: `https://github.com/borjacandeel/auto-previas/releases/tag/v1.2.0`.
 
+---
+
+### Resumen de Mejoras — Sesión 10 (2026-10-05) — Versión 1.2.2:
+
+#### 🎧 1. Ingeniería Inversa y Aprendizaje del Motor con Nuevas Referencias (`ejemplos/ORIGINAL 2.flac` vs `PREVIA 2.wav`)
+- **Pistas Analizadas**:
+  * `ORIGINAL 2.flac`: 44.1 kHz estéreo, 282.65s (4:42), **170.00 BPM**.
+  * `PREVIA 2.wav`: 44.1 kHz estéreo, 181.45s (3:01), acelerada a **183.00 BPM** (+13 BPM, ratio 1.0765, equivalente a aceleración vinilo con +1 semitono armónico).
+- **Descubrimientos Estructurales Clave mediante Chroma CENS y Beat Grid**:
+  * **Corte 1 (Apertura y Gancho)**: La previa inicia exactamente desde el compás 1 (`0.0s`), conservando la melodía de introducción completa cuando la intro antes de la subida es de <= 16 compases (en lugar de recortar a mitad de intro), empalma con la subida y el primer drop de alta energía.
+  * **Corte 2 (El Núcleo Melódico Central)**: A diferencia de la lógica previa que solo tomaba la subida, `PREVIA 2` incluye hasta 12-16 compases del **breakdown melódico** previo (donde suenan los sintes principales, acordes y vocales del tema), enlazando directamente con la subida central y el Drop 2 clímax. Esto reproduce con fidelidad la experiencia clubbing de Radical Records.
+  * **Corte 3 (Clímax Final)**: Subida final + Drop final con cierre en final de frase musical.
+- **Implementación en el Motor (`src/analysis/segments.py`)**:
+  * Lógica de `build_preview_plan` actualizada para integrar la intro melódica desde `0.0s` en pistas con intros concisas y rescatar el breakdown melódico central en temas de >= 3 drops.
+  * Los 3 bloques resultantes totalizan ~110s brutos, traduciéndose tras aceleración en ~102s-120s, sincronizando perfectamente con el preset por defecto de 2 minutos.
+
+#### 🪟 2. Diagnóstico al 200% y Corrección Definitiva del Arranque en Windows (x64 y ARM64 Parallels)
+- **Diagnóstico del Proceso Colgado sin Ventana**:
+  * **Falta de Bytecode Precompilado**: Al instalarse en `C:\Program Files\AutoPrevias\`, el usuario estándar carece de permisos de escritura. Las librerías de Python copiadas en tiempo de empaquetado intentaban compilar archivos `.pyc` en caliente al importarse en carpetas protegidas, originando bloqueos de E/S y UAC.
+  * **Modo de Consola Silenciado**: `--windows-console-mode=disable` en Nuitka suprimía `stdout` y `stderr` (`sys.stdout = None`), tragándose de forma invisible cualquier excepción temprana o aviso de inicialización.
+  * **Logging Limitado**: Si `%LOCALAPPDATA%` experimentaba contención de bloqueo por procesos huérfanos en segundo plano, el registro de arranque no se creaba.
+- **Solución Implementada**:
+  1. **`sys.dont_write_bytecode = True`**: Forzado de forma incondicional en la cabecera de `src/main.py`.
+  2. **Precompilación Total en el Bundle**: En `scripts/bundle_runtime_deps.py` se ejecuta `compileall.compile_dir(target_dir, force=False, quiet=1)` para garantizar que todos los `.py` dispongan de su `.pyc` antes de la creación del instalador.
+  3. **Registro Multi-Ruta de Arranque (`_log_startup`)**: Escritura simultánea y a prueba de fallos en `%TEMP%\autoprevias_startup.log`, `%LOCALAPPDATA%\AutoPrevias\startup.log` y salida estándar.
+  4. **Modo Consola `attach`**: En `.github/workflows/release.yml`, `--windows-console-mode=attach` permite que la app funcione sin ventana de consola al abrirse desde el escritorio, pero mostrando trazas inmediatas en caso de ejecutarse desde terminal `cmd`/`PowerShell`.
+  5. **Modo Render Software OpenGL Defensivo**: Activación garantizada de `QT_OPENGL=software`, `QT_QUICK_BACKEND=software`, `QSG_RHI_BACKEND=software`, `LIBGL_ALWAYS_SOFTWARE=1` y `AA_UseSoftwareOpenGL` antes de la inicialización de la interfaz Qt.
+  6. **Captura y Alerta Visual con `MessageBoxW`**: Si ocurre cualquier fallo inesperado, se muestra una ventana emergente nativa de Windows con el detalle del error y la ubicación del archivo de registro.
+
+#### ⏱️ 3. Preset por Defecto de 120s / 2 Min (Club)
+- En `src/config.py` y `src/ui/app.py`:
+  * Incorporado el 4º botón de preset: `🔥 120s / 2 Min (Club · Defecto)`.
+  * Activado por defecto en la carga inicial y el pipeline de análisis.
+  * Configuración persistente guardando `default_preset_sec: 120` y `preview_max_sec: 120.0`.
+
+#### 🧪 4. Validación de Suite de Pruebas y Diagnóstico
+- `pytest tests -v`: **24/24 pruebas pasadas** exitosamente en 39.01s.
+- `python src/main.py --selftest`: Diagnóstico completo de los 6 subsistemas aprobado con código 0.
+- Auditoría de seguridad: Cero rutas locales ni datos personales en el código sincronizado.
+
+

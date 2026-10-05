@@ -248,7 +248,7 @@ jobs:
             --file-description="AutoPrevias - Radical Records" ^
             --copyright="Copyright (c) 2026 Radical Records. Todos los derechos reservados." ^
             --windows-icon-from-ico=assets\icon.ico ^
-            --windows-console-mode=disable ^
+            --windows-console-mode=attach ^
             --enable-plugin=pyside6 ^
             --include-qt-plugins=sensible,multimedia ^
             --include-package=PySide6.QtMultimedia ^

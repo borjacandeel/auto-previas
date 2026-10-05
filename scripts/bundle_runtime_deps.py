@@ -152,6 +152,10 @@ def bundle_dependencies(target_dir):
                         for old_ref, new_ref in qt_mapping.items():
                             subprocess.call(["install_name_tool", "-change", old_ref, new_ref, dylib], stderr=subprocess.DEVNULL)
                         subprocess.call(["install_name_tool", "-add_rpath", "@executable_path", dylib], stderr=subprocess.DEVNULL)
+    # Precompilar todos los archivos .py a .pyc para evitar intentos de escritura en tiempo de ejecución en Program Files
+    print("[*] Precompilando bytecode de módulos de Python...")
+    import compileall
+    compileall.compile_dir(target_dir, force=False, quiet=1)
 
     print("[*] Empaquetado de dependencias completado con exito.")
 
