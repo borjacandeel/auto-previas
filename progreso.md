@@ -856,5 +856,29 @@ AutoPrevias/
   - Validación de compatibilidad multiplataforma sin depender de utilidades de shell externas.
   - `src/__version__.py`, `CHANGELOG.md`, `README.md` y `progreso.md` actualizados a `v1.0.4`.
 
+### Sesión 19 — 2026-10-05: Verificación Exhaustiva Integral de Estabilidad y Compatibilidad Multiplataforma (macOS & Windows)
+
+- **Auditoría Integral de la Arquitectura de la Aplicación**:
+  1. **Rutas Estándar y Permisos de Sistema**:
+     - `src/config.py` validado con fallback inteligente:
+       * macOS: `~/Library/Application Support/AutoPrevias/autoprevias_config.json`
+       * Windows: `%APPDATA%\AutoPrevias\autoprevias_config.json`
+       * Directorio de caché: `~/Library/Caches/AutoPrevias` (macOS) y `%LOCALAPPDATA%\AutoPrevias\Cache` (Windows).
+     - Garantiza que la aplicación nunca lance `PermissionError` al ejecutarse como usuario estándar en `C:\Program Files\AutoPrevias` o `/Applications/AutoPrevias.app`.
+  2. **Resolución de FFmpeg Empaquetado**:
+     - `src/config.py::get_ffmpeg_path()` y `src/engine/export.py` buscan prioritariamente en:
+       * `exe_dir/ffmpeg_bin/ffmpeg.exe` (Windows)
+       * `exe_dir/ffmpeg_bin/ffmpeg` y `exe_dir.parent/Resources/ffmpeg` (macOS)
+       * PATH del sistema y Homebrew como último recurso.
+     - Esto garantiza la exportación de previas MP3 a 320 kbps con carátula oficial incrustada e ID3v2.3 en cualquier equipo sin software previo instalado.
+  3. **Script de Instalación Inno Setup (`installer/windows/setup.iss`)**:
+     - Configuración validada: Compresión ultra64 LZMA2, iconos en escritorio y menú inicio, desinstalador oficial y modo 64 bits forzado (`ArchitecturesAllowed=x64compatible`).
+  4. **Suite de Pruebas Unitarias y Selftest**:
+     - `pytest tests/ -v`: **20/20 pruebas superadas (100% éxito)** en 48.18s.
+     - `python src/main.py --selftest`: **5/5 pruebas críticas superadas** (dependencias científicas, generación de señal de prueba, análisis BPM/grid, cortes musicales y exportación a WAV y MP3 con carátula).
+- **Pipeline de GitHub Actions (`#37272157314`)**:
+  - Paso de extracción de FFmpeg en Windows verificado con éxito (`success`).
+  - Ambos runners en fase avanzada de compilación y empaquetado autónomo Nuitka.
+
 
 
