@@ -811,4 +811,10 @@ AutoPrevias/
   2. Dicho paso localiza de manera dinámica la ruta de `llvmlite` en el entorno virtual de Python y copia `llvmlite.dll` a `AutoPrevias.dist/llvmlite/binding/llvmlite.dll` y `AutoPrevias.dist/llvmlite/llvmlite.dll`.
   3. Se incluyó `--include-package-data=llvmlite` en la invocación de Nuitka en Windows.
   4. Se generó y publicó el tag `v1.0.2` en GitHub para disparar el flujo de compilación y publicación automatizada de ambos instaladores oficiales (macOS ARM64 DMG e Inno Setup Windows x64 EXE).
+  5. **Protocolo Estricto de Documentación de Versiones (Parches 1.0.x y Updates 1.x)**:
+     - Actualizado `src/__version__.py` a `1.0.2`.
+     - Actualizado `CHANGELOG.md` con el registro formal de `[1.0.2] - 2026-10-05`.
+     - Actualizado `README.md` con badges oficiales `Release-v1.0.2` y entrada en el historial de releases.
+     - Redactadas las notas completas de la release para su publicación y vinculación directa en GitHub Releases.
+     - Commiteado y sincronizado en la rama `main` (`7626a0e`).
 
