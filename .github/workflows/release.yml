@@ -217,7 +217,7 @@ jobs:
         run: |
           mkdir -p ffmpeg_bin
           curl -sL "https://github.com/Tyrrrz/FFmpegBin/releases/download/9.0.2/ffmpeg-windows-x64.zip" -o ffmpeg-win.zip
-          tar -xf ffmpeg-win.zip -C ffmpeg_bin/
+          python -m zipfile -e ffmpeg-win.zip ffmpeg_bin/
           rm -f ffmpeg-win.zip
           ls -la ffmpeg_bin/
 

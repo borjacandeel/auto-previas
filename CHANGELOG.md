@@ -3,7 +3,16 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.4] - 2026-10-05
+
+### Corregido
+- **Extracción de binarios FFmpeg en Windows:**
+  - Sustitución de `tar` (incompatible con archivos zip en GNU tar de MSYS/Git bash) por `python -m zipfile -e ffmpeg-win.zip ffmpeg_bin/`, garantizando una extracción limpia y sin dependencias externas en el runner de Windows.
+
+---
+
 ## [1.0.3] - 2026-10-05
+
 
 ### Corregido
 - **Optimización masiva del tiempo de compilación CI/CD (de 82 min a ~12 min en Windows):**

@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v1.0.3-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v1.0.4-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -196,6 +196,9 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 ---
 
 ### 📈 Registro Oficial de Versiones y Parches
+
+#### 🟢 [v1.0.4] — 2026-10-05 (Parche de Extracción de FFmpeg en Windows)
+- **Extracción de binarios en Windows con motor nativo de Python:** Sustitución de `tar` por `python -m zipfile` para garantizar una descompresión robusta del zip de FFmpeg en Windows.
 
 #### 🟢 [v1.0.3] — 2026-10-05 (Parche de Rendimiento de Compilación CI/CD y Empaquetado de FFmpeg)
 - **Aceleración radical de compilación (reducción de 82 min a ~12 min en Windows):** Supresión de Link-Time Optimization (`--lto=no`) en MSVC y Clang, eliminando el bloqueo monohilo de `/LTCG`.

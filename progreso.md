@@ -845,4 +845,16 @@ AutoPrevias/
      - `src/__version__.py` elevado a `1.0.3`.
      - `CHANGELOG.md` y `README.md` actualizados con la entrada formal de `[1.0.3] - 2026-10-05`.
 
+### Sesión 18 — 2026-10-05: Parche v1.0.4 — Corrección del Extractor de FFmpeg en Windows mediante `zipfile` Nativo de Python
+
+- **Diagnóstico del Fallo en Windows CI (`v1.0.3`)**:
+  - En el runner de Windows, el paso `Descargar FFmpeg estático para Windows` arrojaba:
+    `tar: This does not look like a tar archive` (código de salida 2).
+  - **Causa Raíz:** Al ejecutarse con `shell: bash` en Windows, se invoca el binario GNU `tar` provisto por MSYS/Git bash (`/usr/bin/tar`), el cual a diferencia del `bsdtar` de Windows no soporta el formato `.zip`.
+- **Solución Implementada**:
+  - Sustitución de `tar -xf` por `python -m zipfile -e ffmpeg-win.zip ffmpeg_bin/`, utilizando el motor nativo de descompresión de Python 3 ya configurado en el runner.
+  - Validación de compatibilidad multiplataforma sin depender de utilidades de shell externas.
+  - `src/__version__.py`, `CHANGELOG.md`, `README.md` y `progreso.md` actualizados a `v1.0.4`.
+
+
 
