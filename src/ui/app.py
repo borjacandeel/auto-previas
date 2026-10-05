@@ -1691,13 +1691,41 @@ class ResultPanel(QWidget):
         self._card_pv.set_value(fmt_time_short(est))
         self._card_pv.set_accent(GREEN if ok else WARN)
 
+        self._out_path = str(get_output_dir(file_path, cfg))
+        self._lbl_folder_path.setText(short_path(self._out_path))
+        self._chk_wav.setChecked(cfg.get("export_wav", True))
+        self._chk_mp3.setChecked(cfg.get("export_mp3", True))
+        if hasattr(self, "_branding_card"):
+            self._branding_card.load_from_cfg(cfg)
+
+        default_name = preview_filename(file_path)
+        self._edit_name.setText(default_name)
+        self._last_default_name = default_name
+
+        self._fill_structure(analysis)
+        self._fill_plan(plan)
+
+        # Waveform
+        if HAS_WAVEFORM:
+            self._waveform.load_track(file_path)
+            self._waveform.set_sections(analysis.sections, plan.segments)
+
+        # Reproductor: cargar el track original inmediatamente
+        if self._player:
+            self._player.set_source_track(file_path)
+
+        self._btn_generate.setEnabled(True)
+        self._apply_generate_style(True)
+        self._btn_generate.start_shimmer()
+        self._update_tempo_plot()
+
     def _apply_duration_preset(self, seconds: int):
         if not self._analysis:
             return
         cfg = load_cfg()
         cfg["preview_min_sec"] = float(max(5, seconds - 2))
         cfg["preview_max_sec"] = float(seconds + 2)
-        new_plan = build_preview_plan(self._analysis, cfg=cfg)
+        new_plan = build_preview_plan(self._analysis, target_duration_sec=float(seconds), cfg=cfg)
         self.update_after_regen(new_plan)
         self._lbl_simple_desc.setText(f"Preset {seconds}s aplicado ({len(new_plan.segments)} cortes calculados)")
 
@@ -1727,39 +1755,11 @@ class ResultPanel(QWidget):
             "key_str": self._key_str,
         }
 
-        self._out_path = str(get_output_dir(file_path, cfg))
-        self._lbl_folder_path.setText(short_path(self._out_path))
-        self._chk_wav.setChecked(cfg.get("export_wav", True))
-        self._chk_mp3.setChecked(cfg.get("export_mp3", True))
-        if hasattr(self, "_branding_card"):
-            self._branding_card.load_from_cfg(cfg)
-
-        default_name = preview_filename(file_path)
-        self._edit_name.setText(default_name)
-        self._last_default_name = default_name
-
-        self._fill_structure(analysis)
-        self._fill_plan(plan)
-
-        # Waveform
-        if HAS_WAVEFORM:
-            self._waveform.load_track(file_path)
-            self._waveform.set_sections(analysis.sections, plan.segments)
-
-        # Reproductor: cargar el track original inmediatamente
-        if self._player:
-            self._player.set_source_track(file_path)
-
-        self._btn_generate.setEnabled(True)
-        self._apply_generate_style(True)
-        self._btn_generate.start_shimmer()
-        self._update_tempo_plot()
-
     def update_after_regen(self, plan):
         self._plan = plan
         self._fill_plan(plan)
         est = plan.estimated_duration_after_stretch
-        ok  = 120 <= est <= 180
+        ok  = 10 <= est <= 180
         self._card_pv.set_value(fmt_time_short(est))
         self._card_pv.set_accent(GREEN if ok else WARN)
         if HAS_WAVEFORM and self._source_path:

@@ -16,6 +16,18 @@
 
 ### Resumen de Mejoras — Sesión 25 (2026-10-05): Lanzamiento Mayor v1.1.0 (Studio Suite)
 
+#### 🛠️ Corrección Crítica: Carga de Waveform y Presets de Duración
+- **Problema detectado en `AutoPrevias.command`:**
+  - Al soltar un track, no se dibujaba la forma de onda ni se cargaba el reproductor.
+  - Al hacer clic en los botones de Presets de Duración (15s, 30s, 60s), se producía `TypeError: build_preview_plan() got an unexpected keyword argument 'cfg'`.
+- **Causa raíz diagnosticada:**
+  - En `src/ui/app.py`, las funciones auxiliares `_apply_duration_preset()`, `_select_voice_drop()` y `get_export_options()` habían quedado anidadas dentro del método `ResultPanel.populate()`. Como `get_export_options()` finalizaba con un `return`, el flujo de `populate()` se interrumpía antes de alcanzar las líneas que invocan `self._waveform.load_track(file_path)` y `self._player.set_source_track(file_path)`.
+  - La función `build_preview_plan` en `src/analysis/segments.py` no declaraba el argumento de palabra clave `cfg`.
+- **Solución aplicada y verificada:**
+  - Reestructuración e indentación completa de `ResultPanel.populate()` en `src/ui/app.py`, garantizando la ejecución de toda la cadena de inicialización de la onda, el reproductor y las rutas.
+  - Se unificó la firma de `build_preview_plan` en `src/analysis/segments.py` para aceptar `target_duration_sec: float | None = None, cfg: dict | None = None`, implementando el recorte musical alineado por compases para 15s, 30s y 60s.
+  - Se verificó con un smoke test automatizado en PySide6 y los 24/24 tests de `pytest` pasaron exitosamente.
+
 #### 💻 1. Compatibilidad Universal con Windows ARM64 (Snapdragon X Elite / Parallels en Apple Silicon)
 - **Problema resuelto:** En entornos Windows 11 ARM64 (ejecución x64 emulada), Qt 6 intentaba sondear controladores de hardware Direct3D/OpenGL incompatibles, provocando un bloqueo infinito de inicialización de la ventana en `qwindows.dll` o finalización silenciosa.
 - **Detección nativa de hardware emulado:** Implementación en `src/compat.py` mediante llamadas directas a la API de Windows con `ctypes`:

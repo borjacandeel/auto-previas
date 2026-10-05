@@ -110,30 +110,40 @@ def build_preview_plan(
     stretch_factor: float = AVG_STRETCH_FACTOR,
     target_min: float = TARGET_MIN_SEC,
     target_max: float = TARGET_MAX_SEC,
+    target_duration_sec: float | None = None,
+    cfg: dict | None = None,
 ) -> PreviewPlan:
     """
-    Construye el plan de segmentos para la previa con MÁXIMO 3 CORTES por defecto.
-    
-    Aprendizaje directo del patrón profesional de referencia (PREVIA.wav vs ORIGINAL.wav):
-    1. Si el tema tiene 3 o más drops, la previa se compone de los 3 Drops Principales
-       (seleccionados por impacto acústico = plenitud * sqrt(duración)).
-    2. Cada corte a un drop incluye su SUBIDA (buildup) previa de 6 compases (24 beats, ~9s)
-       que estalla exactamente en el downbeat (beat 1) del drop.
-    3. El Corte 1 (Apertura) incluye el tema melódico/intro antes de la Subida 1 + Drop 1.
-    4. El Corte 2 incluye la Subida 2 + Drop 2 (Clímax central).
-    5. El Corte 3 incluye la Subida 3 + Drop 3 (Clímax final).
-    6. Los cortes están sincronizados en compases y frases musicales (múltiplos de 4 compases).
+    Construye el plan de segmentos para la previa con MÁXIMO 3 CORTES por defecto
+    o con la duración exacta requerida si se especifica un Preset (15s, 30s, 60s).
     """
     sections = analysis.sections
     if not sections:
         return PreviewPlan()
 
+    # Si se pasa configuración con duración de previa objetivo
+    effective_target: float | None = target_duration_sec
+    if effective_target is None and cfg is not None:
+        p_max = cfg.get("preview_max_sec")
+        if p_max and float(p_max) <= 90.0:
+            effective_target = float(p_max)
+
     all_drops = [s for s in sections if s.type == SectionType.DROP]
+    bpm = analysis.bpm if analysis.bpm > 0 else 128.0
+    bar_dur = 4.0 * (60.0 / bpm)
+    bu_dur = 6.0 * bar_dur
+
     if not all_drops:
-        # Fallback si no hay drops: tomar las 3 secciones con mayor energía
+        # Fallback si no hay drops: tomar secciones con mayor energía
         by_energy = sorted(sections, key=lambda s: getattr(s, "fullness", s.energy), reverse=True)
-        selected = sorted(by_energy[:3], key=lambda s: s.start_time)
-        segs = [_full_segment(s) for s in selected]
+        limit = 1 if (effective_target and effective_target <= 20.0) else (2 if effective_target and effective_target <= 45.0 else 3)
+        selected = sorted(by_energy[:limit], key=lambda s: s.start_time)
+        segs = []
+        for s in selected:
+            dur = s.duration
+            if effective_target and dur > effective_target:
+                dur = effective_target
+            segs.append(PreviewSegment(section=s, trimmed_start=0.0, trimmed_end=dur))
         raw = sum(s.duration for s in segs)
         return PreviewPlan(
             segments=segs,
@@ -141,13 +151,61 @@ def build_preview_plan(
             estimated_duration_after_stretch=_estimated_final(raw, stretch_factor),
         )
 
-    # Duración de 1 compás (4 beats) y de la subida estándar de 6 compases (24 beats)
-    bpm = analysis.bpm if analysis.bpm > 0 else 128.0
-    bar_dur = 4.0 * (60.0 / bpm)
-    bu_dur = 6.0 * bar_dur
+    # ── MODO PRESET RÁPIDO: 15s (Teaser) ──────────────────────────────────
+    if effective_target is not None and effective_target <= 20.0:
+        # Tomar el drop de mayor impacto
+        best_drop = max(all_drops, key=lambda d: getattr(d, "fullness", d.energy) * (d.duration ** 0.5))
+        bu_s = max(0.0, best_drop.start_time - min(4.0 * bar_dur, 5.0))
+        target_len = effective_target if effective_target >= 10.0 else 15.0
+        c_end = min(best_drop.end_time, bu_s + target_len)
+        sec = Section(
+            type=best_drop.type,
+            start_time=bu_s,
+            end_time=c_end,
+            energy=best_drop.energy,
+            fullness=getattr(best_drop, "fullness", 0.8),
+        )
+        segs = [PreviewSegment(section=sec, trimmed_start=0.0, trimmed_end=c_end - bu_s)]
+        raw = sum(s.duration for s in segs)
+        return PreviewPlan(
+            segments=segs,
+            estimated_duration_before_stretch=raw,
+            estimated_duration_after_stretch=raw,
+        )
+
+    # ── MODO PRESET RÁPIDO: 30s (Promo) ───────────────────────────────────
+    if effective_target is not None and 20.0 < effective_target <= 45.0:
+        if len(all_drops) >= 2:
+            d1, d2 = all_drops[0], all_drops[1]
+            c1_s = max(0.0, d1.start_time - min(3.0 * bar_dur, 4.0))
+            c1_e = c1_s + 14.0
+            c2_s = max(c1_e + 2.0, d2.start_time - min(3.0 * bar_dur, 4.0))
+            c2_e = c2_s + (effective_target - 14.0)
+
+            s1 = Section(type=d1.type, start_time=c1_s, end_time=c1_e, energy=d1.energy)
+            s2 = Section(type=d2.type, start_time=c2_s, end_time=c2_e, energy=d2.energy)
+            segs = [
+                PreviewSegment(section=s1, trimmed_start=0.0, trimmed_end=c1_e - c1_s),
+                PreviewSegment(section=s2, trimmed_start=0.0, trimmed_end=c2_e - c2_s),
+            ]
+        else:
+            d1 = all_drops[0]
+            c1_s = max(0.0, d1.start_time - min(4.0 * bar_dur, 6.0))
+            c1_e = min(d1.end_time, c1_s + effective_target)
+            s1 = Section(type=d1.type, start_time=c1_s, end_time=c1_e, energy=d1.energy)
+            segs = [PreviewSegment(section=s1, trimmed_start=0.0, trimmed_end=c1_e - c1_s)]
+
+        raw = sum(s.duration for s in segs)
+        return PreviewPlan(
+            segments=segs,
+            estimated_duration_before_stretch=raw,
+            estimated_duration_after_stretch=raw,
+        )
 
     # Filtrar drops principales por impacto acústico (duración y fullness)
     major_drops = [d for d in all_drops if d.duration >= 20.0]
+    if len(major_drops) < 2:
+        major_drops = all_drops
     if len(major_drops) < 2:
         major_drops = all_drops
 
