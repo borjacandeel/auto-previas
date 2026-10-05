@@ -1195,3 +1195,19 @@ AutoPrevias/
   - `get_output_dir(source_file, cfg)` genera automáticamente la subcarpeta `Previas` (`Path(source_file).parent / "Previas"` o `Path(output_dir) / "Previas"`) y asegura su creación física en disco con `mkdir(parents=True, exist_ok=True)`.
   - Mantiene los proyectos, stems y carpetas de canciones completamente limpios y ordenados.
   - Sincronizado tanto para el modo individual (`ResultPanel`) como para el procesamiento por lote (`BatchDialog`).
+
+#### 🔐 8. Confirmación de Validación de Usuario en macOS
+- El usuario confirmó que el procedimiento estándar de autorización en macOS para aplicaciones sin certificado de pago de Apple Developer (**Ajustes del Sistema > Privacidad y Seguridad > Abrir de todos modos**) desbloquea y abre la aplicación con total normalidad y fluidez.
+- La versión `v1.2.0` queda así 100% operativa y validada en el hardware real del usuario.
+
+#### 🚀 9. Publicación Exitosa de la Release Oficial v1.2.0 en GitHub
+- **Workflow de GitHub Actions (Run #37332163505)**:
+  - `Build macOS (Apple Silicon arm64)`: **Superado al 100%** (28m 23s).
+  - `Build Windows (x64 / ARM64)`: **Superado al 100%** (54m 21s).
+  - `Publicar GitHub Release`: **Superado al 100%** (24s).
+- **Activos Binarios Publicados**:
+  - `AutoPrevias-1.2.0-macOS-arm64.dmg` (211.31 MB).
+  - `AutoPrevias-1.2.0-Windows-x64-Setup.exe` (133.09 MB).
+  - `SHA256SUMS.txt`.
+- Disponible públicamente en: `https://github.com/borjacandeel/auto-previas/releases/tag/v1.2.0`.
+
