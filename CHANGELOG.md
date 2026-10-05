@@ -3,7 +3,18 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.5] - 2026-10-05
+
+### Corregido
+- **Inclusión de módulos estándar críticos (`uuid`, `dis`, `inspect`, `opcode`) en standalone:**
+  - Corrección de `x ERROR EN SELFTEST: No module named 'uuid'` en los ejecutables compilados con Nuitka en macOS y Windows.
+  - Al aislar `librosa` de la compilación estática a C, Numba y sus despachadores (`numba.core.dispatcher`) invocan `import uuid` en tiempo de ejecución.
+  - Inclusión explícita de `uuid`, `dis`, `inspect` y `opcode` en `src/compat.py` y como argumentos `--include-module` en Nuitka para macOS y Windows, garantizando su presencia nativa dentro del bundle compilado.
+
+---
+
 ## [1.0.4] - 2026-10-05
+
 
 ### Corregido
 - **Extracción de binarios FFmpeg en Windows:**

@@ -96,6 +96,10 @@ jobs:
             --no-deployment-flag=excluded-module-usage \
             --include-package=audioread \
             --include-module=lazy_loader \
+            --include-module=uuid \
+            --include-module=dis \
+            --include-module=inspect \
+            --include-module=opcode \
             --include-package=soxr \
             --include-data-dir="$LIBROSA_DIR"=librosa \
             --include-package-data=pedalboard \
@@ -242,6 +246,10 @@ jobs:
             --no-deployment-flag=excluded-module-usage ^
             --include-package=audioread ^
             --include-module=lazy_loader ^
+            --include-module=uuid ^
+            --include-module=dis ^
+            --include-module=inspect ^
+            --include-module=opcode ^
             --include-package=soxr ^
             --include-data-dir="%LIBROSA_DIR%"=librosa ^
             --include-package-data=pedalboard ^

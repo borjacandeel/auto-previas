@@ -2,9 +2,30 @@
 import sys
 import numpy as np
 
+# Módulos estándar requeridos dinámicamente por Numba, Librosa, Scikit-learn y Pooch en standalone
+import uuid
+import dis
+import inspect
+import opcode
+import socket
+import secrets
+import mimetypes
+import difflib
+import cmath
+import ast
+import asyncio
+import token
+import tokenize
+import pydoc
+import runpy
+import timeit
+import calendar
+import pprint
+
 # Asegurar flag frozen para permitir a Numba y librerías nativas resolver rutas virtuales en standalone
 if not hasattr(sys, "frozen"):
     setattr(sys, "frozen", True)
+
 
 
 def apply_librosa_patches():

@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v1.0.4-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v1.0.5-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -196,6 +196,10 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 ---
 
 ### 📈 Registro Oficial de Versiones y Parches
+
+#### 🟢 [v1.0.5] — 2026-10-05 (Parche de Inclusión de Módulos Estándar Críticos en Bundles Standalone)
+- **Resolución de dependencias dinámicas de Numba y Librosa (`uuid`, `dis`, `inspect`, `opcode`):** Corrección del fallo `x ERROR EN SELFTEST: No module named 'uuid'` al ejecutar el binario compilado en macOS y Windows.
+- **Inclusión directa en `src/compat.py` y workflow:** Los módulos estándar requeridos por los compiladores JIT y despachadores de Numba se declaran estáticamente y se empaquetan en los instaladores de ambos sistemas operativos.
 
 #### 🟢 [v1.0.4] — 2026-10-05 (Parche de Extracción de FFmpeg en Windows)
 - **Extracción de binarios en Windows con motor nativo de Python:** Sustitución de `tar` por `python -m zipfile` para garantizar una descompresión robusta del zip de FFmpeg en Windows.

@@ -76,6 +76,31 @@ def bundle_dependencies(target_dir):
             print(f"    [+] Copiando modulo {base_name}...")
             shutil.copy2(src, dest)
 
+    # Asegurar módulos y extensiones estándar críticos requeridos por Numba/Librosa
+    import sysconfig
+    stdlib_dir = sysconfig.get_path("stdlib")
+    if stdlib_dir and os.path.isdir(stdlib_dir):
+        for mod_name in ["uuid.py", "dis.py", "inspect.py", "opcode.py"]:
+            src_mod = os.path.join(stdlib_dir, mod_name)
+            dst_mod = os.path.join(target_dir, mod_name)
+            if os.path.isfile(src_mod) and not os.path.exists(dst_mod):
+                print(f"    [+] Copiando modulo stdlib crítico: {mod_name}")
+                shutil.copy2(src_mod, dst_mod)
+
+        dynload_dirs = [
+            os.path.join(stdlib_dir, "lib-dynload"),
+            os.path.join(os.path.dirname(stdlib_dir), "DLLs"),
+            os.path.join(sys.prefix, "DLLs"),
+        ]
+        for d in dynload_dirs:
+            if os.path.isdir(d):
+                for pattern in ["*uuid*", "*opcode*"]:
+                    for f in glob.glob(os.path.join(d, pattern)):
+                        dst_f = os.path.join(target_dir, os.path.basename(f))
+                        if not os.path.exists(dst_f):
+                            print(f"    [+] Copiando extension stdlib crítica: {os.path.basename(f)}")
+                            shutil.copy2(f, dst_f)
+
     if sys.platform == "darwin":
         sklearn_dir = os.path.join(target_dir, "sklearn")
         old_dylibs = os.path.join(sklearn_dir, ".dylibs")

@@ -880,5 +880,17 @@ AutoPrevias/
   - Paso de extracción de FFmpeg en Windows verificado con éxito (`success`).
   - Ambos runners en fase avanzada de compilación y empaquetado autónomo Nuitka.
 
+### Sesión 20 — 2026-10-05: Parche v1.0.5 — Resolución de `uuid` y Módulos Estándar Críticos para Numba en Bundles Standalone
+
+- **Diagnóstico del Fallo en Selftest de macOS (`v1.0.4`)**:
+  - Durante el paso de verificación `Ejecutar Selftest sobre binario compilado`, la fase `[3/5] Analizando BPM, beat grid y estructura musical...` fallaba con:
+    `x ERROR EN SELFTEST: No module named 'uuid'` (código de salida 1).
+  - **Causa Raíz:** Al ejecutar `detect_beat_grid`, `librosa` invoca `numba.core.dispatcher`. Numba necesita generar identificadores únicos de función e importa `uuid` dinámicamente en tiempo de ejecución. Debido a que `librosa` y sus dependencias están marcadas como `--nofollow-import-to` y el código fuente propio (`src`) no importaba `uuid`, Nuitka no incluyó el módulo estándar `uuid.py` ni su extensión nativa C `_uuid` en la distribución autónoma.
+- **Solución Implementada**:
+  1. Se importaron explícitamente en `src/compat.py` todos los módulos de la librería estándar de Python requeridos dinámicamente por Numba, Librosa, Scikit-Learn y Pooch (`uuid`, `dis`, `inspect`, `opcode`, `socket`, `secrets`, `mimetypes`, `difflib`, `cmath`, `ast`, `asyncio`, `token`, `tokenize`, `pydoc`, `runpy`, `timeit`, `calendar`, `pprint`).
+  2. Se añadieron `--include-module=uuid`, `--include-module=dis`, `--include-module=inspect` y `--include-module=opcode` a los parámetros de compilación de Nuitka tanto en macOS como en Windows en `.github/workflows/release.yml`.
+  3. Se reforzó `scripts/bundle_runtime_deps.py` con una capa defensiva que copia automáticamente `uuid.py`, `dis.py`, `inspect.py`, `opcode.py` y sus extensiones dinámicas C nativas (`_uuid.*`, `_opcode.*`) desde la librería estándar del sistema al directorio destino de ejecución.
+  4. `src/__version__.py`, `CHANGELOG.md`, `README.md` y `progreso.md` elevados y sincronizados a la versión `v1.0.5`.
+
 
 
