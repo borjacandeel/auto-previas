@@ -3,6 +3,18 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.8] - 2026-10-05
+
+### Corregido
+- **Liberación de bloqueo de archivo de audio en Windows durante el Selftest**:
+  - Corrección de `PermissionError: [WinError 32] El proceso no puede tener acceso al archivo porque está siendo utilizado por otro proceso` al limpiar el directorio temporal al finalizar el selftest en Windows.
+  - Cierre y desvinculación explícita de `QMediaPlayer.setSource(QUrl())`, `player.stop()`, destrucción de objetos de reproducción y parámetro de resiliencia `ignore_cleanup_errors=True` en `tempfile.TemporaryDirectory`.
+- **Privacidad y Sanitización de Información Personal en Repositorio Público**:
+  - Eliminación total de rutas locales absolutas, referencias de usuario y nombres personales en la documentación y banco de pruebas (`progreso.md`, `tests/test_ui_and_export.py`, scripts de build).
+  - Estandarización a rutas relativas y denominaciones neutrales de pistas de prueba (`Demo_Club_Track.wav`, `Demo_Track_Remix.wav`).
+
+---
+
 ## [1.0.7] - 2026-10-05
 
 ### Añadido

@@ -70,7 +70,12 @@ def run_selftest() -> int:
         print(f"  ✓ Directorio assets: {assets_dir}")
         print(f"  ✓ Directorio caché: {cache_dir}")
 
-        with tempfile.TemporaryDirectory() as tmpdir:
+        try:
+            tmp_ctx = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
+        except TypeError:
+            tmp_ctx = tempfile.TemporaryDirectory()
+
+        with tmp_ctx as tmpdir:
             tmp_path = Path(tmpdir)
 
             # 2. Generar audio sintético
@@ -154,6 +159,18 @@ def run_selftest() -> int:
             print(f"  ✓ Estado backend QMediaPlayer: {status.name} (dispositivo: {dev_name})")
             if status == QMediaPlayer.MediaStatus.InvalidMedia:
                 raise RuntimeError("Backend de QtMultimedia reporta InvalidMedia: plugins multimedia no disponibles")
+
+            # Liberar explícitamente el archivo para evitar bloqueos en Windows
+            try:
+                player.stop()
+                player.setSource(QUrl())
+                del player
+                del audio_out
+                import gc
+                gc.collect()
+                app.processEvents()
+            except Exception:
+                pass
 
         print("\n" + "=" * 60)
         print("✓ SELFTEST EXITOSO: Todos los componentes funcionan correctamente.")

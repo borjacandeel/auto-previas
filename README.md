@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v1.0.7-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v1.0.8-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -329,7 +329,7 @@ Para una relación completa de autores y textos legales de licencias, consulta e
 
 - **Sello:** Radical Records
 - **Correo electrónico de soporte:** [radicalrecordsvlc@gmail.com](mailto:radicalrecordsvlc@gmail.com)
-- **Repositorio:** [github.com/borjacandeel/auto-previas](https://github.com/borjacandeel/auto-previas) *(Acceso Privado para miembros del sello)*
+- **Repositorio:** [github.com/borjacandeel/auto-previas](https://github.com/borjacandeel/auto-previas) *(Repositorio Oficial en GitHub)*
 
 ---
 

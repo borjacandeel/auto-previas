@@ -136,10 +136,10 @@ def test_branding_and_cover_export(tmp_path):
     card._drop_area.set_cover(str(test_img_path))
     assert card._drop_area.get_cover_path() == str(test_img_path.resolve())
 
-    card._edit_artist.setText("Borja Candel")
+    card._edit_artist.setText("Radical DJ")
     card._edit_label.setText("Radical Records")
     meta = card.get_metadata()
-    assert meta["artist"] == "Borja Candel"
+    assert meta["artist"] == "Radical DJ"
     assert meta["label"] == "Radical Records"
 
     # 4. Probar export_files con audio sintético y metadata

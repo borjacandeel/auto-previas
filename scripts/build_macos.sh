@@ -123,4 +123,3 @@ echo "✓ BUILD FINALIZADO CON ÉXITO"
 echo "  Bundle: $APP_BUNDLE"
 echo "  Instalador: dist/$DMG_NAME ($(du -h "dist/$DMG_NAME" | cut -f1))"
 echo "========================================="
-EOF && chmod +x /Users/borjacandel/Developer/AutoPrevias/scripts/build_macos.sh

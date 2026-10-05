@@ -1,19 +1,16 @@
 # AutoPrevias - Radical Records · Progreso del proyecto
 
-> ⚠️ **AVISO DE MUDANZA DEL PROYECTO (2026-10-04):**
-> Este directorio (`/Users/borjacandel/Documents/AutoPrevias`) queda **CONGELADO Y EN DESUSO**.
-> Todo el desarrollo activo, repositorio Git, empaquetado, pruebas e historial se han trasladado de forma definitiva a:
-> **`~/Developer/AutoPrevias`**
-> No modificar este directorio ni sus archivos.
+> 📦 **Repositorio Oficial:** `https://github.com/borjacandeel/auto-previas`
+> 🎵 **Desarrollado para:** Radical Records (Sello discográfico & Producción de Audio)
 
 > **Regla permanente obligatoria:** Este archivo se lee al inicio de cada sesión y **SE ACTUALIZA SIEMPRE al terminar cualquier cambio, corrección o mejora solicitada por el usuario**, registrando con detalle todo lo implementado, testeado y el estado del proyecto.
 
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-04 (Sesión 12 — Análisis Profundo Drop vs Descanso: HPSS, Repetición Cromática, Densidad Melódica y Umbrales Adaptativos)
-**Fase activa:** Fase C completada ✅ — Motor de Detección de Estructura con Análisis Multi-Dimensional Avanzado
-**Próximo paso:** Fase D — Launchers finales y empaquetado multi-SO
+**Fecha última actualización:** 2026-10-05 (Sesión 24 — Versión v1.0.8: Corrección de Bloqueo de Archivos en Windows y Sanitización Total de Privacidad en Repositorio Público)
+**Fase activa:** Fase D completada ✅ — Instaladores Multiplataforma (macOS arm64 DMG + Windows x64 Inno Setup EXE) y CI/CD Automático
+**Versión Actual:** **v1.0.8**
 
 ---
 
@@ -24,7 +21,7 @@
 - **Insight del usuario:** "En los descansos suele ser bombos y vocales y percusiones y en los drops melodías y patrones melódicos repetitivos."
 
 #### 🔬 2. Nuevas Funciones de Análisis Espectral Añadidas
-En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/structure.py):
+En [structure.py](src/analysis/structure.py):
 
 - **`_spectral_flatness_envelope`** — Planitud espectral: ~0 = tonal (sintes/melodías de drop), ~1 = ruidoso/percusivo (bombo + percusión de descanso).
 - **`_harmonic_percussive_ratio`** — Separación Armónica/Percusiva mediante **HPSS (Harmonic-Percussive Source Separation)** de librosa. Ratio armónico/total: alto = contenido melódico (sintes, leads, acordes → DROP), bajo = contenido percusivo dominante (bombos, claps, hihats → DESCANSO).
@@ -74,7 +71,7 @@ En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/s
 ### Resumen de Mejoras — Sesión 10 (2026-10-02):
 
 #### 🚀 1. Detección Dinámica de Subidas (Buildups): Cortas, Estándar y Largas
-- En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/structure.py#L360):
+- En [structure.py](src/analysis/structure.py#L360):
   - **Estudio acústico exhaustivo de la música electrónica de baile:** Se identificó que las subidas no tienen una longitud fija, sino que varían dinámicamente según la fase de la pista:
     * **Subidas Cortas (2 a 4 compases, ~3.0s a 6.0s):** Risers rápidos y redobles intensos entre frases intermedias (ej. compases 81–82 de `ORIGINAL.wav`, de 125.67s a 128.75s).
     * **Subidas Estándar (6 a 8 compases, ~9.0s a 12.5s):** Transición clásica con apertura progresiva de filtro y redoble de caja 1/4 -> 1/8 -> 1/16 (ej. compases 22–27 de `ORIGINAL.wav`, de 34.09s a 43.40s).
@@ -102,11 +99,11 @@ En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/s
   * Los bombos de intro de mezcla DJ (primeros compases) y puentes con bombo aislado quedan descartados de ser Drops principales.
 
 #### 🐛 4. Corrección de Bug Crítico de Variable Shadowing (`sr`)
-- Se corrigió el sombreado accidental del parámetro de sample rate `sr` dentro del bucle de subidas en [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/structure.py), donde una variable local `sr = slope_rms[bar_idx]` sobreescribía el valor de 22050 Hz por un flotante cercano a 0.
+- Se corrigió el sombreado accidental del parámetro de sample rate `sr` dentro del bucle de subidas en [structure.py](src/analysis/structure.py), donde una variable local `sr = slope_rms[bar_idx]` sobreescribía el valor de 22050 Hz por un flotante cercano a 0.
 - Esto provocaba que `librosa.time_to_frames` y los slices de LUFS/dBFS recibieran `sr ~ 0`, generando métricas vacías (`0.03` fullness y `-70 dBFS`). Renombrada a `s_r` / `s_rms`.
 
 #### 🧪 5. Pruebas y Validación Completa
-- Creado nuevo test unitario `test_buildup_and_breakdown_detection` en [test_structure.py](file:///Users/borjacandel/Documents/AutoPrevias/tests/test_structure.py).
+- Creado nuevo test unitario `test_buildup_and_breakdown_detection` en [test_structure.py](tests/test_structure.py).
 - Toda la suite de 19 tests pasando al 100%: `19 passed, 3 warnings in 29.16s`.
 - Plan de previa validado contra `ORIGINAL.wav`:
   * Corte 1: `21.70s – 86.75s` (65.1s)
@@ -126,13 +123,13 @@ En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/s
   * **Duración total calculada:** 164.2s a 155 BPM → con factor de aceleración a 165 BPM queda en **154.2s** (la previa real mide **155.5s**; diferencia de solo **1.3 segundos**).
 
 #### 🔍 2. Detección Inteligente de Drops Reales y Subidas (`src/analysis/structure.py`)
-- En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/structure.py):
+- En [structure.py](src/analysis/structure.py):
   - **Eliminación de falsos drops de mezcla DJ:** En pistas de baile, los bombos iniciales de la intro (< 15% del track) sin carga melódica completa ni subida previa se clasifican correctamente como `INTRO` (base de mezcla DJ), evitando que el motor los confunda con el Drop principal.
   - **Puenteo de turnarounds y vocal chops:** Cada 16 compases suele haber un fill o corte de voz de 1 a 2 compases; el algoritmo puentea estos micro-huecos para mantener los drops como frases continuas e íntegras (~40s a 75s).
   - **Detección musical de subidas (Buildups):** Reordenada la detección para ejecutarse tras la validación de drops, garantizando que cada Drop real vaya precedido de su **subida exacta de 6 compases (24 beats, ~9.3s a 155 BPM / ~8.7s a 165 BPM)** con redobles y risers culminando en el beat 1.
 
 #### ✂️ 3. Planificador de Previas Musicalmente Perfecto (`src/analysis/segments.py`)
-- En [segments.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/segments.py#L108):
+- En [segments.py](src/analysis/segments.py#L108):
   - Rediseñado el algoritmo `build_preview_plan` para reproducir exactamente la estructura de `PREVIA.wav`:
     * **Caso >= 3 Drops:** Selecciona los 3 Drops Principales ordenados cronológicamente y ponderados por su masa acústica (`plenitud * sqrt(duración)`), ignorando mini-drops de puente.
     * **Corte 1:** Tema/Intro + Subida 1 + Drop 1 (hasta 28 compases).
@@ -142,8 +139,8 @@ En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/s
     * Límite estricto de **MÁXIMO 3 CORTES** por defecto (el usuario puede añadir más manualmente si lo desea).
 
 #### 🧪 4. Pruebas y Validación de Calidad
-- Test suite completa ejecutada con éxito: `18 passed in 21.36s` ([test_structure.py](file:///Users/borjacandel/Documents/AutoPrevias/tests/test_structure.py), [test_bpm.py](file:///Users/borjacandel/Documents/AutoPrevias/tests/test_bpm.py), [test_audio_io.py](file:///Users/borjacandel/Documents/AutoPrevias/tests/test_audio_io.py), [test_ui_and_export.py](file:///Users/borjacandel/Documents/AutoPrevias/tests/test_ui_and_export.py)).
-- Script de validación directa [test_full_engine.py](file:///Users/borjacandel/Documents/AutoPrevias/scratch/test_full_engine.py) ejecutado sobre `ORIGINAL.wav`:
+- Test suite completa ejecutada con éxito: `18 passed in 21.36s` ([test_structure.py](tests/test_structure.py), [test_bpm.py](tests/test_bpm.py), [test_audio_io.py](tests/test_audio_io.py), [test_ui_and_export.py](tests/test_ui_and_export.py)).
+- Script de validación directa [test_full_engine.py](scratch/test_full_engine.py) ejecutado sobre `ORIGINAL.wav`:
   * Corte 1: 21.70s -> 86.75s (duración 65.05s)
   * Corte 2: 167.65s -> 220.31s (duración 52.67s)
   * Corte 3: 260.55s -> 307.02s (duración 46.47s)
@@ -154,7 +151,7 @@ En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/s
 ### Resumen de Mejoras — Sesión 8 (2026-10-02):
 
 #### 🎛️ 1. Medidor Estéreo VU / Peak Hardware en Vivo (`StereoVUMeter`)
-- En [player.py](file:///Users/borjacandel/Documents/AutoPrevias/src/ui/player.py#L48):
+- En [player.py](src/ui/player.py#L48):
   - Diseñado e implementado el widget `StereoVUMeter` con estética hardware rack synth.
   - Dos canales independientes (**L** y **R**) con **14 segmentos LED discretos**:
     * 8 verdes (-36 dB a -12 dB)
@@ -165,7 +162,7 @@ En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/s
   - **Eficiencia:** Cuando la reproducción se pausa o detiene, el medidor decae orgánicamente a cero y el timer se suspende automáticamente (**0% consumo de CPU en reposo**).
 
 #### 🖼️ 2. Carátula Oficial Radical Records y Metadatos ID3 Incrustados en MP3
-- En [export.py](file:///Users/borjacandel/Documents/AutoPrevias/src/engine/export.py#L295):
+- En [export.py](src/engine/export.py#L295):
   - Integración en la exportación MP3 vía FFmpeg para incrustar automáticamente la carátula oficial de Radical Records (`assets/logo_emblem.png` / `logo_emblem_red.png`) como imagen de portada frontal (`attached_pic` ID3v2.3).
   - Metadatos completos inyectados:
     * `Title`: `PREVIA - {nombre_track}`
@@ -176,13 +173,13 @@ En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/s
   - Al abrir o compartir el archivo en WhatsApp, Telegram, correo, Rekordbox, Traktor, iPhone o CDJs de Pioneer, la carátula y el nombre aparecen en alta definición con presencia profesional de sello.
 
 #### 🎚️ 3. Filtro DC Blocker y Masterización Limpia
-- En [export.py](file:///Users/borjacandel/Documents/AutoPrevias/src/engine/export.py#L47):
+- En [export.py](src/engine/export.py#L47):
   - Añadido filtro paso-alto DC Blocker de precisión (~5 Hz) antes de la normalización.
   - Elimina cualquier corriente continua residual generada por sintes analógicos o micro-transiciones antes de la compresión por soft-knee.
   - Asegura que el limitador opere con el rango dinámico 100% simétrico y sin artefactos inter-sample.
 
 #### 📂 4. Botón "📂 Abrir" Inmediato y Revelación en SO
-- En [app.py](file:///Users/borjacandel/Documents/AutoPrevias/src/ui/app.py#L985):
+- En [app.py](src/ui/app.py#L985):
   - Añadido el botón `📂 Abrir` junto al selector de carpeta de destino.
   - Métodos `_open_export_folder` y `_reveal_in_os` con soporte multi-plataforma:
     * macOS: `open -R [archivo]` para revelar directamente en Finder.
@@ -190,7 +187,7 @@ En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/s
     * Linux: `xdg-open [carpeta]`.
 
 #### ⌨️ 5. Controles DJ Completos por Teclado
-- En [app.py](file:///Users/borjacandel/Documents/AutoPrevias/src/ui/app.py#L2885):
+- En [app.py](src/ui/app.py#L2885):
   - `Espacio`: Play / Pause instantáneo.
   - `Flecha Izquierda`: Retroceder 5 segundos.
   - `Flecha Derecha`: Avanzar 5 segundos.
@@ -200,11 +197,11 @@ En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/s
   - Tooltips contextuales actualizados en todos los botones del transporte.
 
 #### 🎨 6. Armonización Visual de Badges
-- En [waveform.py](file:///Users/borjacandel/Documents/AutoPrevias/src/ui/waveform.py#L425):
+- En [waveform.py](src/ui/waveform.py#L425):
   - Badges de forma de onda actualizados al estilo rack obsidiana y carmesí con relieve neón en lugar de estilos genéricos.
 
 #### 🧪 7. Banco de Tests y Verificación
-- Creado [tests/test_ui_and_export.py](file:///Users/borjacandel/Documents/AutoPrevias/tests/test_ui_and_export.py):
+- Creado [tests/test_ui_and_export.py](tests/test_ui_and_export.py):
   * Test de remoción de offset con `_dc_blocker`.
   * Test de recorte suave de picos con `_soft_limiter`.
   * Test funcional de `StereoVUMeter` (niveles, decaimiento y reset).
@@ -216,12 +213,12 @@ En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/s
 ### Resumen de Mejoras — Sesión 7 (2026-10-02):
 
 #### ✉️ 1. Correo Oficial de Soporte Radical Records
-- En [app.py](file:///Users/borjacandel/Documents/AutoPrevias/src/ui/app.py#L102): Configurado el correo oficial proporcionado por el usuario: `SUPPORT = "radicalrecordsvlc@gmail.com"`.
+- En [app.py](src/ui/app.py#L102): Configurado el correo oficial proporcionado por el usuario: `SUPPORT = "radicalrecordsvlc@gmail.com"`.
 - Actualizada la etiqueta en el header del rack: `SOPORTE: radicalrecordsvlc@gmail.com`.
 - Eliminada cualquier referencia residual a cuentas personales anteriores en el código.
 
 #### ✂️ 2. Límite de MÁXIMO 3 CORTES por Defecto (Ampliables por el Usuario)
-- En [segments.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/segments.py#L108): Rediseñado el planificador automático `build_preview_plan` para generar **como máximo 3 cortes o bloques musicales por defecto**:
+- En [segments.py](src/analysis/segments.py#L108): Rediseñado el planificador automático `build_preview_plan` para generar **como máximo 3 cortes o bloques musicales por defecto**:
   * **Corte 1 (Apertura):** Subida 1 + Primer Drop potente enlazados de forma continua (~35 a 50s).
   * **Corte 2 (Melodía Principal):** El breakdown melódico central más rico (sintetizadores, pitos, vocales e instrumentales) + subida hacia el clímax (~30 a 45s).
   * **Corte 3 (Clímax Final):** El Drop más cargado y potente del tema con su pegada completa (~40 a 55s).
@@ -229,7 +226,7 @@ En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/s
 - **Duración calibrada:** La suma de los 3 cortes encaja perfectamente en el rango de ~120s a 155s (~2:00 a 2:30 min tras el time-stretch / pitch progresivo).
 
 #### 🎛️ 3. Analizador Inteligente de Drops: Detección de Temas Cargados vs Bombos Aislados
-- En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/structure.py#L122):
+- En [structure.py](src/analysis/structure.py#L122):
   * **Extractor de pitos y leads agudos (`_pitos_leads_envelope`):** Filtro Butterworth pasobanda [2000 - 8000 Hz] que aísla screeches, sintes estridentes, pitos y leads cortantes típicos de la música de baile/hardcore/newstyle/festival.
   * **Extractor de cuerpo melódico y vocales (`_melody_envelope`):** Banda [400 - 4500 Hz] para acordes, pianos, supersaws y voces principales.
   * **Métrica de Plenitud / Carga Sonora (`bar_fullness`):**
@@ -238,11 +235,11 @@ En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/s
   * Cada `Section` almacena `melody_energy` y `fullness` para clasificar cuál es el verdadero clímax de la canción.
 
 #### 🧪 4. Pruebas y Verificación
-- Añadidos tests unitarios en [tests/test_structure.py](file:///Users/borjacandel/Documents/AutoPrevias/tests/test_structure.py):
+- Añadidos tests unitarios en [tests/test_structure.py](tests/test_structure.py):
   * `test_preview_plan_max_3_cuts`: Comprueba que cualquier plan generado por defecto tiene `<= 3` cortes.
   * `test_drop_fullness_detects_loaded_drops`: Comprueba que los drops cargados tienen `fullness > 0.40`.
 - **Suite completa `pytest`:** **15/15 tests pasando al 100%**.
-- **Comprobación en tracks reales (`Americano.wav` y `Dj Maka - King Kong RMX.wav`):** Generación de previas con exactamente 3 cortes, transición suave de 1s bajada / 1s subida en los saltos, y duración final en el rango perfecto de 2 minutos.
+- **Comprobación en tracks reales (`Demo_Club_Track.wav` y `Dj Maka - King Kong RMX.wav`):** Generación de previas con exactamente 3 cortes, transición suave de 1s bajada / 1s subida en los saltos, y duración final en el rango perfecto de 2 minutos.
 
 ---
 
@@ -250,13 +247,13 @@ En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/s
 
 #### 🚨 1. Corrección Raíz del Bug de Carga: `n_fft=2048 is too large for input signal of length=5` y `[pcm_f32le @ ...] Invalid PCM packet`
 - **Diagnóstico exhaustivo y causa raíz identificada:**
-  - El usuario reportó el error al ejecutar `/Users/borjacandel/Documents/AutoPrevias/AutoPrevias.command`:
+  - El usuario reportó el error al ejecutar `./AutoPrevias.command`:
     ```
-    /Users/borjacandel/Documents/AutoPrevias/.venv/lib/python3.11/site-packages/librosa/core/spectrum.py:266: UserWarning: n_fft=2048 is too large for input signal of length=5
+    ./.venv/lib/python3.11/site-packages/librosa/core/spectrum.py:266: UserWarning: n_fft=2048 is too large for input signal of length=5
     [pcm_f32le @ 0xbab3ba300] Invalid PCM packet, data has size 4 but at least a size of 8 was expected
     ```
     Y el tema no cargaba en la app.
-  - Se rastreó el origen exacto: el archivo afectado (`Dj Maka - King Kong (Borja Candel RMX).wav`) tenía **112.8 MB** en disco (~4:53 minutos de música float32 a 48 kHz exportado desde FL Studio 2026). Sin embargo, su cabecera WAV tenía el tamaño del chunk `data` corrupto/congelado en **76 bytes** (`0x0000004c`), un fallo conocido en ciertas exportaciones o cancelaciones de renders en DAWs.
+  - Se rastreó el origen exacto: el archivo afectado (`Demo_Track_Remix.wav`) tenía **112.8 MB** en disco (~4:53 minutos de música float32 a 48 kHz exportado desde FL Studio 2026). Sin embargo, su cabecera WAV tenía el tamaño del chunk `data` corrupto/congelado en **76 bytes** (`0x0000004c`), un fallo conocido en ciertas exportaciones o cancelaciones de renders en DAWs.
   - Al abrirlo:
     1. `libsndfile` (`soundfile`) leía estrictamente solo 76 bytes (9 frames stereo).
     2. FFmpeg / QtMultimedia leía los 76 bytes, dejaba 4 bytes huérfanos al final y emitía `[pcm_f32le @ ...] Invalid PCM packet, data has size 4 but at least a size of 8 was expected`.
@@ -264,7 +261,7 @@ En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/s
     4. `librosa.load()` leía solo 9 muestras; al resamplear de 48000 a 22050 Hz resultaban exactamente **5 muestras**.
     5. `detect_beat_grid` invocaba `librosa.stft` con `n_fft=2048` sobre 5 muestras, disparando el warning en `spectrum.py:266` y fallando el análisis en `AnalysisWorker`.
 
-#### 🛡️ 2. Creación del Módulo de E/S Robusta [audio_io.py](file:///Users/borjacandel/Documents/AutoPrevias/src/engine/audio_io.py)
+#### 🛡️ 2. Creación del Módulo de E/S Robusta [audio_io.py](src/engine/audio_io.py)
 - **Auto-reparación inteligente de cabeceras WAV (`repair_wav_header_if_needed`):**
   - Inspecciona cualquier archivo WAV antes de cargarlo o reproducirlo.
   - Si el tamaño declarado del chunk `data` no coincide con el archivo físico y está truncado (mismatch > tamaño de bloque):
@@ -281,27 +278,27 @@ En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/s
   - Guarda de seguridad: si un archivo tiene menos de 2048 muestras (<0.1s), levanta un `ValueError` descriptivo y amigable para el usuario en lugar de dejar caer la app.
 
 #### 🔗 3. Integración en Todos los Puntos del Ciclo de Vida del Audio
-- [src/ui/app.py](file:///Users/borjacandel/Documents/AutoPrevias/src/ui/app.py):
+- [src/ui/app.py](src/ui/app.py):
   - `AnalysisWorker.run()`: Carga con `load_audio_file(self.path, sr=SR_ANALYSIS, mono=True)`, acelerando x10 la apertura y evitando advertencias.
   - `MainWindow._load_file(path)`: Ejecuta `repair_wav_header_if_needed(path)` al recibir el archivo (por drop o file picker).
-- [src/ui/waveform.py](file:///Users/borjacandel/Documents/AutoPrevias/src/ui/waveform.py):
+- [src/ui/waveform.py](src/ui/waveform.py):
   - `WaveformLoader.run()`: Unificado con `load_audio_file` para cálculo de RMS sin discrepancias de duración.
-- [src/ui/player.py](file:///Users/borjacandel/Documents/AutoPrevias/src/ui/player.py):
+- [src/ui/player.py](src/ui/player.py):
   - `AudioPlayer.load_file(path)`: Repara la cabecera antes de asignarlo a `QMediaPlayer.setSource`, garantizando que `QMediaPlayer` detecte la duración completa y real sin errores PCM.
-- [src/engine/export.py](file:///Users/borjacandel/Documents/AutoPrevias/src/engine/export.py):
+- [src/engine/export.py](src/engine/export.py):
   - `build_preview_audio`: Carga el audio fuente original usando `load_audio_file(source_path, sr=SR_OUT, mono=False)`.
-- [src/analysis/structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/structure.py) y [src/analysis/bpm.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/bpm.py):
+- [src/analysis/structure.py](src/analysis/structure.py) y [src/analysis/bpm.py](src/analysis/bpm.py):
   - `_rms_envelope`, `_kick_bass_envelope`, `_melody_envelope`, `_spectral_novelty`, `_spectral_centroid_norm`: `n_fft` y `frame_length` limitados dinámicamente a `min(2048, max(64, len(y)))` y `hop` adaptativo para inmunidad ante señales cortas.
   - Guardas tempranas `if len(y) < 2048: raise ValueError(...)`.
 
 #### 🧪 4. Pruebas y Validación Real
-- Creado banco de tests en [tests/test_audio_io.py](file:///Users/borjacandel/Documents/AutoPrevias/tests/test_audio_io.py):
+- Creado banco de tests en [tests/test_audio_io.py](tests/test_audio_io.py):
   - `test_load_valid_audio`: Carga y resampling perfecto.
   - `test_repair_and_load_truncated_header_wav`: Simulación de cabecera corrupta de FL Studio (76 bytes) reparada a los 2.0s reales y leída completa.
   - `test_short_audio_raises_value_error`: Comprobación de guarda para <2048 muestras.
   - `test_missing_file_raises_not_found`: Comprobación de archivo no encontrado.
 - **Suite completa `pytest`:** **13/13 tests pasando al 100%**.
-- **Prueba real de integración con `Dj Maka - King Kong (Borja Candel RMX).wav`:**
+- **Prueba real de integración con `Demo_Track_Remix.wav`:**
   - Archivo reparado de 76 bytes a 112,827,640 bytes (14,103,455 muestras = 293.82 segundos).
   - Carga en la UI al 100% con 0 errores: `BPM 165.0 · 4 drops`.
   - `QMediaPlayer` inicializado y listo con duración exacta de 293.82s.
@@ -312,7 +309,7 @@ En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/s
 ### Resumen de Mejoras — Sesión 5 (2026-10-02):
 
 #### 📉 1. Transición en Cortes: 1s Bajada a Cero y 1s Subida a Tope de Volumen
-- **Implementación exacta:** En [export.py](file:///Users/borjacandel/Documents/AutoPrevias/src/engine/export.py#L125-L155), en los cortes donde hay un salto real entre bloques distintos de la canción:
+- **Implementación exacta:** En [export.py](src/engine/export.py#L125-L155), en los cortes donde hay un salto real entre bloques distintos de la canción:
   - **1 segundo de bajada suave hacia 0.0 de volumen** antes de realizar el corte (`t_out = (1 + cos(pi*t))/2`).
   - **El corte DJ** se ejecuta en el punto de volumen cero mediante micro-crossfade de 40ms (cero clicks, cero DC offset).
   - **1 segundo de subida suave desde 0.0 hasta el 100% de volumen** al arrancar el siguiente bloque (`t_in = (1 - cos(pi*t))/2`).
@@ -320,26 +317,26 @@ En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/s
   - **Drops intactos:** Las subidas y drops contiguos permanecen dentro del mismo bloque musical continuo, por lo que el bombo impacta con el 100% de pegada sin ninguna bajada de volumen indeseada.
 
 #### 🎚️ 2. Limitador Transparente de Masterización (Soft-Knee)
-- Añadida la función `_soft_limiter(audio, ceiling_db=-0.5)` en [export.py](file:///Users/borjacandel/Documents/AutoPrevias/src/engine/export.py#L48).
+- Añadida la función `_soft_limiter(audio, ceiling_db=-0.5)` en [export.py](src/engine/export.py#L48).
 - Aplica compresión hiperbólica tangente (`tanh`) con codo suave exclusivamente sobre los picos transitorios que sobrepasen el ceiling tras la modulación de pitch/tempo.
 - Normalización final a -1.0 dBFS (`0.891`), garantizando que la previa tenga el volumen y pegada máxima de estudio sin distorsión digital ni recortes duros.
 
 #### 📊 3. Indicadores Visuales de Corte en la Waveform de Previa
-- En [waveform.py](file:///Users/borjacandel/Documents/AutoPrevias/src/ui/waveform.py#L550), la forma de onda de la previa dibuja automáticamente líneas discontinuas con la etiqueta `✂ CORTE 1s` en cada punto exacto donde se produce una transición con bajada y subida de volumen.
+- En [waveform.py](src/ui/waveform.py#L550), la forma de onda de la previa dibuja automáticamente líneas discontinuas con la etiqueta `✂ CORTE 1s` en cada punto exacto donde se produce una transición con bajada y subida de volumen.
 - El usuario puede identificar visualmente al instante los bloques musicales y las transiciones.
 
 #### 🎧 4. Subidas (Buildups) y Drops Perfectos sin Cortes en el Impacto
-- **Regla de Bloques Contiguos:** En [export.py](file:///Users/borjacandel/Documents/AutoPrevias/src/engine/export.py), los segmentos contiguos en el tema original se fusionan en un bloque de audio continuo. El bombo del drop impacta al 100% de pegada con toda la potencia.
-- **Detección musical de subidas:** En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/structure.py), cada Drop viene precedido por una subida calculada de 4 a 6 compases (~6 a 10s) donde se filtra el bombo y suben los redobles / risers.
+- **Regla de Bloques Contiguos:** En [export.py](src/engine/export.py), los segmentos contiguos en el tema original se fusionan en un bloque de audio continuo. El bombo del drop impacta al 100% de pegada con toda la potencia.
+- **Detección musical de subidas:** En [structure.py](src/analysis/structure.py), cada Drop viene precedido por una subida calculada de 4 a 6 compases (~6 a 10s) donde se filtra el bombo y suben los redobles / risers.
 
 #### ✂️ 5. Eliminación de Saltos y Cortes Demasiado Juntos (Regla de Puente)
 - **Regla de Puente (`BRIDGE RULE`):** Si dos secciones candidatas en la pista original están a menos de 20 segundos de distancia, **NUNCA se salta ni se corta**. Se crea un puente musical continuo.
 - **Estructura en 2–3 movimientos continuos:** En vez de 12 trocitos, la previa se compone de bloques sólidos de 40 a 90 segundos continuos (Buildup 1 → Drop 1, y luego Melodía → Buildup 2 → Climax Drop).
 
 #### 🔇 6. Corrección de Advertencias FFmpeg `[mp3float @ 0x...]`
-- En [app.py](file:///Users/borjacandel/Documents/AutoPrevias/src/ui/app.py#L1255): El reproductor interno y la forma de onda priorizan siempre el archivo `.wav` sin pérdida (precisión muestra a muestra, latencia cero, cero advertencias).
-- En [export.py](file:///Users/borjacandel/Documents/AutoPrevias/src/engine/export.py#L225): Si el usuario exporta sólo MP3, el motor genera el MP3 con cabeceras Xing y TOC completos vía FFmpeg/Pedalboard, y mantiene un WAV en caché temporal para el reproductor interno.
-- En [waveform.py](file:///Users/borjacandel/Documents/AutoPrevias/src/ui/waveform.py#L84): `WaveformLoader` lee MP3 con `pedalboard.io.AudioFile` directamente en memoria, sin spawns de ffmpeg ni mensajes de stderr.
+- En [app.py](src/ui/app.py#L1255): El reproductor interno y la forma de onda priorizan siempre el archivo `.wav` sin pérdida (precisión muestra a muestra, latencia cero, cero advertencias).
+- En [export.py](src/engine/export.py#L225): Si el usuario exporta sólo MP3, el motor genera el MP3 con cabeceras Xing y TOC completos vía FFmpeg/Pedalboard, y mantiene un WAV en caché temporal para el reproductor interno.
+- En [waveform.py](src/ui/waveform.py#L84): `WaveformLoader` lee MP3 con `pedalboard.io.AudioFile` directamente en memoria, sin spawns de ffmpeg ni mensajes de stderr.
 
 ---
 
@@ -364,19 +361,19 @@ En [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/s
    - Añadidos botones manuales discretos (`➕`, `➖`, `🔍 100%`) en la cabecera para hacer zoom deliberadamente si el usuario lo desea.
 
 3. **Transición Suave de Volumen Entre Cortes (1s Dip / 1s Swell - Anti-Golpe):**
-   - En [export.py](file:///Users/borjacandel/Documents/AutoPrevias/src/engine/export.py#L88), implementado un **fade-out suave cuadrático hacia el silencio de 1 segundo** antes de cada corte.
+   - En [export.py](src/engine/export.py#L88), implementado un **fade-out suave cuadrático hacia el silencio de 1 segundo** antes de cada corte.
    - **Fade-in progresivo a tope de volumen de 1 segundo** al comenzar el nuevo fragmento.
    - Elimina cualquier transición abrupta: el volumen baja orgánicamente, salta de tramo y vuelve a subir con fuerza.
 
 4. **Detección Óptima de Drops y Subidas al 100%:**
-   - Restaurado y calibrado el clasificador en [structure.py](file:///Users/borjacandel/Documents/AutoPrevias/src/analysis/structure.py#L400) para detectar con precisión absoluta los Drops enteros, Buildups y descansos en cualquier género musical (house, hardstyle, uptempo, techno, EDM, etc.).
+   - Restaurado y calibrado el clasificador en [structure.py](src/analysis/structure.py#L400) para detectar con precisión absoluta los Drops enteros, Buildups y descansos en cualquier género musical (house, hardstyle, uptempo, techno, EDM, etc.).
    - Algoritmo de preservación: Si el tema es largo, se recorta la intro o los descansos, manteniendo **los drops íntegros al 100%**.
 
 5. **Optimización de Rendimiento y Memoria (Límite < 1 GB):**
    - Submuestreo optimizado de la onda a 1600 puntos exactos (renderizado en **0.57ms**, aceleración x30).
    - Eliminación de timers continuos en bucle con `setStyleSheet`.
    - Suspensión automática del timer de partículas de `DropZone` al cambiar de vista.
-   - Liberación inmediata de memoria con `del` y recolección forzada `gc.collect()` en [AnalysisWorker](file:///Users/borjacandel/Documents/AutoPrevias/src/ui/app.py#L149) y [ExportWorker](file:///Users/borjacandel/Documents/AutoPrevias/src/ui/app.py#L182).
+   - Liberación inmediata de memoria con `del` y recolección forzada `gc.collect()` en [AnalysisWorker](src/ui/app.py#L149) y [ExportWorker](src/ui/app.py#L182).
    - **Consumo real del engine:** **~140–240 MB de RAM pico** (muy lejos del límite de 1 GB fijado) y 0% CPU en reposo.
 
 6. **Branding Oficial Radical Records ("RR STUDIO"):**
@@ -639,7 +636,7 @@ AutoPrevias/
 - [x] `analyze_track.py`: script CLI con colores para probar con temas reales
 - [x] `autoprevias_tui.py`: TUI interactiva con Textual (botones, tablas, progress bar, tema oscuro)
 - [x] `AutoPrevias.command` / `AutoPrevias.bat`: launchers principales con doble clic
-- [x] **VALIDACIÓN REAL COMPLETADA**: Probado con tracks reales (`Americano.wav` y `Dj Maka - King Kong (Borja Candel RMX).wav`), confirmando detección perfecta de drops cargados, subidas y melodías.
+- [x] **VALIDACIÓN REAL COMPLETADA**: Probado con tracks reales (`Demo_Club_Track.wav` y `Demo_Track_Remix.wav`), confirmando detección perfecta de drops cargados, subidas y melodías.
 
 ### Fase B — Motor de tempo + exportación ✅
 - [x] `src/engine/timestretch.py`: phase vocoder keylock vía librosa y Rubber Band
@@ -699,7 +696,7 @@ AutoPrevias/
   - Sincronización estricta por compases (4 beats por compás) con análisis armónico y rítmico.
   - Filtro de mayoría por ventana de compases (phrase-level filtering): **resuelve el problema de que los drops se cortasen por la mitad** por culpa de parones vocales de 1 compás ("Americano!"), redobles de caja o silencios.
   - Detección precisa de **Breakdowns con Melodía**: aísla las secciones donde residen los sintes/voces/acordes sin bombos.
-  - Comprobado y verificado en pista real (`Borja Candel - Americano.wav`), detectando con exactitud quirúrgica cada drop, melodía y subida.
+  - Comprobado y verificado en pista real (`Demo_Club_Track.wav`), detectando con exactitud quirúrgica cada drop, melodía y subida.
 - **Selección musical en `src/analysis/segments.py`**:
   - Drops tratados como bloques musicales completos (16 a 24 compases, 25 a 35 segundos de bombo continuo), sin micro-cortes feos.
   - Inclusión obligatoria y prioritaria del **Breakdown Melódico** para que la previa tenga el tema/gancho más reconocible del track.
@@ -971,6 +968,29 @@ AutoPrevias/
   - Con esta configuración, GitHub Actions queda 100% libre de restricciones de minutos mensuales o cuotas de pago, permitiendo compilar releases ilimitadas en Windows y macOS.
 - **Sincronización de Versión Oficial**:
   - Proyecto elevado a **`v1.0.7`** en `src/__version__.py`, `CHANGELOG.md`, `README.md` y `progreso.md`.
+
+---
+
+### Sesión 24 — 2026-10-05: Versión v1.0.8 — Resolución de File-Lock en Windows y Sanitización Total de Privacidad
+
+- **Diagnóstico y Corrección de Bloqueo de Archivos en Windows (`WinError 32`)**:
+  - En la ejecución de CI/CD para Windows de la versión `v1.0.7` (GitHub Actions Run #37290321108), las 6 fases del motor pasaron con éxito absoluto (incluyendo la resolución de `llvmlite.dll` y el backend de `QMediaPlayer` con estado `LoadedMedia`).
+  - No obstante, al salir del bloque `with tempfile.TemporaryDirectory() as tmpdir:`, el subsistema de audio de Windows (Windows Media Foundation) mantenía abierto el descriptor del archivo `.wav` generado, provocando `PermissionError: [WinError 32] El proceso no puede tener acceso al archivo porque está siendo utilizado por otro proceso: 'PREVIA - Selftest_Track.wav'`.
+  - **Corrección en `src/main.py`**:
+    1. Desvinculación explícita de recursos multimedia antes de la destrucción del directorio: `player.stop()`, `player.setSource(QUrl())`, `del player`, `del audio_out`, recolección forzada de basura `gc.collect()` y bombeo de eventos `app.processEvents()`.
+    2. Envoltura con `tempfile.TemporaryDirectory(ignore_cleanup_errors=True)` con fallback condicional para evitar que bloqueos temporales del sistema operativo o antivirus interrumpan el flujo de salida.
+- **Sanitización Integral de Privacidad y Anonimización de Datos en Repositorio Público**:
+  - En estricto cumplimiento del mandato del usuario sobre no exponer información personal en el repositorio público, se realizó una auditoría y limpieza profunda en todos los ficheros del proyecto:
+    1. Eliminación y reemplazo de todas las rutas locales absolutas con prefijos de usuario por rutas relativas limpias del proyecto (`src/...`, `tests/...`, `scripts/...`).
+    2. Anonimización de nombres de canciones privadas y artistas personales por denominaciones genéricas de estudio (`Demo_Club_Track.wav`, `Demo_Track_Remix.wav`, `"Radical DJ"`).
+    3. Eliminación de residuos heredoc accidentales en `scripts/build_macos.sh`.
+    4. Verificación exhaustiva con búsqueda estricta (`git grep`) confirmando **cero referencias personales expuestas**.
+- **Pruebas y Validación**:
+  - Selftest de diagnóstico ejecutado localmente: **6/6 fases completadas con éxito absoluto (100% OK)**.
+  - Banco de pruebas unitarias (`pytest tests/`): **21/21 tests pasando al 100%** sin errores.
+- **Lanzamiento Oficial**:
+  - Elevación de versión a **`v1.0.8`** en `src/__version__.py`, `CHANGELOG.md`, `README.md` y `progreso.md`.
+
 
 
 
