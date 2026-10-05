@@ -541,17 +541,21 @@ class PlayerWidget(QWidget):
         except Exception:
             pass
 
-        self._audio_out = QAudioOutput(self)
-        self._audio_out.setVolume(self._vol_slider.value() / 100.0)
+        try:
+            self._audio_out = QAudioOutput(self)
+            self._audio_out.setVolume(self._vol_slider.value() / 100.0)
 
-        self._player = QMediaPlayer(self)
-        self._player.setAudioOutput(self._audio_out)
+            self._player = QMediaPlayer(self)
+            self._player.setAudioOutput(self._audio_out)
 
-        self._player.positionChanged.connect(self._on_position)
-        self._player.durationChanged.connect(self._on_duration)
-        self._player.playbackStateChanged.connect(self._on_state)
-        self._player.mediaStatusChanged.connect(self._on_media_status)
-        self._player.errorOccurred.connect(self._on_error)
+            self._player.positionChanged.connect(self._on_position)
+            self._player.durationChanged.connect(self._on_duration)
+            self._player.playbackStateChanged.connect(self._on_state)
+            self._player.mediaStatusChanged.connect(self._on_media_status)
+            self._player.errorOccurred.connect(self._on_error)
+        except Exception:
+            self._audio_out = None
+            self._player = None
 
         # Timer de refresco para el medidor VU (30 FPS)
         self._vu_timer = QTimer(self)

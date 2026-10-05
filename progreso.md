@@ -8,13 +8,46 @@
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-05 (Sesión 25 — Versión v1.1.0: Lanzamiento Mayor de Estudio con Efectos Flanger/Sweep/Limiter, Compatibilidad Universal Windows ARM64, Clave Camelot, Vídeo Social 9:16 y Modo Lote)
-**Fase activa:** Fase E completada ✅ — Motor de Estudio v1.1 (Efectos de Audio, Vídeo Social, Modo Lote, Rueda Camelot y Soporte Windows ARM64)
-**Versión Actual:** **v1.1.0**
+**Fecha última actualización:** 2026-10-05 (Sesión 26 — Versión v1.2.1: Solución Definitiva de Arranque en Windows x64 / ARM64 Parallels, Rendering Seguro por Software, Diálogos Nativos de Excepciones y Preset 120s / 2 Min por Defecto)
+**Fase activa:** Fase E completada ✅ — Motor de Estudio v1.2.1 (Estabilidad Universal Windows x64/ARM64, Previas en Carpeta Propia, Vídeo Viral y Preset 120s por Defecto)
+**Versión Actual:** **v1.2.1**
 
 ---
 
-### Resumen de Mejoras — Sesión 25 (2026-10-05): Lanzamiento Mayor v1.1.0 (Studio Suite)
+### Resumen de Mejoras — Sesión 26 (2026-10-05): Versión v1.2.1 (Hotfix Windows & Preset 120s)
+
+#### 🪟 1. Solución Definitiva de Bloqueo / Carga Infinita en Windows (x64 y Parallels ARM64)
+- **Problema reportado:** En Windows x64 y Windows 11 ARM64 (Parallels Desktop en Apple Silicon), el instalador Inno Setup instalaba la aplicación correctamente, pero al hacer doble clic o abrirla desde el acceso directo, el proceso `AutoPrevias.exe` se quedaba cargando indefinidamente en segundo plano en el Administrador de Tareas sin llegar a mostrar la ventana.
+- **Causas raíz diagnosticadas:**
+  1. **WorkingDir faltante en accesos directos:** En `installer/windows/setup.iss`, las entradas de `[Icons]` y `[Run]` no definían `WorkingDir: "{app}"`. Al iniciar desde el escritorio o el instalador, Windows fijaba el directorio de trabajo en `System32` o la carpeta temporal del usuario, impidiendo la resolución de librerías DLL y recursos relativos.
+  2. **Bloqueo de contexto Direct3D / OpenGL:** En Qt 6 / PySide6 en Windows (especialmente dentro de entornos virtuales o bajo emulación x64 en ARM64), Qt 6 intenta inicializar aceleración por hardware vía Direct3D 11 / OpenGL. En controladores emulados o genéricos, la llamada a `D3D11CreateDevice` o `wglCreateContext` entra en punto muerto (deadlock). La condición previa `_check_is_arm()` devolvía `False` porque en emulación Prism de 64 bits la arquitectura reportada es `AMD64`, por lo que el modo software nunca se activaba ni en x64 ni en Parallels.
+  3. **PyQtGraph OpenGL Probe:** `pyqtgraph` puede intentar sondear módulos `QtOpenGL` y crear contextos GL si no se desactiva explícitamente al importar.
+- **Solución integral implementada:**
+  - **Inno Setup:** Añadido `WorkingDir: "{app}"` tanto a `{group}\AutoPrevias`, `{autodesktop}\AutoPrevias` como a la sección `[Run]`. Actualizado a `ArchitecturesInstallIn64BitMode=x64 arm64`.
+  - **Renderizado por software incondicional en Windows:** Establecidas las variables de entorno `QT_OPENGL=software`, `QT_QUICK_BACKEND=software`, `QMLSCENE_DEVICE=softwarecontext` y `QSG_RHI_BACKEND=software` en `src/main.py` y `src/compat.py`.
+  - **Atributo `AA_UseSoftwareOpenGL` temprano:** Configurado `QCoreApplication.setAttribute(Qt.ApplicationAttribute.AA_UseSoftwareOpenGL, True)` tanto en `src/compat.py` (al importar PySide6) como en `launch()` antes de instanciar `QApplication`.
+  - **PyQtGraph en rasterizado puro:** Configurado `pg.setConfigOptions(antialias=False, useOpenGL=False)` inmediatamente en el bloque de importación de `src/ui/app.py` y `src/ui/waveform.py`.
+  - **Protección de backend de audio en Windows:** En `src/ui/player.py`, la inicialización de `QAudioOutput` y `QMediaPlayer` se envolvió en un bloque `try/except` defensivo, permitiendo arrancar la interfaz incluso en sistemas virtuales o servidores que carecen de tarjeta de audio o servicio de sonido activo.
+  - **Activación explícita de ventana:** En `launch()`, tras `win.show()` se ejecutan `win.raise_()` y `win.activateWindow()` para forzar a Windows a traer la ventana al primer plano.
+
+#### 📝 2. Sistema de Diagnóstico y Logging Temprano de Arranque (`startup.log`)
+- Reubicada la función `_log_startup` a la cabecera absoluta de `src/main.py` para registrar cada hito del proceso desde el microsegundo 1:
+  * PID del proceso y argumentos CLI.
+  * Configuración de variables de entorno y parches de compatibilidad.
+  * Creación de `QApplication`.
+  * Instanciación y construcción de `MainWindow`.
+  * Llamada a `show()` y entrada en el bucle de eventos `app.exec()`.
+- **Capturador global de excepciones (`sys.excepthook`):** Si cualquier fallo inesperado ocurre en Windows en modo sin consola (`--windows-console-mode=disable`), se captura la traza completa, se escribe en `%LOCALAPPDATA%\AutoPrevias\startup.log` y se muestra un diálogo nativo `MessageBoxW` con el detalle del error, eliminando por completo los fallos silenciosos.
+
+#### ⏱️ 3. Preset por Defecto de 120s (Máximo 2 Minutos)
+- **Comportamiento solicitado por el usuario:** Crear un 4º preset de 120 segundos y hacer que la aplicación **siempre cargue ese preset por defecto con un máximo de 2 minutos**.
+- **Implementación:**
+  - **Nuevo botón en la barra de presets:** Añadido `🔥 120s / 2 Min (Club · Defecto)` junto a `15s (Teaser)`, `30s (Promo)` y `60s (Extended)`.
+  - **Feedback visual del preset activo:** Implementado `_update_preset_styles(active_sec)` que resalta el preset seleccionado en rojo carmesí de Radical Records (`#ff1e38` con borde luminoso) y mantiene los demás en estilo rack synth discreto.
+  - **Carga por defecto a 120s:** Al cargar cualquier canción, `AnalysisWorker` construye el plan con `target_duration_sec=120.0`. En `src/config.py`, `preview_max_sec` se fija en `120.0` y `default_preset_sec` en `120`.
+  - **Límite estricto de 2 minutos en el planificador:** En `src/analysis/segments.py`, `FINAL_MAX_SEC` se establece en `120.0` y el planificador recorta proporcionalmente los 3 cortes para que la previa calculada nunca supere los 120.0 segundos.
+
+---
 
 #### 🎛️ 0. Flanger Agresivo y Efectos Automáticos Pre-Drop con Parada en Seco
 - **Comportamiento solicitado por el usuario:** El flanger debía sonar con mayor carácter y agresividad de estudio, aplicándose **automáticamente en los 5 segundos previos a cada drop** (durante la subida/buildup) y **cortando en seco ("hard stop") justo al impactar el downbeat del drop**, permitiendo que el bombo y la pegada del drop entren 100% limpios y sin modulación.

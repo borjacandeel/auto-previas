@@ -24,8 +24,9 @@ _DEFAULTS = {
     "fade_out_sec": 4.0,
     "tempo_min_pct": 0.0,
     "tempo_max_pct": 15.0,
-    "preview_min_sec": 120.0,
-    "preview_max_sec": 180.0,
+    "preview_min_sec": 90.0,
+    "preview_max_sec": 120.0,  # 2 minutos máx por defecto
+    "default_preset_sec": 120,
     # Firma y metadatos de audio personalizados
     "tag_artist": "",
     "tag_label": "",

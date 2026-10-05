@@ -7,6 +7,46 @@ import tempfile
 import traceback
 from pathlib import Path
 
+import time
+
+def _log_startup(msg: str):
+    if sys.platform == "win32":
+        try:
+            log_dir = Path(os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData" / "Local"))) / "AutoPrevias"
+            log_dir.mkdir(parents=True, exist_ok=True)
+            with open(log_dir / "startup.log", "a", encoding="utf-8") as f:
+                f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}\n")
+                f.flush()
+        except Exception:
+            pass
+
+# Configuración defensiva de renderizado en Windows
+if sys.platform == "win32":
+    os.environ.setdefault("QT_OPENGL", "software")
+    os.environ.setdefault("QT_QUICK_BACKEND", "software")
+    os.environ.setdefault("QMLSCENE_DEVICE", "softwarecontext")
+    os.environ.setdefault("QSG_RHI_BACKEND", "software")
+    _log_startup(f"AutoPrevias proceso iniciado (pid={os.getpid()})")
+
+# Capturador global de excepciones para evitar cierre silencioso sin consola
+def _global_exception_handler(exc_type, exc_value, exc_tb):
+    err_text = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
+    _log_startup(f"FATAL UNHANDLED EXCEPTION:\n{err_text}")
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            ctypes.windll.user32.MessageBoxW(
+                0,
+                f"Error inesperado al ejecutar AutoPrevias:\n\n{exc_value}\n\nDetalles técnicos guardados en:\n%LOCALAPPDATA%\\AutoPrevias\\startup.log",
+                "AutoPrevias - Error crítico",
+                0x10,
+            )
+        except Exception:
+            pass
+    sys.__excepthook__(exc_type, exc_value, exc_tb)
+
+sys.excepthook = _global_exception_handler
+
 # Asegurar raíz en sys.path
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
@@ -15,6 +55,7 @@ if str(_ROOT) not in sys.path:
 if not hasattr(sys, "frozen"):
     setattr(sys, "frozen", True)
 
+_log_startup("Aplicando parches de compatibilidad...")
 from src.compat import apply_librosa_patches
 apply_librosa_patches()
 
@@ -185,20 +226,9 @@ def run_selftest() -> int:
         return 1
 
 
-def _log_startup(msg: str):
-    if sys.platform == "win32":
-        try:
-            log_dir = Path(os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData" / "Local"))) / "AutoPrevias"
-            log_dir.mkdir(parents=True, exist_ok=True)
-            import time
-            with open(log_dir / "startup.log", "a", encoding="utf-8") as f:
-                f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}\n")
-        except Exception:
-            pass
-
-
 def main():
     _log_startup(f"Iniciando AutoPrevias v{__version__} (argv={sys.argv})")
+    _log_startup(f"Plataforma: {sys.platform} | Python: {sys.version.split()[0]}")
 
     if "--version" in sys.argv or "-v" in sys.argv:
         print(f"AutoPrevias {__version__}")
@@ -214,8 +244,9 @@ def main():
             break
 
     try:
+        _log_startup("Importando módulo de interfaz gráfica src.ui.app...")
         from src.ui.app import launch
-        _log_startup("Invocando launch()...")
+        _log_startup("Módulo UI cargado. Invocando launch()...")
         launch(target)
     except Exception as e:
         err_msg = f"Error fatal al iniciar AutoPrevias:\n{e}\n\n{traceback.format_exc()}"

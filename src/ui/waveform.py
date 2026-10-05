@@ -25,6 +25,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QPushBu
 
 try:
     import pyqtgraph as pg
+    pg.setConfigOptions(antialias=False, useOpenGL=False)
     HAS_PYQTGRAPH = True
 except ImportError:
     HAS_PYQTGRAPH = False
@@ -159,7 +160,7 @@ class WaveformWidget(QWidget):
             layout.addWidget(lbl)
             return
 
-        pg.setConfigOptions(antialias=True, useOpenGL=False, background=BG_COLOR)
+        pg.setConfigOptions(antialias=False, useOpenGL=False, background=BG_COLOR)
 
         # ── Barra superior de estado / badge de sección ───────────────────
         top_bar = QHBoxLayout()

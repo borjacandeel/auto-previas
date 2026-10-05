@@ -59,6 +59,7 @@ from src.engine.variations import compute_preview_tempo_curve
 
 try:
     import pyqtgraph as pg
+    pg.setConfigOptions(antialias=False, useOpenGL=False)
     HAS_PYQTGRAPH = True
 except ImportError:
     HAS_PYQTGRAPH = False
@@ -188,8 +189,8 @@ class AnalysisWorker(QThread):
             analysis = analyze_structure(y, sr, grid)
             if self.isInterruptionRequested():
                 return
-            self.progress.emit(85, "Construyendo plan de previa…")
-            plan = build_preview_plan(analysis)
+            self.progress.emit(85, "Construyendo plan de previa (Preset 120s / 2 Min)…")
+            plan = build_preview_plan(analysis, target_duration_sec=120.0)
             if self.isInterruptionRequested():
                 return
             self.progress.emit(100, "¡Análisis completado!")
@@ -1205,16 +1206,26 @@ class ResultPanel(QWidget):
         lbl_pre.setStyleSheet(f"color: {TEXT_DIM}; font-size: 9px; font-weight: 800; letter-spacing: 0.8px; border: none; background: transparent;")
         p_lay.addWidget(lbl_pre)
 
-        self._btn_p15 = QPushButton("⚡ 15s (Teaser / Stories)")
-        self._btn_p30 = QPushButton("📻 30s (Promo Estándar)")
-        self._btn_p60 = QPushButton("🚀 60s (Extended)")
+        self._btn_p15  = QPushButton("⚡ 15s (Teaser)")
+        self._btn_p30  = QPushButton("📻 30s (Promo)")
+        self._btn_p60  = QPushButton("🚀 60s (Extended)")
+        self._btn_p120 = QPushButton("🔥 120s / 2 Min (Club · Defecto)")
 
-        for btn, sec in [(self._btn_p15, 15), (self._btn_p30, 30), (self._btn_p60, 60)]:
+        self._preset_buttons = [
+            (self._btn_p15, 15),
+            (self._btn_p30, 30),
+            (self._btn_p60, 60),
+            (self._btn_p120, 120),
+        ]
+
+        for btn, sec in self._preset_buttons:
             btn.setFixedHeight(24)
             btn.setCursor(Qt.PointingHandCursor)
-            btn.setStyleSheet(_btn(BG3, TEXT_MID, BG4, radius=4, fs=10))
             btn.clicked.connect(lambda _, s=sec: self._apply_duration_preset(s))
             p_lay.addWidget(btn)
+
+        self._active_preset_sec = 120
+        self._update_preset_styles(120)
 
         p_lay.addStretch()
         root.addWidget(preset_frame)
@@ -1796,20 +1807,49 @@ class ResultPanel(QWidget):
         if self._player:
             self._player.set_source_track(file_path)
 
+        self._active_preset_sec = 120
+        self._update_preset_styles(120)
+        self._lbl_simple_desc.setText(f"Preset 120s (2 Min · Defecto) aplicado ({len(plan.segments)} cortes calculados)")
+
         self._btn_generate.setEnabled(True)
         self._apply_generate_style(True)
         self._btn_generate.start_shimmer()
         self._update_tempo_plot()
 
+    def _update_preset_styles(self, active_sec: int):
+        if not hasattr(self, "_preset_buttons"):
+            return
+        for btn, sec in self._preset_buttons:
+            if sec == active_sec:
+                btn.setStyleSheet("""
+                    QPushButton {
+                        background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
+                            stop:0 #ff1e38, stop:1 #b30018);
+                        color: #ffffff;
+                        border: 1px solid #ff4d63;
+                        border-radius: 4px;
+                        font-size: 10px;
+                        font-weight: 800;
+                        padding: 0 8px;
+                    }
+                """)
+            else:
+                btn.setStyleSheet(_btn(BG3, TEXT_MID, BG4, radius=4, fs=10))
+
     def _apply_duration_preset(self, seconds: int):
+        self._active_preset_sec = seconds
+        self._update_preset_styles(seconds)
         if not self._analysis:
             return
         cfg = load_cfg()
         cfg["preview_min_sec"] = float(max(5, seconds - 2))
-        cfg["preview_max_sec"] = float(seconds + 2)
+        cfg["preview_max_sec"] = float(seconds)
         new_plan = build_preview_plan(self._analysis, target_duration_sec=float(seconds), cfg=cfg)
         self.update_after_regen(new_plan)
-        self._lbl_simple_desc.setText(f"Preset {seconds}s aplicado ({len(new_plan.segments)} cortes calculados)")
+        if seconds == 120:
+            self._lbl_simple_desc.setText(f"Preset 120s (2 Min · Defecto) aplicado ({len(new_plan.segments)} cortes calculados)")
+        else:
+            self._lbl_simple_desc.setText(f"Preset {seconds}s aplicado ({len(new_plan.segments)} cortes calculados)")
 
     def _select_voice_drop(self):
         file, _ = QFileDialog.getOpenFileName(
@@ -3606,16 +3646,18 @@ class MainWindow(QMainWindow):
 
 def launch(initial_file: str = ""):
     if sys.platform == "win32":
-        import os
-        arch = os.environ.get("PROCESSOR_ARCHITECTURE", "").upper()
-        arch_w64 = os.environ.get("PROCESSOR_ARCHITEW6432", "").upper()
-        if arch == "ARM64" or arch_w64 == "ARM64":
-            try:
-                from PySide6.QtCore import Qt, QCoreApplication
-                QCoreApplication.setAttribute(Qt.ApplicationAttribute.AA_UseSoftwareOpenGL, True)
-            except Exception:
-                pass
+        try:
+            from PySide6.QtCore import Qt, QCoreApplication
+            QCoreApplication.setAttribute(Qt.ApplicationAttribute.AA_UseSoftwareOpenGL, True)
+        except Exception:
+            pass
 
+    try:
+        from src.main import _log_startup
+    except Exception:
+        def _log_startup(msg): pass
+
+    _log_startup("Iniciando QApplication...")
     app = QApplication.instance() or QApplication(sys.argv)
     app.setStyle("Fusion")
 
@@ -3623,9 +3665,16 @@ def launch(initial_file: str = ""):
     family_to_use = ".AppleSystemUIFont" if sys.platform == "darwin" else "Segoe UI"
     app.setFont(QFont(family_to_use, 12))
 
+    _log_startup("Instanciando MainWindow...")
     win = MainWindow(initial_file=initial_file)
     app.aboutToQuit.connect(win._cleanup_threads)
+
+    _log_startup("Mostrando ventana principal...")
     win.show()
+    win.raise_()
+    win.activateWindow()
+
+    _log_startup("Ventana principal visible. Ejecutando app.exec()...")
     sys.exit(app.exec())
 
 

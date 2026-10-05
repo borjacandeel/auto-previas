@@ -18,12 +18,12 @@ from typing import List, Tuple
 from .structure import Section, SectionType, StructureAnalysis
 
 # Rango objetivo en segundos para la SELECCIÓN (antes de time-stretch)
-TARGET_MIN_SEC = 130.0   # 2:10  → con factor 1.075 queda ~2:01
-TARGET_MAX_SEC = 195.0   # 3:15  → con factor 1.075 queda ~3:02
+TARGET_MIN_SEC = 90.0
+TARGET_MAX_SEC = 129.0   # ~120s final tras factor 1.075
 
-# Rango final deseado tras time-stretch
-FINAL_MIN_SEC = 120.0    # 2:00
-FINAL_MAX_SEC = 180.0    # 3:00
+# Rango final deseado tras time-stretch (máx 2:00 min por defecto)
+FINAL_MIN_SEC = 60.0
+FINAL_MAX_SEC = 120.0    # 2:00 máx por defecto
 
 # Factor medio de stretch esperado
 AVG_STRETCH_FACTOR = 1.075
@@ -122,12 +122,12 @@ def build_preview_plan(
     if not sections:
         return PreviewPlan()
 
-    # Si se pasa configuración con duración de previa objetivo
+    # Si se pasa configuración con duración de previa objetivo o valor por defecto
     effective_target: float | None = target_duration_sec
     if effective_target is None and cfg is not None:
-        p_max = cfg.get("preview_max_sec")
-        if p_max and float(p_max) <= 90.0:
-            effective_target = float(p_max)
+        effective_target = float(cfg.get("default_preset_sec", cfg.get("preview_max_sec", 120.0)))
+    if effective_target is None:
+        effective_target = 120.0  # Siempre 120s (máximo 2 minutos) por defecto
 
     all_drops = [s for s in sections if s.type == SectionType.DROP]
     bpm = analysis.bpm if analysis.bpm > 0 else 128.0
@@ -339,6 +339,22 @@ def build_preview_plan(
 
     raw_total = sum(s.duration for s in segments)
     final_est = _estimated_final(raw_total, stretch_factor)
+
+    # Asegurar que nunca supere el límite máximo (120s / 2 min por defecto)
+    max_limit = effective_target if effective_target is not None else FINAL_MAX_SEC
+    if final_est > max_limit and final_est > 0:
+        ratio = max_limit / final_est
+        trimmed_segs = []
+        for seg in segments:
+            new_dur = max(4.0, seg.duration * ratio)
+            trimmed_segs.append(PreviewSegment(
+                section=seg.section,
+                trimmed_start=seg.trimmed_start,
+                trimmed_end=seg.trimmed_start + new_dur,
+            ))
+        segments = trimmed_segs
+        raw_total = sum(s.duration for s in segments)
+        final_est = _estimated_final(raw_total, stretch_factor)
 
     # Identificar momentos de impacto de drops incluidos en los segmentos
     included_drops = [

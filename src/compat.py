@@ -85,24 +85,22 @@ if sys.platform == "win32":
         proc = platform.processor().lower()
         return "arm" in mach or "arm" in proc
 
-    is_arm = _check_is_arm()
-    if is_arm:
-        # En Windows ARM64 (ej. Snapdragon X o Parallels en Apple Silicon),
-        # los controladores OpenGL/Direct3D emulados pueden bloquear la inicialización de la ventana.
-        # Forzar modo de renderizado por software seguro garantiza arranque instantáneo de la GUI.
-        os.environ["QT_OPENGL"] = "software"
-        os.environ["QT_QUICK_BACKEND"] = "software"
-        os.environ["QMLSCENE_DEVICE"] = "softwarecontext"
-        os.environ["QSG_RHI_BACKEND"] = "software"
+    # En Windows (tanto x64 como ARM64 bajo emulación o virtualización en Parallels / VMware / Snapdragon),
+    # los controladores OpenGL / Direct3D emulados pueden bloquear la inicialización de la ventana de Qt.
+    # Forzar modo de renderizado por software seguro garantiza arranque instantáneo de la GUI al 100%.
+    os.environ.setdefault("QT_OPENGL", "software")
+    os.environ.setdefault("QT_QUICK_BACKEND", "software")
+    os.environ.setdefault("QMLSCENE_DEVICE", "softwarecontext")
+    os.environ.setdefault("QSG_RHI_BACKEND", "software")
 
     exe_dir = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent.parent
     for d in [
         exe_dir,
         exe_dir / "llvmlite" / "binding",
         exe_dir / "PySide6",
-        exe_dir / "PySide6" / "plugins" / "platforms",
-        exe_dir / "PySide6" / "qt-plugins" / "platforms",
-        exe_dir / "qt-plugins" / "platforms",
+        exe_dir / "PySide6" / "plugins",
+        exe_dir / "PySide6" / "qt-plugins",
+        exe_dir / "qt-plugins",
     ]:
         if d.is_dir():
             if hasattr(os, "add_dll_directory"):
@@ -150,9 +148,14 @@ try:
 except Exception:
     pass
 
-# Registrar rutas de plugins de Qt (multimedia, platforms, styles) en standalone
+# Registrar rutas de plugins de Qt (multimedia, platforms, styles) en standalone y activar OpenGL software
 try:
-    from PySide6.QtCore import QCoreApplication
+    from PySide6.QtCore import Qt, QCoreApplication
+    if sys.platform == "win32":
+        try:
+            QCoreApplication.setAttribute(Qt.ApplicationAttribute.AA_UseSoftwareOpenGL, True)
+        except Exception:
+            pass
     _base_dir = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent.parent
     for p_dir in [
         _base_dir / "PySide6" / "qt-plugins",
