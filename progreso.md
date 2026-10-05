@@ -818,3 +818,31 @@ AutoPrevias/
      - Redactadas las notas completas de la release para su publicación y vinculación directa en GitHub Releases.
      - Commiteado y sincronizado en la rama `main` (`7626a0e`).
 
+### Sesión 17 — 2026-10-05: Parche v1.0.3 — Auditoría Exhaustiva de Logs de CI, Reducción Radical de Tiempos de Compilación y Blindaje de FFmpeg en Windows
+
+- **Auditoría Exhaustiva de Logs de Compilación en GitHub Actions**:
+  1. **Cuello de Botella Masivo en Windows (82 minutos de compilación)**:
+     - *Diagnóstico en logs de MSVC (`cl.exe` y `link.exe`):*
+       - `Nuitka-Scons: Backend C compiler: cl (cl 14.5).` (21:19:40Z)
+       - `Nuitka-Scons: Backend C linking with 1197 files...` (22:33:43Z)
+       - Se detectó que MSVC tardaba más de 50 minutos únicamente en la fase de enlace monohilo `/LTCG` (Link-Time Code Generation) debido a la activación implícita de Link-Time Optimization (`--lto=auto`).
+       - En máquinas virtuales de 2 cores (GitHub runner `windows-latest`), LTO monohilo analiza todo el programa C entre 1.197 unidades de compilación, provocando demoras extremas sin beneficio en aplicaciones Qt standalone.
+     - *Corrección:* Se añadió `--lto=no` tanto en Windows como en macOS. La fase de enlace pasa de 50 minutos a escasos segundos.
+  2. **Bloatware de Módulos de Prueba (`pytest`, `unittest` arrastrados a compilación C)**:
+     - *Diagnóstico:*
+       - `Nuitka-Plugins:WARNING: anti-bloat: Undesirable import of 'pytest' in 'lazy_loader.tests.test_lazy_loader' encountered. It may slow down compilation.`
+       - La directiva `--include-package=lazy_loader` incluía el submódulo `lazy_loader.tests`, lo que desencadenaba la importación y compilación de cientos de archivos de `pytest`, `pluggy`, etc.
+     - *Corrección:* Se sustituyó `--include-package=lazy_loader` por `--include-module=lazy_loader` y se agregó `--nofollow-import-to=librosa,pytest,unittest,lazy_loader.tests`.
+  3. **Paralelismo Forzado**:
+     - Se añadió `--jobs=2` en el runner de Windows y `--jobs=3` en macOS para maximizar la saturación de los vCPUs de GitHub Actions durante la compilación C de Nuitka.
+  4. **Fallo Silencioso en Descarga/Inclusión de FFmpeg en Windows**:
+     - *Diagnóstico:* En Windows aparecía `Nuitka-Options:WARNING: No data files in directory 'ffmpeg_bin'` y en el selftest posterior `FFmpeg binario: No detectado (se usará fallback interno)`.
+     - *Causa:* El cmdlet `Expand-Archive` de PowerShell 5.1 fallaba silenciosamente o no descomprimía los binarios ejecutables a la raíz esperada de `ffmpeg_bin/`.
+     - *Corrección:* Sustitución por comandos nativos universales en bash (`curl -sL` y `tar -xf` integrados en Windows 10/11 y Server 2022). Se garantiza la extracción directa de `ffmpeg.exe`, `ffprobe.exe` y `ffplay.exe`.
+  5. **Habilitación de Caché en macOS**:
+     - Eliminado el flag deshabilitador `--disable-cache=ccache` para permitir que Nuitka use aceleración de caché nativo en macOS.
+  6. **Actualización Semántica y Documentación**:
+     - `src/__version__.py` elevado a `1.0.3`.
+     - `CHANGELOG.md` y `README.md` actualizados con la entrada formal de `[1.0.3] - 2026-10-05`.
+
+

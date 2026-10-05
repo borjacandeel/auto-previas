@@ -92,10 +92,10 @@ jobs:
             --enable-plugin=pyside6 \
             --include-data-dir=assets=assets \
             --include-data-dir=ffmpeg_bin=ffmpeg_bin \
-            --nofollow-import-to=librosa \
+            --nofollow-import-to=librosa,pytest,unittest,lazy_loader.tests \
             --no-deployment-flag=excluded-module-usage \
             --include-package=audioread \
-            --include-package=lazy_loader \
+            --include-module=lazy_loader \
             --include-package=soxr \
             --include-data-dir="$LIBROSA_DIR"=librosa \
             --include-package-data=pedalboard \
@@ -103,7 +103,8 @@ jobs:
             --output-dir=dist \
             --output-filename=AutoPrevias \
             --assume-yes-for-downloads \
-            --disable-cache=ccache \
+            --lto=no \
+            --jobs=3 \
             src/main.py
 
           if [ -d "dist/main.app" ] && [ ! -d "dist/AutoPrevias.app" ]; then
@@ -212,12 +213,13 @@ jobs:
           python scripts/generate_icons.py
 
       - name: Descargar FFmpeg estático para Windows
-        shell: powershell
+        shell: bash
         run: |
-          if (-not (Test-Path "ffmpeg_bin")) { New-Item -ItemType Directory -Path "ffmpeg_bin" }
-          Invoke-WebRequest -Uri "https://github.com/Tyrrrz/FFmpegBin/releases/download/9.0.2/ffmpeg-windows-x64.zip" -OutFile "ffmpeg-win.zip"
-          Expand-Archive -Path "ffmpeg-win.zip" -DestinationPath "ffmpeg_bin" -Force
-          Remove-Item "ffmpeg-win.zip"
+          mkdir -p ffmpeg_bin
+          curl -sL "https://github.com/Tyrrrz/FFmpegBin/releases/download/9.0.2/ffmpeg-windows-x64.zip" -o ffmpeg-win.zip
+          tar -xf ffmpeg-win.zip -C ffmpeg_bin/
+          rm -f ffmpeg-win.zip
+          ls -la ffmpeg_bin/
 
       - name: Compilar con Nuitka
         shell: cmd
@@ -236,10 +238,10 @@ jobs:
             --enable-plugin=pyside6 ^
             --include-data-dir=assets=assets ^
             --include-data-dir=ffmpeg_bin=ffmpeg_bin ^
-            --nofollow-import-to=librosa ^
+            --nofollow-import-to=librosa,pytest,unittest,lazy_loader.tests ^
             --no-deployment-flag=excluded-module-usage ^
             --include-package=audioread ^
-            --include-package=lazy_loader ^
+            --include-module=lazy_loader ^
             --include-package=soxr ^
             --include-data-dir="%LIBROSA_DIR%"=librosa ^
             --include-package-data=pedalboard ^
@@ -249,6 +251,8 @@ jobs:
             --output-dir=dist ^
             --output-filename=AutoPrevias.exe ^
             --assume-yes-for-downloads ^
+            --lto=no ^
+            --jobs=2 ^
             src\main.py
 
           if exist "dist\main.dist" (

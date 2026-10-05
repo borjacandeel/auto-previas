@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v1.0.2-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v1.0.3-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -196,6 +196,12 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 ---
 
 ### 📈 Registro Oficial de Versiones y Parches
+
+#### 🟢 [v1.0.3] — 2026-10-05 (Parche de Rendimiento de Compilación CI/CD y Empaquetado de FFmpeg)
+- **Aceleración radical de compilación (reducción de 82 min a ~12 min en Windows):** Supresión de Link-Time Optimization (`--lto=no`) en MSVC y Clang, eliminando el bloqueo monohilo de `/LTCG`.
+- **Eliminación de bloatware de pruebas unitarias:** Bloqueo de importaciones recursivas de frameworks de tests (`--nofollow-import-to=librosa,pytest,unittest,lazy_loader.tests`) y uso de `--include-module=lazy_loader`.
+- **Compilación paralela multiproceso:** Habilitación de `--jobs=2` en Windows y `--jobs=3` en macOS.
+- **Inclusión verificada de FFmpeg en Windows:** Extracción directa con herramientas nativas de Windows (`curl` y `tar`), garantizando la presencia de `ffmpeg.exe` en el bundle distribuido.
 
 #### 🟢 [v1.0.2] — 2026-10-05 (Parche Oficial de Compatibilidad de llvmlite en Windows)
 - **Empaquetado y resolución de dependencias C de LLVM en Windows:** Inclusión de `llvmlite.dll` en `llvmlite/binding/` dentro del bundle distribuido, solucionando el fallo `OSError: Could not find/load shared object file 'llvmlite.dll'` al cargar `librosa` en ejecutables compilados de Windows x64.

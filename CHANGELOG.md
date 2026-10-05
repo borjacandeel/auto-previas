@@ -3,7 +3,22 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.3] - 2026-10-05
+
+### Corregido
+- **Optimización masiva del tiempo de compilación CI/CD (de 82 min a ~12 min en Windows):**
+  - Desactivación de Link-Time Optimization (`--lto=no`) en MSVC y Clang para suprimir la fase de enlace monohilo `/LTCG` que bloqueaba el runner durante más de 50 minutos.
+  - Bloqueo de importación de frameworks de pruebas (`--nofollow-import-to=librosa,pytest,unittest,lazy_loader.tests`) que evitaba compilar a C cientos de módulos de prueba arrastrados por `lazy_loader`.
+  - Reemplazo de `--include-package=lazy_loader` por `--include-module=lazy_loader`.
+  - Compilación paralela forzada (`--jobs=2` en Windows, `--jobs=3` en macOS).
+  - Eliminación del flag redundante `--disable-cache=ccache` en macOS para permitir reuso de caché C.
+- **Inclusión robusta de binarios FFmpeg en Windows:**
+  - Sustitución de `Invoke-WebRequest` + `Expand-Archive` de PowerShell por `curl` + `tar` nativos de Windows, garantizando la presencia de `ffmpeg.exe`, `ffprobe.exe` y `ffplay.exe` dentro de `ffmpeg_bin/` y eliminando la advertencia `No data files in directory 'ffmpeg_bin'`.
+
+---
+
 ## [1.0.2] - 2026-10-05
+
 
 ### Corregido
 - **Carga de bibliotecas nativas de LLVM en Windows (llvmlite.dll):**
