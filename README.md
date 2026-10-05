@@ -103,7 +103,7 @@ Existen dos métodos sencillos para autorizar la aplicación:
   ```bash
   xattr -cr /Applications/AutoPrevias.app
   ```
-  *(Este comando retira la marca de cuarentena de descarga y la aplicación se abrirá instantáneamente con un doble clic).*
+  *(Este comando retira la marca de cuarentena de descarga, permitiendo a macOS cargar los plugins multimedia nativos de audio y abrir la aplicación con un simple doble clic).*
 
 - **Método desde Ajustes del Sistema:**
   1. Abre `/Applications/AutoPrevias.app`.

@@ -1000,6 +1000,11 @@ AutoPrevias/
     1. Descargado `AutoPrevias-1.0.8-macOS-arm64.dmg` directamente en `~/Downloads`.
     2. Instalado en `/Applications/AutoPrevias.app` y desbloqueado con `xattr -cr /Applications/AutoPrevias.app`.
     3. Ejecutado selftest de diagnóstico interno sobre el binario instalado: **6/6 fases completadas exitosamente**, inicializando el backend FFmpeg de QtMultimedia y conectando a `Auriculares externos` en estado `LoadedMedia`.
+  - **Validación Final del Usuario**:
+    - Apertura directa de `/Applications/AutoPrevias.app` en el escritorio de macOS.
+    - El usuario probó la reproducción interactiva, botón Play/Pause, búsqueda, adelantar/retroceder y salida acústica por auriculares/altavoces, validando funcionamiento 100% correcto y fluido.
+    - Toda la documentación de usuario ([README.md](README.md)), notas de release ([CHANGELOG.md](CHANGELOG.md)) y registro cronológico ([progreso.md](progreso.md)) quedan sincronizadas, completas y garantizadas con cero datos privados expuestos.
+
 
 
 
