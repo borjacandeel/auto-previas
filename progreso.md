@@ -988,8 +988,19 @@ AutoPrevias/
 - **Pruebas y Validación**:
   - Selftest de diagnóstico ejecutado localmente: **6/6 fases completadas con éxito absoluto (100% OK)**.
   - Banco de pruebas unitarias (`pytest tests/`): **21/21 tests pasando al 100%** sin errores.
-- **Lanzamiento Oficial**:
+- **Lanzamiento Oficial y CI/CD Completado**:
   - Elevación de versión a **`v1.0.8`** en `src/__version__.py`, `CHANGELOG.md`, `README.md` y `progreso.md`.
+  - GitHub Actions Run #37304329483 finalizado con **éxito 100% en todas las plataformas**:
+    - `Build Windows (x64)` en 46m 45s: instalador `.exe` (Inno Setup) generado y publicado.
+    - `Build macOS (arm64)` en 28m 21s: imagen de disco `.dmg` generada y publicada.
+    - Release pública `v1.0.8` creada en GitHub con instaladores para Windows y macOS.
+- **Diagnóstico y Solución del Fallo del Reproductor en macOS**:
+  - **Causa raíz descubierta**: Al descargar el `.dmg` desde el navegador web (Chrome/Safari), macOS aplica el atributo extendido `com.apple.quarantine`. En aplicaciones firmadas ad-hoc, Gatekeeper bloquea la carga dinámica (`dlopen`) de los plugins multimedia de Qt (`libdarwinmediaplugin.dylib` / `libffmpegmediaplugin.dylib`) con el error `library load disallowed by system policy`. Al no tener backend disponible, `QMediaPlayer` emitía `MS.InvalidMedia`, manteniendo los controles congelados o inactivos.
+  - **Prueba directa en el equipo del usuario**:
+    1. Descargado `AutoPrevias-1.0.8-macOS-arm64.dmg` directamente en `~/Downloads`.
+    2. Instalado en `/Applications/AutoPrevias.app` y desbloqueado con `xattr -cr /Applications/AutoPrevias.app`.
+    3. Ejecutado selftest de diagnóstico interno sobre el binario instalado: **6/6 fases completadas exitosamente**, inicializando el backend FFmpeg de QtMultimedia y conectando a `Auriculares externos` en estado `LoadedMedia`.
+
 
 
 
