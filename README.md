@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v1.1.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v1.2.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -196,6 +196,27 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 ---
 
 ### 📈 Registro Oficial de Versiones y Parches
+
+#### 🚀 [v1.2.0] — 2026-10-05 (Subcarpeta Automática 'Previas', Plantilla de Vídeo Viral, Flanger Pre-Drop Agresivo y Acceso Inmediato en Finder/Explorador)
+- **Organización Automática en Subcarpeta `Previas/`:**
+  - Todas las previas generadas se guardan de forma limpia dentro de una subcarpeta dedicada llamada `Previas` en el directorio de la canción original (o en la carpeta personalizada configurada), evitando mezclar archivos con proyectos o grabaciones originales.
+- **Rediseño Total de la Plantilla de Vídeo para Redes (TikTok, Reels, Shorts):**
+  - Fondo cinemático con color grading profundo (`eq=brightness=-0.35:contrast=1.35:saturation=2.2,boxblur=40:5`).
+  - Carátula de estudio con esquinas redondeadas (`radius=28`), máscara alfa y doble bisel neón iluminado.
+  - Analizador de espectro FFT tricolor (Cian/Magenta/Ámbar) + osciloscopio analógico central sólido (`draw=full`) sobre tarjeta glassmórfica con marcadores de frecuencia y niveles de mezcla.
+  - Iconos vectoriales nítidos dibujados en Pillow (rayo BPM, vinilo Tonalidad, faders Master, estrella Exclusivo) sustituyendo caracteres emoji rotos.
+  - Tipografía broadcast en gran formato con sombras profundas e indicador `REC` en vivo.
+- **Efectos Pre-Drop Agresivos y Automáticos:**
+  - Flanger de estudio con feedback (0.74), profundidad (3.8ms), LFO (0.65 Hz), mezcla wet (75%), rampa suave de 0.6s y parada en seco micro-atenuada (3ms) en el beat 1 del drop.
+  - Activación automática 5 segundos antes de cada drop real.
+- **Claridad de Destino y Botones Directos de Apertura:**
+  - Tarjeta verde de confirmación `_card_export_success` en la pantalla principal con desglose de archivos y botón directo `📂 Abrir Carpeta en Finder / Explorador`.
+  - Selector visual explícito de carpeta en el Procesador por Lote (Batch), columna de acciones con botón `📂 Abrir` por fila, soporte para apertura por doble clic y diálogo emergente de resumen con botón directo a la carpeta.
+- **Correcciones Críticas de Estabilidad y Compatibilidad:**
+  - Corrección de la firma digital `codesign` en macOS ejecutando selftest con `PYTHONDONTWRITEBYTECODE=1` y limpiando `.pyc` antes de firmar para eliminar el aviso falso de Gatekeeper *"está dañado"*.
+  - Cierre cooperativo seguro de hilos en `MainWindow` (`closeEvent`) eliminando el error `Abort trap: 6`.
+
+---
 
 #### 🚀 [v1.1.0] — 2026-10-05 (Lanzamiento Mayor de Estudio: Efectos Flanger/Sweep/Limiter, Windows ARM64, Clave Camelot, Vídeo Social 9:16 y Modo Lote)
 - **Compatibilidad Universal con Windows ARM64 (Snapdragon X Elite / Parallels en Apple Silicon):**

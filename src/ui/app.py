@@ -1544,6 +1544,72 @@ class ResultPanel(QWidget):
         self._btn_generate.clicked.connect(self.generate_requested.emit)
         root.addWidget(self._btn_generate)
 
+        # ── 7b. TARJETA DE CONFIRMACIÓN DE EXPORTACIÓN ───────────────────────
+        self._card_export_success = QFrame()
+        self._card_export_success.setStyleSheet(f"""
+            QFrame {{
+                background: {BG2};
+                border: 1px solid {GREEN};
+                border-radius: 9px;
+            }}
+        """)
+        card_lay = QVBoxLayout(self._card_export_success)
+        card_lay.setContentsMargins(14, 10, 14, 10)
+        card_lay.setSpacing(6)
+
+        hdr_row = QHBoxLayout()
+        lbl_succ_icon = QLabel("✅")
+        lbl_succ_icon.setStyleSheet("font-size: 16px; border: none; background: transparent;")
+        hdr_row.addWidget(lbl_succ_icon)
+
+        self._lbl_succ_title = QLabel("¡Previa y contenido exportados con éxito!")
+        self._lbl_succ_title.setStyleSheet(f"color: {GREEN}; font-size: 12px; font-weight: 800; border: none; background: transparent;")
+        hdr_row.addWidget(self._lbl_succ_title, stretch=1)
+
+        btn_close_succ = QPushButton("✕")
+        btn_close_succ.setFixedSize(20, 20)
+        btn_close_succ.setStyleSheet(_btn(BG3, TEXT_DIM, BG4, radius=4, fs=10))
+        btn_close_succ.setCursor(Qt.PointingHandCursor)
+        btn_close_succ.clicked.connect(lambda: self._card_export_success.setVisible(False))
+        hdr_row.addWidget(btn_close_succ)
+        card_lay.addLayout(hdr_row)
+
+        self._lbl_succ_files = QLabel("")
+        self._lbl_succ_files.setStyleSheet(f"color: {TEXT}; font-size: 11px; font-weight: 600; border: none; background: transparent;")
+        self._lbl_succ_files.setWordWrap(True)
+        card_lay.addWidget(self._lbl_succ_files)
+
+        self._lbl_succ_dir = QLabel("")
+        self._lbl_succ_dir.setStyleSheet(f"color: {TEXT_MID}; font-size: 10.5px; border: none; background: transparent;")
+        self._lbl_succ_dir.setWordWrap(True)
+        card_lay.addWidget(self._lbl_succ_dir)
+
+        act_row = QHBoxLayout()
+        self._btn_succ_open = QPushButton("📂 Abrir Carpeta en Finder / Explorador")
+        self._btn_succ_open.setFixedHeight(28)
+        self._btn_succ_open.setStyleSheet(f"""
+            QPushButton {{
+                background: {GREEN};
+                color: #000000;
+                font-size: 11px;
+                font-weight: 800;
+                border: none;
+                border-radius: 6px;
+                padding: 0 14px;
+            }}
+            QPushButton:hover {{
+                background: #34d399;
+            }}
+        """)
+        self._btn_succ_open.setCursor(Qt.PointingHandCursor)
+        self._btn_succ_open.clicked.connect(self.open_folder_requested.emit)
+        act_row.addWidget(self._btn_succ_open)
+        act_row.addStretch()
+        card_lay.addLayout(act_row)
+
+        self._card_export_success.setVisible(False)
+        root.addWidget(self._card_export_success)
+
     # ── Helpers de UI ─────────────────────────────────────────────────────
 
     def _on_toggle_advanced(self, checked: bool):
@@ -1794,8 +1860,19 @@ class ResultPanel(QWidget):
         self._btn_generate.setText("▶   GENERAR PREVIA")
         self._apply_generate_style(True)
         self._btn_generate.start_shimmer()
-        # Cargar la previa en la waveform y en el reproductor como pista activa
+
+        # Mostrar tarjeta de confirmación con los archivos y la carpeta exacta
         if generated:
+            out_dir = str(Path(generated[0]).parent)
+            file_names = [Path(p).name for p in generated]
+            has_vid = any(p.lower().endswith(".mp4") for p in generated)
+
+            title_text = "🎉 ¡Previa y Vídeo Social exportados con éxito!" if has_vid else "✅ ¡Previa de audio exportada con éxito!"
+            self._lbl_succ_title.setText(title_text)
+            self._lbl_succ_files.setText("Archivos:  " + "  ·  ".join(file_names))
+            self._lbl_succ_dir.setText(f"📁 Carpeta de guardado:\n{out_dir}")
+            self._card_export_success.setVisible(True)
+
             # Priorizar archivo WAV sin comprimir para evitar retrasos de búsqueda y advertencias [mp3float]
             prev_file = next((p for p in generated if p.lower().endswith(".wav")), generated[0])
             if HAS_WAVEFORM and self._plan:
@@ -1805,6 +1882,8 @@ class ResultPanel(QWidget):
             self.play_requested.emit(prev_file)
 
     def on_export_start(self):
+        if hasattr(self, "_card_export_success"):
+            self._card_export_success.setVisible(False)
         self._btn_generate.setEnabled(False)
         self._btn_generate.setText("⏳   Generando previa…")
         self._btn_generate.stop_shimmer()
@@ -3421,9 +3500,11 @@ class MainWindow(QMainWindow):
         self._results.on_export_done(generated, seed)
         if generated:
             names = ", ".join(Path(p).name for p in generated)
+            folder = str(Path(generated[0]).parent)
             self._set_progress(100,
-                f"✅  {names}  ·  seed {seed}"
+                f"✅  Guardado en: {folder}  ·  ({names})"
             )
+            self._results._btn_open_folder.setStyleSheet(_btn("#059669", "#ffffff", "#10b981", radius=5, fs=10.5))
         else:
             self._set_progress(0, "⚠  No se generaron archivos.")
 

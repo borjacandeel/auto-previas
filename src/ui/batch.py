@@ -60,8 +60,8 @@ AUDIO_EXTS = {".wav", ".mp3", ".aiff", ".aif", ".flac", ".m4a", ".ogg"}
 class BatchWorker(QThread):
     file_started = Signal(int, str)             # index, filename
     file_progress = Signal(int, int, str)       # index, pct, msg
-    file_finished = Signal(int, str, str)       # index, bpm_key_info, status
-    batch_finished = Signal(int, int)           # total_ok, total_err
+    file_finished = Signal(int, str, str, list) # index, bpm_key_info, status, generated_paths
+    batch_finished = Signal(int, int, list)     # total_ok, total_err, all_generated
     log_message = Signal(str)
 
     def __init__(self, files: List[str], cfg: dict):
@@ -77,6 +77,7 @@ class BatchWorker(QThread):
         ok_count = 0
         err_count = 0
         total = len(self.files)
+        all_generated: List[str] = []
 
         for idx, file_path in enumerate(self.files):
             if self._is_cancelled:
@@ -112,7 +113,7 @@ class BatchWorker(QThread):
                 )
 
                 # 5. Exportar formatos
-                self.file_progress.emit(idx, 90, "Exportando archivos…")
+                self.file_progress.emit(idx, 90, "Exportando archivos y vídeo…")
                 out_dir = str(get_output_dir(file_path, self.cfg))
                 paths = output_paths(
                     source_path=file_path,
@@ -131,7 +132,7 @@ class BatchWorker(QThread):
                     "camelot": key_res.camelot,
                     "title": p.stem,
                 }
-                export_files(
+                generated = export_files(
                     audio=audio,
                     sr=preview_sr,
                     paths=paths,
@@ -140,14 +141,15 @@ class BatchWorker(QThread):
                 )
 
                 ok_count += 1
-                self.file_finished.emit(idx, key_info, "✅ Listo")
+                all_generated.extend(generated)
+                self.file_finished.emit(idx, key_info, "✅ Listo", generated)
             except Exception as e:
                 err_count += 1
                 err_msg = str(e).splitlines()[-1] if str(e) else "Error"
-                self.file_finished.emit(idx, "—", f"❌ {err_msg}")
+                self.file_finished.emit(idx, "—", f"❌ {err_msg}", [])
                 self.log_message.emit(f"Error en {p.name}: {traceback.format_exc()}")
 
-        self.batch_finished.emit(ok_count, err_count)
+        self.batch_finished.emit(ok_count, err_count, all_generated)
 
 
 class BatchDialog(QDialog):
@@ -226,14 +228,54 @@ class BatchDialog(QDialog):
         tb.addWidget(self._lbl_count)
         root.addLayout(tb)
 
+        # ── Destino de Exportación ───────────────────────────────────────────
+        dest_box = QFrame()
+        dest_box.setStyleSheet(f"background: {BG2}; border: 1px solid {BORDER}; border-radius: 8px;")
+        dest_lay = QHBoxLayout(dest_box)
+        dest_lay.setContentsMargins(12, 6, 12, 6)
+        dest_lay.setSpacing(10)
+
+        lbl_dest = QLabel("📁 Carpeta destino:")
+        lbl_dest.setStyleSheet(f"color: {TEXT_MID}; font-size: 11px; font-weight: 700; border: none; background: transparent;")
+        dest_lay.addWidget(lbl_dest)
+
+        self._lbl_dest_path = QLabel("Subcarpeta 'Previas' en cada pista de origen (Predeterminado)")
+        self._lbl_dest_path.setStyleSheet(f"color: {GREEN}; font-size: 11px; font-weight: 600; border: none; background: transparent;")
+        dest_lay.addWidget(self._lbl_dest_path, stretch=1)
+
+        btn_ch_dest = QPushButton("Cambiar…")
+        btn_ch_dest.setFixedHeight(24)
+        btn_ch_dest.setStyleSheet(self._btn_style(BG3, TEXT, ACCENT))
+        btn_ch_dest.setCursor(Qt.PointingHandCursor)
+        btn_ch_dest.clicked.connect(self._choose_dest_folder)
+        dest_lay.addWidget(btn_ch_dest)
+
+        btn_rst_dest = QPushButton("Restablecer")
+        btn_rst_dest.setFixedHeight(24)
+        btn_rst_dest.setStyleSheet(self._btn_style(BG3, TEXT_DIM, "#ef4444"))
+        btn_rst_dest.setCursor(Qt.PointingHandCursor)
+        btn_rst_dest.clicked.connect(self._reset_dest_folder)
+        dest_lay.addWidget(btn_rst_dest)
+
+        btn_op_dest = QPushButton("📂 Abrir Carpeta")
+        btn_op_dest.setFixedHeight(24)
+        btn_op_dest.setStyleSheet(self._btn_style(BG3, TEXT, GREEN))
+        btn_op_dest.setCursor(Qt.PointingHandCursor)
+        btn_op_dest.clicked.connect(self._open_current_dest)
+        dest_lay.addWidget(btn_op_dest)
+
+        root.addWidget(dest_box)
+
         # ── Tabla de Archivos ────────────────────────────────────────────────
         self._table = QTableWidget()
-        self._table.setColumnCount(4)
-        self._table.setHorizontalHeaderLabels(["PISTA / ARCHIVO", "DURACIÓN", "BPM / TONALIDAD", "ESTADO"])
+        self._table.setColumnCount(5)
+        self._table.setHorizontalHeaderLabels(["PISTA / ARCHIVO", "DURACIÓN", "BPM / TONALIDAD", "ESTADO", "ACCIONES"])
         self._table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
         self._table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
         self._table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
         self._table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        self._table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeToContents)
+        self._table.cellDoubleClicked.connect(self._on_table_double_clicked)
         self._table.setStyleSheet(f"""
             QTableWidget {{
                 background: {BG2};
@@ -282,7 +324,7 @@ class BatchDialog(QDialog):
         self._chk_flac.setStyleSheet("color: white; font-size: 11px; border: none; background: transparent;")
         opt_lay.addWidget(self._chk_flac)
 
-        self._chk_video = QCheckBox("Vídeo 9:16 (Reels/TikTok)")
+        self._chk_video = QCheckBox("🎬 Vídeo 9:16 (TikTok/Reels)")
         self._chk_video.setChecked(False)
         self._chk_video.setStyleSheet("color: #a855f7; font-size: 11px; font-weight: 700; border: none; background: transparent;")
         opt_lay.addWidget(self._chk_video)
@@ -293,7 +335,7 @@ class BatchDialog(QDialog):
         lbl_fx.setStyleSheet(f"color: {TEXT_MID}; font-size: 11px; font-weight: 700; border: none; background: transparent;")
         opt_lay.addWidget(lbl_fx)
 
-        self._chk_flanger = QCheckBox("Flanger")
+        self._chk_flanger = QCheckBox("Flanger Pre-Drop")
         self._chk_flanger.setChecked(False)
         self._chk_flanger.setStyleSheet("color: white; font-size: 11px; border: none; background: transparent;")
         opt_lay.addWidget(self._chk_flanger)
@@ -415,8 +457,64 @@ class BatchDialog(QDialog):
                 item_st.setForeground(QColor(TEXT_MID))
                 self._table.setItem(row, 3, item_st)
 
+                item_act = QTableWidgetItem("—")
+                item_act.setTextAlignment(Qt.AlignCenter)
+                self._table.setItem(row, 4, item_act)
+
         self._lbl_count.setText(f"{len(self._files)} pistas en cola")
         self._btn_start.setEnabled(len(self._files) > 0)
+
+    def _choose_dest_folder(self):
+        folder = QFileDialog.getExistingDirectory(self, "Seleccionar carpeta destino para el lote")
+        if folder:
+            self._custom_out_dir = folder
+            self._lbl_dest_path.setText(str(folder))
+            self._lbl_dest_path.setStyleSheet(f"color: {TEXT}; font-size: 11px; font-weight: 700; border: none; background: transparent;")
+
+    def _reset_dest_folder(self):
+        self._custom_out_dir = None
+        self._lbl_dest_path.setText("Subcarpeta 'Previas' en cada pista de origen (Predeterminado)")
+        self._lbl_dest_path.setStyleSheet(f"color: {GREEN}; font-size: 11px; font-weight: 600; border: none; background: transparent;")
+
+    def _open_current_dest(self):
+        if hasattr(self, "_custom_out_dir") and self._custom_out_dir:
+            self._reveal_paths([self._custom_out_dir])
+        elif self._files:
+            self._reveal_paths([str(Path(self._files[0]).parent)])
+        else:
+            from src.config import get_output_dir
+            self._reveal_paths([str(get_output_dir("", self._cfg))])
+
+    def _reveal_paths(self, paths: list):
+        if not paths:
+            return
+        target = paths[0]
+        p = Path(target)
+        try:
+            import subprocess, sys
+            if not p.exists():
+                p = p.parent
+            if sys.platform == "darwin":
+                if p.is_file():
+                    subprocess.run(["open", "-R", str(p)])
+                else:
+                    subprocess.run(["open", str(p)])
+            elif sys.platform == "win32":
+                if p.is_file():
+                    subprocess.run(["explorer", f"/select,{p}"])
+                else:
+                    subprocess.run(["explorer", str(p)])
+            else:
+                target_str = str(p if p.is_dir() else p.parent)
+                subprocess.run(["xdg-open", target_str])
+        except Exception:
+            pass
+
+    def _on_table_double_clicked(self, row: int, col: int):
+        if hasattr(self, "_generated_map") and row in self._generated_map:
+            self._reveal_paths(self._generated_map[row])
+        elif 0 <= row < len(self._files):
+            self._reveal_paths([self._files[row]])
 
     def _clear_list(self):
         if self._worker and self._worker.isRunning():
@@ -443,6 +541,10 @@ class BatchDialog(QDialog):
         cfg["fx_flanger"] = self._chk_flanger.isChecked()
         cfg["studio_mastering"] = self._chk_master.isChecked()
 
+        if hasattr(self, "_custom_out_dir") and self._custom_out_dir:
+            cfg["output_dir"] = self._custom_out_dir
+
+        self._generated_map = {}
         self._prog.setValue(0)
         self._btn_start.setText("⏹ Detener")
 
@@ -467,7 +569,11 @@ class BatchDialog(QDialog):
         if item:
             item.setText(f"⚙️ {msg}")
 
-    def _on_file_finished(self, idx: int, key_info: str, status: str):
+    def _on_file_finished(self, idx: int, key_info: str, status: str, generated: list):
+        if not hasattr(self, "_generated_map"):
+            self._generated_map = {}
+        self._generated_map[idx] = generated
+
         if key_info != "—":
             it_key = self._table.item(idx, 2)
             if it_key:
@@ -479,12 +585,56 @@ class BatchDialog(QDialog):
             item.setText(status)
             item.setForeground(QColor(GREEN if "Listo" in status else "#ef4444"))
 
-    def _on_batch_finished(self, ok: int, err: int):
+        if generated:
+            btn_open = QPushButton("📂 Abrir")
+            btn_open.setFixedHeight(22)
+            btn_open.setStyleSheet(f"""
+                QPushButton {{
+                    background: {BG3};
+                    color: {TEXT};
+                    border: 1px solid {BORDER};
+                    border-radius: 4px;
+                    font-size: 10px;
+                    font-weight: 700;
+                    padding: 0 6px;
+                }}
+                QPushButton:hover {{
+                    border-color: {GREEN};
+                    color: {GREEN};
+                }}
+            """)
+            btn_open.setCursor(Qt.PointingHandCursor)
+            btn_open.setToolTip(f"Abrir carpeta y ver archivos ({len(generated)}):\n" + "\n".join(Path(p).name for p in generated))
+            btn_open.clicked.connect(lambda _, g=generated: self._reveal_paths(g))
+            self._table.setCellWidget(idx, 4, btn_open)
+
+    def _on_batch_finished(self, ok: int, err: int, all_generated: list):
         self._prog.setValue(100)
         self._btn_start.setText("🚀 Iniciar Lote")
+
+        out_dirs = list(dict.fromkeys(str(Path(p).parent) for p in all_generated if Path(p).exists()))
+        dirs_text = "<br>".join(f"• <code>{d}</code>" for d in out_dirs[:4])
+        if len(out_dirs) > 4:
+            dirs_text += f"<br><i>... y {len(out_dirs) - 4} carpetas adicionales.</i>"
+
+        vid_count = sum(1 for p in all_generated if p.lower().endswith(".mp4"))
+
         from PySide6.QtWidgets import QMessageBox
-        QMessageBox.information(
-            self,
-            "Lote Completado",
-            f"Procesamiento por lote finalizado:\n\n✓ {ok} pistas exportadas con éxito.\n✗ {err} errores.",
+        msg = QMessageBox(self)
+        msg.setWindowTitle("🎉 Procesamiento por Lote Completado")
+        msg.setIcon(QMessageBox.Information)
+        msg.setText(
+            f"<h3>¡Procesamiento por lote finalizado con éxito!</h3>"
+            f"<p>✓ <b>{ok}</b> pistas procesadas correctamente.<br>"
+            f"✓ <b>{len(all_generated)}</b> archivos generados en total"
+            f" (incluyendo <b>{vid_count}</b> vídeos MP4 9:16 para redes).<br>"
+            f"✗ <b>{err}</b> errores.</p>"
+            f"<hr>"
+            f"<p><b>📁 Archivos guardados en:</b><br>{dirs_text}</p>"
         )
+        btn_open = msg.addButton("📂 Abrir Carpeta en Finder / Explorador", QMessageBox.ActionRole)
+        msg.addButton("Cerrar", QMessageBox.RejectRole)
+        msg.exec()
+
+        if msg.clickedButton() == btn_open and out_dirs:
+            self._reveal_paths([out_dirs[0]])

@@ -122,6 +122,15 @@ jobs:
         run: |
           python scripts/bundle_runtime_deps.py "dist/AutoPrevias.app/Contents/MacOS"
 
+      - name: Ejecutar Selftest sobre binario compilado
+        run: |
+          PYTHONDONTWRITEBYTECODE=1 dist/AutoPrevias.app/Contents/MacOS/AutoPrevias --selftest
+
+      - name: Limpiar metadatos y bytecode residual
+        run: |
+          find dist/AutoPrevias.app -name "*.pyc" -delete -o -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+          xattr -cr dist/AutoPrevias.app
+
       - name: Firma de aplicación (Developer ID o ad-hoc fallback)
         env:
           MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
@@ -134,10 +143,8 @@ jobs:
             echo "Sin secrets de firma comercial. Aplicando firma ad-hoc..."
             codesign --force --deep --sign - dist/AutoPrevias.app
           fi
-
-      - name: Ejecutar Selftest sobre binario compilado
-        run: |
-          dist/AutoPrevias.app/Contents/MacOS/AutoPrevias --selftest
+          echo "Verificando integridad del sello de firma digital..."
+          codesign -vvv --deep --strict dist/AutoPrevias.app
 
       - name: Crear instalador DMG
         run: |

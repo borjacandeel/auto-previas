@@ -1126,7 +1126,7 @@ AutoPrevias/
 
 ---
 
-### Sesión 25 — 2026-10-05: Versión v1.1.0 — Plantilla de Vídeo Viral para Redes Sociales, Efectos Pre-Drop Automáticos y Cierre Seguro de Hilos
+### Sesión 25 — 2026-10-05: Versión v1.2.0 — Subcarpeta 'Previas' Automática, Plantilla de Vídeo Viral, Efectos Pre-Drop y Apertura Directa en Finder/Explorador
 
 #### 🎬 1. Rediseño Total de la Plantilla de Vídeo para Redes Sociales (TikTok, Reels, Shorts)
 - **Diagnóstico de la versión previa**: El vídeo resultaba visualmente plano y monótono; las cajas de texto contenían caracteres emoji que los sistemas de fuentes de renderizado interpretaban como cuadros rotos (`[]`); el fondo carecía de contraste y dinamismo; el osciloscopio era monocromático y básico.
@@ -1164,7 +1164,34 @@ AutoPrevias/
   - Implementado `closeEvent()` y `_cleanup_threads()` en `MainWindow` que solicita interrupción cooperativa, espera con `wait(400)` y asegura la detención limpia sin fugas ni abortos de proceso.
   - Conexión del evento `QApplication.aboutToQuit`.
 
-#### 🧪 4. Validación y Banco de Pruebas
-- **Pruebas unitarias**: **24/24 tests pasando al 100%** en `pytest tests/`.
-- **Selftest de diagnóstico**: **6/6 fases completadas con éxito absoluto**.
-- **Auditoría de privacidad**: Cero rutas privadas ni datos personales en el código fuente ni en el historial de cambios.
+#### 🍏 5. Diagnóstico y Corrección de Gatekeeper en macOS ("está dañado y no se puede abrir")
+- **Causa Raíz Descubierta**:
+  - En el workflow de CI/CD de GitHub Actions, el paso `Firma de aplicación` (`codesign`) se ejecutaba **antes** de `Ejecutar Selftest sobre binario compilado`.
+  - Al ejecutar el binario compilado con Nuitka durante el selftest en el runner de GitHub, el intérprete de Python generaba archivos compilados de bytecode `.pyc` dentro de las carpetas internas del bundle (`Contents/MacOS/numba/__pycache__/`, etc.).
+  - Posteriormente, `create-dmg` empaquetaba el bundle con estos archivos nuevos añadidos a posteriori.
+  - Al descargarlo en el Mac, macOS Gatekeeper evaluaba la firma y detectaba que el sello criptográfico estaba violado (`file added: ...`), arrojando la alerta crítica: *"AutoPrevias.app está dañado y no se puede abrir. Deberías trasladarlo a la papelera."*
+- **Solución Definitiva**:
+  1. En `.github/workflows/release.yml`, se reordenaron las fases:
+     - El selftest se ejecuta con `PYTHONDONTWRITEBYTECODE=1`.
+     - Se limpian exhaustivamente todos los archivos residuales (`find -name "*.pyc" -delete -o -name "__pycache__" -exec rm -rf`) y atributos extendidos (`xattr -cr`).
+     - La firma (`codesign`) se aplica **después** del selftest, sellando el paquete de forma definitiva.
+     - Se ejecuta una verificación estricta `codesign -vvv --deep --strict dist/AutoPrevias.app` antes de crear el instalador `.dmg`.
+  2. En local, se limpió y re-firmó `/Applications/AutoPrevias.app` validando `valid on disk` y `satisfies its Designated Requirement`, abriendo la aplicación sin ninguna alerta de sistema.
+
+#### 📂 6. Claridad Total en la Ubicación de Archivos Exportados y Apertura Directa en Finder / Explorador
+- **Diagnóstico**: Al generar previas individuales o en lote, los archivos exportados (WAV, MP3, MP4) se guardaban correctamente en la carpeta de origen de cada canción, pero la interfaz no ofrecía suficiente confirmación visual ni accesos directos destacados para localizarlos de inmediato.
+- **Mejoras Implementadas**:
+  1. **En el Motor por Lote (`src/ui/batch.py`)**:
+     - **Selector de Destino Explícito**: Nueva sección de configuración de carpeta destino que indica claramente *"Misma carpeta que cada pista de origen (Predeterminado)"* o permite elegir una carpeta personalizada con botones de selección, restablecimiento y apertura directa.
+     - **Columna de Acciones Directas en la Tabla**: Nueva columna con botón interactivo `📂 Abrir` por cada pista procesada con tooltip detallando todos los archivos generados, además de soporte para abrir al hacer doble clic sobre cualquier fila.
+     - **Diálogo Final Enriquecido**: Al concluir el lote, la ventana emergente muestra el desglose exacto de audios y vídeos generados (`.mp4`), la lista de carpetas donde se alojan y un botón prominente **"📂 Abrir Carpeta en Finder / Explorador"** para acceder con un solo clic.
+  2. **En la Interfaz Principal (`src/ui/app.py`)**:
+     - **Tarjeta de Éxito Visual (`_card_export_success`)**: Panel flotante con borde verde de alta visibilidad que emerge automáticamente al finalizar la previa, detallando los nombres de los archivos generados (especificando si incluye el vídeo MP4 9:16), la ruta absoluta de guardado y un botón verde de acción inmediata para revelar la carpeta en Finder o Windows Explorer.
+     - **Barra de Progreso Informativa**: Actualizada para reflejar la carpeta destino y resaltar el botón `📂 Abrir` en verde esmeralda.
+
+#### 📁 7. Organización Automática en la Subcarpeta 'Previas'
+- **Requisito del Usuario**: Al generar las previas, el programa debe crearlas y guardarlas organizadas dentro de una carpeta dedicada llamada `Previas` en lugar de depositarlas en la raíz del tema original.
+- **Implementación en el Motor (`src/config.py` - `get_output_dir`)**:
+  - `get_output_dir(source_file, cfg)` genera automáticamente la subcarpeta `Previas` (`Path(source_file).parent / "Previas"` o `Path(output_dir) / "Previas"`) y asegura su creación física en disco con `mkdir(parents=True, exist_ok=True)`.
+  - Mantiene los proyectos, stems y carpetas de canciones completamente limpios y ordenados.
+  - Sincronizado tanto para el modo individual (`ResultPanel`) como para el procesamiento por lote (`BatchDialog`).

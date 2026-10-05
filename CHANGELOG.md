@@ -3,6 +3,32 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.2.0] - 2026-10-05
+
+### Añadido
+- **Organización Automática en Subcarpeta `Previas/`**:
+  - Todas las previas generadas (WAV, MP3, FLAC, AIFF y Vídeo MP4) se guardan automáticamente dentro de una subcarpeta organizada llamada `Previas` en el directorio de la canción de origen (o dentro de la carpeta personalizada configurada), evitando mezclar archivos en las carpetas principales del usuario.
+- **Plantilla de Vídeo Viral para Redes Sociales (TikTok, Reels, Shorts)**:
+  - Fondo cinemático enriquecido con color grading (`eq=brightness=-0.35:contrast=1.35:saturation=2.2`) y desenfoque atmosférico extraído de la propia carátula.
+  - Carátula de estudio con esquinas redondeadas (`radius=28`), máscara alfa de alta resolución y doble bisel iluminado (resplandor cian translúcido + contorno blanco nítido).
+  - Analizador de espectro FFT tricolor (Cian Eléctrico / Magenta Radical / Ámbar) + osciloscopio dinámico analógico con opacidad total (`draw=full`) sobre tarjeta glassmórfica con marcadores de frecuencia de estudio (20Hz a 20kHz) y niveles de referencia (-6dB y -18dB).
+  - Sustitución completa de emojis rotos (`[]`) por iconos vectoriales trazados matemáticamente en Pillow (rayo de BPM, vinilo de Tonalidad, faders de Master y estrella de Exclusivo).
+  - Tipografía broadcast en gran formato (50pt) con sombras oscuras profundas y cabecera de emisión en directo con indicador `REC` rojo.
+- **Efectos Pre-Drop Agresivos y Automáticos (5s antes del Drop)**:
+  - Flanger de estudio con feedback agresivo (0.74), profundidad modulada (3.8ms), oscilador LFO (0.65 Hz), mezcla wet al 75%, apertura suave de 0.6s y parada en seco instantánea (3ms) en el downbeat (beat 1) del drop.
+  - Sweep de filtro pasa-altos complementario aplicado automáticamente 5 segundos antes de cada drop real.
+- **Claridad de Rutas de Guardado y Botones Directos de Apertura**:
+  - Tarjeta flotante de confirmación `_card_export_success` en la pantalla principal con la lista de archivos creados, ruta completa y botón de acción rápida `📂 Abrir Carpeta en Finder / Explorador`.
+  - Selector visual explícito de carpeta destino en el Procesador por Lote (Batch), columna de acciones interactivas con botón `📂 Abrir` por fila, soporte para apertura por doble clic y diálogo emergente de resumen con botón directo a la carpeta.
+
+### Corregido
+- **Integridad del Sello Digital de Firma (`codesign`) en macOS**:
+  - Reordenamiento del pipeline de CI/CD para ejecutar el selftest con `PYTHONDONTWRITEBYTECODE=1` y limpiar exhaustivamente archivos `.pyc` antes de la firma definitiva, eliminando la alerta de Gatekeeper *"AutoPrevias.app está dañado y no se puede abrir"*.
+- **Cierre Seguro de Hilos y Prevención de `Abort trap: 6`**:
+  - Implementación de `closeEvent()` y `_cleanup_threads()` en `MainWindow` con comprobación periódica de `isInterruptionRequested()` en `WaveformLoader`, `AnalysisWorker` y `ExportWorker`, garantizando una salida limpia sin abortos de proceso.
+
+---
+
 ## [1.1.0] - 2026-10-05
 
 ### Añadido

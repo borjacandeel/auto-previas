@@ -183,17 +183,38 @@ def save(cfg: dict) -> None:
 
 
 def get_output_dir(source_file: str | Path, cfg: dict | None = None) -> Path:
+    """
+    Devuelve la carpeta de destino donde se guardarán las previas.
+    Por defecto, crea y utiliza una subcarpeta organizada llamada 'Previas'
+    dentro del directorio de origen de la pista (o dentro de la ruta configurada).
+    """
     if cfg is None:
         cfg = load()
     preferred = cfg.get("output_dir", "").strip()
     if preferred:
         p = Path(preferred)
+        if p.name.lower() != "previas":
+            p = p / "Previas"
         try:
             p.mkdir(parents=True, exist_ok=True)
             return p
         except Exception:
             pass
-    return Path(source_file).parent
+    if source_file and str(source_file).strip():
+        p_src = Path(source_file)
+        src_parent = p_src if p_src.is_dir() else p_src.parent
+        out_p = src_parent / "Previas"
+        try:
+            out_p.mkdir(parents=True, exist_ok=True)
+            return out_p
+        except Exception:
+            return src_parent
+    fallback = Path.cwd() / "Previas"
+    try:
+        fallback.mkdir(parents=True, exist_ok=True)
+        return fallback
+    except Exception:
+        return Path.cwd()
 
 
 def get_active_cover_path(cfg: dict | None = None) -> Path:
