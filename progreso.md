@@ -1124,8 +1124,47 @@ AutoPrevias/
     - El usuario probó la reproducción interactiva, botón Play/Pause, búsqueda, adelantar/retroceder y salida acústica por auriculares/altavoces, validando funcionamiento 100% correcto y fluido.
     - Toda la documentación de usuario ([README.md](README.md)), notas de release ([CHANGELOG.md](CHANGELOG.md)) y registro cronológico ([progreso.md](progreso.md)) quedan sincronizadas, completas y garantizadas con cero datos privados expuestos.
 
+---
 
+### Sesión 25 — 2026-10-05: Versión v1.1.0 — Plantilla de Vídeo Viral para Redes Sociales, Efectos Pre-Drop Automáticos y Cierre Seguro de Hilos
 
+#### 🎬 1. Rediseño Total de la Plantilla de Vídeo para Redes Sociales (TikTok, Reels, Shorts)
+- **Diagnóstico de la versión previa**: El vídeo resultaba visualmente plano y monótono; las cajas de texto contenían caracteres emoji que los sistemas de fuentes de renderizado interpretaban como cuadros rotos (`[]`); el fondo carecía de contraste y dinamismo; el osciloscopio era monocromático y básico.
+- **Transformación de Diseño y Estética Viral (`src/engine/video.py`)**:
+  1. **Fondo Cinemático Enriquecido**: Filtro FFmpeg optimizado con ecualización de saturación y contraste (`eq=brightness=-0.35:contrast=1.35:saturation=2.2`) junto a desenfoque gaussiano suave (`boxblur=40:5`), creando un aura atmosférica vibrante extraída de la propia carátula.
+  2. **Carátula de Estudio con Acabado Premium**: Recorte con esquinas redondeadas con máscara alfa de alta resolución (`radius=28`) y enmarcado con doble bisel iluminado (resplandor cian translúcido + contorno blanco nítido).
+  3. **Analizador Espectral y Osciloscopio Dual en Tiempo Real**:
+     - Combinación sincronizada en tarjeta flotante glassmórfica (`colorkey=0x000000:0.1:0.1`).
+     - **Espectro FFT por bandas de frecuencia** (`showfreqs` en escala logarítmica con gradiente tricolor neón cian/magenta/ámbar).
+     - **Osciloscopio dinámico** (`showwaves=mode=cline:scale=sqrt:draw=full`) para representación analógica de picos y transitorios con 100% de opacidad.
+     - Marcadores de frecuencia serigrafiados (`20Hz`, `100Hz`, `500Hz`, `1kHz`, `5kHz`, `10kHz`, `20kHz`) y líneas de referencia de nivel de mezcla (-6dB y -18dB).
+  4. **Eliminación Total de Emojis Rotos por Iconos Vectoriales Nítidos**:
+     - Implementada la función `_draw_vector_icon()` en Pillow con trazados matemáticos puros:
+       - **Rayo de alta tensión** para el badge de BPM.
+       - **Disco de vinilo con surcos concéntricos** para la Tonalidad musical (Camelot / Tradicional).
+       - **Faders de consola de mezclas** para el badge de Master de Estudio.
+       - **Estrella geométrica de 5 puntas** para la acreditación Exclusiva.
+     - Cero cuadros `[]` o glifos ausentes en cualquier sistema operativo.
+  5. **Tipografía y Jerarquía de Contenidos**:
+     - Título de la pista en gran formato (50pt) con sombra oscura de profundidad para máxima legibilidad.
+     - Artista / Sello en color cian eléctrico de alta luminosidad (30pt).
+     - Cabecera de emisión de estudio con indicador de grabación en directo (`REC` rojo parpadeante).
 
+#### 🎛️ 2. Efectos Pre-Drop Agresivos y Automáticos (Flanger de Estudio y Sweep)
+- **Implementación Acústica (`src/engine/effects.py`)**:
+  - `apply_flanger`: Diseñado específicamente para acumular tensión extrema previa a los drops con feedback (`0.74`), profundidad modulada (`3.8 ms`), oscilador LFO (`0.65 Hz`), mezcla wet/dry (`0.75`), rampa de apertura progresiva de 0.6 segundos y parada en seco limpia (micro-fade de 3 ms para evitar clicks digitales).
+  - `apply_predrop_effects`: Localiza automáticamente los drops reales en la previa y activa el efecto agresivo con antelación quirúrgica de 5 segundos, culminando exactamente en el downbeat (beat 1) del drop donde se detiene de forma instantánea.
+  - Integrado de forma nativa en la cadena de masterización de `src/engine/export.py`.
 
+#### 🛑 3. Cierre Seguro de la Aplicación y Eliminación del Error `Abort trap: 6`
+- **Diagnóstico**: Al cerrar la ventana principal mientras se realizaba el renderizado de waveform o el análisis en segundo plano, Qt destruía las instancias de `QThread` activas, arrojando en terminal:
+  `QThread: Destroyed while thread is still running` -> `Abort trap: 6`.
+- **Corrección en `src/ui/app.py` y `src/ui/waveform.py`**:
+  - `WaveformLoader`, `AnalysisWorker` y `ExportWorker` verifican periódicamente `isInterruptionRequested()`.
+  - Implementado `closeEvent()` y `_cleanup_threads()` en `MainWindow` que solicita interrupción cooperativa, espera con `wait(400)` y asegura la detención limpia sin fugas ni abortos de proceso.
+  - Conexión del evento `QApplication.aboutToQuit`.
 
+#### 🧪 4. Validación y Banco de Pruebas
+- **Pruebas unitarias**: **24/24 tests pasando al 100%** en `pytest tests/`.
+- **Selftest de diagnóstico**: **6/6 fases completadas con éxito absoluto**.
+- **Auditoría de privacidad**: Cero rutas privadas ni datos personales en el código fuente ni en el historial de cambios.
