@@ -926,5 +926,51 @@ AutoPrevias/
   5. **Ampliación de Selftest a 6 fases**: Se incorporó el paso `[6/6] Verificando motor de reproducción de audio (QMediaPlayer / QAudioOutput)` en `src/main.py`, validando que el backend cargue archivos y reporte estado `LoadedMedia` antes de empaquetar instaladores.
   6. **Sincronización de Versión**: Proyecto elevado a **`v1.0.6`** en `src/__version__.py`, `CHANGELOG.md`, `README.md` y `progreso.md`.
 
+### Sesión 22 — 2026-10-05: Implementación de Firma de Audio y Carátula Personalizada (Branding Studio)
+
+- **Requerimiento del Usuario**:
+  - Implementar un sistema de "Firma de Temas" y carátula personalizada con soporte para arrastrar cualquier imagen (`.jpg`, `.png`, `.webp`) y rellenar automáticamente metadatos de artista, sello/discográfica, colección, comentarios y BPM en los archivos generados.
+- **Arquitectura y Diseño Técnico Implementado**:
+  1. **Configuración y Persistencia (`src/config.py`)**:
+     - Nuevas claves en `_DEFAULTS`: `tag_artist`, `tag_label`, `tag_album`, `tag_genre`, `tag_comment`, `custom_cover_path`, `save_signature_default`.
+     - Funciones `get_active_cover_path()` y `save_custom_cover()`, copiando la imagen personalizada al directorio de datos permanente del usuario para que persista entre reinicios de la aplicación sin depender de carpetas temporales.
+  2. **Optimizador de Carátula Cuadrada (`src/engine/export.py`)**:
+     - Función `prepare_cover_art(image_path, output_size=1000)`: transforma cualquier imagen (independientemente de dimensiones o canales de color) en un JPEG cuadrado RGB normalizado de 1000x1000 px centrado y sobre fondo dark `#0e0e11`.
+     - Garantiza máxima compatibilidad con pantallas de reproductores DJ profesionales (Pioneer CDJ-3000, XDJ-RX3, Rekordbox, Serato DJ Pro), Apple Music y Windows Explorer.
+  3. **Incrustación de Metadatos ID3v2.3 en Exportación (`src/engine/export.py`)**:
+     - Inyección vía FFmpeg con `attached_pic` y Xing headers:
+       - `title`: nombre de la previa o personalizado.
+       - `artist`: nombre del DJ / Productor.
+       - `publisher`: sello discográfico.
+       - `album`: colección o álbum de previas.
+       - `genre`: género musical.
+       - `comment`: notas de promoción o créditos de estudio.
+       - `date`: año actual.
+       - `TBPM`: tempo en BPM detectado con precisión por AutoPrevias.
+  4. **Componentes de Interfaz Gráfica (`src/ui/app.py`)**:
+     - `CoverDropArea(QFrame)`: widget de 94x94 px con bordes redondeados y soporte completo de Drag & Drop (`dragEnterEvent`, `dropEvent`) para imágenes `.jpg`, `.jpeg`, `.png`, `.webp`. Al hacer clic abre el selector nativo del sistema operativo. Muestra miniatura centrada con badge de estado (`OFICIAL` vs `PERSONALIZADA`) y botón para restaurar el logo oficial.
+     - `BrandingCard(QFrame)`: panel estilizado con los campos de entrada de Artista, Sello, Álbum, Género, Comentario y el checkbox de persistencia `Guardar firma y carátula como predeterminada`.
+     - Integración en `ResultPanel` inmediatamente visible en las opciones de exportación y enlace transparente con `ExportWorker`.
+- **Pruebas Realizadas**:
+  - Test unitario específico añadido: `tests/test_ui_and_export.py::test_branding_and_cover_export`.
+  - Ejecución de la suite completa con pytest: **21/21 tests pasando al 100%** en 44.05s.
+  - Ejecución de selftest de diagnóstico `python -m src.main --selftest`: **6/6 fases exitosas (100% OK)**.
+
+### Sesión 23 — 2026-10-05: Versión v1.0.7 — Carga Directa Ctypes llvmlite en Windows y Desbloqueo Público de CI/CD
+
+- **Diagnóstico del Fallo de `llvmlite.dll` en Windows en Run #37282026321**:
+  - A pesar de copiar la DLL a `dist\AutoPrevias.dist\llvmlite\binding\` y a la raíz, `llvmlite.binding.ffi` internamente invoca `importlib.resources.files('llvmlite.binding') / 'llvmlite.dll'`.
+  - En ejecutables compilados con Nuitka, `importlib.resources` intenta resolver recursos dentro del meta-path loader compilado y no encuentra la ruta física en disco de la DLL, arrojando:
+    `OSError: Could not find/load shared object file 'llvmlite.dll' from resource location: 'llvmlite.binding'`.
+- **Solución Definitiva de Carga Ctypes**:
+  - En `src/compat.py` se implementó la función interceptora `_robust_load_lib` sobre `llvmlite.binding.ffi._lib_wrapper._load_lib`.
+  - Esta función comprueba directamente las rutas físicas reales en el directorio del ejecutable (`exe_dir / "llvmlite.dll"` y `exe_dir / "llvmlite" / "binding" / "llvmlite.dll"`), cargando la librería con `ctypes.CDLL(str(c.resolve()))` y verificando el símbolo `LLVMPY_GetVersionInfo()`.
+  - Si los candidatos directos existen, se cargan de inmediato omitiendo por completo las limitaciones de `importlib.resources` en Nuitka.
+- **Transición a Repositorio Público y Desbloqueo de CI/CD**:
+  - El usuario autorizó cambiar la visibilidad del repositorio a público vía `gh repo edit borjacandeel/auto-previas --visibility public`.
+  - Con esta configuración, GitHub Actions queda 100% libre de restricciones de minutos mensuales o cuotas de pago, permitiendo compilar releases ilimitadas en Windows y macOS.
+- **Sincronización de Versión Oficial**:
+  - Proyecto elevado a **`v1.0.7`** en `src/__version__.py`, `CHANGELOG.md`, `README.md` y `progreso.md`.
+
 
 

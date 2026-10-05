@@ -39,6 +39,41 @@ if sys.platform == "win32":
             except Exception:
                 pass
 
+# Parche de carga directa para llvmlite en ejecutables standalone (evita fallo de importlib.resources)
+try:
+    import llvmlite.binding.ffi as _ffi
+    import ctypes
+
+    _orig_load_lib = _ffi._lib_wrapper._load_lib
+
+    def _robust_load_lib(self):
+        test_sym = "LLVMPY_GetVersionInfo"
+        exe_dir = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent.parent
+
+        candidates = [
+            exe_dir / "llvmlite.dll",
+            exe_dir / "llvmlite" / "binding" / "llvmlite.dll",
+            exe_dir / "libllvmlite.dylib",
+            exe_dir / "llvmlite" / "binding" / "libllvmlite.dylib",
+            exe_dir / "libllvmlite.so",
+            exe_dir / "llvmlite" / "binding" / "libllvmlite.so",
+        ]
+        for c in candidates:
+            if c.exists() and c.is_file():
+                try:
+                    self._lib_handle = ctypes.CDLL(str(c.resolve()))
+                    getattr(self._lib_handle, test_sym)()
+                    return
+                except Exception:
+                    pass
+
+        # Fallback al cargador original si no se encontró en candidatos directos
+        _orig_load_lib(self)
+
+    _ffi._lib_wrapper._load_lib = _robust_load_lib
+except Exception:
+    pass
+
 # Registrar rutas de plugins de Qt (multimedia, platforms, styles) en standalone
 try:
     from PySide6.QtCore import QCoreApplication

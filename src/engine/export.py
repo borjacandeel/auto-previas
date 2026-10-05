@@ -264,6 +264,79 @@ def output_paths(source_path: str, out_dir: str,
     return paths
 
 
+# ── gestión de carátula y metadatos ──────────────────────────────────────────
+
+def prepare_cover_art(image_path: str | Path | None, output_size: int = 1000) -> Path | None:
+    """
+    Toma cualquier imagen (JPG, PNG, WebP) y genera un JPEG cuadrado RGB optimizado
+    (máx 1000x1000 px) ideal para incrustación ID3/APIC y máxima compatibilidad
+    con Pioneer CDJ, Rekordbox, Serato, Apple Music y exploradores del SO.
+    """
+    from src.config import get_cache_dir, get_assets_dir
+    cache_dir = get_cache_dir()
+    target_jpg = cache_dir / "cover_embedded.jpg"
+
+    candidate: Path | None = None
+    if image_path:
+        p = Path(image_path).resolve()
+        if p.exists() and p.is_file():
+            candidate = p
+
+    if not candidate:
+        assets = get_assets_dir()
+        for name in ["logo_emblem.png", "logo_emblem_red.png", "logo_banner.png"]:
+            p = assets / name
+            if p.exists() and p.is_file():
+                candidate = p
+                break
+
+    if not candidate:
+        return None
+
+    # Intentar con QImage de PySide6 para escalado y centrado cuadrado en fondo dark
+    try:
+        from PySide6.QtGui import QImage, QPainter, QColor
+        from PySide6.QtCore import Qt
+
+        img = QImage(str(candidate))
+        if not img.isNull():
+            square = QImage(output_size, output_size, QImage.Format_RGB888)
+            square.fill(QColor(14, 14, 17))  # Fondo dark #0e0e11
+
+            scaled = img.scaled(output_size, output_size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            x_off = (output_size - scaled.width()) // 2
+            y_off = (output_size - scaled.height()) // 2
+
+            painter = QPainter(square)
+            painter.drawImage(x_off, y_off, scaled)
+            painter.end()
+
+            square.save(str(target_jpg), "JPG", 90)
+            return target_jpg
+    except Exception:
+        pass
+
+    # Fallback FFmpeg si QImage no está disponible
+    from src.config import get_ffmpeg_path
+    import subprocess
+    ffmpeg_bin = get_ffmpeg_path()
+    if ffmpeg_bin:
+        try:
+            cmd = [
+                ffmpeg_bin, "-y", "-i", str(candidate),
+                "-vf", f"scale={output_size}:{output_size}:force_original_aspect_ratio=decrease,pad={output_size}:{output_size}:(ow-iw)/2:(oh-ih)/2:color=#0e0e11,format=yuvj420p",
+                "-q:v", "2",
+                str(target_jpg)
+            ]
+            res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if res.returncode == 0 and target_jpg.exists():
+                return target_jpg
+        except Exception:
+            pass
+
+    return candidate
+
+
 # ── exportación ─────────────────────────────────────────────────────────────
 
 def export_files(
@@ -271,6 +344,8 @@ def export_files(
     sr: int,
     paths: dict,
     progress_cb: Callable[[int, str], None] | None = None,
+    metadata: dict | None = None,
+    cover_image_path: str | None = None,
 ) -> List[str]:
     """audio shape: (2, N) float32 stereo"""
     def _prog(pct: int, msg: str):
@@ -280,20 +355,33 @@ def export_files(
     generated = []
     temp_wav_for_mp3: str | None = None
 
+    meta = metadata or {}
+    artist  = meta.get("artist") or "Radical Records"
+    album   = meta.get("album") or "Radical Records Previews"
+    label   = meta.get("label") or "Radical Records"
+    genre   = meta.get("genre") or "Electronic"
+    comment = meta.get("comment") or "AutoPrevias · Radical Records Studio"
+    year    = str(meta.get("year") or "2026")
+    bpm_val = meta.get("bpm")
+
+    # Preparar carátula optimizada
+    optimized_cover = prepare_cover_art(cover_image_path)
+
     if "wav" in paths:
         _prog(96, "Exportando WAV de estudio (24-bit PCM)…")
-        sf.write(str(paths["wav"]), audio.T, sr, subtype="PCM_24")
-        generated.append(str(paths["wav"]))
+        wav_target = str(paths["wav"])
+        sf.write(wav_target, audio.T, sr, subtype="PCM_24")
+        generated.append(wav_target)
 
     if "mp3" in paths:
-        _prog(98, "Exportando MP3 320kbps con metadatos y carátula oficial…")
+        _prog(98, "Exportando MP3 320kbps con firma y carátula…")
         mp3_target = str(paths["mp3"])
         mp3_done = False
 
         # Si ya tenemos el WAV exportado, usar FFmpeg con Xing headers y carátula ID3
         import subprocess
         import os
-        from src.config import get_ffmpeg_path, get_assets_dir, get_cache_dir
+        from src.config import get_ffmpeg_path, get_cache_dir
 
         ffmpeg_bin = get_ffmpeg_path()
 
@@ -303,37 +391,38 @@ def export_files(
             sf.write(temp_wav_for_mp3, audio.T, sr, subtype="PCM_16")
             src_wav = temp_wav_for_mp3
 
-        # Ubicar logo para carátula oficial Radical Records
-        assets_dir = get_assets_dir()
-        cover_path = assets_dir / "logo_emblem.png"
-        if not cover_path.exists():
-            cover_path = assets_dir / "logo_emblem_red.png"
-        if not cover_path.exists():
-            cover_path = assets_dir / "logo_banner.png"
-
         stem_name = Path(mp3_target).stem
-        track_title = stem_name.replace("PREVIA - ", "")
+        track_title = meta.get("title") or stem_name.replace("PREVIA - ", "")
 
         if ffmpeg_bin and src_wav:
-            # 1. Intentar con carátula incrustada oficial
-            if cover_path.exists():
+            # 1. Intentar con carátula incrustada oficial o personalizada
+            if optimized_cover and Path(optimized_cover).exists():
                 try:
                     cmd_cover = [
                         ffmpeg_bin, "-y",
                         "-i", src_wav,
-                        "-i", str(cover_path),
+                        "-i", str(optimized_cover),
                         "-map", "0:a", "-map", "1:v",
                         "-codec:a", "libmp3lame", "-b:a", "320k",
                         "-codec:v", "copy",
                         "-disposition:v:0", "attached_pic",
                         "-write_xing", "1", "-id3v2_version", "3",
-                        "-metadata", f"title=PREVIA - {track_title}",
-                        "-metadata", "artist=Radical Records",
-                        "-metadata", "album=Radical Records Previews",
-                        "-metadata", "comment=AutoPrevias · Radical Records Studio",
-                        "-metadata", "date=2026",
-                        mp3_target
+                        "-metadata", f"title={track_title}",
+                        "-metadata", f"artist={artist}",
+                        "-metadata", f"album={album}",
+                        "-metadata", f"publisher={label}",
+                        "-metadata", f"genre={genre}",
+                        "-metadata", f"comment={comment}",
+                        "-metadata", f"date={year}",
                     ]
+                    if bpm_val:
+                        try:
+                            bpm_int = int(round(float(bpm_val)))
+                            cmd_cover.extend(["-metadata", f"TBPM={bpm_int}"])
+                        except Exception:
+                            pass
+                    cmd_cover.append(mp3_target)
+
                     res = subprocess.run(cmd_cover, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                     if res.returncode == 0 and Path(mp3_target).exists():
                         generated.append(mp3_target)
@@ -348,13 +437,22 @@ def export_files(
                         ffmpeg_bin, "-y", "-i", src_wav,
                         "-codec:a", "libmp3lame", "-b:a", "320k",
                         "-write_xing", "1", "-id3v2_version", "3",
-                        "-metadata", f"title=PREVIA - {track_title}",
-                        "-metadata", "artist=Radical Records",
-                        "-metadata", "album=Radical Records Previews",
-                        "-metadata", "comment=AutoPrevias · Radical Records Studio",
-                        "-metadata", "date=2026",
-                        mp3_target
+                        "-metadata", f"title={track_title}",
+                        "-metadata", f"artist={artist}",
+                        "-metadata", f"album={album}",
+                        "-metadata", f"publisher={label}",
+                        "-metadata", f"genre={genre}",
+                        "-metadata", f"comment={comment}",
+                        "-metadata", f"date={year}",
                     ]
+                    if bpm_val:
+                        try:
+                            bpm_int = int(round(float(bpm_val)))
+                            cmd_nopic.extend(["-metadata", f"TBPM={bpm_int}"])
+                        except Exception:
+                            pass
+                    cmd_nopic.append(mp3_target)
+
                     res = subprocess.run(cmd_nopic, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                     if res.returncode == 0 and Path(mp3_target).exists():
                         generated.append(mp3_target)
@@ -366,7 +464,7 @@ def export_files(
             try:
                 from pedalboard.io import AudioFile
                 with AudioFile(mp3_target, "w", samplerate=sr,
-                               num_channels=2, quality=320) as f:
+                                num_channels=2, quality=320) as f:
                     f.write(audio)
                 generated.append(mp3_target)
             except Exception as e:

@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v1.0.6-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v1.0.7-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -196,6 +196,11 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 ---
 
 ### 📈 Registro Oficial de Versiones y Parches
+
+#### 🟢 [v1.0.7] — 2026-10-05 (Estudio de Firma & Carátula y Carga Directa llvmlite en Windows)
+- **Firma de Temas & Carátula Personalizada (Branding Studio):** Selector con Drag & Drop directo para imágenes (`.jpg`, `.jpeg`, `.png`, `.webp`) y panel de metadatos completos (Artista, Sello, Álbum, Género, Comentarios de promo y BPM automático `TBPM`). Normalizador `prepare_cover_art` que transforma cualquier arte a 1000x1000 JPEG cuadrado optimizado para Pioneer CDJ, Rekordbox, Serato, Apple Music y smartphones.
+- **Resolución definitiva de `llvmlite.dll` en Windows:** Carga directa con `ctypes.CDLL` en `src/compat.py` interceptando `_load_lib`, evitando fallos de `importlib.resources` en Nuitka.
+- **Migración a Repositorio Público:** GitHub Actions 100% gratuito e ilimitado para compilaciones de Windows y macOS.
 
 #### 🟢 [v1.0.6] — 2026-10-05 (Parche de Backend Multimedia en Bundles y Carga de DLLs en Windows)
 - **Activación del motor de reproducción nativo de PySide6 (`multimedia`):** Inclusión de los plugins de QtMultimedia (`libdarwinmediaplugin.dylib` en macOS y `windowsmediaplugin.dll` en Windows) mediante `--include-qt-plugins=sensible,multimedia` y sincronización con re-enlazado dinámico en `scripts/bundle_runtime_deps.py`, solucionando el fallo del reproductor integrado en las apps compiladas.

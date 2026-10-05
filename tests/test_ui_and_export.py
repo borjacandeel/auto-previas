@@ -110,3 +110,50 @@ def test_waveform_cut_indicators_and_masks():
     assert len(widget._omitted_masks) == 0
 
 
+def test_branding_and_cover_export(tmp_path):
+    from PySide6.QtWidgets import QApplication
+    app = QApplication.instance() or QApplication([])
+    assert app is not None
+
+    from src.engine.export import prepare_cover_art, export_files
+    from src.ui.app import BrandingCard
+    from PySide6.QtGui import QImage, QColor
+
+    # 1. Crear una imagen cuadrada sintética
+    test_img_path = tmp_path / "custom_art.png"
+    img = QImage(300, 300, QImage.Format_RGB888)
+    img.fill(QColor(255, 46, 77))  # Crimson
+    img.save(str(test_img_path), "PNG")
+
+    # 2. Verificar prepare_cover_art
+    prepared = prepare_cover_art(test_img_path, output_size=500)
+    assert prepared is not None
+    assert prepared.exists()
+    assert prepared.stat().st_size > 0
+
+    # 3. Verificar BrandingCard
+    card = BrandingCard()
+    card._drop_area.set_cover(str(test_img_path))
+    assert card._drop_area.get_cover_path() == str(test_img_path.resolve())
+
+    card._edit_artist.setText("Borja Candel")
+    card._edit_label.setText("Radical Records")
+    meta = card.get_metadata()
+    assert meta["artist"] == "Borja Candel"
+    assert meta["label"] == "Radical Records"
+
+    # 4. Probar export_files con audio sintético y metadata
+    sr = 44100
+    audio = np.zeros((2, sr * 2), dtype=np.float32)
+    paths = {
+        "wav": tmp_path / "test_out.wav",
+        "mp3": tmp_path / "test_out.mp3",
+    }
+    meta["bpm"] = 128
+    gen = export_files(audio, sr, paths, metadata=meta, cover_image_path=str(test_img_path))
+    assert str(paths["wav"]) in gen
+    assert str(paths["mp3"]) in gen
+    assert paths["wav"].exists() and paths["wav"].stat().st_size > 0
+    assert paths["mp3"].exists() and paths["mp3"].stat().st_size > 0
+
+

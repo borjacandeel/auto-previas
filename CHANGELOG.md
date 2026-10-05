@@ -3,6 +3,24 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.7] - 2026-10-05
+
+### Añadido
+- **Estudio de Firma de Audio y Carátula Personalizada (Branding & Artwork Studio)**:
+  - Soporte completo de Drag & Drop para imágenes (`.jpg`, `.jpeg`, `.png`, `.webp`) sobre el nuevo widget `CoverDropArea`.
+  - Panel `BrandingCard` para firmar temas con metadatos profesionales: Artista / DJ, Sello / Discográfica, Álbum / Colección, Género y Comentarios de promoción.
+  - Inyección automática del BPM detectado en la etiqueta oficial ID3 `TBPM`.
+  - Normalizador de arte `prepare_cover_art`: convierte y escala cualquier imagen a un JPEG cuadrado RGB optimizado de 1000x1000 px para máxima fidelidad en pantallas de reproductores DJ profesionales (Pioneer CDJ-3000, RX3, Rekordbox, Serato) y smartphones.
+  - Opción de persistencia *"Guardar firma y carátula como predeterminada"* para recordar el branding entre aperturas de la app.
+
+### Corregido
+- **Carga robusta directa de `llvmlite.dll` en Windows 64-bit**:
+  - Parche interceptor en `src/compat.py` sobre `llvmlite.binding.ffi._lib_wrapper._load_lib` para cargar directamente la DLL física con `ctypes.CDLL` desde las rutas de distribución (`dist\AutoPrevias.dist\`), evitando que `importlib.resources` falle en el entorno empaquetado de Nuitka.
+- **Repositorio Público y CI/CD Ilimitado**:
+  - Repositorio configurado como público en GitHub para desbloquear compilaciones ilimitadas y 100% gratuitas en GitHub Actions sin límites de minutos de facturación.
+
+---
+
 ## [1.0.6] - 2026-10-05
 
 ### Corregido

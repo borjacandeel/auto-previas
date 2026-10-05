@@ -27,11 +27,11 @@ import numpy as np
 
 from PySide6.QtCore import (
     Qt, QThread, Signal, QTimer, QPropertyAnimation,
-    QEasingCurve,
+    QEasingCurve, QRect,
 )
 from PySide6.QtGui import (
     QColor, QDragEnterEvent, QDropEvent, QPalette, QFont,
-    QLinearGradient, QPainter, QBrush, QPen, QPainterPath, QPixmap,
+    QLinearGradient, QPainter, QBrush, QPen, QPainterPath, QPixmap, QImage,
 )
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QFileDialog, QGraphicsOpacityEffect,
@@ -45,7 +45,10 @@ from PySide6.QtWidgets import (
 _ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(_ROOT))
 
-from src.config import load as load_cfg, save as save_cfg, get_output_dir, get_assets_dir
+from src.config import (
+    load as load_cfg, save as save_cfg, get_output_dir, get_assets_dir,
+    get_active_cover_path, save_custom_cover,
+)
 _ASSETS_DIR = get_assets_dir()
 
 from src.analysis.bpm import detect_beat_grid, SR_ANALYSIS
@@ -213,8 +216,18 @@ class ExportWorker(QThread):
                 export_mp3=self.cfg.get("export_mp3", True),
                 custom_name=self.cfg.get("custom_name"),
             )
-            generated = export_files(audio, sr, paths,
-                                     progress_cb=self.progress.emit)
+            metadata = dict(self.cfg.get("metadata") or {})
+            if self.beat_grid and hasattr(self.beat_grid, "bpm"):
+                metadata["bpm"] = self.beat_grid.bpm
+
+            cover_path = self.cfg.get("cover_path")
+
+            generated = export_files(
+                audio, sr, paths,
+                progress_cb=self.progress.emit,
+                metadata=metadata,
+                cover_image_path=cover_path,
+            )
 
             # Liberar buffer de audio exportado inmediatamente
             del audio
@@ -715,10 +728,339 @@ class ShimmerButton(QPushButton):
         path.addRoundedRect(0, 0, w, h, 12, 12)
         p.setClipPath(path)
         p.fillRect(0, 0, w, h, QBrush(grad))
-        p.end()
+# ── Gestión de Carátula y Firma (Drag & Drop + Metadatos) ─────────────────────
+
+class CoverDropArea(QFrame):
+    """
+    Área visual para la carátula oficial o personalizada:
+    - Soporta Drag & Drop directo de imágenes (.jpg, .jpeg, .png, .webp).
+    - Clic para abrir el selector de archivos del sistema.
+    - Previsualización recortada/centrada con bordes redondeados.
+    - Botón para restaurar la carátula oficial.
+    """
+    cover_changed = Signal(str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setAcceptDrops(True)
+        self.setFixedSize(94, 94)
+        self._current_path: str = ""
+        self._default_pixmap: QPixmap | None = None
+        self._is_hovered = False
+
+        self.setCursor(Qt.PointingHandCursor)
+        self.setToolTip("Haz clic o arrastra una imagen para personalizar la carátula de tus previas")
+
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(0)
+
+        self._lbl_preview = QLabel()
+        self._lbl_preview.setAlignment(Qt.AlignCenter)
+        self._lbl_preview.setStyleSheet("background: transparent; border: none;")
+        lay.addWidget(self._lbl_preview)
+
+        self._load_default()
+        self._update_style()
+
+    def _load_default(self):
+        assets = _ASSETS_DIR
+        for name in ["logo_emblem.png", "logo_emblem_red.png", "logo_banner.png"]:
+            p = assets / name
+            if p.exists() and p.is_file():
+                pm = QPixmap(str(p))
+                if not pm.isNull():
+                    self._default_pixmap = pm.scaled(80, 80, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                    self._lbl_preview.setPixmap(self._default_pixmap)
+                    break
+
+    def _update_style(self):
+        border_c = ACCENT if self._is_hovered else (BORDER_HV if self._current_path else BORDER)
+        bg = BG4 if self._is_hovered else BG3
+        border_type = "dashed" if self._is_hovered else "solid"
+        self.setStyleSheet(f"""
+            CoverDropArea {{
+                background: {bg};
+                border: 2px {border_type} {border_c};
+                border-radius: 10px;
+            }}
+        """)
+
+    def set_cover(self, path: str):
+        p = Path(path).resolve() if path else None
+        if p and p.exists() and p.is_file() and p.suffix.lower() in [".jpg", ".jpeg", ".png", ".webp"]:
+            pm = QPixmap(str(p))
+            if not pm.isNull():
+                self._current_path = str(p)
+                scaled = pm.scaled(86, 86, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+                rect = QRect((scaled.width() - 86) // 2, (scaled.height() - 86) // 2, 86, 86)
+                cropped = scaled.copy(rect)
+                self._lbl_preview.setPixmap(cropped)
+                self._update_style()
+                self.cover_changed.emit(self._current_path)
+                return
+
+        self._current_path = ""
+        if self._default_pixmap:
+            self._lbl_preview.setPixmap(self._default_pixmap)
+        self._update_style()
+        self.cover_changed.emit("")
+
+    def get_cover_path(self) -> str:
+        return self._current_path
+
+    def dragEnterEvent(self, event: QDragEnterEvent):
+        if event.mimeData().hasUrls():
+            for url in event.mimeData().urls():
+                p = Path(url.toLocalFile())
+                if p.suffix.lower() in [".jpg", ".jpeg", ".png", ".webp"]:
+                    self._is_hovered = True
+                    self._update_style()
+                    event.acceptProposedAction()
+                    return
+        event.ignore()
+
+    def dragLeaveEvent(self, event):
+        self._is_hovered = False
+        self._update_style()
+
+    def dropEvent(self, event: QDropEvent):
+        self._is_hovered = False
+        self._update_style()
+        if event.mimeData().hasUrls():
+            for url in event.mimeData().urls():
+                p = Path(url.toLocalFile())
+                if p.suffix.lower() in [".jpg", ".jpeg", ".png", ".webp"]:
+                    self.set_cover(str(p))
+                    event.acceptProposedAction()
+                    return
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            fpath, _ = QFileDialog.getOpenFileName(
+                self, "Seleccionar carátula para la previa", "",
+                "Imágenes (*.png *.jpg *.jpeg *.webp);;Todos los archivos (*.*)"
+            )
+            if fpath:
+                self.set_cover(fpath)
+
+
+class BrandingCard(QFrame):
+    """
+    Panel compacto de firma de audio y metadatos oficiales / personalizados.
+    Permite arrastrar o seleccionar carátula, asignar artista, sello, colección, comentario y BPM.
+    """
+    signature_changed = Signal()
+
+    def __init__(self, cfg: dict | None = None, parent=None):
+        super().__init__(parent)
+        self._cfg = cfg or {}
+        self.setStyleSheet(f"""
+            BrandingCard {{
+                background: {BG2};
+                border: 1px solid {BORDER};
+                border-radius: 10px;
+            }}
+        """)
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(10, 8, 10, 8)
+        lay.setSpacing(6)
+
+        # ── Header ──────────────────────────────────────────────
+        h_row = QHBoxLayout()
+        h_row.setSpacing(6)
+
+        lbl_icon = QLabel("🏷️")
+        lbl_icon.setStyleSheet("font-size: 13px; background: transparent; border: none;")
+        h_row.addWidget(lbl_icon)
+
+        lbl_t = QLabel("FIRMA & CARÁTULA PERSONALIZADA")
+        lbl_t.setStyleSheet(
+            f"color: {TEXT_DIM}; font-size: 9.5px; font-weight: 700;"
+            "letter-spacing: 1px; background: transparent; border: none;"
+        )
+        h_row.addWidget(lbl_t)
+
+        self._badge = QLabel("OFICIAL")
+        self._badge.setStyleSheet(f"""
+            background: {BG4}; color: {TEXT_SUB};
+            font-size: 8.5px; font-weight: 700;
+            padding: 2px 6px; border-radius: 4px; border: 1px solid {BORDER};
+        """)
+        h_row.addWidget(self._badge)
+
+        h_row.addStretch()
+
+        self._btn_reset_cover = QPushButton("Restablecer portada")
+        self._btn_reset_cover.setFixedHeight(20)
+        self._btn_reset_cover.setStyleSheet(_btn(BG3, TEXT_DIM, BG4, radius=4, fs=9.5))
+        self._btn_reset_cover.setCursor(Qt.PointingHandCursor)
+        self._btn_reset_cover.setVisible(False)
+        self._btn_reset_cover.clicked.connect(self._on_reset_cover)
+        h_row.addWidget(self._btn_reset_cover)
+
+        lay.addLayout(h_row)
+
+        # ── Body (Carátula a la izquierda + Campos a la derecha) ─
+        b_row = QHBoxLayout()
+        b_row.setSpacing(10)
+
+        # Drop area
+        self._drop_area = CoverDropArea(self)
+        self._drop_area.cover_changed.connect(self._on_cover_changed)
+        b_row.addWidget(self._drop_area)
+
+        # Form fields
+        form_col = QVBoxLayout()
+        form_col.setSpacing(4)
+
+        row_f1 = QHBoxLayout()
+        row_f1.setSpacing(6)
+
+        self._edit_artist = QLineEdit()
+        self._edit_artist.setPlaceholderText("Artista / DJ (ej. Radical Records)")
+        self._edit_artist.setStyleSheet(_input_style())
+        self._edit_artist.setFixedHeight(26)
+        row_f1.addWidget(self._edit_artist)
+
+        self._edit_label = QLineEdit()
+        self._edit_label.setPlaceholderText("Sello / Discográfica (ej. Radical Records)")
+        self._edit_label.setStyleSheet(_input_style())
+        self._edit_label.setFixedHeight(26)
+        row_f1.addWidget(self._edit_label)
+        form_col.addLayout(row_f1)
+
+        row_f2 = QHBoxLayout()
+        row_f2.setSpacing(6)
+
+        self._edit_album = QLineEdit()
+        self._edit_album.setPlaceholderText("Álbum / Colección (ej. Radical Previews 2026)")
+        self._edit_album.setStyleSheet(_input_style())
+        self._edit_album.setFixedHeight(26)
+        row_f2.addWidget(self._edit_album)
+
+        self._edit_genre = QLineEdit()
+        self._edit_genre.setPlaceholderText("Género (ej. Tech House / Electronic)")
+        self._edit_genre.setStyleSheet(_input_style())
+        self._edit_genre.setFixedHeight(26)
+        row_f2.addWidget(self._edit_genre)
+        form_col.addLayout(row_f2)
+
+        row_f3 = QHBoxLayout()
+        row_f3.setSpacing(6)
+
+        self._edit_comment = QLineEdit()
+        self._edit_comment.setPlaceholderText("Comentario / Promo (ej. Previa Exclusiva · Solo para sets)")
+        self._edit_comment.setStyleSheet(_input_style())
+        self._edit_comment.setFixedHeight(26)
+        row_f3.addWidget(self._edit_comment)
+        form_col.addLayout(row_f3)
+
+        row_f4 = QHBoxLayout()
+        row_f4.setSpacing(8)
+
+        chk_s = f"""
+            QCheckBox {{
+                color: {TEXT_SUB};
+                font-size: 10px;
+                font-weight: 500;
+                spacing: 4px;
+                background: transparent;
+            }}
+            QCheckBox::indicator {{
+                width: 12px; height: 12px;
+                border: 1px solid {BORDER};
+                border-radius: 3px;
+                background: {BG3};
+            }}
+            QCheckBox::indicator:checked {{
+                background: {ACCENT};
+                border-color: {ACCENT};
+            }}
+        """
+        self._chk_remember = QCheckBox("Guardar firma y carátula como predeterminada")
+        self._chk_remember.setStyleSheet(chk_s)
+        self._chk_remember.setChecked(self._cfg.get("save_signature_default", False))
+        row_f4.addWidget(self._chk_remember)
+        row_f4.addStretch()
+
+        form_col.addLayout(row_f4)
+        b_row.addLayout(form_col, stretch=1)
+        lay.addLayout(b_row)
+
+        self.load_from_cfg(self._cfg)
+
+    def load_from_cfg(self, cfg: dict):
+        if not cfg:
+            return
+        self._cfg = cfg
+        self._edit_artist.setText(cfg.get("tag_artist", ""))
+        self._edit_label.setText(cfg.get("tag_label", ""))
+        self._edit_album.setText(cfg.get("tag_album", ""))
+        self._edit_genre.setText(cfg.get("tag_genre", "Electronic"))
+        self._edit_comment.setText(cfg.get("tag_comment", "AutoPrevias · Radical Records Studio"))
+        self._chk_remember.setChecked(cfg.get("save_signature_default", False))
+
+        cpath = cfg.get("custom_cover_path", "")
+        if cpath and Path(cpath).exists():
+            self._drop_area.set_cover(cpath)
+
+    def _on_cover_changed(self, path: str):
+        if path:
+            self._badge.setText("PERSONALIZADA")
+            self._badge.setStyleSheet(f"""
+                background: {GREEN}22; color: {GREEN};
+                font-size: 8.5px; font-weight: 700;
+                padding: 2px 6px; border-radius: 4px; border: 1px solid {GREEN}44;
+            """)
+            self._btn_reset_cover.setVisible(True)
+        else:
+            self._badge.setText("OFICIAL")
+            self._badge.setStyleSheet(f"""
+                background: {BG4}; color: {TEXT_SUB};
+                font-size: 8.5px; font-weight: 700;
+                padding: 2px 6px; border-radius: 4px; border: 1px solid {BORDER};
+            """)
+            self._btn_reset_cover.setVisible(False)
+        self.signature_changed.emit()
+
+    def _on_reset_cover(self):
+        self._drop_area.set_cover("")
+
+    def get_metadata(self) -> dict:
+        return {
+            "artist":  self._edit_artist.text().strip(),
+            "label":   self._edit_label.text().strip(),
+            "album":   self._edit_album.text().strip(),
+            "genre":   self._edit_genre.text().strip() or "Electronic",
+            "comment": self._edit_comment.text().strip() or "AutoPrevias · Radical Records Studio",
+            "remember": self._chk_remember.isChecked(),
+        }
+
+    def get_cover_path(self) -> str:
+        return self._drop_area.get_cover_path()
+
+    def persist_if_requested(self):
+        if self._chk_remember.isChecked():
+            c = load_cfg()
+            c["tag_artist"] = self._edit_artist.text().strip()
+            c["tag_label"]  = self._edit_label.text().strip()
+            c["tag_album"]  = self._edit_album.text().strip()
+            c["tag_genre"]  = self._edit_genre.text().strip()
+            c["tag_comment"] = self._edit_comment.text().strip()
+            c["save_signature_default"] = True
+
+            cover_p = self._drop_area.get_cover_path()
+            if cover_p:
+                saved_cover = save_custom_cover(cover_p)
+                c["custom_cover_path"] = saved_cover
+            else:
+                c["custom_cover_path"] = ""
+            save_cfg(c)
 
 
 # ── Panel de resultados ───────────────────────────────────────────────────────
+
 
 class ResultPanel(QWidget):
     regen_requested       = Signal(int)   # con seed
@@ -993,6 +1335,10 @@ class ResultPanel(QWidget):
 
         root.addWidget(exp_frame)
 
+        # ── 5.1 FIRMA & CARÁTULA PERSONALIZADA ─────────────────────────────
+        self._branding_card = BrandingCard(load_cfg(), parent=self)
+        root.addWidget(self._branding_card)
+
         # ── 6. SEED + CONTROLES ───────────────────────────────────────────
         seed_row = QHBoxLayout()
         seed_row.setSpacing(6)
@@ -1212,6 +1558,8 @@ class ResultPanel(QWidget):
         self._lbl_folder_path.setText(short_path(self._out_path))
         self._chk_wav.setChecked(cfg.get("export_wav", True))
         self._chk_mp3.setChecked(cfg.get("export_mp3", True))
+        if hasattr(self, "_branding_card"):
+            self._branding_card.load_from_cfg(cfg)
 
         default_name = preview_filename(file_path)
         self._edit_name.setText(default_name)
@@ -1281,6 +1629,20 @@ class ResultPanel(QWidget):
 
     def get_seed(self) -> int:
         return self._spin_seed.value()
+
+    def get_branding_metadata(self) -> dict:
+        if hasattr(self, "_branding_card"):
+            return self._branding_card.get_metadata()
+        return {}
+
+    def get_branding_cover_path(self) -> str:
+        if hasattr(self, "_branding_card"):
+            return self._branding_card.get_cover_path()
+        return ""
+
+    def persist_branding_if_requested(self):
+        if hasattr(self, "_branding_card"):
+            self._branding_card.persist_if_requested()
 
     def _fill_structure(self, analysis):
         tbl = self._tbl_structure
@@ -2814,6 +3176,9 @@ class MainWindow(QMainWindow):
             return
 
         seed = self._results.get_seed()
+        metadata = self._results.get_branding_metadata()
+        cover_path = self._results.get_branding_cover_path()
+        self._results.persist_branding_if_requested()
 
         cfg = dict(self._cfg)
         cfg["export_wav"]   = wav
@@ -2821,6 +3186,8 @@ class MainWindow(QMainWindow):
         cfg["custom_name"]  = custom_name
         cfg["tempo_mode"]   = self._results.get_tempo_mode()
         cfg["tempo_events"] = self._results.get_tempo_events()
+        cfg["metadata"]     = metadata
+        cfg["cover_path"]   = cover_path
 
         self._results.on_export_start()
         self._set_progress(0, "Generando previa")

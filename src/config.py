@@ -26,6 +26,14 @@ _DEFAULTS = {
     "tempo_max_pct": 15.0,
     "preview_min_sec": 120.0,
     "preview_max_sec": 180.0,
+    # Firma y metadatos de audio personalizados
+    "tag_artist": "",
+    "tag_label": "",
+    "tag_album": "",
+    "tag_genre": "Electronic",
+    "tag_comment": "AutoPrevias · Radical Records Studio",
+    "custom_cover_path": "",
+    "save_signature_default": False,
 }
 
 
@@ -186,3 +194,46 @@ def get_output_dir(source_file: str | Path, cfg: dict | None = None) -> Path:
         except Exception:
             pass
     return Path(source_file).parent
+
+
+def get_active_cover_path(cfg: dict | None = None) -> Path:
+    """
+    Devuelve la carátula activa:
+    1. Si hay una carátula personalizada en config y existe en disco, se devuelve esa.
+    2. En su defecto, devuelve el logotipo emblem oficial de assets/.
+    """
+    if cfg is None:
+        cfg = load()
+    custom = cfg.get("custom_cover_path", "").strip()
+    if custom:
+        p = Path(custom)
+        if p.exists() and p.is_file():
+            return p.resolve()
+
+    assets = get_assets_dir()
+    for name in ["logo_emblem.png", "logo_emblem_red.png", "logo_banner.png"]:
+        p = assets / name
+        if p.exists() and p.is_file():
+            return p.resolve()
+
+    return assets / "logo_emblem.png"
+
+
+def save_custom_cover(src_image_path: str | Path) -> str:
+    """
+    Guarda una imagen personalizada en el directorio de datos de usuario de AutoPrevias
+    para que persista permanentemente y no dependa de carpetas temporales.
+    """
+    src = Path(src_image_path).resolve()
+    if not src.exists() or not src.is_file():
+        return ""
+
+    user_dir = get_user_data_dir()
+    ext = src.suffix.lower() if src.suffix else ".jpg"
+    dest = user_dir / f"user_cover{ext}"
+    try:
+        shutil.copy2(src, dest)
+        return str(dest.resolve())
+    except Exception as e:
+        print(f"Advertencia: No se pudo guardar carátula en {dest}: {e}")
+        return str(src)
