@@ -3,6 +3,17 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.1.0] - 2026-10-06
+
+### Corregido
+- **Keylock sonaba con artefactos**: el factor de time-stretch estaba invertido (`1/rate` en lugar de `rate`), haciendo la previa más lenta en lugar de más rápida. Corregido para que el tempo aumente correctamente sin distorsión.
+- **Keylock ahora incluye efecto spin-up/spin-down**: los primeros y últimos segundos usan varispeed vinilo (pitch sube/baja naturalmente al arrancar y frenar), mientras el cuerpo central mantiene el tono bloqueado.
+- **Vídeo siempre exportaba en 9:16** aunque se seleccionara 1:1: el `aspect_ratio` no se incluía en el diccionario de metadatos pasado al motor de vídeo. Corregido.
+- **Pitch/tempo máximo reducido a 3% (≈3 BPM)**: el valor por defecto era 15%, causando variaciones de tempo excesivas. Ahora el rango es más sutil y profesional.
+- **Carátula incrustada y guardada como predeterminada no se cargaba** al volver a abrir la app o cargar un nuevo track. Corregido el orden de prioridad: carátula guardada → carátula embebida → logo oficial.
+- **Preferencias de exportación no persistían**: al guardar firma/carátula, ahora también se guardan el modo de velocidad, paleta de vídeo y ratio de aspecto.
+- **Voice Drop: sin marcador visual en la forma de onda**. Ahora al seleccionar un archivo de voz aparece una línea dorada discontinua arrastrable en la waveform indicando el punto de inserción. El usuario puede arrastrarlo para elegir la posición exacta (modo "Manual") o usar Pre-Drop/Intro automáticos.
+
 ## [2.0.0] - 2026-10-06
 
 ### Añadido (BIG UPDATE — Versión 2.0.0 + Visualizador Vídeo Triple Capa v2.1)

@@ -237,13 +237,33 @@ def build_preview_audio(
     if speed_mode == "keylock":
         _prog(65, "Aplicando aceleración Keylock (tempo aumentado, tono original conservado)…")
         from src.engine.timestretch import stretch_audio
-        # Promedio del rate_env en tramo activo
         avg_rate = float(np.mean(rate_env[n_spin:-n_spin])) if len(rate_env) > 2 * n_spin else float(np.mean(rate_env))
         avg_rate = max(0.85, min(1.35, avg_rate))
-        result = stretch_audio(assembled, SR_OUT, stretch_factor=1.0 / avg_rate)
+
+        # Spin-up/down: aplicar varispeed vinilo en los tramos de arranque/parada
+        # (sube/baja con pitch natural), y time-stretch sin pitch en el cuerpo central.
+        if n_spin > 0 and assembled.shape[1] > 2 * n_spin:
+            spin_in  = assembled[:, :n_spin]
+            body     = assembled[:, n_spin:-n_spin]
+            spin_out = assembled[:, -n_spin:]
+
+            # Rampa del spin: mismos vectores calculados arriba para rate_env
+            spin_up_env = rate_env[:n_spin]
+            spin_dn_env = rate_env[-n_spin:]
+
+            proc_spin_in  = apply_rate_envelope(spin_in,  spin_up_env)
+            proc_body     = stretch_audio(body, SR_OUT, stretch_factor=avg_rate)
+            proc_spin_out = apply_rate_envelope(spin_out, spin_dn_env)
+
+            L = crossfade(crossfade(proc_spin_in[0], proc_body[0], SR_OUT, 20.0),
+                          proc_spin_out[0], SR_OUT, 20.0)
+            R = crossfade(crossfade(proc_spin_in[1], proc_body[1], SR_OUT, 20.0),
+                          proc_spin_out[1], SR_OUT, 20.0)
+            result = np.stack([L, R])
+        else:
+            result = stretch_audio(assembled, SR_OUT, stretch_factor=avg_rate)
     else:
         _prog(65, "Aplicando aceleración Vinilo DJ Clásico (pitch armónico natural + spin)…")
-        # Varispeed continuo muestra a muestra sin bloques
         result = apply_rate_envelope(assembled, rate_env)
 
     del assembled, rate_env
@@ -264,10 +284,15 @@ def build_preview_audio(
         _prog(93, "Incrustando firma de voz / Voice Drop con auto-ducking…")
         from src.engine.effects import inject_voice_drop
         pos = cfg.get("voice_drop_position", "predrop").lower()
-        if pos == "intro":
+        manual_t = float(cfg.get("voice_drop_time_sec", -1.0))
+        if pos == "manual" and manual_t >= 0:
+            insert_t = manual_t
+        elif pos == "intro":
             insert_t = float(cfg.get("voice_drop_time_sec", 1.8))
+            if insert_t < 0:
+                insert_t = 1.8
         else:
-            # Pre-Drop: posicionar 3.5s antes del drop principal o en 12s
+            # Pre-Drop: posicionar 3.8s antes del drop principal
             first_drop = drop_times[0] if drop_times else 16.0
             insert_t = max(1.5, float(first_drop) - 3.8)
         v_db = float(cfg.get("voice_drop_volume_db", -1.5))

@@ -7,10 +7,37 @@
 
 ---
 
+## ⏳ Tareas Pendientes
+
+| # | Tarea | Prioridad | Notas |
+|---|-------|-----------|-------|
+| 1 | **Sistema de Licencias** — Implementación completa en 3 fases: Payhip activación → Cloudflare Worker proxy → pantalla de activación en la app (`src/licensing/license.py`, `src/ui/activate.py`, `src/main.py`) | 🔴 Alta | Arquitectura ya diseñada y documentada. Artifact: `https://claude.ai/artifact/7B2pW4byKK9p7yjhJoY7Qe` |
+
+---
+
 ## Estado actual
-**Fecha última actualización:** 2026-10-06 (Sesión 28 — Versión v2.0.0 + v2.1 visualizador vídeo triple capa: espectrograma scrolling + FFT + osciloscopio P2P, git init + push a GitHub, tag v2.0.0 lanzado en CI/CD, CHANGELOG completado con v1.2.1 y v1.2.2, documento PDF de licencias generado)
-**Fase activa:** Fase G completada ✅ — AutoPrevias Pro Studio v2.0.0 publicado en GitHub Releases
+**Fecha última actualización:** 2026-10-06 (Sesión 29 — Versión v2.1.0: 6 bugs corregidos — Keylock invertido, vídeo siempre 9:16, pitch max reducido, carátula no persistía, presets no guardaban, Voice Drop sin marcador en waveform)
+**Fase activa:** Fase G completada ✅ — AutoPrevias Pro Studio v2.1.0 publicado en GitHub Releases
 **Versión Actual:** **v2.0.0**
+
+---
+
+### Resumen de Mejoras — Sesión 29 (2026-10-06): Versión v2.1.0 — 6 bugs corregidos
+
+#### 🔧 Bugs corregidos
+
+| Bug | Archivo | Causa raíz | Fix |
+|-----|---------|------------|-----|
+| Keylock suena con artefactos | `export.py:243` | `stretch_factor=1/rate` invertido → audio salía más lento no más rápido | Cambiado a `stretch_factor=avg_rate` |
+| Keylock sin spin-up/down | `export.py:236-248` | Solo aplicaba stretch promedio ignorando rate_env | Split en 3 partes: varispeed en spin_in/spin_out, stretch en cuerpo central |
+| Vídeo siempre 9:16 | `app.py:248` | `aspect_ratio` no se copiaba al dict `metadata` en ExportWorker | Añadido `metadata["aspect_ratio"] = self.cfg.get("aspect_ratio", "9:16")` |
+| Pitch max excesivo (15%) | `config.py:28` | Default `tempo_max_pct: 15.0` → hasta ±19 BPM en pistas de 128 BPM | Cambiado a `3.0` (≈3-4 BPM según el tempo de la pista) |
+| Carátula no se cargaba | `app.py:1031` + `3641` | `load_from_cfg` solo miraba `custom_cover_path`, ignoraba `cover_path` (embebida) | Fallback: `custom_cover_path or cover_path`; `_generate` usa `branding or session` |
+| Presets de exportación no persistían | `app.py:1070` + `1863` | `persist_if_requested` solo guardaba firma/carátula | Ahora también guarda y restaura: `speed_mode`, `video_palette`, `aspect_ratio` |
+| Voice Drop sin marcador visual | `waveform.py` + `app.py` | No existía ningún indicador en la waveform | Nueva señal `voice_drop_moved`, método `set_voice_drop_marker(t)`, línea dorada arrastrable, opción "Manual" en combo posición |
+
+#### ✅ Tests
+- 30/30 tests pasados (`pytest tests/ -x -q`)
 
 ---
 

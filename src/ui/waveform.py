@@ -112,6 +112,7 @@ class WaveformWidget(QWidget):
     seek_requested     = Signal(float)  # clic en forma de onda → segundos
     boundaries_changed = Signal(list)   # límites arrastrados → [t0, t1, …]
     cuts_changed       = Signal(list)   # cortes ajustados → [(start, end), …]
+    voice_drop_moved   = Signal(float)  # marcador voice drop arrastrado → segundos
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -139,6 +140,7 @@ class WaveformWidget(QWidget):
         self._omitted_labels   = []   # TextItem etiquetas 'FUERA DE PREVIA'
         self._boundaries       = []   # InfiniteLine transiciones en vista preview
         self._boundary_times: list[float] = []
+        self._voice_drop_line  = None  # InfiniteLine marcador posición Voice Drop
 
         self._loader           = None
         self._preview_loader   = None
@@ -995,9 +997,47 @@ class WaveformWidget(QWidget):
         self._dragging = False
         self.boundaries_changed.emit(list(self._boundary_times))
 
+    def set_voice_drop_marker(self, t: float | None):
+        """
+        Muestra/actualiza el marcador dorado arrastrable de posición Voice Drop.
+        t=None lo oculta. El usuario puede arrastrarlo; emite voice_drop_moved(t).
+        """
+        if not HAS_PYQTGRAPH:
+            return
+        if self._voice_drop_line is not None:
+            try:
+                self._plot.removeItem(self._voice_drop_line)
+            except Exception:
+                pass
+            self._voice_drop_line = None
+
+        if t is None or t < 0:
+            return
+
+        from PySide6.QtCore import Qt as _Qt
+        pen = pg.mkPen(color="#FFD700", width=2, style=_Qt.DashLine)
+        self._voice_drop_line = pg.InfiniteLine(
+            pos=t, angle=90, pen=pen, movable=True,
+            label="🎙 Voice Drop",
+            labelOpts={"position": 0.92, "color": "#FFD700",
+                       "fill": pg.mkBrush(0, 0, 0, 140), "movable": True},
+        )
+        self._voice_drop_line.sigPositionChangeFinished.connect(
+            lambda ln: self.voice_drop_moved.emit(float(ln.value()))
+        )
+        self._plot.addItem(self._voice_drop_line)
+
     def _clear_all(self):
         if not HAS_PYQTGRAPH:
             return
+        # Guardar posición del marcador voice drop antes de limpiar
+        _vd_t: float | None = None
+        if self._voice_drop_line is not None:
+            try:
+                _vd_t = float(self._voice_drop_line.value())
+            except Exception:
+                pass
+
         self._plot.clear()
         self._regions         = []
         self._plan_highlights = []
@@ -1007,7 +1047,12 @@ class WaveformWidget(QWidget):
         self._cut_badges      = []
         self._omitted_masks   = []
         self._omitted_labels  = []
+        self._voice_drop_line = None
         self._plot.addItem(self._playhead_line)
+
+        # Restaurar marcador voice drop si había uno
+        if _vd_t is not None:
+            self.set_voice_drop_marker(_vd_t)
 
     def _clear_regions_and_boundaries(self):
         for r in self._regions:

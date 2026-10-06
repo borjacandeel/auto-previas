@@ -244,8 +244,9 @@ class ExportWorker(QThread):
                 metadata["bpm"] = self.beat_grid.bpm
             if self.cfg.get("key_str"):
                 metadata["key"] = self.cfg.get("key_str")
-            metadata["video_palette"] = self.cfg.get("video_palette", "radical")
+            metadata["video_palette"]    = self.cfg.get("video_palette", "radical")
             metadata["video_promo_text"] = self.cfg.get("video_promo_text", "RADICAL RECORDS · PROMO EXCLUSIVA")
+            metadata["aspect_ratio"]     = self.cfg.get("aspect_ratio", "9:16")
 
             cover_path = self.cfg.get("cover_path")
 
@@ -1028,7 +1029,8 @@ class BrandingCard(QFrame):
         self._edit_comment.setText(cfg.get("tag_comment", "AutoPrevias · Radical Records Studio"))
         self._chk_remember.setChecked(cfg.get("save_signature_default", False))
 
-        cpath = cfg.get("custom_cover_path", "")
+        # Prioridad: 1) custom_cover_path guardado por el usuario, 2) cover_path de sesión (embebida)
+        cpath = cfg.get("custom_cover_path", "") or cfg.get("cover_path", "")
         if cpath and Path(cpath).exists():
             self._drop_area.set_cover(cpath)
 
@@ -1070,10 +1072,10 @@ class BrandingCard(QFrame):
     def persist_if_requested(self):
         if self._chk_remember.isChecked():
             c = load_cfg()
-            c["tag_artist"] = self._edit_artist.text().strip()
-            c["tag_label"]  = self._edit_label.text().strip()
-            c["tag_album"]  = self._edit_album.text().strip()
-            c["tag_genre"]  = self._edit_genre.text().strip()
+            c["tag_artist"]  = self._edit_artist.text().strip()
+            c["tag_label"]   = self._edit_label.text().strip()
+            c["tag_album"]   = self._edit_album.text().strip()
+            c["tag_genre"]   = self._edit_genre.text().strip()
             c["tag_comment"] = self._edit_comment.text().strip()
             c["save_signature_default"] = True
 
@@ -1083,6 +1085,16 @@ class BrandingCard(QFrame):
                 c["custom_cover_path"] = saved_cover
             else:
                 c["custom_cover_path"] = ""
+
+            # Persistir también las preferencias de exportación del ResultPanel padre
+            parent = self.parent()
+            while parent is not None and not hasattr(parent, "_combo_speed_mode"):
+                parent = parent.parent() if hasattr(parent, "parent") else None
+            if parent and hasattr(parent, "_combo_speed_mode"):
+                c["speed_mode"]    = parent._combo_speed_mode.currentData()
+                c["video_palette"] = parent._combo_video_pal.currentData()
+                c["aspect_ratio"]  = parent._combo_aspect.currentData()
+
             save_cfg(c)
 
 
@@ -1114,7 +1126,8 @@ class ResultPanel(QWidget):
         self._tempo_base_line  = None
         self._key_res          = None
         self._key_str          = ""
-        self._voice_drop_path  = ""
+        self._voice_drop_path     = ""
+        self._voice_drop_time_sec = -1.0  # -1 = usar cálculo automático
         self._build_ui()
 
     def _build_ui(self):
@@ -1141,6 +1154,7 @@ class ResultPanel(QWidget):
             self._waveform.seek_requested.connect(self._on_waveform_seek)
             self._waveform.boundaries_changed.connect(self._on_boundaries_changed)
             self._waveform.cuts_changed.connect(self._on_waveform_cuts_changed)
+            self._waveform.voice_drop_moved.connect(self._on_voice_drop_marker_moved)
             wave_lay.addWidget(self._waveform)
         else:
             placeholder = QLabel("Instala pyqtgraph para ver la forma de onda")
@@ -1460,7 +1474,8 @@ class ResultPanel(QWidget):
         self._combo_voice_pos.setStyleSheet(_input_style())
         self._combo_voice_pos.addItem("📍 Pre-Drop", "predrop")
         self._combo_voice_pos.addItem("📍 Intro", "intro")
-        self._combo_voice_pos.setToolTip("Momento de inserción de la firma vocal")
+        self._combo_voice_pos.addItem("🎯 Manual (arrastrar)", "manual")
+        self._combo_voice_pos.setToolTip("Momento de inserción: Pre-Drop, Intro, o arrastrar el marcador dorado en la forma de onda")
 
         self._lbl_voice_drop = QLabel("")
         self._lbl_voice_drop.setStyleSheet(f"color: {GREEN}; font-size: 10px; font-weight: 600; background: transparent; border: none;")
@@ -1518,6 +1533,9 @@ class ResultPanel(QWidget):
         exp_lay.addWidget(self._row_video_widget)
 
         self._chk_video.toggled.connect(self._row_video_widget.setVisible)
+        self._combo_voice_pos.currentIndexChanged.connect(
+            lambda _: self._update_voice_drop_marker()
+        )
 
         # Fila carpeta
         row_folder = QHBoxLayout()
@@ -1853,6 +1871,24 @@ class ResultPanel(QWidget):
         if hasattr(self, "_branding_card"):
             self._branding_card.load_from_cfg(cfg)
 
+        # Restaurar preferencias guardadas (speed_mode, palette, aspect_ratio)
+        persisted_cfg = load_cfg()
+        if hasattr(self, "_combo_speed_mode") and persisted_cfg.get("speed_mode"):
+            for i in range(self._combo_speed_mode.count()):
+                if self._combo_speed_mode.itemData(i) == persisted_cfg["speed_mode"]:
+                    self._combo_speed_mode.setCurrentIndex(i)
+                    break
+        if hasattr(self, "_combo_video_pal") and persisted_cfg.get("video_palette"):
+            for i in range(self._combo_video_pal.count()):
+                if self._combo_video_pal.itemData(i) == persisted_cfg["video_palette"]:
+                    self._combo_video_pal.setCurrentIndex(i)
+                    break
+        if hasattr(self, "_combo_aspect") and persisted_cfg.get("aspect_ratio"):
+            for i in range(self._combo_aspect.count()):
+                if self._combo_aspect.itemData(i) == persisted_cfg["aspect_ratio"]:
+                    self._combo_aspect.setCurrentIndex(i)
+                    break
+
         default_name = preview_filename(file_path)
         self._edit_name.setText(default_name)
         self._last_default_name = default_name
@@ -1925,6 +1961,39 @@ class ResultPanel(QWidget):
             p = Path(file)
             self._lbl_voice_drop.setText(f"✓ {p.name[:16]}")
             self._btn_voice_drop.setText("🎙️ Cambiar Drop")
+            self._update_voice_drop_marker()
+
+    def _update_voice_drop_marker(self):
+        """Calcula y muestra el marcador dorado de Voice Drop en la waveform."""
+        if not (HAS_WAVEFORM and hasattr(self, "_waveform") and self._voice_drop_path):
+            return
+        pos = self._combo_voice_pos.currentData() if hasattr(self, "_combo_voice_pos") else "predrop"
+        if pos == "manual" and self._voice_drop_time_sec >= 0:
+            t = self._voice_drop_time_sec
+        elif pos == "intro":
+            t = 1.8
+        else:
+            # Pre-Drop: calcular desde drops del plan
+            drop_t = 16.0
+            if self._plan:
+                from src.analysis.structure import SectionType
+                drops = [seg.section.start_time for seg in self._plan.segments
+                         if getattr(seg.section, "type", None) == SectionType.DROP]
+                if drops:
+                    drop_t = drops[0]
+            t = max(1.5, drop_t - 3.8)
+        self._waveform.set_voice_drop_marker(t)
+
+    def _on_voice_drop_marker_moved(self, t: float):
+        """El usuario arrastró el marcador dorado → activar modo Manual y guardar posición."""
+        self._voice_drop_time_sec = t
+        if hasattr(self, "_combo_voice_pos"):
+            for i in range(self._combo_voice_pos.count()):
+                if self._combo_voice_pos.itemData(i) == "manual":
+                    self._combo_voice_pos.blockSignals(True)
+                    self._combo_voice_pos.setCurrentIndex(i)
+                    self._combo_voice_pos.blockSignals(False)
+                    break
 
     def get_export_options(self) -> dict:
         speed_mode = self._combo_speed_mode.currentData() if hasattr(self, "_combo_speed_mode") else "vinyl"
@@ -1948,6 +2017,7 @@ class ResultPanel(QWidget):
             "voice_drop_enabled": bool(self._voice_drop_path),
             "voice_drop_path": self._voice_drop_path,
             "voice_drop_position": voice_pos,
+            "voice_drop_time_sec": self._voice_drop_time_sec,
             "key_str": self._key_str,
         }
 
@@ -3638,8 +3708,9 @@ class MainWindow(QMainWindow):
         cfg["custom_name"]  = custom_name
         cfg["tempo_mode"]   = self._results.get_tempo_mode()
         cfg["tempo_events"] = self._results.get_tempo_events()
-        cfg["metadata"]     = metadata
-        cfg["cover_path"]   = cover_path
+        cfg["metadata"]   = metadata
+        # Usar la carátula del branding card si hay una; si no, la cover de sesión (embebida)
+        cfg["cover_path"] = cover_path or self._cfg.get("cover_path", "")
         if hasattr(self, "_key_res") and self._key_res:
             cfg["key_str"] = f"{self._key_res.camelot} · {self._key_res.notation}"
 
