@@ -24,6 +24,7 @@ SolidCompression=yes
 WizardStyle=modern
 ArchitecturesInstallIn64BitMode=x64 arm64
 UninstallDisplayIcon={app}\AutoPrevias.exe
+PrivilegesRequiredOverridesAllowed=dialog commandline
 
 [Languages]
 Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
@@ -32,9 +33,12 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
+[Dirs]
+Name: "{app}"; Permissions: users-modify
+
 [Files]
-Source: "..\..\dist\AutoPrevias.dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\..\assets\icon.ico"; DestDir: "{app}\assets"; Flags: ignoreversion
+Source: "..\..\dist\AutoPrevias.dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Permissions: users-modify
+Source: "..\..\assets\icon.ico"; DestDir: "{app}\assets"; Flags: ignoreversion; Permissions: users-modify
 
 [Icons]
 Name: "{group}\AutoPrevias"; Filename: "{app}\AutoPrevias.exe"; WorkingDir: "{app}"; IconFilename: "{app}\assets\icon.ico"

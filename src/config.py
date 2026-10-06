@@ -44,11 +44,18 @@ def get_user_data_dir() -> Path:
         base = Path.home() / "Library" / "Application Support" / "AutoPrevias"
     elif sys.platform == "win32":
         appdata = os.environ.get("APPDATA")
-        base = Path(appdata) / "AutoPrevias" if appdata else Path.home() / "AppData" / "Roaming" / "AutoPrevias"
+        if appdata:
+            base = Path(appdata) / "AutoPrevias"
+        else:
+            base = Path(os.environ.get("LOCALAPPDATA", tempfile.gettempdir())) / "AutoPrevias"
     else:
         xdg_config = os.environ.get("XDG_CONFIG_HOME")
         base = Path(xdg_config) / "autoprevias" if xdg_config else Path.home() / ".config" / "autoprevias"
-    base.mkdir(parents=True, exist_ok=True)
+    try:
+        base.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        base = Path(tempfile.gettempdir()) / "AutoPrevias"
+        base.mkdir(parents=True, exist_ok=True)
     return base
 
 
@@ -58,20 +65,28 @@ def get_cache_dir() -> Path:
         base = Path.home() / "Library" / "Caches" / "AutoPrevias"
     elif sys.platform == "win32":
         localappdata = os.environ.get("LOCALAPPDATA")
-        base = Path(localappdata) / "AutoPrevias" / "Cache" if localappdata else Path.home() / "AppData" / "Local" / "AutoPrevias" / "Cache"
+        if localappdata:
+            base = Path(localappdata) / "AutoPrevias" / "Cache"
+        else:
+            base = Path(tempfile.gettempdir()) / "AutoPrevias" / "Cache"
     else:
         xdg_cache = os.environ.get("XDG_CACHE_HOME")
         base = Path(xdg_cache) / "autoprevias" if xdg_cache else Path.home() / ".cache" / "autoprevias"
-    base.mkdir(parents=True, exist_ok=True)
+    try:
+        base.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        base = Path(tempfile.gettempdir()) / "AutoPrevias" / "Cache"
+        base.mkdir(parents=True, exist_ok=True)
     return base
 
 
 def get_config_path() -> Path:
     """Ruta del archivo de configuración."""
-    # En desarrollo local, si existe en la raíz del repo y no estamos compilados, usar local
-    dev_local = Path(__file__).resolve().parent.parent / "autoprevias_config.json"
-    if not getattr(sys, "frozen", False) and dev_local.exists():
-        return dev_local
+    is_standalone = getattr(sys, "frozen", False) or hasattr(sys, "__compiled__")
+    if not is_standalone:
+        dev_local = Path(__file__).resolve().parent.parent / "autoprevias_config.json"
+        if dev_local.exists():
+            return dev_local
     return get_user_data_dir() / "autoprevias_config.json"
 
 

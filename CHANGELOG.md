@@ -3,6 +3,28 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.2.4] - 2026-10-06
+
+### Corregido
+- **Arranque Universal en Windows sin Permisos de Administrador (Standard User Fix)**:
+  - Asignación explícita de permisos NTFS `users-modify` en Inno Setup (`installer/windows/setup.iss`) para el directorio de instalación `{app}` y todos sus archivos, permitiendo que usuarios estándar de Windows sin permisos administrativos puedan ejecutar la aplicación sin bloqueos ni requerir "Ejecutar como administrador".
+  - Habilitación de la directiva `PrivilegesRequiredOverridesAllowed=dialog commandline` en Inno Setup para permitir la instalación tanto por usuario actual (sin UAC) como para todos los usuarios.
+  - Endurecimiento de rutas en `src/config.py` con fallbacks defensivos a directorios `%TEMP%` y comprobación segura de entornos standalone (`__compiled__` / `frozen`).
+
+---
+
+## [1.2.3] - 2026-10-06
+
+### Corregido
+- **Prevención de Bloqueos de Proceso y Fork-Bombs en Windows**:
+  - Incorporación de `multiprocessing.freeze_support()` en el punto de entrada de `src/main.py`.
+  - Desactivación forzada de generación de bytecode en runtime (`sys.dont_write_bytecode = True`).
+  - Precompilación AOT de todos los módulos Python en el script de empaquetado de dependencias runtime (`scripts/bundle_runtime_deps.py`).
+  - Inclusión explícita de plugins de Qt (`sensible,multimedia,platforms,styles,imageformats`) en la compilación Nuitka.
+  - Registro de arranque inmediato en `%TEMP%\autoprevias_startup.log` y captura visual de errores con MessageBox nativa.
+
+---
+
 ## [1.2.0] - 2026-10-05
 
 ### Añadido

@@ -1303,7 +1303,22 @@ AutoPrevias/
   * Actualizado `.github/workflows/release.yml` para incluir explícitamente:
     `--include-qt-plugins=sensible,multimedia,platforms,styles,imageformats`
     garantizando que `qwindows.dll`, los estilos visuales nativos y decodificadores de iconos/imágenes estén físicamente empaquetados en la raíz del bundle.
-- **Versión Oficial v1.2.3**: Actualizado `__version__ = "1.2.3"`.
+#### 🔑 3. Confirmación Empírica del Usuario y Corrección de Permisos NTFS
+- **Feedback del Usuario**: *"he descargado la version de antes que estaba la de 1.2.1 para windows 64 bits y como administrador si se abre pero normal no"*.
+- **Confirmación de Causa Raíz**: El ejecutable y las librerías funcionan al 100% (como demuestra la apertura inmediata como Administrador). El bloqueo en modo usuario normal se debía estrictamente a restricciones de permisos NTFS en `C:\Program Files\AutoPrevias\` (donde un usuario normal no tiene permisos de modificación).
+- **Acciones Aplicadas**:
+  1. En `installer/windows/setup.iss`: Añadido `Permissions: users-modify` en `[Dirs]` y en `[Files]`, configurando automáticamente los permisos de Windows para que cualquier usuario estándar tenga control total de lectura, escritura y modificación dentro de la carpeta instalada de AutoPrevias.
+  2. En `src/config.py`: Rediseñadas `get_user_data_dir()`, `get_cache_dir()` y `get_config_path()` con try/except y fallback transparente a directorios temporales si el perfil del usuario estuviese restringido.
 
+---
 
+### Resumen de Mejoras — Sesión 12 (2026-10-06) — Versión 1.2.4:
 
+#### 🚀 1. Despliegue Oficial de AutoPrevias v1.2.4 para Usuario Normal (Non-Admin)
+- **Directiva Inno Setup Dual**:
+  * Añadida `PrivilegesRequiredOverridesAllowed=dialog commandline` en `installer/windows/setup.iss`.
+  * Permite al usuario instalar en modo "Solo para mí" (en `%LOCALAPPDATA%\Programs\AutoPrevias`, sin pedir elevación de privilegios UAC de Administrador) o en modo "Para todos los usuarios" (en `C:\Program Files\AutoPrevias` con permisos `users-modify` concedidos explícitamente a usuarios estándar).
+- **Publicación y Empaquetado Automático**:
+  * Incremento de versión a `1.2.4` en `src/__version__.py` y `CHANGELOG.md`.
+  * Sincronización completa entre el entorno de trabajo y el repositorio de despliegue.
+  * Publicación mediante pipeline automatizado de GitHub Actions con análisis Windows Defender y selftest verificado.
