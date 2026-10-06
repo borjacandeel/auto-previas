@@ -7,9 +7,23 @@ import tempfile
 import traceback
 from pathlib import Path
 import time
+import multiprocessing
+
+# Prevenir fork-bombs o spawns descontrolados en Windows en ejecutables standalone
+multiprocessing.freeze_support()
 
 # Prevenir escritura de .pyc en runtime (crucial para instalaciones en C:\Program Files)
 sys.dont_write_bytecode = True
+
+# Registro ultra-inmediato en TEMP
+if sys.platform == "win32":
+    try:
+        _td = os.environ.get("TEMP") or os.environ.get("TMP") or str(Path.home() / "AppData" / "Local" / "Temp")
+        with open(os.path.join(_td, "autoprevias_startup.log"), "a", encoding="utf-8") as _f:
+            _f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] AutoPrevias entrypoint alcanzado (pid={os.getpid()})\n")
+            _f.flush()
+    except Exception:
+        pass
 
 def _log_startup(msg: str):
     ts = time.strftime('%Y-%m-%d %H:%M:%S')
@@ -44,8 +58,15 @@ if sys.platform == "win32":
     os.environ["QSG_RHI_BACKEND"] = "software"
     os.environ["LIBGL_ALWAYS_SOFTWARE"] = "1"
     os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
+    os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
     os.environ["PYTHONUNBUFFERED"] = "1"
     _log_startup(f"AutoPrevias proceso iniciado (pid={os.getpid()})")
+    try:
+        from PySide6.QtCore import Qt, QCoreApplication
+        QCoreApplication.setAttribute(Qt.ApplicationAttribute.AA_UseSoftwareOpenGL, True)
+        _log_startup("Qt AA_UseSoftwareOpenGL activado.")
+    except Exception as _e:
+        _log_startup(f"Aviso al configurar AA_UseSoftwareOpenGL: {_e}")
 
 # Capturador global de excepciones para evitar cierre silencioso sin consola
 def _global_exception_handler(exc_type, exc_value, exc_tb):

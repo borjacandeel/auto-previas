@@ -90,7 +90,7 @@ jobs:
             --product-name="AutoPrevias" \
             --copyright="Copyright © 2026 Radical Records. Todos los derechos reservados." \
             --enable-plugin=pyside6 \
-            --include-qt-plugins=sensible,multimedia \
+            --include-qt-plugins=sensible,multimedia,platforms,styles,imageformats \
             --include-package=PySide6.QtMultimedia \
             --include-data-dir=assets=assets \
             --include-data-dir=ffmpeg_bin=ffmpeg_bin \
@@ -250,7 +250,7 @@ jobs:
             --windows-icon-from-ico=assets\icon.ico ^
             --windows-console-mode=attach ^
             --enable-plugin=pyside6 ^
-            --include-qt-plugins=sensible,multimedia ^
+            --include-qt-plugins=sensible,multimedia,platforms,styles,imageformats ^
             --include-package=PySide6.QtMultimedia ^
             --include-data-dir=assets=assets ^
             --include-data-dir=ffmpeg_bin=ffmpeg_bin ^

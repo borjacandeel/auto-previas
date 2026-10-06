@@ -1,97 +1,32 @@
-"""Compatibilidad de librerías para ejecutables compilados con Nuitka."""
+"""
+Compatibilidad de librerías para ejecutables compilados con Nuitka.
+Garantiza rutas de búsqueda de DLLs, plugins de Qt y parches de introspección para Librosa.
+"""
+from __future__ import annotations
+
+import os
 import sys
+from pathlib import Path
 import numpy as np
 
-# Módulos estándar requeridos dinámicamente por Numba, Librosa, Scikit-learn y Pooch en standalone
+# Módulos estándar requeridos para inspección de bytecode en Numba/Librosa
 import uuid
 import dis
 import inspect
 import opcode
-import socket
-import secrets
-import mimetypes
-import difflib
-import cmath
-import ast
-import asyncio
-import token
-import tokenize
-import pydoc
-import runpy
-import timeit
-import calendar
-import pprint
 
-# Asegurar flag frozen para permitir a Numba y librerías nativas resolver rutas virtuales en standalone
+# Asegurar flag frozen para permitir a librerías nativas resolver rutas virtuales en standalone
 if not hasattr(sys, "frozen"):
     setattr(sys, "frozen", True)
 
-import os
-from pathlib import Path
-
-# Registrar directorios de DLLs y configurar renderizado seguro en Windows (especialmente ARM64 emulado)
+# Configuración de rutas nativas en Windows
 if sys.platform == "win32":
-    import platform
-
-    def _check_is_arm() -> bool:
-        # 1. Variables de entorno comunes
-        for k in ("PROCESSOR_ARCHITECTURE", "PROCESSOR_ARCHITEW6432", "PROCESSOR_IDENTIFIER"):
-            val = os.environ.get(k, "").upper()
-            if "ARM" in val or "SNAPDRAGON" in val or "QUALCOMM" in val:
-                return True
-        # 2. ctypes: GetNativeSystemInfo
-        try:
-            import ctypes
-            from ctypes import wintypes
-
-            class _SYSTEM_INFO(ctypes.Structure):
-                _fields_ = [
-                    ("wProcessorArchitecture", wintypes.WORD),
-                    ("wReserved", wintypes.WORD),
-                    ("dwPageSize", wintypes.DWORD),
-                    ("lpMinimumApplicationAddress", wintypes.LPVOID),
-                    ("lpMaximumApplicationAddress", wintypes.LPVOID),
-                    ("dwActiveProcessorMask", ctypes.c_size_t),
-                    ("dwNumberOfProcessors", wintypes.DWORD),
-                    ("dwProcessorType", wintypes.DWORD),
-                    ("dwAllocationGranularity", wintypes.DWORD),
-                    ("wProcessorLevel", wintypes.WORD),
-                    ("wProcessorRevision", wintypes.WORD),
-                ]
-
-            sys_info = _SYSTEM_INFO()
-            ctypes.windll.kernel32.GetNativeSystemInfo(ctypes.byref(sys_info))
-            # PROCESSOR_ARCHITECTURE_ARM64 = 12, PROCESSOR_ARCHITECTURE_ARM = 5
-            if sys_info.wProcessorArchitecture in (12, 5):
-                return True
-        except Exception:
-            pass
-        # 3. ctypes: IsWow64Process2
-        try:
-            import ctypes
-            from ctypes import wintypes
-            kernel32 = ctypes.windll.kernel32
-            if hasattr(kernel32, "IsWow64Process2"):
-                proc_mach = wintypes.USHORT()
-                native_mach = wintypes.USHORT()
-                if kernel32.IsWow64Process2(kernel32.GetCurrentProcess(), ctypes.byref(proc_mach), ctypes.byref(native_mach)):
-                    # IMAGE_FILE_MACHINE_ARM64 = 0xAA64 (43620)
-                    if native_mach.value in (0xAA64, 0x01C4, 0x01C0):
-                        return True
-        except Exception:
-            pass
-        # 4. platform string inspection
-        mach = platform.machine().lower()
-        proc = platform.processor().lower()
-        return "arm" in mach or "arm" in proc
-
-    # En Windows (tanto x64 como ARM64 bajo emulación o virtualización en Parallels / VMware / Snapdragon),
-    # los controladores OpenGL / Direct3D emulados pueden bloquear la inicialización de la ventana de Qt.
-    # Forzar modo de renderizado por software seguro garantiza arranque instantáneo de la GUI al 100%.
+    # Forzar modo de renderizado por software seguro
     os.environ.setdefault("QT_OPENGL", "software")
     os.environ.setdefault("QT_QUICK_BACKEND", "software")
     os.environ.setdefault("QMLSCENE_DEVICE", "softwarecontext")
     os.environ.setdefault("QSG_RHI_BACKEND", "software")
+    os.environ.setdefault("LIBGL_ALWAYS_SOFTWARE", "1")
 
     exe_dir = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent.parent
     for d in [
@@ -108,47 +43,11 @@ if sys.platform == "win32":
                     os.add_dll_directory(str(d))
                 except Exception:
                     pass
-            # Asegurar en PATH del proceso
             cur_path = os.environ.get("PATH", "")
             if str(d) not in cur_path:
                 os.environ["PATH"] = f"{d};{cur_path}"
 
-# Parche de carga directa para llvmlite en ejecutables standalone (evita fallo de importlib.resources)
-try:
-    import llvmlite.binding.ffi as _ffi
-    import ctypes
-
-    _orig_load_lib = _ffi._lib_wrapper._load_lib
-
-    def _robust_load_lib(self):
-        test_sym = "LLVMPY_GetVersionInfo"
-        exe_dir = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent.parent
-
-        candidates = [
-            exe_dir / "llvmlite.dll",
-            exe_dir / "llvmlite" / "binding" / "llvmlite.dll",
-            exe_dir / "libllvmlite.dylib",
-            exe_dir / "llvmlite" / "binding" / "libllvmlite.dylib",
-            exe_dir / "libllvmlite.so",
-            exe_dir / "llvmlite" / "binding" / "libllvmlite.so",
-        ]
-        for c in candidates:
-            if c.exists() and c.is_file():
-                try:
-                    self._lib_handle = ctypes.CDLL(str(c.resolve()))
-                    getattr(self._lib_handle, test_sym)()
-                    return
-                except Exception:
-                    pass
-
-        # Fallback al cargador original si no se encontró en candidatos directos
-        _orig_load_lib(self)
-
-    _ffi._lib_wrapper._load_lib = _robust_load_lib
-except Exception:
-    pass
-
-# Registrar rutas de plugins de Qt (multimedia, platforms, styles) en standalone y activar OpenGL software
+# Registrar rutas de plugins de Qt (multimedia, platforms, styles) en standalone
 try:
     from PySide6.QtCore import Qt, QCoreApplication
     if sys.platform == "win32":
@@ -171,13 +70,47 @@ except Exception:
     pass
 
 
+def _apply_llvmlite_patch():
+    """Parche de carga directa para llvmlite en ejecutables standalone."""
+    try:
+        import llvmlite.binding.ffi as _ffi
+        import ctypes
+
+        _orig_load_lib = _ffi._lib_wrapper._load_lib
+
+        def _robust_load_lib(self):
+            test_sym = "LLVMPY_GetVersionInfo"
+            exe_dir = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent.parent
+            candidates = [
+                exe_dir / "llvmlite.dll",
+                exe_dir / "llvmlite" / "binding" / "llvmlite.dll",
+                exe_dir / "libllvmlite.dylib",
+                exe_dir / "llvmlite" / "binding" / "libllvmlite.dylib",
+                exe_dir / "libllvmlite.so",
+                exe_dir / "llvmlite" / "binding" / "libllvmlite.so",
+            ]
+            for c in candidates:
+                if c.exists() and c.is_file():
+                    try:
+                        self._lib_handle = ctypes.CDLL(str(c.resolve()))
+                        getattr(self._lib_handle, test_sym)()
+                        return
+                    except Exception:
+                        pass
+            _orig_load_lib(self)
+
+        _ffi._lib_wrapper._load_lib = _robust_load_lib
+    except Exception:
+        pass
+
 
 def apply_librosa_patches():
     """
-    Parchea funciones DUFunc de librosa para usar directamente NumPy C-loops.
-    En ejecutables compilados con Nuitka, el bytecode de Python se reemplaza por
-    código C nativo, lo que impide a Numba inspeccionar co_code para JIT en tiempo de ejecución.
+    Parchea librosa para ejecutables standalone donde lazy_loader o numba
+    no pueden resolver referencias de módulos dinámicos.
     """
+    _apply_llvmlite_patch()
+
     try:
         import librosa
         import librosa.version

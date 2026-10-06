@@ -1284,4 +1284,26 @@ AutoPrevias/
 - `python src/main.py --selftest`: Diagnóstico completo de los 6 subsistemas aprobado con código 0.
 - Auditoría de seguridad: Cero rutas locales ni datos personales en el código sincronizado.
 
+---
+
+### Resumen de Mejoras — Sesión 11 (2026-10-06) — Versión 1.2.3:
+
+#### 🔍 1. Diagnóstico del Incidente v1.2.2 en GitHub Actions
+- **Hallazgo Crítico**: El ejecutable y el instalador `AutoPrevias-1.2.2-Windows-x64-Setup.exe` (144.88 MB) se compilaron y escanearon con éxito en el runner de Windows en 50m 5s (Job ID `111955557030`). Sin embargo, el paso final `Publicar GitHub Release` en `ubuntu-latest` falló por falta de capacidad de máquinas virtuales de GitHub (*"The job was not acquired by Runner of type hosted even after multiple attempts"*).
+- **Consecuencia**: La versión `v1.2.2` nunca llegó a subirse a la pestaña de Releases de GitHub, por lo que el usuario al descargar la versión más reciente en GitHub continuaba probando `v1.2.1`.
+
+#### 🛡️ 2. Blindaje al 200% para Windows (x64 y ARM64 Parallels)
+- **`multiprocessing.freeze_support()`**: Añadido inmediatamente tras `sys.dont_write_bytecode = True` en `src/main.py`. En ejecutables standalone de Windows, las librerías científicas (`joblib`, `scikit-learn`, `loky`) que invocan multiprocessing provocan una re-ejecución infinita del propio `.exe` (*fork-bomb*) si falta `freeze_support()`, haciendo que el proceso quede cargando en el Administrador de Tareas consumiendo CPU sin abrir jamás la ventana.
+- **Registro de Entrada Ultrarrápido Directo**: `src/main.py` escribe directamente una línea de log en `%TEMP%\autoprevias_startup.log` en el primer milisegundo de ejecución para verificar de inmediato que Python ha tomado el control.
+- **Saneamiento Integral de `src/compat.py`**:
+  * Eliminada la importación en tiempo de carga de módulos pesados o de red (`socket`, `asyncio`, `secrets`).
+  * Eliminada la importación a nivel de módulo de `llvmlite.binding.ffi` (que forzaba la inicialización del compilador LLVM al importar compatibilidad) y encapsulada en una función perezosa `_apply_llvmlite_patch()`.
+  * Eliminado el bloque de estructuras ctypes en desuso de `_check_is_arm()`.
+- **Inclusión Forzada de Plugins Qt Críticos**:
+  * Actualizado `.github/workflows/release.yml` para incluir explícitamente:
+    `--include-qt-plugins=sensible,multimedia,platforms,styles,imageformats`
+    garantizando que `qwindows.dll`, los estilos visuales nativos y decodificadores de iconos/imágenes estén físicamente empaquetados en la raíz del bundle.
+- **Versión Oficial v1.2.3**: Actualizado `__version__ = "1.2.3"`.
+
+
 
