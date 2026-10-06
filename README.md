@@ -1,0 +1,456 @@
+<div align="center">
+  <img src="assets/logo_banner.png" alt="AutoPrevias — Radical Records" width="600"/>
+
+  # AutoPrevias
+  ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
+
+  [![Release](https://img.shields.io/badge/Release-v2.0.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
+  [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+  [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
+  [![CI/CD](https://img.shields.io/badge/Build-GitHub%20Actions-2088FF.svg?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/borjacandeel/auto-previas/actions)
+  [![Licencia](https://img.shields.io/badge/Licencia-Privada%20%2F%20Radical%20Records-black.svg?style=for-the-badge)](THIRD_PARTY_LICENSES.txt)
+
+  <p align="center">
+    <strong>Software exclusivo para Radical Records.</strong><br>
+    Automatiza la selección quirúrgica de segmentos, drops, subidas y descansos musicales para generar previas promocionales de máxima energía acústica, transiciones naturales y perfecta alineación de compases.
+  </p>
+</div>
+
+---
+
+## 📑 Tabla de Contenidos
+1. [📥 Descargas y GitHub Releases](#-descargas-y-github-releases)
+   - [Enlaces de Descarga Directa (Última Versión)](#-enlaces-de-descarga-directa-última-versión)
+   - [Historial de Releases por Versión en GitHub](#-historial-de-releases-por-versión-en-github)
+   - [Comprobación de Integridad Criptográfica (SHA-256)](#-comprobación-de-integridad-criptográfica-sha-256)
+2. [🚀 Guía de Instalación Paso a Paso](#-guía-de-instalación-paso-a-paso)
+   - [Instalación en macOS (Apple Silicon arm64)](#-instalación-en-macos)
+   - [Instalación en Windows (10 y 11 de 64 bits)](#-instalación-en-windows)
+3. [✨ Características Principales](#-características-principales)
+4. [🎧 Funcionamiento del Motor Acústico](#-funcionamiento-del-motor-acústico)
+5. [🏷️ Política de Versionado (SemVer) e Historial](#-política-de-versionado-semver-e-historial)
+6. [🛠️ Guía de Desarrollo y Compilación Local](#️-guía-de-desarrollo-y-compilación-local)
+7. [💻 Requisitos del Sistema](#-requisitos-del-sistema)
+8. [⚖️ Licencias y Componentes de Terceros](#️-licencias-y-componentes-de-terceros)
+9. [✉️ Soporte Técnico y Contacto](#️-soporte-técnico-y-contacto)
+
+---
+
+## 📥 Descargas y GitHub Releases
+
+AutoPrevias se distribuye mediante instaladores precompilados y optimizados para cada sistema operativo, sin necesidad de tener Python ni herramientas de desarrollo instaladas en tu equipo.
+
+### 📦 Enlaces de Descarga Directa (Última Versión)
+
+Los siguientes enlaces apuntan **siempre y de forma automática a los instaladores de la última versión estable (Release Latest)** disponible en GitHub:
+
+| Plataforma | Arquitectura | Tipo de Paquete | Enlace de Descarga Directa | Notas de Versión |
+| :--- | :--- | :--- | :--- | :--- |
+| 🍏 **macOS** | **Apple Silicon (M1 / M2 / M3 / M4)** | Imagen de disco `.dmg` (Drag-to-Applications) | [⬇️ **Descargar AutoPrevias macOS arm64**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-macOS-arm64.dmg) | [Ver Release Oficial](https://github.com/borjacandeel/auto-previas/releases/latest) |
+| 🪟 **Windows** | **64-bit (x64) y ARM64 (Snapdragon X / Parallels)** | Instalador Asistido Universal `.exe` (Inno Setup) | [⬇️ **Descargar AutoPrevias Windows Setup**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-Windows-x64-Setup.exe) | [Ver Release Oficial](https://github.com/borjacandeel/auto-previas/releases/latest) |
+
+---
+
+### 🏷️ Historial de Releases por Versión en GitHub
+
+Para acceder a versiones anteriores, binarios específicos o al histórico de etiquetas (tags), puedes visitar el apartado oficial en el repositorio de GitHub:
+
+👉 **[Ir al Apartado Oficial de Releases en GitHub](https://github.com/borjacandeel/auto-previas/releases)**
+
+En dicha sección de GitHub encontrarás:
+1. **Etiquetas por versión (Tags):** Cada publicación está catalogada siguiendo el estándar *Semantic Versioning* (`v1.0.1`, `v1.1.0`, etc.).
+2. **Desplegable de Assets (Archivos adjuntos):**
+   - `AutoPrevias-macOS-arm64.dmg`: Instalador para Mac con procesadores Apple Silicon (M1/M2/M3/M4).
+   - `AutoPrevias-Windows-x64-Setup.exe`: Instalador ejecutable asistido para Windows 10/11 (64 bits).
+   - `SHA256SUMS.txt`: Archivo de texto con las sumas de verificación criptográficas oficiales de cada instalador.
+3. **Registro de cambios (Release Notes):** Resumen detallado con las correcciones, mejoras y novedades incluidas en cada compilación.
+
+---
+
+### 🔒 Comprobación de Integridad Criptográfica (SHA-256)
+
+Cada release incluye un archivo `SHA256SUMS.txt` generado automáticamente durante la compilación en GitHub Actions. Puedes comprobar que el archivo que has descargado es auténtico y no se ha corrompido durante la descarga:
+
+- **En macOS (Terminal):**
+  ```bash
+  shasum -a 256 ~/Downloads/AutoPrevias-macOS-arm64.dmg
+  ```
+- **En Windows (PowerShell):**
+  ```powershell
+  Get-FileHash -Algorithm SHA256 "$HOME\Downloads\AutoPrevias-Windows-x64-Setup.exe"
+  ```
+El valor hexadecimal devuelto debe coincidir exactamente con el hash publicado en el archivo `SHA256SUMS.txt` de la release.
+
+---
+
+## 🚀 Guía de Instalación Paso a Paso
+
+### 🍏 Instalación en macOS
+
+1. Descarga el archivo de imagen de disco `.dmg` para Apple Silicon (`AutoPrevias-macOS-arm64.dmg`).
+2. Haz doble clic en el archivo `.dmg` descargado para montar la imagen de disco.
+3. En la ventana emergente, arrastra el icono de **AutoPrevias** a la carpeta de **Aplicaciones**.
+4. Expulsa la imagen de disco desde el Finder o el Escritorio.
+
+#### 🛡️ Primera Apertura en macOS (Aviso de Desarrollador No Identificado / Gatekeeper)
+Dado que AutoPrevias es un software de uso privado interno del sello y no cuenta por el momento con el certificado comercial anual de Apple Developer Program ($99/año), macOS activará la protección de cuarentena Gatekeeper en el primer arranque.
+
+Existen dos métodos sencillos para autorizar la aplicación:
+
+- **Método Rápido por Terminal (Recomendado):**
+  Abre la aplicación **Terminal** (cmd + espacio, escribe *Terminal*) y ejecuta el siguiente comando:
+  ```bash
+  xattr -cr /Applications/AutoPrevias.app
+  ```
+  *(Este comando retira la marca de cuarentena de descarga, permitiendo a macOS cargar los plugins multimedia nativos de audio y abrir la aplicación con un simple doble clic).*
+
+- **Método desde Ajustes del Sistema:**
+  1. Abre `/Applications/AutoPrevias.app`.
+  2. Aparecerá el mensaje indicando que el desarrollador no ha podido ser verificado. Pulsa **Cancelar**.
+  3. Dirígete a **Ajustes del Sistema > Privacidad y seguridad**.
+  4. Baja hasta la sección **Seguridad**. Verás un aviso que indica: *"Se bloqueó el uso de AutoPrevias..."*.
+  5. Haz clic en **Abrir de todos modos** e introduce tu contraseña o Touch ID.
+
+---
+
+### 🪟 Instalación en Windows
+
+1. Descarga el instalador asistido **`AutoPrevias-Windows-x64-Setup.exe`**.
+2. Haz doble clic sobre el archivo ejecutable.
+3. Selecciona el idioma del asistente (Español o Inglés).
+4. Elige el directorio de instalación (por defecto `C:\Program Files\AutoPrevias`).
+5. Marca las casillas para crear accesos directos en el **Escritorio** y en el **Menú Inicio**.
+6. Pulsa en **Instalar** y, al finalizar, haz clic en **Completar** para abrir AutoPrevias.
+
+#### 🛡️ Primera Apertura en Windows (Microsoft Defender SmartScreen)
+Si Windows muestra la pantalla azul con el mensaje *"Windows protegió su PC"* debido a que el instalador no tiene un certificado de firma digital comercial:
+1. Haz clic sobre el enlace **"Más información"** (en texto pequeño bajo el mensaje principal).
+2. Aparecerá el botón **"Ejecutar de todas formas"**. Haz clic en él.
+3. La aplicación se iniciará de inmediato y Windows recordará tu elección en los siguientes arranques.
+
+> 💡 **Desinstalación limpia:** Si deseas desinstalar el programa en cualquier momento, puedes hacerlo desde *Configuración de Windows > Aplicaciones > Aplicaciones instaladas > AutoPrevias > Desinstalar*.
+
+---
+
+## ✨ Características Principales
+
+- 🧠 **Diferenciación Inteligente de Drops vs Descansos (HPSS + Fullness):**
+  Utiliza separación de fuentes armónicas y percusivas (Harmonic-Percussive Source Separation) para distinguir con precisión descansos (con bombos, vocales o percusiones secas) de auténticos drops melódicos (sintetizadores densos, leads y acordes de clímax).
+- ⏱️ **Alineación Rítmica Quirúrgica (Beat Grid):**
+  Detección automática de BPM con proyección de compases enteros. Los cortes y empalmes ocurren de forma estricta sobre el downbeat (inicio de compás), garantizando una transición musical totalmente fluida e imperceptible.
+- 🌊 **Waveform Interactivo en Tiempo Real:**
+  Visualización por GPU en alta resolución (PyQtGraph). Permite arrastrar libremente las marcas de inicio (verdes) y fin (rojas) de cada segmento con actualización de compás, y muestra máscaras sombreadas en las regiones que no formarán parte de la previa.
+- 🎚️ **Reproductor Integrado con Vúmetro Estéreo:**
+  Motor de preescucha en tiempo real sin latencia, control de volumen fluido y vúmetro profesional con medición dBFS estéreo y balística de decaimiento realista.
+- ⚡ **Curvas de Tempo Personalizables (Time-Stretch):**
+  - Modo **Tempo Fijo:** Previa con el BPM 100% original de la pista.
+  - Modo **Aceleración Progresiva:** Incremento de tempo dinámico para intensificar la energía promocional, procesado mediante time-stretching con conservación exacta de pitch y transientes.
+- 💽 **Exportación Simultánea Dual:**
+  - **WAV de Estudio:** 24-bit PCM a máxima fidelidad sonora.
+  - **MP3 de Difusión:** 320 kbps codificado mediante FFmpeg integrado de alto rendimiento, con carátula oficial incrustada de Radical Records y metadatos ID3v2.3 (título, artista, álbum, año y comentarios de estudio).
+- 🩺 **Diagnóstico Automatizado Headless (`--selftest`):**
+  Comprobación interna integral en menos de 2 segundos que valida la síntesis acústica, separación espectral, limitador y exportadores WAV/MP3 sin levantar interfaz gráfica.
+
+---
+
+## 🎧 Funcionamiento del Motor Acústico
+
+El pipeline de procesamiento de AutoPrevias consta de 5 fases estructuradas:
+
+```mermaid
+graph TD
+    A[Pista de Entrada WAV/MP3/FLAC] --> B[Detección de Tempo & Beat Grid]
+    B --> C[Análisis Espectral & Separación HPSS]
+    C --> D[Construcción del Plan en 3 Bloques]
+    D --> E[Procesamiento DSP: Time-Stretch & Limitador Soft]
+    E --> F[Exportación Dual: WAV 24-bit + MP3 320k con Carátula]
+```
+
+1. **Lectura y Saneamiento:** Carga de audio multiformato con comprobación y saneamiento automático de cabeceras corruptas.
+2. **Cuadrícula Rítmica (Beat Grid):** Proyección de downbeats a partir de la estimación de tempo para asegurar sincronía de compás (frases de 4, 8, 16 o 32 compases).
+3. **Análisis HPSS y Densidad Tímbrica:**
+   - Separación de la señal armónica $H$ y percusiva $P$.
+   - Cálculo de *Spectral Fullness*, ancho de banda y planaridad espectral para descartar descansos rítmicos que carezcan de contenido melódico.
+4. **Plan Estructural de 3 Cortes:**
+   - **Bloque 1 (Entrada/Subida 1):** Introducción de la pista que conduce con energía hacia el Drop 1.
+   - **Bloque 2 (Puente/Subida Central):** Transición hacia el Drop más potente de la canción.
+   - **Bloque 3 (Clímax Final):** Último drop y remate de salida.
+5. **Masterización de Salida:** DC Blocker para eliminar tensiones residuales, limitador suave transparente a -0.5 dBFS y normalización integrada.
+
+---
+
+## 🏷️ Política de Versionado (SemVer) e Historial
+
+### 📌 Política Oficial de Versionado
+AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/es/):
+
+- **Versiones de Parche (`1.0.x`)**:
+  - Incrementan el tercer dígito (`1.0.0` ➔ `1.0.1` ➔ `1.0.2`...).
+  - Reservadas exclusivamente para **correcciones técnicas de bugs, hotfixes, optimización de empaquetado autónomo (Nuitka), compatibilidad de dependencias de tiempo de ejecución (runtime), codecs de consola y soporte de instaladores**.
+  - Garantizan total retrocompatibilidad y estabilidad sin alterar los flujos de trabajo de usuario.
+- **Actualizaciones Mayores (`1.x` o `1.x.0`)**:
+  - Incrementan el segundo dígito (`1.0.x` ➔ `1.1.0` ➔ `1.2.0`...).
+  - Reservadas para **nuevas funcionalidades del motor acústico (mejoras en detección de drops vs descansos, algoritmos armónicos avanzados), expansiones de la interfaz de usuario, nuevas opciones de exportación y soporte de hardware o DAWs**.
+
+---
+
+### 📈 Registro Oficial de Versiones y Parches
+
+#### 🌟 [v2.0.0] — 2026-10-06 (BIG UPDATE: Modo DJ Vinyl vs Keylock, Voice Drop con Auto-Ducking, Plantilla de Vídeo Hiper-Pro con Paletas Neón y Barra TikTok, Extracción Automática de Carátulas, Historial Recientes y Carpeta Vigilada)
+- **Modo DJ Vinyl Speedup vs Keylock Digital (Apartado 1: 1):**
+  - *Vinyl Clásico*: Aceleración con pitch armónico continuo (estilo Technics 1200 / CDJ vinyl), subiendo BPM y tono musical en perfecta sincronía analógica.
+  - *Keylock Digital*: Time-stretching de estudio que preserva la afinación musical y escala original de la pista mientras acelera el tempo.
+- **Firma Vocal / Voice Drop Personalizable con Auto-Ducking (Apartado 1: 3):**
+  - Inserción de sello de voz / id de DJ con atenuación dinámica inteligente (-4 dB auto-ducking) y selección de ubicación: *Pre-Drop* (3.8 segundos antes del impacto del drop) o *Intro* (al inicio de la previa).
+- **Extracción Automática de Carátulas Incrustadas (Apartado 2: 2):**
+  - Detección y extracción nativa ultrarrápida vía FFmpeg de imágenes incrustadas en archivos ID3v2, FLAC PICTURE, Vorbis, AIFF y M4A sin dependencias externas pesadas.
+- **Plantilla de Vídeo Hiper-Profesional para Redes (Apartado 2: 3 & 4):**
+  - Rediseño estético total con fondo cinemático ultranítido desenfocado, biseles neón multicapa y tarjeta de cristal esmerilado (*glassmorphism*).
+  - Selector de 5 paletas neón de estudio: *Cian & Magenta Radical*, *Verde Neón Rave*, *Rojo Carmesí Studio*, *Ámbar Gold & Solar* y *Cyber Violet*.
+  - Barra de progreso TikTok / Reels animada fotograma a fotograma en el borde inferior a juego con la paleta de color.
+  - Píldora promocional dinámica y personalizable en la zona superior (ej. "¡YA DISPONIBLE EN TODAS LAS PLATAFORMAS!").
+- **Historial de Temas Recientes con 1 Clic (Apartado 3: 3):**
+  - Acceso inmediato en el header a través del botón `🕒 Recientes` para recargar pistas previas con un solo clic y gestión de vaciado.
+- **Carpeta Vigilada / Watch Folder en Segundo Plano (Apartado 4: 1):**
+  - Escáner centinela en segundo plano (`👁️ Vigilar Carpeta`) que monitoriza cualquier directorio seleccionado cada 4 segundos y genera la previa en cuanto detecta un nuevo archivo de audio.
+
+---
+
+#### 🚀 [v1.2.4] — 2026-10-06 (Arranque Universal en Windows sin Permisos de Administrador y Permisos NTFS users-modify)
+- **Ejecución como Usuario Estándar (Non-Admin Fix):**
+  - Asignación explícita de permisos NTFS `users-modify` en Inno Setup (`installer/windows/setup.iss`) sobre el directorio de instalación `{app}` y todos sus archivos, permitiendo que cualquier usuario estándar de Windows ejecute la aplicación sin requerir elevación "Ejecutar como administrador".
+  - Habilitación de la directiva `PrivilegesRequiredOverridesAllowed=dialog commandline` en Inno Setup para permitir la instalación tanto por usuario actual (sin UAC en `%LOCALAPPDATA%\Programs\AutoPrevias`) como para todos los usuarios.
+  - Endurecimiento de rutas en `src/config.py` con comprobación estricta de ejecutables standalone (`__compiled__` / `frozen`) y fallbacks defensivos a directorios `%TEMP%`.
+- **Validación en Campo:**
+  - Confirmado por el usuario: arranque instantáneo en Windows 64-bit y Windows ARM64 en Parallels sin privilegios administrativos.
+
+---
+
+#### 🟢 [v1.2.3] — 2026-10-06 (Prevención de Fork-Bombs, Bytecode Read-Only y Plugins Qt Completos en Windows)
+- **Prevención de Procesos Colgados (`multiprocessing.freeze_support`):**
+  - Inclusión de `multiprocessing.freeze_support()` en la cabecera de `src/main.py` para evitar que librerías científicas re-ejecuten el `.exe` en bucle infinito en Windows.
+- **Desactivación de Bytecode en Runtime:**
+  - Forzado incondicional de `sys.dont_write_bytecode = True` para impedir que Python intente escribir archivos `.pyc` dentro de carpetas protegidas de Windows.
+- **Precompilación AOT en el Bundle:**
+  - Ejecución de `compileall.compile_dir` durante `scripts/bundle_runtime_deps.py` garantizando que todo el código esté precompilado antes de crear el instalador.
+- **Plugins Qt Nativos Completos:**
+  - Empaquetado explícito de plugins Qt (`sensible,multimedia,platforms,styles,imageformats`) asegurando la presencia de `qwindows.dll` y estilos nativos Fusion.
+- **Logging Ultrarrápido y Diálogo de Error Nativo:**
+  - Registro inmediato de arranque en `%TEMP%\autoprevias_startup.log` y captura visual con `MessageBoxW` ante cualquier excepción crítica.
+
+---
+
+#### 🚀 [v1.2.2] — 2026-10-06 (Calibración Musical con Referencias Reales PREVIA 2 y Preset por Defecto de 120s / 2 Min)
+- **Ingeniería Inversa y Aprendizaje de Estructura Musical (`ORIGINAL 2.flac` vs `PREVIA 2.wav`):**
+  - Análisis con Chroma CENS y Beat Grid denso que reveló el patrón comercial de Radical Records:
+    * **Corte 1 (Apertura)**: Inicio exacto desde `0.0s` (compás 1) cuando la intro es de $\le 16$ compases, empalmando con subida 1 y Drop 1.
+    * **Corte 2 (Núcleo Melódico Central)**: Inclusión de hasta 12-16 compases del breakdown melódico central (sintetizadores y vocales principales) antes de la subida central y Drop 2 clímax.
+    * **Corte 3 (Clímax Final)**: Subida final + Drop final cerrado en límite de frase musical.
+- **Nuevo Preset por Defecto de 120 Segundos / 2 Minutos (Club):**
+  - Cuarto preset rápido en interfaz y motor configurado como valor por defecto (`default_preset_sec: 120`).
+- **Modo Consola `attach`:**
+  - Configurado `--windows-console-mode=attach` en Nuitka para permitir ejecución limpia desde escritorio y trazas inmediatas si se ejecuta desde consola.
+
+---
+
+#### 🟢 [v1.2.1] — 2026-10-05 (Parche de Directorio de Trabajo y Renderizado Seguro Software OpenGL)
+- **Configuración de WorkingDir en Inno Setup:**
+  - Asignación explícita de `WorkingDir: "{app}"` en los accesos directos de Inno Setup para garantizar la resolución correcta de rutas relativas y assets.
+- **Renderizado por Software Seguro:**
+  - Activación forzada de `QT_OPENGL=software`, `QT_QUICK_BACKEND=software` y `AA_UseSoftwareOpenGL` para evitar cierres en máquinas virtuales o controladores GPU incompatibles.
+
+---
+
+#### 🚀 [v1.2.0] — 2026-10-05 (Subcarpeta Automática 'Previas', Plantilla de Vídeo Viral, Flanger Pre-Drop Agresivo y Acceso Inmediato en Finder/Explorador)
+- **Organización Automática en Subcarpeta `Previas/`:**
+  - Todas las previas generadas se guardan de forma limpia dentro de una subcarpeta dedicada llamada `Previas` en el directorio de la canción original (o en la carpeta personalizada configurada), evitando mezclar archivos con proyectos o grabaciones originales.
+- **Rediseño Total de la Plantilla de Vídeo para Redes (TikTok, Reels, Shorts):**
+  - Fondo cinemático con color grading profundo (`eq=brightness=-0.35:contrast=1.35:saturation=2.2,boxblur=40:5`).
+  - Carátula de estudio con esquinas redondeadas (`radius=28`), máscara alfa y doble bisel neón iluminado.
+  - Analizador de espectro FFT tricolor (Cian/Magenta/Ámbar) + osciloscopio analógico central sólido (`draw=full`) sobre tarjeta glassmórfica con marcadores de frecuencia y niveles de mezcla.
+  - Iconos vectoriales nítidos dibujados en Pillow (rayo BPM, vinilo Tonalidad, faders Master, estrella Exclusivo) sustituyendo caracteres emoji rotos.
+  - Tipografía broadcast en gran formato con sombras profundas e indicador `REC` en vivo.
+- **Efectos Pre-Drop Agresivos y Automáticos:**
+  - Flanger de estudio con feedback (0.74), profundidad (3.8ms), LFO (0.65 Hz), mezcla wet (75%), rampa suave de 0.6s y parada en seco micro-atenuada (3ms) en el beat 1 del drop.
+  - Activación automática 5 segundos antes de cada drop real.
+- **Claridad de Destino y Botones Directos de Apertura:**
+  - Tarjeta verde de confirmación `_card_export_success` en la pantalla principal con desglose de archivos y botón directo `📂 Abrir Carpeta en Finder / Explorador`.
+  - Selector visual explícito de carpeta en el Procesador por Lote (Batch), columna de acciones con botón `📂 Abrir` por fila, soporte para apertura por doble clic y diálogo emergente de resumen con botón directo a la carpeta.
+- **Correcciones Críticas de Estabilidad y Compatibilidad:**
+  - Corrección de la firma digital `codesign` en macOS ejecutando selftest con `PYTHONDONTWRITEBYTECODE=1` y limpiando `.pyc` antes de firmar para eliminar el aviso falso de Gatekeeper *"está dañado"*.
+  - Cierre cooperativo seguro de hilos en `MainWindow` (`closeEvent`) eliminando el error `Abort trap: 6`.
+
+---
+
+#### 🚀 [v1.1.0] — 2026-10-05 (Lanzamiento Mayor de Estudio: Efectos Flanger/Sweep/Limiter, Windows ARM64, Clave Camelot, Vídeo Social 9:16 y Modo Lote)
+- **Compatibilidad Universal con Windows ARM64 (Snapdragon X Elite / Parallels en Apple Silicon):**
+  - Detección precisa de máquinas ARM mediante `GetNativeSystemInfo` y `IsWow64Process2` vía `ctypes` de Windows.
+  - Activación automática de renderizado por software seguro (`QT_OPENGL=software`, `QT_QUICK_BACKEND=software`, `AA_UseSoftwareOpenGL`) eliminando cuelgues del controlador GPU emulado en `qwindows.dll`.
+  - Instalador Inno Setup universal (`ArchitecturesInstallIn64BitMode=x64compatible arm64`).
+- **Suite de Efectos de Estudio y Masterización (`src/engine/effects.py`):**
+  - **Flanger Analógico Estéreo:** LFO sinusoidal continuo con desfase estéreo de 90°, modulación de delay, feedback y mezcla dry/wet.
+  - **Filter Sweep Dinámico:** Barrido de filtro bicuadrático progresivo para tensión acústica en subidas.
+  - **Voice Drop / Audio Tag:** Inserción de firma de voz con auto-ducking inteligente (-4 dB en pista base).
+  - **Masterizador LUFS & Limitador Soft:** Normalización a -9 LUFS (Club/Beatport) con soft-clipping tangencial hiperbólico a -0.3 dB True Peak.
+- **Detección Tonal Armónica y Rueda Camelot (`src/analysis/key.py`):**
+  - Algoritmo Krumhansl-Schmuckler sobre perfiles cromáticos con correlación de Pearson y cálculo de confianza.
+  - Visualización en panel de estadísticas (`CLAVE / CAMELOT`, ej. `8A · Am`).
+  - Inyección en metadatos ID3v2 (`TKEY`, `TBPM`).
+- **Generador de Vídeos Sociales para TikTok, Reels y Shorts (`src/engine/video.py`):**
+  - Renderizado automático en formato vertical 9:16 (1080x1920) y cuadrado 1:1 con fondo desenfocado, carátula central nítida, visualizador interactivo de onda de audio reactivo y cartelería tipográfica.
+- **Procesamiento por Lote (Batch Engine) (`src/ui/batch.py`):**
+  - Encolado de carpetas o múltiples archivos para generación de previas en segundo plano.
+  - Detección automática al arrastrar múltiples archivos al programa.
+- **Modo Bucle Continuo (Loop Infinito) en Reproductor (`src/ui/player.py`):**
+  - Botón `🔁` para reproducción ininterrumpida sin cortes.
+- **Presets Rápidos de Duración:**
+  - ⚡ 15s (Teaser / Stories) · 📻 30s (Promo Estándar) · 🚀 60s (Extended Showcase).
+- **Formatos Profesionales de Exportación:**
+  - WAV 24b, MP3 320k, FLAC Lossless, AIFF 24b y Vídeo Social MP4.
+
+#### 🟢 [v1.0.8] — 2026-10-05 (Corrección de Bloqueo de Archivos en Windows y Sanitización Total de Repositorio Público)
+- **Liberación explícita de descriptores de archivo en Windows:** Cierre inmediato de `QMediaPlayer` (`player.stop()`, desvinculación de URL y recolección de basura) para evitar bloqueos `PermissionError [WinError 32]` en Windows al procesar archivos temporales.
+- **Empaquetado de plugins de QtMultimedia en bundles:** Inclusión de `libffmpegmediaplugin.dylib` y `windowsmediaplugin.dll` con resolución de rutas en `src/compat.py`.
+- **Sanitización exhaustiva de privacidad:** Eliminación absoluta de nombres personales, rutas locales privadas y títulos privados en todo el repositorio público, documentación y commits para garantizar la privacidad institucional de Radical Records.
+- **Diagnóstico y Selftest:** Superación al 100% de la suite de auto-diagnóstico en macOS y Windows.
+
+#### 🟢 [v1.0.7] — 2026-10-05 (Estudio de Firma & Carátula y Carga Directa llvmlite en Windows)
+- **Firma de Temas & Carátula Personalizada (Branding Studio):** Selector con Drag & Drop directo para imágenes (`.jpg`, `.jpeg`, `.png`, `.webp`) y panel de metadatos completos (Artista, Sello, Álbum, Género, Comentarios de promo y BPM automático `TBPM`). Normalizador `prepare_cover_art` que transforma cualquier arte a 1000x1000 JPEG cuadrado optimizado para Pioneer CDJ, Rekordbox, Serato, Apple Music y smartphones.
+- **Resolución definitiva de `llvmlite.dll` en Windows:** Carga directa con `ctypes.CDLL` en `src/compat.py` interceptando `_load_lib`, evitando fallos de `importlib.resources` en Nuitka.
+- **Migración a Repositorio Público:** GitHub Actions 100% gratuito e ilimitado para compilaciones de Windows y macOS.
+
+#### 🟢 [v1.0.6] — 2026-10-05 (Parche de Backend Multimedia en Bundles y Carga de DLLs en Windows)
+- **Activación del motor de reproducción nativo de PySide6 (`multimedia`):** Inclusión de los plugins de QtMultimedia (`libdarwinmediaplugin.dylib` en macOS y `windowsmediaplugin.dll` en Windows) mediante `--include-qt-plugins=sensible,multimedia` y sincronización con re-enlazado dinámico en `scripts/bundle_runtime_deps.py`, solucionando el fallo del reproductor integrado en las apps compiladas.
+- **Resolución de carga de `llvmlite.dll` en Windows 64-bit:** Registro de directorios DLL mediante `os.add_dll_directory` en `src/compat.py` y copia redundante en la raíz del bundle para satisfacer la carga dinámica de `ctypes.CDLL`.
+- **Selftest ampliado a 6 fases:** Verificación estricta de arranque y enlace de `QMediaPlayer` con el sistema de audio del SO anfitrión previo a la generación de instaladores.
+
+#### 🟢 [v1.0.5] — 2026-10-05 (Parche de Inclusión de Módulos Estándar Críticos en Bundles Standalone)
+- **Resolución de dependencias dinámicas de Numba y Librosa (`uuid`, `dis`, `inspect`, `opcode`):** Corrección del fallo `x ERROR EN SELFTEST: No module named 'uuid'` al ejecutar el binario compilado en macOS y Windows.
+- **Inclusión directa en `src/compat.py` y workflow:** Los módulos estándar requeridos por los compiladores JIT y despachadores de Numba se declaran estáticamente y se empaquetan en los instaladores de ambos sistemas operativos.
+
+#### 🟢 [v1.0.4] — 2026-10-05 (Parche de Extracción de FFmpeg en Windows)
+- **Extracción de binarios en Windows con motor nativo de Python:** Sustitución de `tar` por `python -m zipfile` para garantizar una descompresión robusta del zip de FFmpeg en Windows.
+
+#### 🟢 [v1.0.3] — 2026-10-05 (Parche de Rendimiento de Compilación CI/CD y Empaquetado de FFmpeg)
+- **Aceleración radical de compilación (reducción de 82 min a ~12 min en Windows):** Supresión de Link-Time Optimization (`--lto=no`) en MSVC y Clang, eliminando el bloqueo monohilo de `/LTCG`.
+- **Eliminación de bloatware de pruebas unitarias:** Bloqueo de importaciones recursivas de frameworks de tests (`--nofollow-import-to=librosa,pytest,unittest,lazy_loader.tests`) y uso de `--include-module=lazy_loader`.
+- **Compilación paralela multiproceso:** Habilitación de `--jobs=2` en Windows y `--jobs=3` en macOS.
+- **Inclusión verificada de FFmpeg en Windows:** Extracción directa con herramientas nativas de Windows (`curl` y `tar`), garantizando la presencia de `ffmpeg.exe` en el bundle distribuido.
+
+#### 🟢 [v1.0.2] — 2026-10-05 (Parche Oficial de Compatibilidad de llvmlite en Windows)
+- **Empaquetado y resolución de dependencias C de LLVM en Windows:** Inclusión de `llvmlite.dll` en `llvmlite/binding/` dentro del bundle distribuido, solucionando el fallo `OSError: Could not find/load shared object file 'llvmlite.dll'` al cargar `librosa` en ejecutables compilados de Windows x64.
+- **Configuración de datos de paquete en Nuitka:** Activación explícita de `--include-package-data=llvmlite` en el runner de compilación de Windows.
+- **Validación automatizada:** Superación íntegra de la suite de auto-diagnóstico `--selftest` en ambas plataformas (macOS ARM64 y Windows x64).
+
+#### 🟢 [v1.0.1] — 2026-10-04 (Parche Oficial de Empaquetado y Compatibilidad)
+- **Sincronizador de dependencias en tiempo de ejecución:** Creación de `scripts/bundle_runtime_deps.py` que asegura la inclusión de todas las dependencias científicas y de audio en paquetes autónomos Nuitka (`librosa`, `numba`, `llvmlite`, `decorator`, `joblib`, `msgpack`, `cloudpickle`, `pooch`, `platformdirs`, `requests`, `urllib3`, `certifi`, `idna`, `charset_normalizer`, `packaging`, `sklearn`, `threadpoolctl`, `narwhals`).
+- **Corrección de firma ad-hoc en macOS:** Reubicación de carpetas `.dylibs` y reescritura de dependencias dinámicas con `install_name_tool` para firma ad-hoc sin errores de bundle en Apple codesign.
+- **Soporte UTF-8 en consolas Windows:** Blindaje ante el codec CP1252 (`UnicodeEncodeError`) con `PYTHONUTF8=1`, `PYTHONIOENCODING=utf-8` y eliminación de caracteres no ASCII en scripts de empaquetado.
+- **Resolución dinámica de versión:** Corrección de carga perezosa de `__version__` en `librosa` para el diagnóstico autónomo `--selftest`.
+- **Especialización de matriz CI/CD:** Optimización de compilación automatizada enfocada exclusivamente en **macOS Apple Silicon (ARM64)** y **Windows 64-bit (x64)**.
+
+#### 🟢 [v1.0.0] — 2026-10-04 (Lanzamiento Inicial Oficial)
+- **Instaladores oficiales multi-plataforma:**
+  - Build nativa macOS arm64 (Apple Silicon) en DMG con ventana drag-and-drop a Aplicaciones.
+  - Asistente de instalación profesional para Windows x64 con Inno Setup, accesos directos y desinstalador limpio.
+- **Motor HPSS avanzado:** Clasificación precisa entre descansos con bombos/vocales y drops melódicos densos.
+- **FFmpeg integrado:** Binario autónomo para exportación MP3 a 320 kbps con carátula oficial de Radical Records y tags ID3 sin dependencias externas.
+- **Rutas estándar del sistema:** Configuración y caché ubicadas en carpetas nativas de usuario (`Application Support` en Mac, `%APPDATA%` en Windows).
+- **Modo `--selftest`:** Verificación completa de integridad del software en un único comando.
+- **CI/CD con GitHub Actions:** Pipeline de compilación paralela, tests unitarios automatizados y releases con sumas SHA-256.
+
+> Para revisar el historial técnico detallado de cada commit y parche, consulta el archivo [CHANGELOG.md](CHANGELOG.md).
+
+---
+
+## 🛠️ Guía de Desarrollo y Compilación Local
+
+Para desarrolladores o ingenieros de audio que deseen trabajar en el código fuente o compilar localmente:
+
+### Requisitos Previos
+- **Python 3.11** instalado en el sistema.
+- **Git**.
+- **macOS:** Xcode Command Line Tools (`xcode-select --install`).
+- **Windows:** Microsoft Visual C++ Build Tools o MinGW64.
+
+### 1. Clonar el Repositorio
+```bash
+git clone https://github.com/borjacandeel/auto-previas.git
+cd auto-previas
+```
+
+### 2. Configurar Entorno Virtual
+```bash
+python3.11 -m venv .venv
+source .venv/bin/activate    # En macOS/Linux
+# .venv\Scripts\activate     # En Windows
+pip install --upgrade pip
+pip install -r requirements.txt -r requirements-dev.txt
+```
+
+### 3. Ejecutar la Aplicación en Modo Desarrollo
+```bash
+python src/main.py
+```
+
+### 4. Ejecutar la Suite de Pruebas y Diagnóstico
+```bash
+# Ejecutar tests unitarios
+pytest tests/ -v
+
+# Ejecutar el auto-diagnóstico interno
+python src/main.py --selftest
+```
+
+### 5. Compilar los Instaladores Localmente con Nuitka
+- **En macOS:**
+  ```bash
+  bash scripts/build_macos.sh
+  ```
+  *(Genera `dist/AutoPrevias.app` y la imagen `dist/AutoPrevias-1.0.0-macOS-<arch>.dmg`).*
+
+- **En Windows:**
+  ```bat
+  scripts\build_windows.bat
+  ```
+  *(Compila el binario autónomo y genera `dist\AutoPrevias-Windows-x64-Setup.exe` mediante Inno Setup).*
+
+---
+
+## 💻 Requisitos del Sistema
+
+| Componente | Requisito Mínimo | Requisito Recomendado |
+| :--- | :--- | :--- |
+| **Sistema Operativo (Mac)** | macOS 12 Monterey o superior | macOS 14 Sonoma o macOS 15 Sequoia |
+| **Sistema Operativo (Windows)**| Windows 10 (64-bit) versión 1909+ | Windows 11 (64-bit) |
+| **Procesador** | Intel Core i3 / Apple M1 | Intel Core i5 / AMD Ryzen 5 / Apple M2 o superior |
+| **Memoria RAM** | 4 GB | 8 GB o más |
+| **Espacio en Disco** | 500 MB libres | 1 GB libre (para archivos de caché y previsualización) |
+| **Resolución de Pantalla** | 1280 x 720 px | 1920 x 1080 px o superior |
+
+---
+
+## ⚖️ Licencias y Componentes de Terceros
+
+AutoPrevias integra librerías y componentes de código abierto de alto rendimiento para el tratamiento acústico y visual:
+- **PySide6 / Qt 6:** Licenciado bajo LGPLv3.
+- **FFmpeg:** Licenciado bajo LGPLv2.1 / GPLv3.
+- **Pedalboard & Rubber Band Library:** Algoritmos de time-stretching licenciados bajo GNU GPLv3.
+- **SoundFile & Librosa:** Licenciados bajo BSD / ISC.
+
+Para una relación completa de autores y textos legales de licencias, consulta el documento [THIRD_PARTY_LICENSES.txt](THIRD_PARTY_LICENSES.txt).
+
+---
+
+## ✉️ Soporte Técnico y Contacto
+
+- **Sello:** Radical Records
+- **Correo electrónico de soporte:** [radicalrecordsvlc@gmail.com](mailto:radicalrecordsvlc@gmail.com)
+- **Repositorio:** [github.com/borjacandeel/auto-previas](https://github.com/borjacandeel/auto-previas) *(Repositorio Oficial en GitHub)*
+
+---
+
+<div align="center">
+  <sub>AutoPrevias © 2026 Radical Records. Todos los derechos reservados.</sub>
+</div>

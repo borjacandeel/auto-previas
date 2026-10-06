@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Entorno virtual
+.venv/
+venv/
+env/
+
+# Caches de análisis y herramientas
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Archivos temporales de AutoPrevias
+autoprevias_config.json
+scratch/extracted_cover.jpg
+scratch/test_with_cover.mp3
+
+# Binarios FFmpeg locales
+ffmpeg_bin/
+
+# Archivos de audio de ejemplo grandes (los WAV/FLAC de ejemplos)
+ejemplos/*.flac
+ejemplos/*.wav
