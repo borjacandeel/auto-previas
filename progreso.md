@@ -8,9 +8,41 @@
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-06 (Sesión 27 — Versión v2.0.0: BIG UPDATE — Modo DJ Vinyl vs Keylock, Voice Drop con Auto-Ducking, Extracción de Carátulas, Plantilla de Vídeo Hiper-Pro con 5 Paletas Neón y Barra TikTok, Historial Recientes y Carpeta Vigilada)
-**Fase activa:** Fase F completada ✅ — AutoPrevias Pro Studio v2.0.0
+**Fecha última actualización:** 2026-10-06 (Sesión 28 — Versión v2.0.0 + v2.1 visualizador vídeo triple capa: espectrograma scrolling + FFT + osciloscopio P2P, git init + push a GitHub, tag v2.0.0 lanzado en CI/CD, CHANGELOG completado con v1.2.1 y v1.2.2, documento PDF de licencias generado)
+**Fase activa:** Fase G completada ✅ — AutoPrevias Pro Studio v2.0.0 publicado en GitHub Releases
 **Versión Actual:** **v2.0.0**
+
+---
+
+### Resumen de Mejoras — Sesión 28 (2026-10-06): Versión v2.0.0 publicada + v2.1 visualizador vídeo
+
+#### 🎬 1. Visualizador de Vídeo Triple Capa — Rediseño Completo (`src/engine/video.py`)
+- **Capa 1 — Espectrograma Scrolling (`showspectrum`)**: Heatmap de color arcoíris que avanza en tiempo real. `color=channel:saturation=8:gain=5:scale=cbrt`. La pieza visual más llamativa e impactante.
+- **Capa 2 — Analizador FFT de Barras (`showfreqs`)**: Aumentado a `win_size=2048` para mayor resolución frecuencial. Barras multicolor con paleta neón seleccionada.
+- **Capa 3 — Osciloscopio Peak-to-Peak (`showwaves mode=p2p`)**: Modo `draw=full` con líneas gruesas que conectan picos positivos y negativos — mucho más visible e impactante que el `cline` anterior.
+- **Tarjeta Glassmorphism mejorada**: Etiquetas de sección ("SPECTROGRAM", "FREQUENCY SPECTRUM", "WAVEFORM P2P"), divisores neón con colores de paleta, segundo bisel interior, `card_h` aumentado a 350px (9:16) y 225px (1:1).
+- **Fondo cinemático más profundo**: `boxblur=52:6` + `saturation=3.0` + `brightness=-0.28:contrast=1.48`.
+- **Barra de progreso TikTok más gruesa**: 14px con highlight blanco de 3px en el borde superior.
+
+#### 🔧 2. Repositorio Git Inicializado y Subido a GitHub
+- `git init` + `.gitignore` profesional (excluye `.venv`, `__pycache__`, `ejemplos/*.wav`, `scratch/`, `ffmpeg_bin/`, etc.)
+- Commit inicial con los 53 ficheros del proyecto (código, assets, tests, CI/CD, instaladores).
+- Fusión del historial remoto previo (v1.2.4) con `--allow-unrelated-histories`. Todos los conflictos resueltos manteniendo la versión local más reciente.
+- Push a `https://github.com/borjacandeel/auto-previas` — rama `main` actualizada.
+
+#### 🏷️ 3. Tag v2.0.0 y Compilación CI/CD Lanzada
+- `git tag -a v2.0.0` + `git push origin v2.0.0` → dispara automáticamente el workflow **Release AutoPrevias**.
+- GitHub Actions compila en paralelo: macOS arm64 (Nuitka → DMG) + Windows x64 (Nuitka → Inno Setup EXE).
+- El job `publish-release` publica el GitHub Release con instaladores + `SHA256SUMS.txt`.
+- Release URL: `https://github.com/borjacandeel/auto-previas/releases/tag/v2.0.0`
+
+#### 📋 4. CHANGELOG.md Completado
+- Añadidas entradas faltantes: **v1.2.1** (WorkingDir Inno Setup + Software OpenGL) y **v1.2.2** (Calibración referencias PREVIA 2 + Preset 120s).
+- CHANGELOG ahora cubre toda la historia: v1.0.0 → v1.0.1 → … → v1.2.4 → v2.0.0 (16 versiones).
+
+#### 🔐 5. Documento de Licencias y Protección
+- Generado documento técnico formal PDF (HTML publicado) para Radical Records explicando el sistema de protección de licencias con Payhip + Cloudflare Workers + firma Ed25519.
+- Artifact público: `https://claude.ai/artifact/7B2pW4byKK9p7yjhJoY7Qe`
 
 ---
 

@@ -5,7 +5,7 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ## [2.0.0] - 2026-10-06
 
-### Añadido (BIG UPDATE — Versión 2.0.0)
+### Añadido (BIG UPDATE — Versión 2.0.0 + Visualizador Vídeo Triple Capa v2.1)
 - **Modo DJ Vinyl Speedup vs Keylock Digital**:
   - *Modo Vinyl Clásico*: Varispeed continuo con pitch shift armónico analógico (estilo giradiscos Technics 1200 / CDJ vinyl mode), acelerando tempo y tono conjuntamente para máxima energía en club.
   - *Modo Keylock Digital*: Algoritmo time-stretch que congela la tonalidad y afinación musical original mientras acelera los BPM de la previa.
@@ -29,6 +29,16 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
   - Acceso inmediato desde el botón `🕒 Recientes` en la cabecera principal, con lista desplegable de pistas cargadas recientemente y opción de limpieza rápida.
 - **Carpeta Vigilada en Segundo Plano (Watch Folder)**:
   - Modo centinela activable desde `👁️ Vigilar Carpeta` que monitoriza un directorio seleccionado en segundo plano cada 4 segundos y procesa automáticamente nuevos audios que caigan en la carpeta.
+- **Visualizador de Vídeo Triple Capa (`src/engine/video.py`)**:
+  - *Capa 1 — Espectrograma scrolling*: `showspectrum color=channel:saturation=8:gain=5:scale=cbrt` — heatmap arcoíris en tiempo real, la pieza visual más llamativa.
+  - *Capa 2 — Barras FFT*: `showfreqs win_size=2048` — mayor resolución frecuencial, barras EQ multicolor con paleta neón.
+  - *Capa 3 — Osciloscopio P2P*: `showwaves mode=p2p:draw=full` — líneas peak-to-peak gruesas y vívidas.
+  - Tarjeta glassmorphism rediseñada con etiquetas de sección, divisores neón y segundo bisel interior.
+  - Fondo cinemático más profundo: `boxblur=52` + `saturation=3.0`.
+  - Barra de progreso TikTok de 14px con highlight blanco superior.
+- **Repositorio Git inicializado y publicado**:
+  - Primera subida completa a `https://github.com/borjacandeel/auto-previas` con historial fusionado.
+  - Tag `v2.0.0` publicado → dispara CI/CD: compilación Nuitka macOS arm64 (DMG) + Windows x64 (EXE) + GitHub Release automático.
 
 ---
 
