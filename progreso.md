@@ -12,12 +12,42 @@
 | # | Tarea | Prioridad | Notas |
 |---|-------|-----------|-------|
 | 1 | **Sistema de Licencias** — Implementación completa en 3 fases: Payhip activación → Cloudflare Worker proxy → pantalla de activación en la app (`src/licensing/license.py`, `src/ui/activate.py`, `src/main.py`) | 🔴 Alta | Arquitectura ya diseñada y documentada. Artifact: `https://claude.ai/artifact/7B2pW4byKK9p7yjhJoY7Qe` |
+| 2 | **Panel de previas recientes** — Lista de previas ya generadas (carpeta de ficheros) con reproductor rápido y opción de "abrir proyecto" para recargar el track original | 🟡 Media | Feature solicitada en sesión 29 |
+| 3 | **Presets de firma guardados como archivos** — Carpeta `presets/` en datos de usuario con JSONs nombrados (ej. "Radical Records Main", "Set de Verano"). UI para crear/cargar/borrar presets | 🟡 Media | Feature solicitada en sesión 29 |
+
+---
+
+## 🗂️ Plan de Ediciones — Versión Básica vs Versión Plus
+
+> Definido en sesión 29 (2026-10-07) por el usuario.
+
+### Versión Básica (free o precio bajo)
+- Selección de inicio y fin de cada parte de la previa ✅
+- Cortes conservados ✅
+- BPM auto (sube/baja solos — modo vinilo) ✅
+- Exportación **solo a MP3** (sin WAV/FLAC/AIFF)
+- Sin batch (una previa a la vez)
+- Efectos de intro/outro conservados ✅
+- Sin modo manual avanzado (sin editor de cortes manual, sin curva BPM manual)
+
+### Versión Plus (precio completo)
+- **Todo lo de Básica** +
+- Exportación WAV 24-bit, FLAC, AIFF
+- Batch / Watch Folder (múltiples previas a la vez)
+- Modo manual: editor de cortes en waveform, curva BPM manual
+- Keylock digital (time-stretch sin cambio de tono)
+- Vídeo social (TikTok/Reels/Shorts) con paletas neón
+- Voice Drop personalizable con marcador en waveform
+- Historial recientes + presets de firma
+- Configuración avanzada de masterización LUFS
+
+> **Implementación técnica**: flag `EDITION = "basic" | "plus"` en config, leído de la licencia al activar. Los elementos de UI de Plus se ocultan/deshabilitan en Básica con `setVisible(False)` / `setEnabled(False)`. Ligado al sistema de licencias pendiente (tarea #1).
 
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-06 (Sesión 29 — Versión v2.1.0: 6 bugs corregidos — Keylock invertido, vídeo siempre 9:16, pitch max reducido, carátula no persistía, presets no guardaban, Voice Drop sin marcador en waveform)
-**Fase activa:** Fase G completada ✅ — AutoPrevias Pro Studio v2.1.0 publicado en GitHub Releases
+**Fecha última actualización:** 2026-10-07 (Sesión 29 — v2.1.0: 6 bugs. v2.2.0: botón "Generar otra previa" en success card. Plan de ediciones Básica/Plus documentado.)
+**Fase activa:** Fase G completada ✅ — AutoPrevias Pro Studio v2.2.0 publicado en GitHub Releases
 **Versión Actual:** **v2.0.0**
 
 ---

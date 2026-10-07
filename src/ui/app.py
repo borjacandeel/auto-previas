@@ -1106,6 +1106,7 @@ class ResultPanel(QWidget):
     folder_requested      = Signal()
     open_folder_requested = Signal()
     new_file_requested    = Signal()
+    load_file_requested   = Signal(str)   # path de nuevo audio a cargar directamente
     generate_requested    = Signal()
     play_requested        = Signal(str)   # path del archivo para reproducir
 
@@ -1676,7 +1677,7 @@ class ResultPanel(QWidget):
         card_lay.addWidget(self._lbl_succ_dir)
 
         act_row = QHBoxLayout()
-        self._btn_succ_open = QPushButton("📂 Abrir Carpeta en Finder / Explorador")
+        self._btn_succ_open = QPushButton("📂 Abrir Carpeta")
         self._btn_succ_open.setFixedHeight(28)
         self._btn_succ_open.setStyleSheet(f"""
             QPushButton {{
@@ -1695,6 +1696,26 @@ class ResultPanel(QWidget):
         self._btn_succ_open.setCursor(Qt.PointingHandCursor)
         self._btn_succ_open.clicked.connect(self.open_folder_requested.emit)
         act_row.addWidget(self._btn_succ_open)
+
+        self._btn_succ_new = QPushButton("🎵  Generar otra previa")
+        self._btn_succ_new.setFixedHeight(28)
+        self._btn_succ_new.setStyleSheet(f"""
+            QPushButton {{
+                background: {ACCENT};
+                color: #ffffff;
+                font-size: 11px;
+                font-weight: 800;
+                border: none;
+                border-radius: 6px;
+                padding: 0 16px;
+            }}
+            QPushButton:hover {{
+                background: #ff4d63;
+            }}
+        """)
+        self._btn_succ_new.setCursor(Qt.PointingHandCursor)
+        self._btn_succ_new.clicked.connect(self._pick_new_file)
+        act_row.addWidget(self._btn_succ_new)
         act_row.addStretch()
         card_lay.addLayout(act_row)
 
@@ -1948,6 +1969,17 @@ class ResultPanel(QWidget):
             self._lbl_simple_desc.setText(f"Preset 120s (2 Min · Defecto) aplicado ({len(new_plan.segments)} cortes calculados)")
         else:
             self._lbl_simple_desc.setText(f"Preset {seconds}s aplicado ({len(new_plan.segments)} cortes calculados)")
+
+    def _pick_new_file(self):
+        """Abre selector de archivo y emite load_file_requested sin salir de la app."""
+        file, _ = QFileDialog.getOpenFileName(
+            self,
+            "Seleccionar track para nueva previa",
+            "",
+            "Audio (*.mp3 *.wav *.flac *.aiff *.m4a *.ogg *.opus *.wma)",
+        )
+        if file:
+            self.load_file_requested.emit(file)
 
     def _select_voice_drop(self):
         file, _ = QFileDialog.getOpenFileName(
@@ -3471,6 +3503,7 @@ class MainWindow(QMainWindow):
         self._results.open_folder_requested.connect(self._open_export_folder)
         self._results.new_file_requested.connect(self._back_to_drop)
         self._results.generate_requested.connect(self._generate)
+        self._results.load_file_requested.connect(self._load_file)
         scroll.setWidget(self._results)
         self._stack.addWidget(scroll)
 

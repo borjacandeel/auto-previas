@@ -3,6 +3,11 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.2.0] - 2026-10-07
+
+### Añadido
+- **Botón "Generar otra previa"** en la tarjeta de éxito: tras exportar, un botón rojo permite abrir directamente un selector de archivos para cargar un nuevo track y generar su previa sin cerrar ni reiniciar la app. El análisis se lanza automáticamente y los resultados se muestran en la misma pantalla.
+
 ## [2.1.0] - 2026-10-06
 
 ### Corregido
