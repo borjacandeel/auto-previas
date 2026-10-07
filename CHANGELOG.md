@@ -3,6 +3,18 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.6.0] - 2026-10-07
+
+### Añadido
+- **Pantalla de bienvenida animada (Splash Screen)**: al abrir la app aparece el logo de Radical Records con barra de progreso y mensajes de estado mientras carga el motor de audio.
+- **Pantalla de análisis animada**: al cargar un archivo, en lugar de mostrar la zona de arrastre estática, se muestra el logo de RR pulsando/escalando con barra de progreso en tiempo real. Mucho más informativo y visual.
+- **Botón "← Nuevo track" siempre visible** en la barra de presets del panel de resultados — ya no hay que desplazarse hasta el final para cargar otro tema.
+- **Cache de hardware**: al primer inicio se guardan los specs del PC (CPU, cores, RAM, plataforma) en `hw_cache.json` para futuras optimizaciones automáticas.
+
+### Cambiado
+- **Badge de edición Plus/Básica más prominente**: gradiente de color, tipografía más grande (10px → mayor peso visual) y padding ampliado para que se vea más profesional.
+- **Badge "PRO STUDIO" con versión real**: muestra la versión instalada actual en lugar de un número fijo (`v2.0` → `v2.6.0`), así el usuario siempre sabe qué versión tiene.
+
 ## [2.5.1] - 2026-10-07
 
 ### Corregido

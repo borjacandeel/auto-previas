@@ -102,7 +102,11 @@ BORDER    = "#232733"
 BORDER_HV = "#ff1e38"
 SHIMMER   = "#ffffff18"
 
-VERSION   = "2.0"
+try:
+    from src.__version__ import __version__ as _APP_VERSION
+except Exception:
+    _APP_VERSION = "2.5"
+VERSION   = _APP_VERSION
 CREATOR   = "Radical Records"
 SUPPORT   = "radicalrecordsvlc@gmail.com"
 
@@ -410,6 +414,296 @@ def _shadow(widget: QWidget, radius: int = 20, color: str = "#000000",
 
 
 # ── Drop Zone ─────────────────────────────────────────────────────────────────
+
+# ── Splash Screen ─────────────────────────────────────────────────────────────
+
+class SplashWindow(QWidget):
+    """Ventana de bienvenida animada con logo y barra de progreso."""
+
+    def __init__(self):
+        super().__init__()
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setFixedSize(520, 300)
+
+        # Centrar en pantalla
+        from PySide6.QtGui import QGuiApplication
+        screen = QGuiApplication.primaryScreen()
+        if screen:
+            sg = screen.availableGeometry()
+            self.move(sg.x() + (sg.width() - 520) // 2, sg.y() + (sg.height() - 300) // 2)
+
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(0)
+
+        # Contenedor con fondo
+        container = QFrame()
+        container.setObjectName("splash-card")
+        container.setStyleSheet(f"""
+            QFrame#splash-card {{
+                background: {BG2};
+                border: 1px solid {ACCENT};
+                border-radius: 18px;
+            }}
+        """)
+        inner = QVBoxLayout(container)
+        inner.setContentsMargins(40, 32, 40, 32)
+        inner.setSpacing(18)
+        inner.setAlignment(Qt.AlignCenter)
+
+        # Logo
+        self._logo_lbl = QLabel()
+        self._logo_lbl.setAlignment(Qt.AlignCenter)
+        logo_file = None
+        for cand in [_ASSETS_DIR / "logo_emblem.png", _ASSETS_DIR / "logo.png",
+                     _ASSETS_DIR / "logo_emblem_red.png"]:
+            if cand.exists():
+                logo_file = str(cand)
+                break
+        self._logo_pix = None
+        if logo_file:
+            pix = QPixmap(logo_file)
+            if not pix.isNull():
+                self._logo_pix = pix.scaled(88, 88, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                self._logo_lbl.setPixmap(self._logo_pix)
+                self._logo_lbl.setStyleSheet("background: transparent; border: none;")
+        else:
+            self._logo_lbl.setText("🎧")
+            self._logo_lbl.setStyleSheet("font-size: 56px; background: transparent; border: none;")
+        inner.addWidget(self._logo_lbl, alignment=Qt.AlignCenter)
+
+        # Nombre app
+        name_lbl = QLabel("AUTOPREVIAS")
+        name_lbl.setAlignment(Qt.AlignCenter)
+        name_lbl.setStyleSheet(
+            f"color: {TEXT}; font-size: 22px; font-weight: 900; letter-spacing: 4px;"
+            "background: transparent; border: none;"
+        )
+        inner.addWidget(name_lbl)
+
+        sub_lbl = QLabel(f"RADICAL RECORDS  ·  STUDIO v{VERSION}")
+        sub_lbl.setAlignment(Qt.AlignCenter)
+        sub_lbl.setStyleSheet(
+            f"color: {ACCENT}; font-size: 10px; font-weight: 700; letter-spacing: 2px;"
+            "background: transparent; border: none;"
+        )
+        inner.addWidget(sub_lbl)
+
+        # Barra de progreso
+        self._bar = QProgressBar()
+        self._bar.setRange(0, 100)
+        self._bar.setValue(0)
+        self._bar.setTextVisible(False)
+        self._bar.setFixedHeight(4)
+        self._bar.setStyleSheet(f"""
+            QProgressBar {{
+                background: {BG4};
+                border: none;
+                border-radius: 2px;
+            }}
+            QProgressBar::chunk {{
+                background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
+                    stop:0 {ACCENT}, stop:1 #ff8c00);
+                border-radius: 2px;
+            }}
+        """)
+        inner.addWidget(self._bar)
+
+        self._status_lbl = QLabel("Iniciando motor de audio…")
+        self._status_lbl.setAlignment(Qt.AlignCenter)
+        self._status_lbl.setStyleSheet(
+            f"color: {TEXT_MID}; font-size: 10px; background: transparent; border: none;"
+        )
+        inner.addWidget(self._status_lbl)
+
+        lay.addWidget(container)
+
+        # Animación del logo (escala pulsante con opacity)
+        self._pulse_phase = 0.0
+        self._anim_timer = QTimer(self)
+        self._anim_timer.timeout.connect(self._tick)
+        self._anim_timer.start(40)
+
+        # Simular progreso inicial
+        self._fake_pct = 0
+        self._fake_timer = QTimer(self)
+        self._fake_timer.timeout.connect(self._fake_progress)
+        self._fake_timer.start(30)
+
+        self._steps = [
+            (20,  "Cargando motor espectral…"),
+            (45,  "Preparando análisis de BPM…"),
+            (70,  "Iniciando renderizador de audio…"),
+            (90,  "Cargando interfaz de usuario…"),
+            (100, "¡Listo!"),
+        ]
+
+    def _fake_progress(self):
+        if self._fake_pct >= 95:
+            self._fake_timer.stop()
+            return
+        self._fake_pct = min(95, self._fake_pct + 1)
+        self._bar.setValue(self._fake_pct)
+        for pct, msg in self._steps:
+            if self._fake_pct >= pct:
+                self._status_lbl.setText(msg)
+
+    def set_progress(self, pct: int, msg: str):
+        self._fake_timer.stop()
+        self._bar.setValue(pct)
+        self._status_lbl.setText(msg)
+
+    def _tick(self):
+        self._pulse_phase = (self._pulse_phase + 0.06) % (2 * math.pi)
+        t = (math.sin(self._pulse_phase) + 1) / 2
+        alpha = int(180 + 75 * t)
+        if self._logo_pix:
+            img = self._logo_pix.toImage()
+            img.setAlphaChannel(img.createAlphaMask())
+        # Aplicar opacidad al logo_lbl mediante stylesheet
+        self._logo_lbl.setStyleSheet(
+            f"background: transparent; border: none; opacity: {0.7 + 0.3 * t:.2f};"
+        )
+
+    def paintEvent(self, event):
+        # Sombra exterior con QPainter
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.fillRect(self.rect(), QColor(0, 0, 0, 0))
+        super().paintEvent(event)
+
+    def finish(self, main_window):
+        """Cierra el splash con fade-out y muestra la ventana principal."""
+        self._anim_timer.stop()
+        self._fake_timer.stop()
+        self._bar.setValue(100)
+        self._status_lbl.setText("¡Listo!")
+
+        eff = QGraphicsOpacityEffect(self)
+        self.setGraphicsEffect(eff)
+        anim = QPropertyAnimation(eff, b"opacity", self)
+        anim.setDuration(350)
+        anim.setStartValue(1.0)
+        anim.setEndValue(0.0)
+        anim.setEasingCurve(QEasingCurve.OutCubic)
+        anim.finished.connect(self.close)
+        anim.finished.connect(main_window.show)
+        anim.finished.connect(main_window.raise_)
+        anim.finished.connect(main_window.activateWindow)
+        anim.start(QPropertyAnimation.DeleteWhenStopped)
+
+
+# ── Página de análisis en curso ────────────────────────────────────────────────
+
+class AnalysisPage(QWidget):
+    """Pantalla que se muestra mientras se analiza un archivo: logo animado + progreso."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setStyleSheet(f"background: {BG};")
+        lay = QVBoxLayout(self)
+        lay.setAlignment(Qt.AlignCenter)
+        lay.setSpacing(24)
+        lay.setContentsMargins(40, 40, 40, 40)
+
+        # Logo grande animado
+        self._logo_lbl = QLabel()
+        self._logo_lbl.setAlignment(Qt.AlignCenter)
+        logo_file = None
+        for cand in [_ASSETS_DIR / "logo_emblem.png", _ASSETS_DIR / "logo.png",
+                     _ASSETS_DIR / "logo_emblem_red.png"]:
+            if cand.exists():
+                logo_file = str(cand)
+                break
+        self._logo_pix_orig = None
+        if logo_file:
+            pix = QPixmap(logo_file)
+            if not pix.isNull():
+                self._logo_pix_orig = pix.scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                self._logo_lbl.setPixmap(self._logo_pix_orig)
+                self._logo_lbl.setStyleSheet("background: transparent; border: none;")
+        else:
+            self._logo_lbl.setText("🎧")
+            self._logo_lbl.setStyleSheet("font-size: 72px; background: transparent; border: none;")
+        lay.addWidget(self._logo_lbl, alignment=Qt.AlignCenter)
+
+        # Nombre del archivo
+        self._file_lbl = QLabel("Analizando…")
+        self._file_lbl.setAlignment(Qt.AlignCenter)
+        self._file_lbl.setStyleSheet(
+            f"color: {TEXT}; font-size: 15px; font-weight: 700; background: transparent; border: none;"
+        )
+        lay.addWidget(self._file_lbl)
+
+        # Mensaje de estado
+        self._status_lbl = QLabel("")
+        self._status_lbl.setAlignment(Qt.AlignCenter)
+        self._status_lbl.setStyleSheet(
+            f"color: {TEXT_MID}; font-size: 11px; background: transparent; border: none;"
+        )
+        lay.addWidget(self._status_lbl)
+
+        # Barra de progreso
+        bar_frame = QFrame()
+        bar_frame.setFixedWidth(380)
+        bar_lay = QVBoxLayout(bar_frame)
+        bar_lay.setContentsMargins(0, 0, 0, 0)
+
+        self._bar = QProgressBar()
+        self._bar.setRange(0, 100)
+        self._bar.setValue(0)
+        self._bar.setTextVisible(False)
+        self._bar.setFixedHeight(6)
+        self._bar.setStyleSheet(f"""
+            QProgressBar {{
+                background: {BG3};
+                border: none;
+                border-radius: 3px;
+            }}
+            QProgressBar::chunk {{
+                background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
+                    stop:0 {ACCENT}, stop:1 #ff8c00);
+                border-radius: 3px;
+            }}
+        """)
+        bar_lay.addWidget(self._bar)
+        lay.addWidget(bar_frame, alignment=Qt.AlignCenter)
+
+        # Animación del logo
+        self._pulse_phase = 0.0
+        self._scale = 1.0
+        self._anim_timer = QTimer(self)
+        self._anim_timer.timeout.connect(self._tick)
+
+    def start(self, filename: str):
+        self._file_lbl.setText(filename[:60] + ("…" if len(filename) > 60 else ""))
+        self._status_lbl.setText("Preparando análisis…")
+        self._bar.setValue(0)
+        self._anim_timer.start(35)
+
+    def stop(self):
+        self._anim_timer.stop()
+
+    def update_progress(self, pct: int, msg: str):
+        self._bar.setValue(pct)
+        self._status_lbl.setText(msg)
+
+    def _tick(self):
+        self._pulse_phase = (self._pulse_phase + 0.05) % (2 * math.pi)
+        t = (math.sin(self._pulse_phase) + 1) / 2
+
+        if self._logo_pix_orig:
+            # Escalar el logo entre 0.9x y 1.1x
+            scale = 0.90 + 0.20 * t
+            new_size = int(120 * scale)
+            scaled = self._logo_pix_orig.scaled(
+                new_size, new_size,
+                Qt.KeepAspectRatio, Qt.SmoothTransformation
+            )
+            self._logo_lbl.setPixmap(scaled)
+            self._logo_lbl.setFixedSize(new_size, new_size)
+
 
 class GlowFrame(QFrame):
     """Frame con borde que pulsa en color."""
@@ -1247,6 +1541,31 @@ class ResultPanel(QWidget):
         self._update_preset_styles(120)
 
         p_lay.addStretch()
+
+        # Botón "Nuevo Track" — accesible desde la barra de presets
+        self._btn_new_track_top = QPushButton("← Nuevo track")
+        self._btn_new_track_top.setFixedHeight(24)
+        self._btn_new_track_top.setCursor(Qt.PointingHandCursor)
+        self._btn_new_track_top.setToolTip("Cargar otro archivo de audio")
+        self._btn_new_track_top.setStyleSheet(f"""
+            QPushButton {{
+                background: {BG4};
+                color: {TEXT_MID};
+                border: 1px solid {BORDER};
+                border-radius: 5px;
+                font-size: 10px;
+                font-weight: 700;
+                padding: 0 10px;
+            }}
+            QPushButton:hover {{
+                border-color: {ACCENT};
+                color: {TEXT};
+                background: {BG3};
+            }}
+        """)
+        self._btn_new_track_top.clicked.connect(self._pick_new_file)
+        p_lay.addWidget(self._btn_new_track_top)
+
         root.addWidget(preset_frame)
 
         # ── 4. PANEL SIMPLE POR DEFECTO + TOGGLE MODO AVANZADO ────────────
@@ -3451,17 +3770,17 @@ class MainWindow(QMainWindow):
         )
         logo_row.addWidget(self._logo_lbl)
 
-        v_badge = QLabel("PRO STUDIO v2.0")
+        v_badge = QLabel(f"PRO STUDIO v{VERSION}")
         v_badge.setStyleSheet("""
             color: #ffffff;
             background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
                 stop:0 #ff1e38, stop:1 #990014);
-            font-size: 8px;
-            font-weight: 800;
-            letter-spacing: 1px;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 1.2px;
             border: 1px solid #ff4d63;
-            border-radius: 4px;
-            padding: 2px 5px;
+            border-radius: 5px;
+            padding: 3px 7px;
         """)
         logo_row.addWidget(v_badge)
 
@@ -3530,30 +3849,37 @@ class MainWindow(QMainWindow):
         )
         right_col.addWidget(self._hint_lbl)
 
-        # Badge de edición — visible y claramente diferenciado
+        # Badge de edición — prominente y diferenciado por color
         _ed = get_edition()
         if _ed == "plus":
-            _ed_text  = "✦  PLUS"
-            _ed_bg    = "#7C3AED"   # violeta
-            _ed_fg    = "#E9D5FF"
-            _ed_bdr   = "#A855F7"
+            _ed_text = "✦  PLUS"
+            _ed_style = f"""
+                background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
+                    stop:0 #6d28d9, stop:1 #7c3aed);
+                color: #ede9fe;
+                border: 1px solid #a78bfa;
+                border-radius: 6px;
+                font-size: 10px;
+                font-weight: 900;
+                padding: 3px 10px;
+                letter-spacing: 1.5px;
+            """
         else:
-            _ed_text  = "◈  BÁSICA"
-            _ed_bg    = "#1E3A5F"   # azul oscuro
-            _ed_fg    = "#93C5FD"
-            _ed_bdr   = "#3B82F6"
+            _ed_text = "◈  BÁSICA"
+            _ed_style = f"""
+                background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
+                    stop:0 #1e3a5f, stop:1 #1d4ed8);
+                color: #bfdbfe;
+                border: 1px solid #60a5fa;
+                border-radius: 6px;
+                font-size: 10px;
+                font-weight: 900;
+                padding: 3px 10px;
+                letter-spacing: 1.5px;
+            """
         self._edition_badge = QLabel(_ed_text)
         self._edition_badge.setAlignment(Qt.AlignRight)
-        self._edition_badge.setStyleSheet(f"""
-            background: {_ed_bg};
-            color: {_ed_fg};
-            border: 1px solid {_ed_bdr};
-            border-radius: 5px;
-            font-size: 9px;
-            font-weight: 800;
-            padding: 2px 8px;
-            letter-spacing: 1px;
-        """)
+        self._edition_badge.setStyleSheet(_ed_style)
         right_col.addWidget(self._edition_badge)
 
         support_lbl = QLabel(f"SOPORTE: {SUPPORT}")
@@ -3576,7 +3902,11 @@ class MainWindow(QMainWindow):
         self._drop_zone.file_dropped.connect(self._load_file)
         self._stack.addWidget(self._drop_zone)
 
-        # Página 1 — Resultados (scroll)
+        # Página 1 — Análisis en curso (logo animado + progress)
+        self._analysis_page = AnalysisPage()
+        self._stack.addWidget(self._analysis_page)
+
+        # Página 2 — Resultados (scroll)
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.NoFrame)
@@ -3604,7 +3934,7 @@ class MainWindow(QMainWindow):
         self._results.generate_requested.connect(self._generate)
         self._results.load_file_requested.connect(self._load_file)
         scroll.setWidget(self._results)
-        self._stack.addWidget(scroll)
+        self._stack.addWidget(scroll)  # índice 2
 
         root.addWidget(self._stack, stretch=1)
 
@@ -3707,6 +4037,10 @@ class MainWindow(QMainWindow):
         self._set_progress(0, f"Analizando  {name}")
         self._start_dots()
 
+        # Mostrar página de análisis animada
+        self._analysis_page.start(name)
+        self._stack.setCurrentIndex(1)
+
         if self._worker and self._worker.isRunning():
             try:
                 self._worker.progress.disconnect()
@@ -3719,20 +4053,21 @@ class MainWindow(QMainWindow):
 
         self._worker = AnalysisWorker(path)
         self._worker.progress.connect(self._set_progress)
+        self._worker.progress.connect(self._analysis_page.update_progress)
         self._worker.finished.connect(self._on_analysis_done)
         self._worker.error.connect(self._on_error)
         self._worker.start()
 
     def _on_analysis_done(self, analysis, plan, grid, bpm: float, dur: float, key_res=None):
         self._stop_dots()
+        self._analysis_page.stop()
         self._analysis  = analysis
         self._plan      = plan
         self._beat_grid = grid
         self._key_res   = key_res
 
-        # Mostrar la página de resultados ANTES de populate() para que el
-        # WaveformWidget tenga geometría real cuando el loader dispare el dibujado
-        self._stack.setCurrentIndex(1)
+        # Mostrar la página de resultados (índice 2) ANTES de populate()
+        self._stack.setCurrentIndex(2)
         self._fade_in_results()
 
         self._results.populate(analysis, plan, bpm, dur,
@@ -3747,6 +4082,9 @@ class MainWindow(QMainWindow):
 
     def _on_error(self, msg: str):
         self._stop_dots()
+        self._analysis_page.stop()
+        # Volver a la DropZone para que el usuario pueda intentar de nuevo
+        self._stack.setCurrentIndex(0)
         # Mostrar solo la última línea del traceback para no saturar
         lines = [ln for ln in msg.strip().splitlines() if ln.strip()]
         short = lines[-1] if lines else msg
@@ -3772,6 +4110,7 @@ class MainWindow(QMainWindow):
 
 
     def _back_to_drop(self):
+        self._analysis_page.stop()
         self._stack.setCurrentIndex(0)
         self._hint_lbl.setText("Arrastra un track para comenzar")
         self._set_progress(0, "Listo — arrastra un track o pulsa Abrir archivo")
@@ -4126,6 +4465,34 @@ class MainWindow(QMainWindow):
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 
+def _save_hw_cache():
+    """Guarda specs del hardware en cache para arranques futuros más informados."""
+    try:
+        import json
+        import platform
+        import multiprocessing
+        from src.config import get_user_data_dir
+        cache_file = Path(get_user_data_dir()) / "hw_cache.json"
+        if cache_file.exists():
+            return  # ya está cacheado
+        specs: dict = {
+            "cpu":       platform.processor() or platform.machine(),
+            "cores":     multiprocessing.cpu_count(),
+            "platform":  sys.platform,
+            "python":    platform.python_version(),
+            "machine":   platform.machine(),
+            "node":      platform.node(),
+        }
+        try:
+            import psutil
+            specs["ram_gb"] = round(psutil.virtual_memory().total / 1e9, 1)
+        except Exception:
+            pass
+        cache_file.write_text(json.dumps(specs, indent=2, ensure_ascii=False))
+    except Exception:
+        pass
+
+
 def launch(initial_file: str = ""):
     if sys.platform == "win32":
         try:
@@ -4147,14 +4514,26 @@ def launch(initial_file: str = ""):
     family_to_use = ".AppleSystemUIFont" if sys.platform == "darwin" else "Segoe UI"
     app.setFont(QFont(family_to_use, 12))
 
+    # Splash screen animado mientras se carga MainWindow
+    splash = SplashWindow()
+    splash.show()
+    app.processEvents()
+
+    _log_startup("Iniciando cache de hardware...")
+    _save_hw_cache()
+
     _log_startup("Instanciando MainWindow...")
+    splash.set_progress(60, "Construyendo interfaz…")
+    app.processEvents()
+
     win = MainWindow(initial_file=initial_file)
     app.aboutToQuit.connect(win._cleanup_threads)
 
+    splash.set_progress(100, "¡Todo listo!")
+    app.processEvents()
+
     _log_startup("Mostrando ventana principal...")
-    win.show()
-    win.raise_()
-    win.activateWindow()
+    splash.finish(win)
 
     _log_startup("Ventana principal visible. Ejecutando app.exec()...")
     sys.exit(app.exec())
