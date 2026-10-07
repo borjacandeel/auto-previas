@@ -364,13 +364,43 @@ def add_recent_file(file_path: str | Path, cfg: dict | None = None) -> list[str]
 
 # ── Edición del producto ──────────────────────────────────────────────────────
 
+def _get_baked_edition() -> str | None:
+    """
+    Devuelve la edición horneada en el binario en tiempo de compilación, o None
+    si se está ejecutando desde el código fuente (entorno de desarrollo).
+    El archivo src/_edition.py lo genera el CI antes de compilar con Nuitka
+    y nunca se sube al repositorio (está en .gitignore).
+    """
+    try:
+        from src._edition import BAKED_EDITION  # type: ignore[import]
+        if BAKED_EDITION in ("basic", "plus"):
+            return BAKED_EDITION
+    except ImportError:
+        pass
+    return None
+
+
 def get_edition() -> str:
-    """Devuelve la edición activa: 'plus' (por defecto) o 'basic'."""
+    """
+    Devuelve la edición activa.
+    Orden de prioridad:
+      1. BAKED_EDITION del binario compilado (inmutable, no sobreescribible)
+      2. Campo 'edition' del JSON de configuración del usuario
+      3. 'plus' por defecto en modo desarrollo
+    """
+    baked = _get_baked_edition()
+    if baked is not None:
+        return baked
     return load().get("edition", "plus")
 
 
 def set_edition(edition: str) -> None:
-    """Establece la edición. Llamado por el sistema de licencias al activar."""
+    """
+    Establece la edición en el JSON de configuración.
+    En builds compilados (BAKED_EDITION presente) esta función no tiene efecto
+    sobre la edición real — solo persiste el valor para coherencia con el sistema
+    de licencias, que lo usará cuando BAKED_EDITION no esté presente.
+    """
     if edition not in ("basic", "plus"):
         raise ValueError(f"Edición desconocida: {edition!r}")
     cfg = load()

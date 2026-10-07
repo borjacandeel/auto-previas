@@ -23,9 +23,15 @@ env:
   PYTHONIOENCODING: "utf-8"
 
 jobs:
+  # ── macOS arm64 × {basic, plus} ────────────────────────────────────────────
   build-macos-arm64:
-    name: Build macOS (Apple Silicon arm64)
+    name: Build macOS arm64 (${{ matrix.edition }})
     runs-on: macos-14
+    strategy:
+      fail-fast: false
+      matrix:
+        edition: [basic, plus]
+
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
@@ -40,13 +46,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/Library/Caches/Nuitka
-          key: nuitka-arm64-${{ runner.os }}-${{ hashFiles('requirements*.txt') }}
+          key: nuitka-arm64-${{ matrix.edition }}-${{ runner.os }}-${{ hashFiles('requirements*.txt') }}
           restore-keys: |
+            nuitka-arm64-${{ matrix.edition }}-${{ runner.os }}-
             nuitka-arm64-${{ runner.os }}-
 
       - name: Instalar create-dmg
-        run: |
-          brew install create-dmg
+        run: brew install create-dmg
 
       - name: Instalar dependencias Python
         run: |
@@ -55,8 +61,7 @@ jobs:
           pip install pillow
 
       - name: Ejecutar Tests
-        run: |
-          pytest tests -v
+        run: pytest tests -v
 
       - name: Obtener versión del proyecto
         id: version
@@ -64,9 +69,14 @@ jobs:
           VER=$(python -c "from src.__version__ import __version__; print(__version__)")
           echo "version=$VER" >> $GITHUB_OUTPUT
 
-      - name: Generar iconos
+      - name: Hornear edición en el binario
         run: |
-          python scripts/generate_icons.py
+          echo 'BAKED_EDITION = "${{ matrix.edition }}"' > src/_edition.py
+          echo "Edición horneada: ${{ matrix.edition }}"
+          cat src/_edition.py
+
+      - name: Generar iconos
+        run: python scripts/generate_icons.py
 
       - name: Descargar FFmpeg estático para macOS arm64
         run: |
@@ -78,16 +88,17 @@ jobs:
 
       - name: Compilar con Nuitka
         run: |
+          EDITION_CAP=$(echo "${{ matrix.edition }}" | python3 -c "import sys; print(sys.stdin.read().strip().capitalize())")
           LIBROSA_DIR=$(python -c "import librosa; print(librosa.__path__[0])")
           python -m nuitka \
             --standalone \
             --macos-create-app-bundle \
-            --macos-app-name=AutoPrevias \
+            --macos-app-name="AutoPrevias $EDITION_CAP" \
             --macos-app-icon=assets/icon.icns \
-            --macos-signed-app-name=com.radicalrecords.autoprevias \
+            --macos-signed-app-name=com.radicalrecords.autoprevias.${{ matrix.edition }} \
             --macos-app-version="${{ steps.version.outputs.version }}" \
             --company-name="Radical Records" \
-            --product-name="AutoPrevias" \
+            --product-name="AutoPrevias $EDITION_CAP" \
             --copyright="Copyright © 2026 Radical Records. Todos los derechos reservados." \
             --enable-plugin=pyside6 \
             --include-qt-plugins=sensible,multimedia,platforms,styles,imageformats \
@@ -119,12 +130,10 @@ jobs:
           fi
 
       - name: Empaquetar dependencias runtime adicionales
-        run: |
-          python scripts/bundle_runtime_deps.py "dist/AutoPrevias.app/Contents/MacOS"
+        run: python scripts/bundle_runtime_deps.py "dist/AutoPrevias.app/Contents/MacOS"
 
       - name: Ejecutar Selftest sobre binario compilado
-        run: |
-          PYTHONDONTWRITEBYTECODE=1 dist/AutoPrevias.app/Contents/MacOS/AutoPrevias --selftest
+        run: PYTHONDONTWRITEBYTECODE=1 dist/AutoPrevias.app/Contents/MacOS/AutoPrevias --selftest
 
       - name: Limpiar metadatos y bytecode residual
         run: |
@@ -143,18 +152,18 @@ jobs:
             echo "Sin secrets de firma comercial. Aplicando firma ad-hoc..."
             codesign --force --deep --sign - dist/AutoPrevias.app
           fi
-          echo "Verificando integridad del sello de firma digital..."
           codesign -vvv --deep --strict dist/AutoPrevias.app
 
       - name: Crear instalador DMG
         run: |
-          DMG_NAME="AutoPrevias-${{ steps.version.outputs.version }}-macOS-arm64.dmg"
+          EDITION_CAP=$(echo "${{ matrix.edition }}" | python3 -c "import sys; print(sys.stdin.read().strip().capitalize())")
+          DMG_NAME="AutoPrevias-$EDITION_CAP-${{ steps.version.outputs.version }}-macOS-arm64.dmg"
           DMG_STAGING="dist/dmg_staging"
           rm -rf "$DMG_STAGING"
           mkdir -p "$DMG_STAGING"
           cp -R "dist/AutoPrevias.app" "$DMG_STAGING/"
           create-dmg \
-            --volname "AutoPrevias" \
+            --volname "AutoPrevias $EDITION_CAP" \
             --window-pos 200 120 \
             --window-size 600 400 \
             --icon-size 100 \
@@ -165,24 +174,32 @@ jobs:
             "dist/$DMG_NAME" \
             "$DMG_STAGING"
           rm -rf "$DMG_STAGING"
+          echo "dmg_name=$DMG_NAME" >> $GITHUB_OUTPUT
+        id: dmg
 
       - name: Calcular SHA-256
         run: |
           cd dist
-          shasum -a 256 AutoPrevias-*.dmg > checksum.txt
-          cat checksum.txt
+          shasum -a 256 AutoPrevias-*-macOS-arm64.dmg > checksum-macos-${{ matrix.edition }}.txt
+          cat checksum-macos-${{ matrix.edition }}.txt
 
-      - name: Subir artefacto macOS arm64
+      - name: Subir artefacto macOS arm64 ${{ matrix.edition }}
         uses: actions/upload-artifact@v4
         with:
-          name: installer-macos-arm64
+          name: installer-macos-arm64-${{ matrix.edition }}
           path: |
             dist/AutoPrevias-*-macOS-arm64.dmg
-            dist/checksum.txt
+            dist/checksum-macos-${{ matrix.edition }}.txt
 
+  # ── Windows x64 × {basic, plus} ────────────────────────────────────────────
   build-windows-x64:
-    name: Build Windows (x64)
+    name: Build Windows x64 (${{ matrix.edition }})
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        edition: [basic, plus]
+
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
@@ -197,13 +214,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~\AppData\Local\Nuitka\Nuitka\Cache
-          key: nuitka-win64-${{ runner.os }}-${{ hashFiles('requirements*.txt') }}
+          key: nuitka-win64-${{ matrix.edition }}-${{ runner.os }}-${{ hashFiles('requirements*.txt') }}
           restore-keys: |
+            nuitka-win64-${{ matrix.edition }}-${{ runner.os }}-
             nuitka-win64-${{ runner.os }}-
 
       - name: Instalar Inno Setup
-        run: |
-          choco install innosetup --no-progress -y
+        run: choco install innosetup --no-progress -y
 
       - name: Instalar dependencias Python
         run: |
@@ -212,8 +229,7 @@ jobs:
           pip install pillow
 
       - name: Ejecutar Tests
-        run: |
-          pytest tests -v
+        run: pytest tests -v
 
       - name: Obtener versión del proyecto
         id: version
@@ -222,9 +238,15 @@ jobs:
           VER=$(python -c "from src.__version__ import __version__; print(__version__)")
           echo "version=$VER" >> $GITHUB_OUTPUT
 
-      - name: Generar iconos
+      - name: Hornear edición en el binario
+        shell: bash
         run: |
-          python scripts/generate_icons.py
+          echo 'BAKED_EDITION = "${{ matrix.edition }}"' > src/_edition.py
+          echo "Edición horneada: ${{ matrix.edition }}"
+          cat src/_edition.py
+
+      - name: Generar iconos
+        run: python scripts/generate_icons.py
 
       - name: Descargar FFmpeg estático para Windows
         shell: bash
@@ -239,13 +261,14 @@ jobs:
         shell: cmd
         run: |
           for /f "tokens=*" %%i in ('python -c "import librosa; print(librosa.__path__[0])"') do set LIBROSA_DIR=%%i
+          for /f "tokens=*" %%i in ('python -c "s=\"${{ matrix.edition }}\"; print(s[0].upper()+s[1:])"') do set EDITION_CAP=%%i
           python -m nuitka ^
             --standalone ^
             --company-name="Radical Records" ^
-            --product-name="AutoPrevias" ^
+            --product-name="AutoPrevias %EDITION_CAP%" ^
             --file-version=${{ steps.version.outputs.version }}.0 ^
             --product-version=${{ steps.version.outputs.version }} ^
-            --file-description="AutoPrevias - Radical Records" ^
+            --file-description="AutoPrevias %EDITION_CAP% - Radical Records" ^
             --copyright="Copyright (c) 2026 Radical Records. Todos los derechos reservados." ^
             --windows-icon-from-ico=assets\icon.ico ^
             --windows-console-mode=attach ^
@@ -282,56 +305,49 @@ jobs:
 
       - name: Empaquetar dependencias runtime adicionales
         shell: cmd
-        run: |
-          python scripts\bundle_runtime_deps.py "dist\AutoPrevias.dist"
+        run: python scripts\bundle_runtime_deps.py "dist\AutoPrevias.dist"
 
-      - name: Copiar llvmlite.dll al bundle (fix Windows ctypes resource path)
+      - name: Copiar llvmlite.dll al bundle
         shell: pwsh
         run: |
           $llvmlite_src = python -c "import llvmlite; import os; print(os.path.join(llvmlite.__path__[0], 'binding'))"
           $llvmlite_dll = Join-Path $llvmlite_src "llvmlite.dll"
           $llvmlite_dest = "dist\AutoPrevias.dist\llvmlite\binding"
           if (Test-Path $llvmlite_dll) {
-            Write-Host "Copiando llvmlite.dll desde $llvmlite_dll a $llvmlite_dest y raiz"
             New-Item -ItemType Directory -Force -Path $llvmlite_dest | Out-Null
             Copy-Item $llvmlite_dll $llvmlite_dest -Force
             Copy-Item $llvmlite_dll "dist\AutoPrevias.dist\" -Force
             Write-Host "[OK] llvmlite.dll copiado correctamente."
           } else {
-            Write-Host "[WARN] llvmlite.dll no encontrado en $llvmlite_src - buscando en site-packages..."
             $sp = python -c "import site; print([p for p in site.getsitepackages() if 'site-packages' in p][0])"
             $alt = Join-Path $sp "llvmlite\binding\llvmlite.dll"
             if (Test-Path $alt) {
               Copy-Item $alt $llvmlite_dest -Force
               Copy-Item $alt "dist\AutoPrevias.dist\" -Force
-              Write-Host "[OK] llvmlite.dll encontrado en $alt y copiado."
+              Write-Host "[OK] llvmlite.dll encontrado y copiado."
             } else {
-              Write-Host "[ERROR] llvmlite.dll no encontrado en ninguna ruta conocida."
+              Write-Host "[ERROR] llvmlite.dll no encontrado."
               exit 1
             }
           }
 
       - name: Ejecutar Selftest sobre binario compilado
         shell: cmd
-        run: |
-          dist\AutoPrevias.dist\AutoPrevias.exe --selftest
+        run: dist\AutoPrevias.dist\AutoPrevias.exe --selftest
 
       - name: Crear instalador con Inno Setup
         shell: cmd
         run: |
-          "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DAppVersion=${{ steps.version.outputs.version }} installer\windows\setup.iss
+          "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DAppVersion=${{ steps.version.outputs.version }} /DEdition=${{ matrix.edition }} installer\windows\setup.iss
 
       - name: Análisis de seguridad con Windows Defender
         shell: powershell
         run: |
           $installer = Get-Item dist\AutoPrevias-*-Windows-x64-Setup.exe
-          Write-Host "Escaneando instalador con Microsoft Defender: $($installer.FullName)"
+          Write-Host "Escaneando: $($installer.FullName)"
           try {
             Start-MpScan -ScanPath $installer.FullName -ScanType CustomScan -ErrorAction SilentlyContinue
             Write-Host "Escaneo completado sin amenazas detectadas."
-            echo "### Windows Defender Scan" >> $env:GITHUB_STEP_SUMMARY
-            echo "- Archivo: $($installer.Name)" >> $env:GITHUB_STEP_SUMMARY
-            echo "- Estado: Limpio / Sin amenazas detectadas" >> $env:GITHUB_STEP_SUMMARY
           } catch {
             Write-Host "Aviso en escaneo Defender: $_"
           }
@@ -342,17 +358,18 @@ jobs:
           cd dist
           $hash = (Get-FileHash -Algorithm SHA256 AutoPrevias-*-Windows-x64-Setup.exe).Hash.ToLower()
           $file = (Get-Item AutoPrevias-*-Windows-x64-Setup.exe).Name
-          "$hash  $file" | Out-File -Encoding utf8 checksum.txt
-          Get-Content checksum.txt
+          "$hash  $file" | Out-File -Encoding utf8 checksum-windows-${{ matrix.edition }}.txt
+          Get-Content checksum-windows-${{ matrix.edition }}.txt
 
-      - name: Subir artefacto Windows x64
+      - name: Subir artefacto Windows x64 ${{ matrix.edition }}
         uses: actions/upload-artifact@v4
         with:
-          name: installer-windows-x64
+          name: installer-windows-x64-${{ matrix.edition }}
           path: |
             dist/AutoPrevias-*-Windows-x64-Setup.exe
-            dist/checksum.txt
+            dist/checksum-windows-${{ matrix.edition }}.txt
 
+  # ── Publicar release con los 4 instaladores ────────────────────────────────
   publish-release:
     name: Publicar GitHub Release
     if: always() && (needs.build-macos-arm64.result == 'success' || needs.build-windows-x64.result == 'success')
@@ -362,7 +379,7 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v4
 
-      - name: Descargar todos los instaladores
+      - name: Descargar todos los instaladores (4 artefactos)
         uses: actions/download-artifact@v4
         with:
           path: release-artifacts
@@ -372,10 +389,15 @@ jobs:
           mkdir -p release-files
           find release-artifacts -type f \( -name "*.dmg" -o -name "*.exe" \) -exec cp {} release-files/ \;
           cd release-files
-          for f in AutoPrevias-*-macOS-arm64.dmg; do [ -f "$f" ] && cp "$f" AutoPrevias-macOS-arm64.dmg; done
-          for f in AutoPrevias-*-Windows-x64-Setup.exe; do [ -f "$f" ] && cp "$f" AutoPrevias-Windows-x64-Setup.exe; done
+          # Alias cortos predecibles para los enlaces de descarga directa
+          for f in AutoPrevias-Basic-*-macOS-arm64.dmg;   do [ -f "$f" ] && cp "$f" AutoPrevias-Basic-macOS-arm64.dmg;   done
+          for f in AutoPrevias-Plus-*-macOS-arm64.dmg;    do [ -f "$f" ] && cp "$f" AutoPrevias-Plus-macOS-arm64.dmg;    done
+          for f in AutoPrevias-Basic-*-Windows-x64-Setup.exe; do [ -f "$f" ] && cp "$f" AutoPrevias-Basic-Windows-x64-Setup.exe; done
+          for f in AutoPrevias-Plus-*-Windows-x64-Setup.exe;  do [ -f "$f" ] && cp "$f" AutoPrevias-Plus-Windows-x64-Setup.exe;  done
           sha256sum * > SHA256SUMS.txt
           cat SHA256SUMS.txt
+          echo "Instaladores disponibles:"
+          ls -lh *.dmg *.exe 2>/dev/null
 
       - name: Extraer notas de versión de CHANGELOG.md
         id: notes
@@ -399,7 +421,7 @@ jobs:
           if [ -z "$TAG_NAME" ] || [ "$TAG_NAME" = "main" ]; then
             TAG_NAME="${{ github.event.inputs.tag_name }}"
           fi
-          
+
           if gh release view "$TAG_NAME" >/dev/null 2>&1; then
             echo "Release $TAG_NAME ya existe, subiendo/actualizando activos..."
             gh release upload "$TAG_NAME" release-files/* --clobber

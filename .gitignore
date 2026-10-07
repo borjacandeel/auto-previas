@@ -40,3 +40,4 @@ ffmpeg_bin/
 # Archivos de audio de ejemplo grandes (los WAV/FLAC de ejemplos)
 ejemplos/*.flac
 ejemplos/*.wav
+src/_edition.py

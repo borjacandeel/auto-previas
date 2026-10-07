@@ -3,6 +3,13 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.4.0] - 2026-10-07
+
+### Añadido
+- **4 instaladores compilados por release** (Basic macOS, Basic Windows, Plus macOS, Plus Windows). La edición queda horneada en el binario en tiempo de compilación mediante `src/_edition.py` generado por el CI antes de Nuitka — el usuario no puede cambiar de edición editando archivos.
+- **`BAKED_EDITION` en `config.py`**: si el módulo `src._edition` existe (build compilado), su valor es la fuente autoritativa de edición y el JSON de configuración no puede sobreescribirlo.
+- **Inno Setup actualizado**: acepta `/DEdition=basic|plus`, genera `AppId`, `DefaultDirName` y nombre del instalador distintos por edición, permitiendo que Basic y Plus coexistan instalados en el mismo PC sin conflicto.
+
 ## [2.3.0] - 2026-10-07
 
 ### Añadido

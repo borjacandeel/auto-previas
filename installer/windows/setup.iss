@@ -5,19 +5,34 @@
 #define AppVersion "2.0.0"
 #endif
 
+; Edición: "basic" o "plus" — se pasa desde el workflow con /DEdition=basic|plus
+#ifndef Edition
+#define Edition "plus"
+#endif
+
+; Capitalizar la primera letra para el nombre visible
+#define EditionCap Edition[0] == 'b' ? "Basic" : "Plus"
+
+; AppId distinto por edición para que puedan coexistir instalados
+#if Edition == "basic"
+#define AppId "{{A1B2C3D4-0000-0000-0000-111111111111}"
+#else
+#define AppId "{{C789218F-A362-4C61-9E89-E8652D027F11}"
+#endif
+
 [Setup]
-AppId={{C789218F-A362-4C61-9E89-E8652D027F11}
-AppName=AutoPrevias
+AppId={#AppId}
+AppName=AutoPrevias {#EditionCap}
 AppVersion={#AppVersion}
-AppVerName=AutoPrevias {#AppVersion}
+AppVerName=AutoPrevias {#EditionCap} {#AppVersion}
 AppPublisher=Radical Records
 AppPublisherURL=mailto:radicalrecordsvlc@gmail.com
 AppSupportURL=mailto:radicalrecordsvlc@gmail.com
-DefaultDirName={autopf}\AutoPrevias
-DefaultGroupName=AutoPrevias
+DefaultDirName={autopf}\AutoPrevias {#EditionCap}
+DefaultGroupName=AutoPrevias {#EditionCap}
 AllowNoIcons=yes
 OutputDir=..\..\dist
-OutputBaseFilename=AutoPrevias-{#AppVersion}-Windows-x64-Setup
+OutputBaseFilename=AutoPrevias-{#EditionCap}-{#AppVersion}-Windows-x64-Setup
 SetupIconFile=..\..\assets\icon.ico
 Compression=lzma2/ultra64
 SolidCompression=yes
@@ -41,9 +56,9 @@ Source: "..\..\dist\AutoPrevias.dist\*"; DestDir: "{app}"; Flags: ignoreversion 
 Source: "..\..\assets\icon.ico"; DestDir: "{app}\assets"; Flags: ignoreversion; Permissions: users-modify
 
 [Icons]
-Name: "{group}\AutoPrevias"; Filename: "{app}\AutoPrevias.exe"; WorkingDir: "{app}"; IconFilename: "{app}\assets\icon.ico"
-Name: "{group}\{cm:UninstallProgram,AutoPrevias}"; Filename: "{uninstallexe}"; WorkingDir: "{app}"
-Name: "{autodesktop}\AutoPrevias"; Filename: "{app}\AutoPrevias.exe"; WorkingDir: "{app}"; IconFilename: "{app}\assets\icon.ico"; Tasks: desktopicon
+Name: "{group}\AutoPrevias {#EditionCap}"; Filename: "{app}\AutoPrevias.exe"; WorkingDir: "{app}"; IconFilename: "{app}\assets\icon.ico"
+Name: "{group}\{cm:UninstallProgram,AutoPrevias {#EditionCap}}"; Filename: "{uninstallexe}"; WorkingDir: "{app}"
+Name: "{autodesktop}\AutoPrevias {#EditionCap}"; Filename: "{app}\AutoPrevias.exe"; WorkingDir: "{app}"; IconFilename: "{app}\assets\icon.ico"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\AutoPrevias.exe"; WorkingDir: "{app}"; Description: "{cm:LaunchProgram,AutoPrevias}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\AutoPrevias.exe"; WorkingDir: "{app}"; Description: "{cm:LaunchProgram,AutoPrevias {#EditionCap}}"; Flags: nowait postinstall skipifsilent
