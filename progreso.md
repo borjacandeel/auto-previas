@@ -46,9 +46,25 @@
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-07 (Sesión 29 — v2.1.0: 6 bugs. v2.2.0: botón "Generar otra previa" en success card. Plan de ediciones Básica/Plus documentado.)
-**Fase activa:** Fase G completada ✅ — AutoPrevias Pro Studio v2.2.0 publicado en GitHub Releases
-**Versión Actual:** **v2.0.0**
+**Fecha última actualización:** 2026-10-07 (Sesión 31 — v2.5.1: corrección de generación de cortes musicales)
+**Fase activa:** Publicado en GitHub Releases con 4 instaladores (Basic/Plus × macOS/Windows)
+**Versión Actual:** **v2.5.1**
+
+---
+
+### Resumen de Mejoras — Sesión 31 (2026-10-07): Versión v2.5.1 — Cortes Musicales Más Inteligentes
+
+#### 🐛 Bugs corregidos
+
+| Archivo | Problema | Fix |
+|---------|----------|-----|
+| `src/analysis/structure.py` | `is_rising` exigía kick < 0.45 → buildups con bombo (dance/house) no se detectaban | Eliminada restricción de kick; umbrales de pendiente ligeramente más sensibles (0.008/0.012 en lugar de 0.010/0.015) |
+| `src/analysis/structure.py` | `is_predrop_fill` también exigía kick < 0.45 → los 1-2 compases de redoble antes del drop no se marcaban como buildup | Eliminada restricción; los últimos 2 compases antes del drop siempre son buildup |
+| `src/analysis/structure.py` | Intro forzada de 12 compases solapaba buildups cortos al inicio del tema | Reducida a 8 compases |
+| `src/analysis/segments.py` | Fallback de inicio de corte usaba offset fijo `drop.start_time - 6*bar_dur` → caía en medio de cualquier sección | Nuevo helper `_buildup_start()` que busca BUILDUP/BREAKDOWN real hacia atrás desde el drop |
+
+#### 🧪 Tests
+- 30/30 tests pasados sin regresiones
 
 ---
 
