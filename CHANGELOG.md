@@ -3,6 +3,13 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.6.2] - 2026-10-07
+
+### Corregido
+- **Ventana fantasma de "Vinilo" en macOS (fix definitivo)**: la corrección anterior (eliminar `processEvents`) no era suficiente. La causa raíz era que `QSplashScreen.finish()` llamaba internamente a `winId()` en macOS para inicializar los handles nativos antes de que la ventana principal fuera visible, lo que hacía aparecer el popup nativo del `QComboBox`. Ahora la ventana se muestra explícitamente primero (`win.show()`) y el splash se cierra 80ms después mediante un temporizador, evitando por completo la inicialización prematura de controles nativos.
+- **Email de soporte tapado por el badge de edición**: el header aumenta de 58px a 72px para que todos los elementos del panel derecho (logo, estado, badge y email) quepan sin solaparse.
+- **Edición Básica no arrancaba correctamente**: el splash no se cerraba porque el evento `QEvent::Show` se perdía con el orden anterior de `win.show()` + `splash.finish()`. Resuelto con el nuevo patrón `win.show()` + cierre por temporizador.
+
 ## [2.6.1] - 2026-10-07
 
 ### Añadido

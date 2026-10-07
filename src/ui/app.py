@@ -3750,7 +3750,7 @@ class MainWindow(QMainWindow):
 
         # ── HEADER ───────────────────────────────────────────────────────
         self._hdr = QFrame()
-        self._hdr.setFixedHeight(58)
+        self._hdr.setFixedHeight(72)
         self._hdr.setObjectName("hdr")
         self._hdr.setStyleSheet(f"""
             QFrame#hdr {{
@@ -3854,7 +3854,7 @@ class MainWindow(QMainWindow):
 
         # Right — banner de Radical Records
         right_col = QVBoxLayout()
-        right_col.setSpacing(2)
+        right_col.setSpacing(1)
         right_col.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
 
         banner_path = _ASSETS_DIR / "logo_banner.png"
@@ -4563,7 +4563,13 @@ def launch(initial_file: str = ""):
     splash.repaint()
 
     _log_startup("Mostrando ventana principal...")
-    splash.finish(win)
+    # Mostramos la ventana ANTES de cerrar el splash para que macOS inicialice
+    # los controles nativos (QComboBox → NSPopUpButton) con la ventana ya visible.
+    # Esto evita el popup fantasma "Vinilo (+Pitch Armónico)" que aparecía cuando
+    # QSplashScreen.finish() llamaba winId() antes de que la ventana fuera visible.
+    # El splash se cierra 80ms después para asegurar que la transición es suave.
+    win.show()
+    QTimer.singleShot(80, splash.close)
 
     _log_startup("Ventana principal visible. Ejecutando app.exec()...")
     sys.exit(app.exec())

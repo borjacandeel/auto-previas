@@ -46,9 +46,9 @@
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-07 (Sesión 32 — v2.6.1: animaciones UI + corrección ventana fantasma macOS)
+**Fecha última actualización:** 2026-10-07 (Sesión 32 — v2.6.2: fix definitivo ventana fantasma + header solapado)
 **Fase activa:** Publicado en GitHub Releases con 4 instaladores (Basic/Plus × macOS/Windows)
-**Versión Actual:** **v2.6.1**
+**Versión Actual:** **v2.6.2**
 
 ---
 
