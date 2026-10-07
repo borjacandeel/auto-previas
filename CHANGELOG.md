@@ -3,6 +3,16 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.6.1] - 2026-10-07
+
+### Añadido
+- **Animación de tarjetas de estadísticas**: al cargar un tema, las 6 tarjetas (BPM, clave, drops, etc.) aparecen con un efecto de fundido escalonado en lugar de mostrarse todas de golpe.
+- **Filas de tabla de cortes animadas**: al regenerar los cortes, cada fila de la tabla aparece de forma escalonada de arriba a abajo.
+- **Brillo pulsante en el playhead**: la línea roja del reproductor en la waveform pulsa sutilmente mientras hay audio cargado, dando más vida a la interfaz.
+
+### Corregido
+- **Ventana fantasma de "Vinilo" en macOS**: al abrir la app, aparecía una pequeña ventana flotante con el texto del combo "Vinilo (+Pitch Armónico)". Corregido eliminando el `processEvents()` que inicializaba los controles nativos de macOS antes de que la ventana principal estuviera visible.
+
 ## [2.6.0] - 2026-10-07
 
 ### Añadido

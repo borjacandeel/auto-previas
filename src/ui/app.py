@@ -39,7 +39,7 @@ from PySide6.QtWidgets import (
     QPushButton, QStackedWidget, QTableWidget, QSpinBox, QDoubleSpinBox,
     QComboBox, QTableWidgetItem, QVBoxLayout, QWidget, QHeaderView,
     QFrame, QTabWidget, QAbstractItemView, QSizePolicy,
-    QScrollArea, QGraphicsDropShadowEffect, QMenu,
+    QScrollArea, QGraphicsDropShadowEffect, QMenu, QSplashScreen,
 )
 
 _ROOT = Path(__file__).parent.parent.parent
@@ -417,181 +417,137 @@ def _shadow(widget: QWidget, radius: int = 20, color: str = "#000000",
 
 # ── Splash Screen ─────────────────────────────────────────────────────────────
 
-class SplashWindow(QWidget):
-    """Ventana de bienvenida animada con logo y barra de progreso."""
+def _build_splash_pixmap(pct: int = 0, msg: str = "Iniciando…") -> QPixmap:
+    """Pinta el splash sobre un QPixmap — sin widgets, sin transparencia problemática."""
+    W, H = 520, 290
+    pix = QPixmap(W, H)
+    pix.fill(QColor(BG2))
+
+    p = QPainter(pix)
+    p.setRenderHint(QPainter.Antialiasing)
+
+    # Marco rojo
+    p.setPen(QPen(QColor(ACCENT), 2))
+    p.setBrush(Qt.NoBrush)
+    p.drawRoundedRect(1, 1, W - 2, H - 2, 14, 14)
+
+    # Línea decorativa interior
+    p.setPen(QPen(QColor(ACCENT + "33"), 1))
+    p.drawRoundedRect(6, 6, W - 12, H - 12, 10, 10)
+
+    # Logo
+    logo_file = None
+    for cand in [_ASSETS_DIR / "logo_emblem.png", _ASSETS_DIR / "logo.png",
+                 _ASSETS_DIR / "logo_emblem_red.png"]:
+        if cand.exists():
+            logo_file = str(cand)
+            break
+    if logo_file:
+        lp = QPixmap(logo_file)
+        if not lp.isNull():
+            lp = lp.scaled(84, 84, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            p.drawPixmap((W - 84) // 2, 24, lp)
+
+    # Título AUTOPREVIAS
+    from PySide6.QtGui import QFont as _QFont
+    f = _QFont()
+    f.setPixelSize(24)
+    f.setBold(True)
+    f.setLetterSpacing(_QFont.AbsoluteSpacing, 5)
+    p.setFont(f)
+    p.setPen(QColor(TEXT))
+    p.drawText(QRect(0, 118, W, 32), Qt.AlignCenter, "AUTOPREVIAS")
+
+    # Subtítulo
+    f2 = _QFont()
+    f2.setPixelSize(10)
+    f2.setBold(True)
+    f2.setLetterSpacing(_QFont.AbsoluteSpacing, 2)
+    p.setFont(f2)
+    p.setPen(QColor(ACCENT))
+    p.drawText(QRect(0, 154, W, 18), Qt.AlignCenter, f"RADICAL RECORDS  ·  STUDIO v{VERSION}")
+
+    # Barra de progreso — fondo
+    bx, by, bw, bh = 70, 190, W - 140, 6
+    p.setPen(Qt.NoPen)
+    p.setBrush(QColor(BG4))
+    p.drawRoundedRect(bx, by, bw, bh, 3, 3)
+
+    # Barra de progreso — relleno con gradiente
+    if pct > 0:
+        fill = max(8, int(bw * pct / 100))
+        grad = QLinearGradient(bx, 0, bx + bw, 0)
+        grad.setColorAt(0.0, QColor(ACCENT))
+        grad.setColorAt(1.0, QColor("#ff8c00"))
+        p.setBrush(QBrush(grad))
+        p.drawRoundedRect(bx, by, fill, bh, 3, 3)
+
+    # Porcentaje
+    f3 = _QFont()
+    f3.setPixelSize(11)
+    f3.setBold(True)
+    p.setFont(f3)
+    p.setPen(QColor(TEXT_MID))
+    p.drawText(QRect(0, 202, W, 18), Qt.AlignCenter, f"{pct}%")
+
+    # Mensaje de estado
+    f4 = _QFont()
+    f4.setPixelSize(10)
+    p.setFont(f4)
+    p.setPen(QColor(TEXT_DIM))
+    p.drawText(QRect(0, 224, W, 16), Qt.AlignCenter, msg)
+
+    p.end()
+    return pix
+
+
+class SplashWindow(QSplashScreen):
+    """Splash screen usando QSplashScreen estándar — sin ventanas fantasma."""
+
+    _STEPS = [
+        (15,  "Cargando motor espectral…"),
+        (35,  "Preparando análisis de BPM…"),
+        (60,  "Iniciando renderizador de audio…"),
+        (85,  "Cargando interfaz de usuario…"),
+    ]
 
     def __init__(self):
-        super().__init__()
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
-        self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setFixedSize(520, 300)
+        pix = _build_splash_pixmap(0, "Iniciando…")
+        super().__init__(pix, Qt.WindowStaysOnTopHint)
+        self._pct = 0
+        self._cur_msg = "Iniciando…"
 
-        # Centrar en pantalla
-        from PySide6.QtGui import QGuiApplication
-        screen = QGuiApplication.primaryScreen()
-        if screen:
-            sg = screen.availableGeometry()
-            self.move(sg.x() + (sg.width() - 520) // 2, sg.y() + (sg.height() - 300) // 2)
-
-        lay = QVBoxLayout(self)
-        lay.setContentsMargins(0, 0, 0, 0)
-        lay.setSpacing(0)
-
-        # Contenedor con fondo
-        container = QFrame()
-        container.setObjectName("splash-card")
-        container.setStyleSheet(f"""
-            QFrame#splash-card {{
-                background: {BG2};
-                border: 1px solid {ACCENT};
-                border-radius: 18px;
-            }}
-        """)
-        inner = QVBoxLayout(container)
-        inner.setContentsMargins(40, 32, 40, 32)
-        inner.setSpacing(18)
-        inner.setAlignment(Qt.AlignCenter)
-
-        # Logo
-        self._logo_lbl = QLabel()
-        self._logo_lbl.setAlignment(Qt.AlignCenter)
-        logo_file = None
-        for cand in [_ASSETS_DIR / "logo_emblem.png", _ASSETS_DIR / "logo.png",
-                     _ASSETS_DIR / "logo_emblem_red.png"]:
-            if cand.exists():
-                logo_file = str(cand)
-                break
-        self._logo_pix = None
-        if logo_file:
-            pix = QPixmap(logo_file)
-            if not pix.isNull():
-                self._logo_pix = pix.scaled(88, 88, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-                self._logo_lbl.setPixmap(self._logo_pix)
-                self._logo_lbl.setStyleSheet("background: transparent; border: none;")
-        else:
-            self._logo_lbl.setText("🎧")
-            self._logo_lbl.setStyleSheet("font-size: 56px; background: transparent; border: none;")
-        inner.addWidget(self._logo_lbl, alignment=Qt.AlignCenter)
-
-        # Nombre app
-        name_lbl = QLabel("AUTOPREVIAS")
-        name_lbl.setAlignment(Qt.AlignCenter)
-        name_lbl.setStyleSheet(
-            f"color: {TEXT}; font-size: 22px; font-weight: 900; letter-spacing: 4px;"
-            "background: transparent; border: none;"
-        )
-        inner.addWidget(name_lbl)
-
-        sub_lbl = QLabel(f"RADICAL RECORDS  ·  STUDIO v{VERSION}")
-        sub_lbl.setAlignment(Qt.AlignCenter)
-        sub_lbl.setStyleSheet(
-            f"color: {ACCENT}; font-size: 10px; font-weight: 700; letter-spacing: 2px;"
-            "background: transparent; border: none;"
-        )
-        inner.addWidget(sub_lbl)
-
-        # Barra de progreso
-        self._bar = QProgressBar()
-        self._bar.setRange(0, 100)
-        self._bar.setValue(0)
-        self._bar.setTextVisible(False)
-        self._bar.setFixedHeight(4)
-        self._bar.setStyleSheet(f"""
-            QProgressBar {{
-                background: {BG4};
-                border: none;
-                border-radius: 2px;
-            }}
-            QProgressBar::chunk {{
-                background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
-                    stop:0 {ACCENT}, stop:1 #ff8c00);
-                border-radius: 2px;
-            }}
-        """)
-        inner.addWidget(self._bar)
-
-        self._status_lbl = QLabel("Iniciando motor de audio…")
-        self._status_lbl.setAlignment(Qt.AlignCenter)
-        self._status_lbl.setStyleSheet(
-            f"color: {TEXT_MID}; font-size: 10px; background: transparent; border: none;"
-        )
-        inner.addWidget(self._status_lbl)
-
-        lay.addWidget(container)
-
-        # Animación del logo (escala pulsante con opacity)
-        self._pulse_phase = 0.0
-        self._anim_timer = QTimer(self)
-        self._anim_timer.timeout.connect(self._tick)
-        self._anim_timer.start(40)
-
-        # Simular progreso inicial
         self._fake_pct = 0
         self._fake_timer = QTimer(self)
-        self._fake_timer.timeout.connect(self._fake_progress)
-        self._fake_timer.start(30)
+        self._fake_timer.timeout.connect(self._fake_step)
+        self._fake_timer.start(25)
 
-        self._steps = [
-            (20,  "Cargando motor espectral…"),
-            (45,  "Preparando análisis de BPM…"),
-            (70,  "Iniciando renderizador de audio…"),
-            (90,  "Cargando interfaz de usuario…"),
-            (100, "¡Listo!"),
-        ]
-
-    def _fake_progress(self):
-        if self._fake_pct >= 95:
+    def _fake_step(self):
+        if self._fake_pct >= 88:
             self._fake_timer.stop()
             return
-        self._fake_pct = min(95, self._fake_pct + 1)
-        self._bar.setValue(self._fake_pct)
-        for pct, msg in self._steps:
+        self._fake_pct = min(88, self._fake_pct + 2)
+        msg = self._cur_msg
+        for pct, m in self._STEPS:
             if self._fake_pct >= pct:
-                self._status_lbl.setText(msg)
+                msg = m
+        self._cur_msg = msg
+        self._repaint(self._fake_pct, msg)
+
+    def _repaint(self, pct: int, msg: str):
+        self._pct = pct
+        self.setPixmap(_build_splash_pixmap(pct, msg))
+        self.repaint()
 
     def set_progress(self, pct: int, msg: str):
         self._fake_timer.stop()
-        self._bar.setValue(pct)
-        self._status_lbl.setText(msg)
-
-    def _tick(self):
-        self._pulse_phase = (self._pulse_phase + 0.06) % (2 * math.pi)
-        t = (math.sin(self._pulse_phase) + 1) / 2
-        alpha = int(180 + 75 * t)
-        if self._logo_pix:
-            img = self._logo_pix.toImage()
-            img.setAlphaChannel(img.createAlphaMask())
-        # Aplicar opacidad al logo_lbl mediante stylesheet
-        self._logo_lbl.setStyleSheet(
-            f"background: transparent; border: none; opacity: {0.7 + 0.3 * t:.2f};"
-        )
-
-    def paintEvent(self, event):
-        # Sombra exterior con QPainter
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.fillRect(self.rect(), QColor(0, 0, 0, 0))
-        super().paintEvent(event)
+        self._cur_msg = msg
+        self._repaint(pct, msg)
 
     def finish(self, main_window):
-        """Cierra el splash con fade-out y muestra la ventana principal."""
-        self._anim_timer.stop()
         self._fake_timer.stop()
-        self._bar.setValue(100)
-        self._status_lbl.setText("¡Listo!")
-
-        eff = QGraphicsOpacityEffect(self)
-        self.setGraphicsEffect(eff)
-        anim = QPropertyAnimation(eff, b"opacity", self)
-        anim.setDuration(350)
-        anim.setStartValue(1.0)
-        anim.setEndValue(0.0)
-        anim.setEasingCurve(QEasingCurve.OutCubic)
-        anim.finished.connect(self.close)
-        anim.finished.connect(main_window.show)
-        anim.finished.connect(main_window.raise_)
-        anim.finished.connect(main_window.activateWindow)
-        anim.start(QPropertyAnimation.DeleteWhenStopped)
+        self._repaint(100, "¡Todo listo!")
+        super().finish(main_window)
 
 
 # ── Página de análisis en curso ────────────────────────────────────────────────
@@ -2236,6 +2192,7 @@ class ResultPanel(QWidget):
 
         self._fill_structure(analysis)
         self._fill_plan(plan)
+        self._animate_stat_cards()
 
         # Waveform
         if HAS_WAVEFORM:
@@ -2254,6 +2211,23 @@ class ResultPanel(QWidget):
         self._apply_generate_style(True)
         self._btn_generate.start_shimmer()
         self._update_tempo_plot()
+
+    def _animate_stat_cards(self):
+        cards = [self._card_file, self._card_bpm, self._card_key,
+                 self._card_dur, self._card_drops, self._card_pv]
+        self._card_anims = []
+        for i, card in enumerate(cards):
+            eff = QGraphicsOpacityEffect(card)
+            eff.setOpacity(0.0)
+            card.setGraphicsEffect(eff)
+            anim = QPropertyAnimation(eff, b"opacity", self)
+            anim.setDuration(300)
+            anim.setStartValue(0.0)
+            anim.setEndValue(1.0)
+            anim.setEasingCurve(QEasingCurve.OutCubic)
+            anim.finished.connect(lambda c=card: c.setGraphicsEffect(None))
+            self._card_anims.append(anim)
+            QTimer.singleShot(i * 70, anim.start)
 
     def _update_preset_styles(self, active_sec: int):
         if not hasattr(self, "_preset_buttons"):
@@ -2920,6 +2894,15 @@ class ResultPanel(QWidget):
         self._lbl_cuts_summary.setText(
             f"{len(plan.segments)} cortes  ·  Total: {raw_dur:.1f}s  ·  Previa est: {fmt_time_short(est)}"
         )
+        self._animate_cuts_rows()
+
+    def _animate_cuts_rows(self):
+        tbl = self._tbl_cuts
+        n = tbl.rowCount()
+        for r in range(n):
+            tbl.setRowHidden(r, True)
+        for r in range(n):
+            QTimer.singleShot(r * 35, lambda row=r: tbl.setRowHidden(row, False))
 
     # ── Pestaña de Curva de BPM ───────────────────────────────────────────
 
@@ -3677,6 +3660,51 @@ class MainWindow(QMainWindow):
             _log_startup(f"MainWindow: cargando archivo inicial: {initial_file}")
             self._load_file(initial_file)
 
+    # ── Badge de edición ──────────────────────────────────────────────────
+
+    def _apply_badge_style(self, shimmer: int = 0):
+        """Aplica el estilo del badge con offset de shimmer (0-100) para Plus."""
+        if self._badge_is_plus:
+            # El shimmer desplaza el punto blanco brillante de izquierda a derecha
+            s = shimmer / 100.0
+            self._edition_badge.setStyleSheet(f"""
+                QLabel {{
+                    background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
+                        stop:0 #5b21b6,
+                        stop:{max(0.0, s-0.15):.2f} #7c3aed,
+                        stop:{s:.2f} #c4b5fd,
+                        stop:{min(1.0, s+0.15):.2f} #7c3aed,
+                        stop:1 #6d28d9);
+                    color: #f5f3ff;
+                    border: 1px solid #a78bfa;
+                    border-radius: 7px;
+                    font-size: 11px;
+                    font-weight: 900;
+                    padding: 3px 12px;
+                    letter-spacing: 2px;
+                }}
+            """)
+        else:
+            self._edition_badge.setStyleSheet(f"""
+                QLabel {{
+                    background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
+                        stop:0 #1e3a5f, stop:1 #1d4ed8);
+                    color: #bfdbfe;
+                    border: 1px solid #60a5fa;
+                    border-radius: 7px;
+                    font-size: 11px;
+                    font-weight: 900;
+                    padding: 3px 12px;
+                    letter-spacing: 2px;
+                }}
+            """)
+
+    def _tick_badge_shimmer(self):
+        self._badge_shimmer_phase = (self._badge_shimmer_phase + 3) % 140
+        # Shimmer visible entre 0 y 100, fuera del rango reposa
+        pos = self._badge_shimmer_phase if self._badge_shimmer_phase <= 100 else 100
+        self._apply_badge_style(pos)
+
     # ── Paleta ────────────────────────────────────────────────────────────
 
     def _apply_palette(self):
@@ -3849,38 +3877,28 @@ class MainWindow(QMainWindow):
         )
         right_col.addWidget(self._hint_lbl)
 
-        # Badge de edición — prominente y diferenciado por color
+        # Badge de edición — grande, con gradiente y shimmer animado (Plus)
         _ed = get_edition()
         if _ed == "plus":
             _ed_text = "✦  PLUS"
-            _ed_style = f"""
-                background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
-                    stop:0 #6d28d9, stop:1 #7c3aed);
-                color: #ede9fe;
-                border: 1px solid #a78bfa;
-                border-radius: 6px;
-                font-size: 10px;
-                font-weight: 900;
-                padding: 3px 10px;
-                letter-spacing: 1.5px;
-            """
+            self._badge_is_plus = True
         else:
             _ed_text = "◈  BÁSICA"
-            _ed_style = f"""
-                background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
-                    stop:0 #1e3a5f, stop:1 #1d4ed8);
-                color: #bfdbfe;
-                border: 1px solid #60a5fa;
-                border-radius: 6px;
-                font-size: 10px;
-                font-weight: 900;
-                padding: 3px 10px;
-                letter-spacing: 1.5px;
-            """
+            self._badge_is_plus = False
+
         self._edition_badge = QLabel(_ed_text)
-        self._edition_badge.setAlignment(Qt.AlignRight)
-        self._edition_badge.setStyleSheet(_ed_style)
+        self._edition_badge.setAlignment(Qt.AlignCenter)
+        self._edition_badge.setMinimumWidth(80)
+        self._edition_badge.setFixedHeight(22)
+        self._apply_badge_style(0)
         right_col.addWidget(self._edition_badge)
+
+        # Shimmer animado solo en Plus
+        self._badge_shimmer_phase = 0
+        if self._badge_is_plus:
+            self._badge_shimmer_timer = QTimer(self)
+            self._badge_shimmer_timer.timeout.connect(self._tick_badge_shimmer)
+            self._badge_shimmer_timer.start(60)
 
         support_lbl = QLabel(f"SOPORTE: {SUPPORT}")
         support_lbl.setAlignment(Qt.AlignRight)
@@ -3960,19 +3978,24 @@ class MainWindow(QMainWindow):
         self._progress_bar = GlowProgressBar()
         self._progress_bar.setRange(0, 100)
         self._progress_bar.setValue(0)
-        self._progress_bar.setTextVisible(False)
-        self._progress_bar.setFixedHeight(5)
-        self._progress_bar.setMinimumWidth(180)
+        self._progress_bar.setTextVisible(True)
+        self._progress_bar.setFormat("%p%")
+        self._progress_bar.setFixedHeight(16)
+        self._progress_bar.setMinimumWidth(100)
         self._progress_bar.setStyleSheet(f"""
             QProgressBar {{
                 background: {BG3};
                 border: none;
-                border-radius: 2px;
+                border-radius: 7px;
+                color: {TEXT};
+                font-size: 9px;
+                font-weight: 700;
+                text-align: center;
             }}
             QProgressBar::chunk {{
                 background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
                     stop:0 {ACCENT}, stop:1 {ACCENT2});
-                border-radius: 2px;
+                border-radius: 7px;
             }}
         """)
 
@@ -3999,13 +4022,22 @@ class MainWindow(QMainWindow):
     # ── Fade-in del panel de resultados ──────────────────────────────────
 
     def _fade_in_results(self):
-        eff = QGraphicsOpacityEffect(self._stack.currentWidget())
-        self._stack.currentWidget().setGraphicsEffect(eff)
+        self._fade_to_page(self._stack.currentIndex())
+
+    def _fade_to_page(self, index: int):
+        """Crossfade suave hacia la página `index` del stack."""
+        self._stack.setCurrentIndex(index)
+        w = self._stack.currentWidget()
+        if w is None:
+            return
+        eff = QGraphicsOpacityEffect(w)
+        w.setGraphicsEffect(eff)
         anim = QPropertyAnimation(eff, b"opacity", self)
-        anim.setDuration(400)
+        anim.setDuration(320)
         anim.setStartValue(0.0)
         anim.setEndValue(1.0)
         anim.setEasingCurve(QEasingCurve.OutCubic)
+        anim.finished.connect(lambda: w.setGraphicsEffect(None))
         anim.start(QPropertyAnimation.DeleteWhenStopped)
 
     # ── Carga ─────────────────────────────────────────────────────────────
@@ -4037,9 +4069,9 @@ class MainWindow(QMainWindow):
         self._set_progress(0, f"Analizando  {name}")
         self._start_dots()
 
-        # Mostrar página de análisis animada
+        # Mostrar página de análisis animada con crossfade
         self._analysis_page.start(name)
-        self._stack.setCurrentIndex(1)
+        self._fade_to_page(1)
 
         if self._worker and self._worker.isRunning():
             try:
@@ -4066,9 +4098,8 @@ class MainWindow(QMainWindow):
         self._beat_grid = grid
         self._key_res   = key_res
 
-        # Mostrar la página de resultados (índice 2) ANTES de populate()
-        self._stack.setCurrentIndex(2)
-        self._fade_in_results()
+        # Mostrar la página de resultados (índice 2) con crossfade
+        self._fade_to_page(2)
 
         self._results.populate(analysis, plan, bpm, dur,
                                self._current_file, self._cfg, key_res=key_res)
@@ -4083,8 +4114,7 @@ class MainWindow(QMainWindow):
     def _on_error(self, msg: str):
         self._stop_dots()
         self._analysis_page.stop()
-        # Volver a la DropZone para que el usuario pueda intentar de nuevo
-        self._stack.setCurrentIndex(0)
+        self._fade_to_page(0)
         # Mostrar solo la última línea del traceback para no saturar
         lines = [ln for ln in msg.strip().splitlines() if ln.strip()]
         short = lines[-1] if lines else msg
@@ -4111,7 +4141,7 @@ class MainWindow(QMainWindow):
 
     def _back_to_drop(self):
         self._analysis_page.stop()
-        self._stack.setCurrentIndex(0)
+        self._fade_to_page(0)
         self._hint_lbl.setText("Arrastra un track para comenzar")
         self._set_progress(0, "Listo — arrastra un track o pulsa Abrir archivo")
 
@@ -4530,7 +4560,7 @@ def launch(initial_file: str = ""):
     app.aboutToQuit.connect(win._cleanup_threads)
 
     splash.set_progress(100, "¡Todo listo!")
-    app.processEvents()
+    splash.repaint()
 
     _log_startup("Mostrando ventana principal...")
     splash.finish(win)

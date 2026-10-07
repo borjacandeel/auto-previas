@@ -46,9 +46,30 @@
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-07 (Sesión 31 — v2.5.1: corrección de generación de cortes musicales)
+**Fecha última actualización:** 2026-10-07 (Sesión 32 — v2.6.1: animaciones UI + corrección ventana fantasma macOS)
 **Fase activa:** Publicado en GitHub Releases con 4 instaladores (Basic/Plus × macOS/Windows)
-**Versión Actual:** **v2.5.1**
+**Versión Actual:** **v2.6.1**
+
+---
+
+### Resumen de Mejoras — Sesión 32 (2026-10-07): Versión v2.6.1 — Animaciones UI + Fix macOS
+
+#### ✨ Nuevas funcionalidades / animaciones
+
+| Componente | Archivo | Implementación |
+|------------|---------|---------------|
+| Anim. tarjetas estadísticas (pop-in) | `app.py` | `_animate_stat_cards()` — `QGraphicsOpacityEffect` + `QPropertyAnimation` 0→1 con delay escalonado de 70ms por tarjeta, 300ms OutCubic |
+| Anim. filas de tabla de cortes | `app.py` | `_animate_cuts_rows()` — filas ocultas inicialmente, reveladas con `QTimer.singleShot` cada 35ms |
+| Brillo pulsante del playhead | `waveform.py` | `_playhead_glow` (`InfiniteLine` roja ancha, alpha 30-160), `_tick_playhead_glow()` con QTimer 45ms; `set_playhead()` sincroniza ambas líneas |
+
+#### 🐛 Bug corregido
+
+| Archivo | Problema | Fix |
+|---------|----------|-----|
+| `app.py` | En macOS, `app.processEvents()` después de crear `MainWindow` inicializaba los widgets nativos de `QComboBox` antes de que la ventana fuera visible → aparecía una pequeña ventana flotante con "Vinilo (+Pitch Armónico)" | Reemplazado `processEvents()` por `splash.repaint()` para actualizar el splash sin trigger de inicialización nativa |
+
+#### 🧪 Tests
+- 30/30 tests pasados sin regresiones
 
 ---
 

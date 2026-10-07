@@ -257,7 +257,17 @@ class WaveformWidget(QWidget):
         self._plot.getPlotItem().setContentsMargins(0, 0, 0, 0)
         self._plot.getViewBox().setDefaultPadding(0)
 
-        # Línea de reproducción (playhead)
+        # Línea de reproducción (playhead) — capa de brillo pulsante
+        self._playhead_glow_alpha = 80
+        self._playhead_glow_dir   = 1
+        self._playhead_glow = pg.InfiniteLine(
+            pos=0, angle=90,
+            pen=pg.mkPen(color=(255, 30, 56, 80), width=8, style=Qt.SolidLine),
+            movable=False,
+        )
+        self._playhead_glow.setZValue(19)
+        self._plot.addItem(self._playhead_glow)
+
         self._playhead_line = pg.InfiniteLine(
             pos=0, angle=90,
             pen=pg.mkPen(color=PLAYHEAD_COLOR, width=2, style=Qt.SolidLine),
@@ -265,6 +275,12 @@ class WaveformWidget(QWidget):
         )
         self._playhead_line.setZValue(20)
         self._plot.addItem(self._playhead_line)
+
+        # Timer para el pulso del glow
+        self._glow_timer = QTimer(self)
+        self._glow_timer.setInterval(45)
+        self._glow_timer.timeout.connect(self._tick_playhead_glow)
+        self._glow_timer.start()
 
         # Clic para seek instantáneo
         self._plot.scene().sigMouseClicked.connect(self._on_click)
@@ -375,12 +391,28 @@ class WaveformWidget(QWidget):
                 self._lbl_sec_live.setText("⏳ Cargando onda de la previa…")
 
 
+    def _tick_playhead_glow(self):
+        if not HAS_PYQTGRAPH:
+            return
+        self._playhead_glow_alpha += self._playhead_glow_dir * 6
+        if self._playhead_glow_alpha >= 160:
+            self._playhead_glow_alpha = 160
+            self._playhead_glow_dir = -1
+        elif self._playhead_glow_alpha <= 30:
+            self._playhead_glow_alpha = 30
+            self._playhead_glow_dir = 1
+        self._playhead_glow.setPen(
+            pg.mkPen(color=(255, 30, 56, self._playhead_glow_alpha),
+                     width=8, style=Qt.SolidLine)
+        )
+
     def set_playhead(self, time_sec: float):
         """Mueve el cursor de reproducción y actualiza el indicador de sección."""
         if not HAS_PYQTGRAPH or self._duration <= 0:
             return
         t = max(0.0, min(float(time_sec), self._duration))
         self._playhead_line.setValue(t)
+        self._playhead_glow.setValue(t)
         self._update_current_section_badge(t)
 
     def get_boundary_times(self) -> list[float]:
@@ -507,6 +539,7 @@ class WaveformWidget(QWidget):
         self._draw_plan_highlights()
         self._draw_legend()
         self._playhead_line.setValue(0.0)
+        self._playhead_glow.setValue(0.0)
 
     def _draw_preview_view(self):
         """Dibuja la onda de la previa generada con sus secciones consecutivas."""
@@ -520,6 +553,7 @@ class WaveformWidget(QWidget):
         self._draw_preview_regions()
         self._draw_legend_preview()
         self._playhead_line.setValue(0.0)
+        self._playhead_glow.setValue(0.0)
 
     def _draw_waveform(self, color: tuple):
         if self._rms is None or not HAS_PYQTGRAPH or self._duration <= 0:
