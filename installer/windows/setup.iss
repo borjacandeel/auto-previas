@@ -10,18 +10,17 @@
 #define Edition "plus"
 #endif
 
-; Capitalizar la primera letra para el nombre visible
-#define EditionCap Edition[0] == 'b' ? "Basic" : "Plus"
-
-; AppId distinto por edición para que puedan coexistir instalados
+; Nombre visible y AppId según edición
 #if Edition == "basic"
-#define AppId "{{A1B2C3D4-0000-0000-0000-111111111111}"
+  #define EditionCap "Basic"
+  #define AppIdStr "A1B2C3D4-0000-0000-0000-111111111111"
 #else
-#define AppId "{{C789218F-A362-4C61-9E89-E8652D027F11}"
+  #define EditionCap "Plus"
+  #define AppIdStr "C789218F-A362-4C61-9E89-E8652D027F11"
 #endif
 
 [Setup]
-AppId={#AppId}
+AppId={{{#AppIdStr}}
 AppName=AutoPrevias {#EditionCap}
 AppVersion={#AppVersion}
 AppVerName=AutoPrevias {#EditionCap} {#AppVersion}
