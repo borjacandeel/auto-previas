@@ -226,50 +226,69 @@ def inject_voice_drop(
     drop_file_path: str,
     insert_time_sec: float,
     volume_db: float = -1.5,
-    ducking_db: float = -4.0,
+    ducking_db: float = -14.0,   # ~20 % del volumen original
+    fade_ramp_sec: float = 1.0,  # 1 s de bajada antes y subida después
 ) -> np.ndarray:
     """
-    Superpone una firma de voz / jingle / audio tag sobre la previa en el segundo indicado.
-    Aplica auto-ducking suave en la música de fondo durante el habla para máxima inteligibilidad.
+    Superpone una firma de voz / jingle sobre la previa en el punto indicado.
+    Curva de ducking:
+      · 1 s de rampa descendente hasta ~20 % antes de que empiece el voice drop
+      · Durante el voice drop el master queda al 20 %
+      · 1 s de rampa ascendente de vuelta al 100 % tras el voice drop
     """
     from src.engine.audio_io import load_audio_file
 
-    tag_audio, tag_sr = load_audio_file(drop_file_path, sr=sr, mono=False, dtype=np.float32)
+    tag_audio, _ = load_audio_file(drop_file_path, sr=sr, mono=False, dtype=np.float32)
     if tag_audio.ndim == 1:
         tag_audio = np.stack([tag_audio, tag_audio])
 
-    # Escalar volumen del tag
-    tag_gain = 10.0 ** (volume_db / 20.0)
+    tag_gain  = 10.0 ** (volume_db / 20.0)
     tag_audio = tag_audio * tag_gain
 
-    out = np.copy(base_audio)
+    out      = np.copy(base_audio)
+    total    = out.shape[1]
     channels = min(out.shape[0], tag_audio.shape[0])
 
-    start_idx = max(0, int(insert_time_sec * sr))
-    tag_len = tag_audio.shape[1]
-    end_idx = min(out.shape[1], start_idx + tag_len)
-
-    actual_len = end_idx - start_idx
-    if actual_len <= 0:
+    vd_start = max(0, int(insert_time_sec * sr))
+    vd_end   = min(total, vd_start + tag_audio.shape[1])
+    vd_len   = vd_end - vd_start
+    if vd_len <= 0:
         return out
 
-    # Curva de ducking sobre la música de fondo
-    duck_gain = 10.0 ** (ducking_db / 20.0)
-    fade_len = min(int(0.08 * sr), actual_len // 4)
-    envelope = np.ones(actual_len, dtype=np.float32) * duck_gain
+    duck_gain  = 10.0 ** (ducking_db / 20.0)   # ≈ 0.2 a -14 dB
+    fade_samps = int(fade_ramp_sec * sr)
 
-    if fade_len > 0:
-        fade_in = np.linspace(1.0, duck_gain, fade_len)
-        fade_out = np.linspace(duck_gain, 1.0, fade_len)
-        envelope[:fade_len] = fade_in
-        envelope[-fade_len:] = fade_out
+    # Zona de ducking extendida: [duck_start, duck_end]
+    duck_start = max(0, vd_start - fade_samps)
+    duck_end   = min(total, vd_end + fade_samps)
 
+    # Construir envolvente para toda la zona de ducking
+    env_len = duck_end - duck_start
+    envelope = np.ones(env_len, dtype=np.float32)
+
+    # Rampa de bajada: duck_start → vd_start
+    pre_len = vd_start - duck_start
+    if pre_len > 0:
+        envelope[:pre_len] = np.linspace(1.0, duck_gain, pre_len)
+
+    # Zona plana durante el voice drop
+    vd_env_start = vd_start - duck_start
+    vd_env_end   = vd_end   - duck_start
+    envelope[vd_env_start:vd_env_end] = duck_gain
+
+    # Rampa de subida: vd_end → duck_end
+    post_len = duck_end - vd_end
+    if post_len > 0:
+        envelope[vd_env_end:vd_env_end + post_len] = np.linspace(duck_gain, 1.0, post_len)
+
+    # Aplicar envolvente al master
+    for ch in range(out.shape[0]):
+        out[ch, duck_start:duck_end] *= envelope
+
+    # Mezclar el voice drop sobre el master ya duckeado
     for ch in range(channels):
-        out[ch, start_idx:end_idx] = (
-            out[ch, start_idx:end_idx] * envelope + tag_audio[ch, :actual_len]
-        )
+        out[ch, vd_start:vd_end] += tag_audio[ch, :vd_len]
 
-    # Limitar para evitar saturación
     return np.clip(out, -0.98, 0.98).astype(np.float32)
 
 

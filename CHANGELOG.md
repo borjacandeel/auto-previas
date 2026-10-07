@@ -3,6 +3,15 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.5.0] - 2026-10-07
+
+### Añadido
+- **Voice Drop con región visual y ducking profesional**: al seleccionar un archivo de voice drop, la waveform muestra ahora una región sombreada dorada que indica exactamente cuánto tiempo ocupa el audio (no solo una línea). El label también muestra la duración del archivo (ej. "✓ firma.wav · 3.2s").
+- **Ducking de 1 segundo con rampa suave**: el master baja progresivamente al 20% durante 1 segundo antes de que arranque el voice drop, se mantiene al 20% mientras suena, y sube de vuelta al 100% en 1 segundo al acabar. Sin cortes bruscos.
+
+### Cambiado
+- **Keylock eliminado**: la opción de modo Keylock se ha quitado de la interfaz. La app usa siempre modo Vinilo (+Pitch Armónico).
+
 ## [2.4.0] - 2026-10-07
 
 ### Añadido

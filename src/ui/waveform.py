@@ -140,7 +140,9 @@ class WaveformWidget(QWidget):
         self._omitted_labels   = []   # TextItem etiquetas 'FUERA DE PREVIA'
         self._boundaries       = []   # InfiniteLine transiciones en vista preview
         self._boundary_times: list[float] = []
-        self._voice_drop_line  = None  # InfiniteLine marcador posición Voice Drop
+        self._voice_drop_line   = None  # InfiniteLine marcador de inicio Voice Drop (arrastrable)
+        self._voice_drop_region = None  # LinearRegionItem región sombreada [t, t+dur]
+        self._voice_drop_dur    = 0.0   # duración del archivo de voice drop en segundos
 
         self._loader           = None
         self._preview_loader   = None
@@ -997,41 +999,69 @@ class WaveformWidget(QWidget):
         self._dragging = False
         self.boundaries_changed.emit(list(self._boundary_times))
 
-    def set_voice_drop_marker(self, t: float | None):
+    def set_voice_drop_marker(self, t: float | None, dur: float = 0.0):
         """
-        Muestra/actualiza el marcador dorado arrastrable de posición Voice Drop.
-        t=None lo oculta. El usuario puede arrastrarlo; emite voice_drop_moved(t).
+        Muestra/actualiza el marcador de posición Voice Drop en la waveform.
+        - Línea dorada discontinua arrastrable en el punto de inicio.
+        - Región sombreada [t, t+dur] si se conoce la duración del archivo.
+        t=None/t<0 lo oculta. Emite voice_drop_moved(t) al soltar el arrastre.
         """
         if not HAS_PYQTGRAPH:
             return
-        if self._voice_drop_line is not None:
-            try:
-                self._plot.removeItem(self._voice_drop_line)
-            except Exception:
-                pass
-            self._voice_drop_line = None
+
+        # Limpiar marcadores anteriores
+        for _item in (self._voice_drop_region, self._voice_drop_line):
+            if _item is not None:
+                try:
+                    self._plot.removeItem(_item)
+                except Exception:
+                    pass
+        self._voice_drop_line   = None
+        self._voice_drop_region = None
 
         if t is None or t < 0:
             return
 
+        self._voice_drop_dur = max(0.0, float(dur))
+
         from PySide6.QtCore import Qt as _Qt
+
+        # Región sombreada dorada [t, t+dur] (solo visual, no arrastrable)
+        if self._voice_drop_dur > 0.05:
+            self._voice_drop_region = pg.LinearRegionItem(
+                values=(t, t + self._voice_drop_dur),
+                brush=pg.mkBrush(255, 215, 0, 40),
+                pen=pg.mkPen(color="#FFD700", width=1),
+                movable=False,
+            )
+            self._plot.addItem(self._voice_drop_region)
+
+        # Línea arrastrable en el inicio
         pen = pg.mkPen(color="#FFD700", width=2, style=_Qt.DashLine)
+        label_text = f"🎙 Voice Drop{f'  ({self._voice_drop_dur:.1f}s)' if self._voice_drop_dur > 0.05 else ''}"
         self._voice_drop_line = pg.InfiniteLine(
             pos=t, angle=90, pen=pen, movable=True,
-            label="🎙 Voice Drop",
+            label=label_text,
             labelOpts={"position": 0.92, "color": "#FFD700",
-                       "fill": pg.mkBrush(0, 0, 0, 140), "movable": True},
+                       "fill": pg.mkBrush(0, 0, 0, 150), "movable": True},
         )
-        self._voice_drop_line.sigPositionChangeFinished.connect(
-            lambda ln: self.voice_drop_moved.emit(float(ln.value()))
-        )
+
+        # Al arrastrar: mover también la región sombreada
+        def _on_drag_finished(ln):
+            new_t = float(ln.value())
+            if self._voice_drop_region is not None:
+                self._voice_drop_region.setRegion((new_t, new_t + self._voice_drop_dur))
+            self.voice_drop_moved.emit(new_t)
+
+        self._voice_drop_line.sigPositionChangeFinished.connect(_on_drag_finished)
         self._plot.addItem(self._voice_drop_line)
 
     def _clear_all(self):
         if not HAS_PYQTGRAPH:
             return
-        # Guardar posición del marcador voice drop antes de limpiar
-        _vd_t: float | None = None
+        # Guardar posición y duración del marcador voice drop antes de limpiar
+        _vd_t:   float | None = None
+        _vd_dur: float        = self._voice_drop_dur
         if self._voice_drop_line is not None:
             try:
                 _vd_t = float(self._voice_drop_line.value())
@@ -1047,12 +1077,13 @@ class WaveformWidget(QWidget):
         self._cut_badges      = []
         self._omitted_masks   = []
         self._omitted_labels  = []
-        self._voice_drop_line = None
+        self._voice_drop_line   = None
+        self._voice_drop_region = None
         self._plot.addItem(self._playhead_line)
 
         # Restaurar marcador voice drop si había uno
         if _vd_t is not None:
-            self.set_voice_drop_marker(_vd_t)
+            self.set_voice_drop_marker(_vd_t, dur=_vd_dur)
 
     def _clear_regions_and_boundaries(self):
         for r in self._regions:

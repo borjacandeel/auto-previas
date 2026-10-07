@@ -1129,6 +1129,7 @@ class ResultPanel(QWidget):
         self._key_str          = ""
         self._voice_drop_path     = ""
         self._voice_drop_time_sec = -1.0  # -1 = usar cálculo automático
+        self._voice_drop_dur_sec  = 0.0   # duración del archivo de voice drop
         self._build_ui()
         self._apply_edition_limits()
 
@@ -1456,13 +1457,12 @@ class ResultPanel(QWidget):
         self._chk_fx_master.setChecked(True)
         self._chk_fx_master.setToolTip("Normalización y limitador analógico transparente (-9 LUFS Club / Beatport)")
 
-        # Modo DJ v2.0: Vinilo (+Pitch Armónico) vs Keylock
+        # Modo DJ: solo Vinilo (Keylock eliminado por decisión de producto)
         self._combo_speed_mode = QComboBox()
         self._combo_speed_mode.setFixedHeight(24)
         self._combo_speed_mode.setStyleSheet(_input_style())
         self._combo_speed_mode.addItem("💿 Vinilo (+Pitch Armónico)", "vinyl")
-        self._combo_speed_mode.addItem("🔒 Keylock (Tono Original)", "keylock")
-        self._combo_speed_mode.setToolTip("Modo de aceleración: Vinilo analógico (el pitch sube y baja armónicamente al acelerar) o Keylock digital (Rubber Band congela el tono)")
+        self._combo_speed_mode.setToolTip("Modo de aceleración: Vinilo analógico con spin-up/spin-down armónico")
 
         self._btn_voice_drop = QPushButton("🎙️ Voice Drop…")
         self._btn_voice_drop.setFixedHeight(22)
@@ -1486,7 +1486,7 @@ class ResultPanel(QWidget):
         row_fx.addWidget(self._chk_fx_flanger)
         row_fx.addWidget(self._chk_fx_filter)
         row_fx.addWidget(self._chk_fx_master)
-        row_fx.addWidget(self._combo_speed_mode)
+        self._combo_speed_mode.setVisible(False)  # una sola opción — ocultamos el combo
         row_fx.addSpacing(4)
         row_fx.addWidget(self._btn_voice_drop)
         row_fx.addWidget(self._combo_voice_pos)
@@ -1991,8 +1991,21 @@ class ResultPanel(QWidget):
         )
         if file:
             self._voice_drop_path = file
+            # Leer duración del archivo para mostrar región en la waveform
+            dur = 0.0
+            try:
+                import soundfile as _sf
+                dur = float(_sf.info(file).duration)
+            except Exception:
+                try:
+                    import librosa as _lr
+                    dur = float(_lr.get_duration(path=file))
+                except Exception:
+                    pass
+            self._voice_drop_dur_sec = dur
             p = Path(file)
-            self._lbl_voice_drop.setText(f"✓ {p.name[:16]}")
+            dur_str = f" · {dur:.1f}s" if dur > 0 else ""
+            self._lbl_voice_drop.setText(f"✓ {p.name[:14]}{dur_str}")
             self._btn_voice_drop.setText("🎙️ Cambiar Drop")
             self._update_voice_drop_marker()
 
@@ -2015,7 +2028,7 @@ class ResultPanel(QWidget):
                 if drops:
                     drop_t = drops[0]
             t = max(1.5, drop_t - 3.8)
-        self._waveform.set_voice_drop_marker(t)
+        self._waveform.set_voice_drop_marker(t, dur=self._voice_drop_dur_sec)
 
     def _on_voice_drop_marker_moved(self, t: float):
         """El usuario arrastró el marcador dorado → activar modo Manual y guardar posición."""
