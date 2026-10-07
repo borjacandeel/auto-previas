@@ -3,6 +3,13 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.5.1] - 2026-10-07
+
+### Corregido
+- **Cortes de previa más musicales**: el algoritmo de detección de secciones ya no descartaba las subidas (buildups) de temas donde el bombo continúa durante la subida (dance, house, hardstyle). Los cortes ahora aterrizan correctamente en el inicio de la subida o del breakdown más cercano, en lugar de en un punto aleatorio calculado con offset fijo.
+- **Detección de buildup mejorada**: se eliminó la restricción errónea que exigía ausencia de bombo para detectar una subida. También se detectan siempre los 1-2 compases justo antes del drop (redoble / corte vocal) como parte del buildup.
+- **Inicio de INTRO ajustado**: los primeros 8 compases se clasifican como INTRO (antes eran 12), evitando que buildups cortos al inicio del tema se solaparan y no se detectaran.
+
 ## [2.5.0] - 2026-10-07
 
 ### Añadido

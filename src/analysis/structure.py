@@ -490,11 +490,12 @@ def analyze_structure(y: np.ndarray, sr: int, beat_grid: BeatGrid) -> StructureA
                 sb = slope_bright[bar_idx]
                 s_r = slope_rms[bar_idx]
 
-                # Criterio de subida: tensión ascendente inequívoca
-                is_rising = (sh > 0.010 or sb > 0.010 or s_r > 0.015) and k < 0.45
-                # Pre-drop fill: los últimos 1-2 compases inmediatos antes del drop suelen tener
-                # un redoble de caja o un silencio/vocal chop de corte antes de romper
-                is_predrop_fill = (look <= 2 and k < 0.45)
+                # Criterio de subida: tensión ascendente inequívoca.
+                # No se exige kick < 0.45: en dance/house el bombo continúa durante el buildup.
+                is_rising = (sh > 0.008 or sb > 0.008 or s_r > 0.012)
+                # Pre-drop fill: los 1-2 compases justo antes del drop son siempre parte
+                # del buildup (redoble, vocal chop, silencio) independientemente del kick.
+                is_predrop_fill = (look <= 2)
 
                 if is_rising or is_predrop_fill:
                     bu_len = look
@@ -518,8 +519,9 @@ def analyze_structure(y: np.ndarray, sr: int, beat_grid: BeatGrid) -> StructureA
                 if bb >= 0 and clean_bars[bb] != SectionType.DROP:
                     clean_bars[bb] = SectionType.BUILDUP
 
-    # Asegurar que el inicio de la pista antes de cualquier drop/subida sea INTRO
-    for b in range(min(12, n_bars)):
+    # Asegurar que el inicio de la pista antes de cualquier drop/subida sea INTRO.
+    # Usar 8 compases (no 12) para no solapar con buildups cortos al inicio del tema.
+    for b in range(min(8, n_bars)):
         if clean_bars[b] not in (SectionType.DROP, SectionType.BUILDUP):
             clean_bars[b] = SectionType.INTRO
 

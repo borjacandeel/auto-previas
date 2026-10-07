@@ -102,6 +102,32 @@ def _estimated_final(raw_duration: float, stretch: float = AVG_STRETCH_FACTOR) -
     return raw_duration / stretch
 
 
+def _buildup_start(sections: list, drop_sec: "Section", bar_dur: float, max_bars: int = 8) -> float:
+    """
+    Busca hacia atrás desde drop_sec el inicio real del buildup/breakdown más próximo.
+    Si encuentra BUILDUP, devuelve su inicio exacto.
+    Si encuentra BREAKDOWN, toma los últimos N compases (no todo el breakdown, que puede ser largo).
+    Si no encuentra nada útil, cae al offset fijo de max_bars compases.
+    """
+    try:
+        idx = sections.index(drop_sec)
+    except ValueError:
+        return max(0.0, drop_sec.start_time - max_bars * bar_dur)
+
+    for i in range(idx - 1, -1, -1):
+        s = sections[i]
+        if s.type == SectionType.BUILDUP:
+            return s.start_time
+        if s.type == SectionType.BREAKDOWN:
+            # Coger los últimos max_bars compases del breakdown para no incluir demasiado
+            window = min(s.duration, max_bars * bar_dur)
+            return max(s.start_time, s.end_time - window)
+        if s.type in (SectionType.DROP, SectionType.INTRO):
+            break
+
+    return max(0.0, drop_sec.start_time - max_bars * bar_dur)
+
+
 # ---------------------------------------------------------------------------
 # Lógica de selección
 # ---------------------------------------------------------------------------
@@ -234,14 +260,13 @@ def build_preview_plan(
         prev_d1 = sections[idx_d1 - 1] if idx_d1 > 0 else None
         if prev_d1 and prev_d1.type == SectionType.BUILDUP:
             bu_s = prev_d1.start_time
-            # Si la intro antes de la subida es concisa (<= 16 compases), empezar desde el inicio (0.0s)
-            # para capturar la melodía y gancho temático de apertura completo (aprendido de PREVIA 2)
+            # Si la intro antes de la subida es concisa (<= 16 compases), empezar desde el inicio
             if bu_s <= 16.0 * bar_dur:
                 c1_start = 0.0
             else:
                 c1_start = max(0.0, bu_s - 8.0 * bar_dur)
         else:
-            c1_start = max(0.0, d1.start_time - bu_dur)
+            c1_start = _buildup_start(sections, d1, bar_dur)
 
         drop1_bars = min(int(d1.duration / bar_dur), 28)
         c1_end = d1.start_time + drop1_bars * bar_dur
@@ -251,7 +276,7 @@ def build_preview_plan(
         # (Aprendido de PREVIA 2: el clímax central debe incluir los compases melódicos del breakdown)
         idx_d2 = sections.index(d2)
         prev_d2 = sections[idx_d2 - 1] if idx_d2 > 0 else None
-        bu2_start = prev_d2.start_time if (prev_d2 and prev_d2.type == SectionType.BUILDUP) else max(c1_end + 2.0, d2.start_time - bu_dur)
+        bu2_start = prev_d2.start_time if (prev_d2 and prev_d2.type == SectionType.BUILDUP) else _buildup_start(sections, d2, bar_dur)
 
         # Buscar breakdown melódico entre el final del Corte 1 y la Subida 2
         candidate_bd = None
@@ -279,7 +304,7 @@ def build_preview_plan(
         if prev_d3 and prev_d3.type == SectionType.BUILDUP:
             c3_start = prev_d3.start_time
         else:
-            c3_start = max(c2_end + 2.0, d3.start_time - bu_dur)
+            c3_start = _buildup_start(sections, d3, bar_dur)
 
         drop3_bars = min(int(d3.duration / bar_dur), 24)
         c3_end = d3.start_time + drop3_bars * bar_dur
@@ -292,7 +317,7 @@ def build_preview_plan(
         # Corte 1: Subida 1 + Drop 1
         idx_d1 = sections.index(d1)
         prev_d1 = sections[idx_d1 - 1] if idx_d1 > 0 else None
-        c1_start = prev_d1.start_time if (prev_d1 and prev_d1.type == SectionType.BUILDUP) else max(0.0, d1.start_time - bu_dur)
+        c1_start = prev_d1.start_time if (prev_d1 and prev_d1.type == SectionType.BUILDUP) else _buildup_start(sections, d1, bar_dur)
         drop1_bars = min(int(d1.duration / bar_dur), 28)
         c1_end = d1.start_time + drop1_bars * bar_dur
         raw_cuts.append((c1_start, c1_end, d1))
@@ -301,7 +326,7 @@ def build_preview_plan(
         breakdowns = [s for s in sections if s.type == SectionType.BREAKDOWN and c1_end <= s.start_time < d2.start_time]
         idx_d2 = sections.index(d2)
         prev_d2 = sections[idx_d2 - 1] if idx_d2 > 0 else None
-        bu2_start = prev_d2.start_time if (prev_d2 and prev_d2.type == SectionType.BUILDUP) else max(c1_end, d2.start_time - bu_dur)
+        bu2_start = prev_d2.start_time if (prev_d2 and prev_d2.type == SectionType.BUILDUP) else _buildup_start(sections, d2, bar_dur)
 
         if breakdowns:
             best_bd = max(breakdowns, key=lambda b: (getattr(b, "melody_energy", 0.5), b.duration))
@@ -327,8 +352,8 @@ def build_preview_plan(
         
         idx_d1 = sections.index(d1)
         prev_d1 = sections[idx_d1 - 1] if idx_d1 > 0 else None
-        bu_s = prev_d1.start_time if (prev_d1 and prev_d1.type == SectionType.BUILDUP) else max(0.0, d1.start_time - bu_dur)
-        raw_cuts.append((max(0.0, bu_s - 16.0), d1.start_time, prev_d1 if prev_d1 else d1))
+        bu_s = prev_d1.start_time if (prev_d1 and prev_d1.type == SectionType.BUILDUP) else _buildup_start(sections, d1, bar_dur)
+        raw_cuts.append((bu_s, d1.start_time, prev_d1 if prev_d1 else d1))
 
         drop_bars = min(int(d1.duration / bar_dur), 32)
         raw_cuts.append((d1.start_time, d1.start_time + drop_bars * bar_dur, d1))
