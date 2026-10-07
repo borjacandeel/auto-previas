@@ -51,6 +51,9 @@ _DEFAULTS = {
     "tag_comment": "AutoPrevias · Radical Records Studio",
     "custom_cover_path": "",
     "save_signature_default": False,
+    # Edición del producto: "plus" (completa) o "basic" (limitada)
+    # La licencia sobreescribirá este valor al activarse.
+    "edition": "plus",
 }
 
 
@@ -357,3 +360,27 @@ def add_recent_file(file_path: str | Path, cfg: dict | None = None) -> list[str]
     cfg["recent_files"] = updated[:10]
     save(cfg)
     return cfg["recent_files"]
+
+
+# ── Edición del producto ──────────────────────────────────────────────────────
+
+def get_edition() -> str:
+    """Devuelve la edición activa: 'plus' (por defecto) o 'basic'."""
+    return load().get("edition", "plus")
+
+
+def set_edition(edition: str) -> None:
+    """Establece la edición. Llamado por el sistema de licencias al activar."""
+    if edition not in ("basic", "plus"):
+        raise ValueError(f"Edición desconocida: {edition!r}")
+    cfg = load()
+    cfg["edition"] = edition
+    save(cfg)
+
+
+def is_plus() -> bool:
+    return get_edition() == "plus"
+
+
+def is_basic() -> bool:
+    return get_edition() == "basic"

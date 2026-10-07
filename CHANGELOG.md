@@ -3,6 +3,16 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.3.0] - 2026-10-07
+
+### Añadido
+- **Sistema de ediciones: Básica y Plus**. La app ahora distingue dos modos de operación controlados por el ajuste `edition` en la configuración:
+  - *Edición PLUS* (por defecto): acceso completo a todas las funciones — exportación WAV/FLAC, vídeo para redes, Keylock, Voice Drop, editor avanzado de cortes/BPM, modo lote y vigilar carpeta.
+  - *Edición BÁSICA*: solo exportación MP3, modo Vinyl fijo, sin vídeo, sin Voice Drop, sin editor avanzado ni procesamiento en lote. Pensada para un precio de entrada más bajo.
+- **Badge de edición visible en el header** de la aplicación: etiqueta de color diferenciada (violeta "✦ PLUS" o azul "◈ BÁSICA") para que el usuario siempre sepa qué versión está usando.
+- **Launchers dedicados por edición**: cuatro nuevos scripts de inicio (`AutoPrevias_Plus.command`, `AutoPrevias_Basic.command`, `AutoPrevias_Plus.bat`, `AutoPrevias_Basic.bat`) que fuerzan la edición correspondiente con `--edition=plus` / `--edition=basic` sin necesidad de tocar la configuración manualmente.
+- **Argumento `--edition=`** en `main.py`: permite forzar la edición al arrancar desde la línea de comandos o desde los launchers. Útil para demos, pruebas y futura integración con el sistema de licencias.
+
 ## [2.2.0] - 2026-10-07
 
 ### Añadido

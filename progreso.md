@@ -52,6 +52,26 @@
 
 ---
 
+### Resumen de Mejoras — Sesión 30 (2026-10-07): Versión v2.3.0 — Sistema de Ediciones Básica/Plus
+
+#### ✨ Nuevas funcionalidades
+
+| Componente | Archivo | Implementación |
+|------------|---------|---------------|
+| Flag `edition` en config | `config.py` | `"edition": "plus"` en `_DEFAULTS`; `get_edition()`, `set_edition()`, `is_plus()`, `is_basic()` |
+| `_apply_edition_limits()` en ResultPanel | `app.py` | Oculta WAV/FLAC, vídeo, Keylock, Voice Drop y editor avanzado en edición Básica; badge azul |
+| Gate en MainWindow header | `app.py` | Oculta "Modo Lote" y "Vigilar Carpeta" en edición Básica |
+| Badge de edición en header | `app.py` | Etiqueta violeta "✦ PLUS" o azul "◈ BÁSICA" siempre visible en la esquina superior derecha |
+| Argumento `--edition=` en main.py | `main.py` | Llama `set_edition()` antes de abrir la UI; útil para launchers y sistema de licencias |
+| Launchers Básica/Plus | raíz del proyecto | `AutoPrevias_Basic.command`, `AutoPrevias_Plus.command`, `AutoPrevias_Basic.bat`, `AutoPrevias_Plus.bat` |
+
+#### ✅ Tests
+- 30/30 tests pasados (`pytest tests/ -q`)
+- Lógica de ediciones validada: `set_edition`, `get_edition`, `is_plus`, `is_basic`, ValueError en valor inválido
+- Parsing de `--edition=basic` y `--edition=plus` verificado
+
+---
+
 ### Resumen de Mejoras — Sesión 29 (2026-10-06): Versión v2.1.0 — 6 bugs corregidos
 
 #### 🔧 Bugs corregidos

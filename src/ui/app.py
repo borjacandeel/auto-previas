@@ -47,7 +47,7 @@ sys.path.insert(0, str(_ROOT))
 
 from src.config import (
     load as load_cfg, save as save_cfg, get_output_dir, get_assets_dir,
-    get_active_cover_path, save_custom_cover,
+    get_active_cover_path, save_custom_cover, get_edition,
 )
 _ASSETS_DIR = get_assets_dir()
 
@@ -1130,6 +1130,7 @@ class ResultPanel(QWidget):
         self._voice_drop_path     = ""
         self._voice_drop_time_sec = -1.0  # -1 = usar cálculo automático
         self._build_ui()
+        self._apply_edition_limits()
 
     def _build_ui(self):
         root = QVBoxLayout(self)
@@ -3119,6 +3120,60 @@ class ResultPanel(QWidget):
     def get_tempo_events(self) -> list:
         return list(self._tempo_events)
 
+    # ── Edición del producto ──────────────────────────────────────────────────
+
+    def _apply_edition_limits(self):
+        """Oculta/deshabilita features exclusivos de Plus en la edición Básica."""
+        plus = get_edition() == "plus"
+
+        # Formatos de exportación: WAV y FLAC solo en Plus
+        for w in (self._chk_wav, self._chk_flac):
+            w.setVisible(plus)
+
+        # Vídeo solo en Plus
+        self._chk_video.setVisible(plus)
+        # _row_video_widget ya empieza oculto; si básico, aseguramos que siga así
+        if not plus:
+            self._chk_video.setChecked(False)
+            self._row_video_widget.setVisible(False)
+
+        # Keylock solo en Plus (Basic usa siempre Vinyl)
+        self._combo_speed_mode.setVisible(plus)
+        if not plus:
+            idx = self._combo_speed_mode.findData("vinyl")
+            if idx >= 0:
+                self._combo_speed_mode.setCurrentIndex(idx)
+
+        # Voice Drop solo en Plus
+        for w in (self._btn_voice_drop, self._combo_voice_pos, self._lbl_voice_drop):
+            w.setVisible(plus)
+
+        # Editor avanzado de cortes/BPM solo en Plus
+        self._chk_advanced.setVisible(plus)
+        if not plus:
+            self._chk_advanced.setChecked(False)
+            self._tabs.setVisible(False)
+
+        # Badge informativo en modo Básico
+        if not plus and not hasattr(self, "_badge_basic"):
+            from PySide6.QtWidgets import QLabel
+            self._badge_basic = QLabel("  BÁSICA  ·  Actualiza a PLUS para más formatos y controles  ")
+            self._badge_basic.setAlignment(Qt.AlignCenter)
+            self._badge_basic.setStyleSheet(f"""
+                background: {ACCENT}1a;
+                color: {ACCENT};
+                border: 1px solid {ACCENT}55;
+                border-radius: 6px;
+                font-size: 10px;
+                font-weight: 700;
+                padding: 4px 10px;
+                letter-spacing: 0.4px;
+            """)
+            # Insertar bajo el check de avanzado (último widget antes de tabs)
+            lay = self.layout()
+            if lay is not None:
+                lay.insertWidget(lay.count() - 1, self._badge_basic)
+
 
 # ── Helpers de tabla ──────────────────────────────────────────────────────────
 
@@ -3421,6 +3476,11 @@ class MainWindow(QMainWindow):
         self._btn_watch.clicked.connect(self._toggle_watch_folder)
         logo_row.addWidget(self._btn_watch)
 
+        # Ocultar features de lote en edición Básica
+        _plus = get_edition() == "plus"
+        self._btn_batch_hdr.setVisible(_plus)
+        self._btn_watch.setVisible(_plus)
+
         logo_col.addLayout(logo_row)
 
         sub_lbl = QLabel("RADICAL RECORDS · HARDWARE SYNTH & PREVIEW ENGINE")
@@ -3456,6 +3516,32 @@ class MainWindow(QMainWindow):
             "background: transparent; border: none;"
         )
         right_col.addWidget(self._hint_lbl)
+
+        # Badge de edición — visible y claramente diferenciado
+        _ed = get_edition()
+        if _ed == "plus":
+            _ed_text  = "✦  PLUS"
+            _ed_bg    = "#7C3AED"   # violeta
+            _ed_fg    = "#E9D5FF"
+            _ed_bdr   = "#A855F7"
+        else:
+            _ed_text  = "◈  BÁSICA"
+            _ed_bg    = "#1E3A5F"   # azul oscuro
+            _ed_fg    = "#93C5FD"
+            _ed_bdr   = "#3B82F6"
+        self._edition_badge = QLabel(_ed_text)
+        self._edition_badge.setAlignment(Qt.AlignRight)
+        self._edition_badge.setStyleSheet(f"""
+            background: {_ed_bg};
+            color: {_ed_fg};
+            border: 1px solid {_ed_bdr};
+            border-radius: 5px;
+            font-size: 9px;
+            font-weight: 800;
+            padding: 2px 8px;
+            letter-spacing: 1px;
+        """)
+        right_col.addWidget(self._edition_badge)
 
         support_lbl = QLabel(f"SOPORTE: {SUPPORT}")
         support_lbl.setAlignment(Qt.AlignRight)

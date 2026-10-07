@@ -277,6 +277,16 @@ def main():
     if "--selftest" in sys.argv:
         sys.exit(run_selftest())
 
+    # Forzar edición vía argumento (útil para launchers y pruebas)
+    for _arg in sys.argv[1:]:
+        if _arg.startswith("--edition="):
+            _ed = _arg.split("=", 1)[1].strip().lower()
+            if _ed in ("basic", "plus"):
+                from src.config import set_edition
+                set_edition(_ed)
+                _log_startup(f"Edición forzada por argumento: {_ed}")
+            break
+
     target = ""
     for arg in sys.argv[1:]:
         if not arg.startswith("-") and Path(arg).is_file():
