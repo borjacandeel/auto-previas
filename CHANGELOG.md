@@ -3,6 +3,15 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.8.2] - 2026-10-08
+
+### Corregido
+- **WAV con firma y carátula completa**: el archivo WAV exportado ahora incrusta todos los metadatos (artista, sello, álbum, BPM, clave, carátula) igual que el MP3. Antes salía sin ninguna etiqueta.
+
+### Cambiado
+- **Edición Básica sin sección de Firma**: los campos de artista, sello, álbum y carátula quedan ocultos en la edición Básica — esta opción es exclusiva de Plus.
+- **Edición Básica sin efectos de estudio**: los efectos Flanger, Filter Sweep y Master LUFS quedan ocultos en la edición Básica — son exclusivos de Plus.
+
 ## [2.8.1] - 2026-10-08
 
 ### Cambiado

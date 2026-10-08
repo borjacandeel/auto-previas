@@ -3509,6 +3509,18 @@ class ResultPanel(QWidget):
             self._chk_advanced.setChecked(False)
             self._tabs.setVisible(False)
 
+        # FX (Flanger, Filter, Master) — solo Plus
+        for w in (self._chk_fx_flanger, self._chk_fx_filter, self._chk_fx_master):
+            w.setVisible(plus)
+        if not plus:
+            self._chk_fx_flanger.setChecked(False)
+            self._chk_fx_filter.setChecked(False)
+            self._chk_fx_master.setChecked(False)
+
+        # BrandingCard (firma + carátula) — solo Plus
+        if hasattr(self, "_branding_card"):
+            self._branding_card.setVisible(plus)
+
         # Badge informativo en modo Básico
         if not plus and not hasattr(self, "_badge_basic"):
             from PySide6.QtWidgets import QLabel

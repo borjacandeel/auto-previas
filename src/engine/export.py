@@ -462,8 +462,60 @@ def export_files(
 
     if "wav" in paths:
         _prog(96, "Exportando WAV de estudio (24-bit PCM)…")
-        wav_target = str(paths["wav"])
-        sf.write(wav_target, audio.T, sr, subtype="PCM_24")
+        import subprocess as _sp_wav, os as _os_wav
+        from src.config import get_ffmpeg_path as _get_ffmpeg_wav, get_cache_dir as _get_cache_wav
+        wav_target  = str(paths["wav"])
+        _ffmpeg_wav = _get_ffmpeg_wav()
+        _stem_wav   = Path(wav_target).stem
+        _title_wav  = meta.get("title") or _stem_wav.replace("PREVIA - ", "")
+        _wav_done   = False
+        # Escribir WAV temporal PCM_24 como fuente
+        _tmp_wav_src = str(_get_cache_wav() / f"autoprevias_wav_src_{_os_wav.getpid()}.wav")
+        sf.write(_tmp_wav_src, audio.T, sr, subtype="PCM_24")
+        if _ffmpeg_wav:
+            # Embed metadata (y carátula si existe) vía FFmpeg — WAV soporta ID3v2
+            _cmd_wav = [_ffmpeg_wav, "-y", "-i", _tmp_wav_src]
+            if optimized_cover and Path(optimized_cover).exists():
+                _cmd_wav += ["-i", str(optimized_cover),
+                             "-map", "0:a", "-map", "1:v",
+                             "-codec:a", "copy",
+                             "-codec:v", "mjpeg",
+                             "-disposition:v:0", "attached_pic"]
+            else:
+                _cmd_wav += ["-map", "0:a", "-codec:a", "copy"]
+            _cmd_wav += [
+                "-id3v2_version", "3",
+                "-metadata", f"title={_title_wav}",
+                "-metadata", f"artist={artist}",
+                "-metadata", f"album={album}",
+                "-metadata", f"publisher={label}",
+                "-metadata", f"genre={genre}",
+                "-metadata", f"comment={comment}",
+                "-metadata", f"date={year}",
+            ]
+            if bpm_val:
+                try:
+                    _cmd_wav += ["-metadata", f"TBPM={int(round(float(bpm_val)))}"]
+                except Exception:
+                    pass
+            _kv = meta.get("key") or meta.get("camelot")
+            if _kv:
+                _cmd_wav += ["-metadata", f"TKEY={_kv}"]
+            _cmd_wav.append(wav_target)
+            try:
+                _res_wav = _sp_wav.run(_cmd_wav, stdout=_sp_wav.DEVNULL, stderr=_sp_wav.DEVNULL)
+                if _res_wav.returncode == 0 and Path(wav_target).exists():
+                    _wav_done = True
+            except Exception:
+                pass
+        if not _wav_done:
+            # Fallback: copiar WAV sin metadata
+            import shutil as _shutil_wav
+            _shutil_wav.copy2(_tmp_wav_src, wav_target)
+        try:
+            Path(_tmp_wav_src).unlink(missing_ok=True)
+        except Exception:
+            pass
         generated.append(wav_target)
 
     if "mp3" in paths:
