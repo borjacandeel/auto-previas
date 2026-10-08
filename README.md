@@ -28,12 +28,13 @@
    - [Instalación en macOS (Apple Silicon arm64)](#-instalación-en-macos)
    - [Instalación en Windows (10 y 11 de 64 bits)](#-instalación-en-windows)
 3. [✨ Características Principales](#-características-principales)
-4. [🎧 Funcionamiento del Motor Acústico](#-funcionamiento-del-motor-acústico)
-5. [🏷️ Política de Versionado (SemVer) e Historial](#-política-de-versionado-semver-e-historial)
-6. [🛠️ Guía de Desarrollo y Compilación Local](#️-guía-de-desarrollo-y-compilación-local)
-7. [💻 Requisitos del Sistema](#-requisitos-del-sistema)
-8. [⚖️ Licencias y Componentes de Terceros](#️-licencias-y-componentes-de-terceros)
-9. [✉️ Soporte Técnico y Contacto](#️-soporte-técnico-y-contacto)
+4. [🔐 Sistema de Activación y Licencias](#-sistema-de-activación-y-licencias)
+5. [🎧 Funcionamiento del Motor Acústico](#-funcionamiento-del-motor-acústico)
+6. [🏷️ Política de Versionado (SemVer) e Historial](#-política-de-versionado-semver-e-historial)
+7. [🛠️ Guía de Desarrollo y Compilación Local](#️-guía-de-desarrollo-y-compilación-local)
+8. [💻 Requisitos del Sistema](#-requisitos-del-sistema)
+9. [⚖️ Licencias y Componentes de Terceros](#️-licencias-y-componentes-de-terceros)
+10. [✉️ Soporte Técnico y Contacto](#️-soporte-técnico-y-contacto)
 
 ---
 
@@ -154,6 +155,44 @@ Si Windows muestra la pantalla azul con el mensaje *"Windows protegió su PC"* d
 
 ---
 
+## 🔐 Sistema de Activación y Licencias
+
+AutoPrevias se distribuye en dos ediciones (**Basic** y **Plus**), protegidas por un sistema de activación por clave. Cada instalador lleva la edición horneada en el binario desde la compilación — no hay forma de cambiar de una a otra sin el instalador correcto.
+
+### ¿Cómo activar tu licencia?
+
+1. Compra tu licencia en **[payhip.com/RADICALRECVLC](https://payhip.com/RADICALRECVLC)** (Basic o Plus).
+2. Recibirás tu **clave única** al instante por correo electrónico.
+3. Al abrir AutoPrevias por primera vez, aparecerá la **pantalla de activación**.
+4. Introduce la clave y pulsa **Activar licencia** — la app se conecta a los servidores de verificación de forma segura y desbloquea la edición correspondiente en segundos.
+5. A partir de ese momento la app arranca directamente sin pedir la clave de nuevo.
+
+### Funcionamiento tras la activación
+
+| Situación | Comportamiento |
+| :--- | :--- |
+| **Con conexión a Internet** | La licencia se reverifica silenciosamente cada **7 días** en segundo plano, sin interrumpir el trabajo. |
+| **Sin conexión a Internet** | La app sigue funcionando con normalidad hasta **14 días** desde la última verificación exitosa (período de gracia). |
+| **Gracia expirada** | La pantalla de activación vuelve a aparecer para introducir la clave o renovar la licencia. |
+
+### Diferencias entre ediciones
+
+| Función | Basic | Plus |
+| :--- | :---: | :---: |
+| Exportación MP3 320k con metadatos | ✅ | ✅ |
+| Análisis automático de BPM y clave | ✅ | ✅ |
+| Procesamiento por lote (Batch) | ✅ | ✅ |
+| Historial recientes y carpeta vigilada | ✅ | ✅ |
+| Exportación WAV 24-bit | ❌ | ✅ |
+| Exportación FLAC y AIFF | ❌ | ✅ |
+| Vídeo social MP4 (TikTok / Reels) | ❌ | ✅ |
+| Firma vocal / Voice Drop | ❌ | ✅ |
+| Sección de Firma y Carátula (Branding) | ❌ | ✅ |
+| Efectos de estudio (Flanger, Filter Sweep, Master LUFS) | ❌ | ✅ |
+| Corrección manual de BPM | ❌ | ✅ |
+
+---
+
 ## 🎧 Funcionamiento del Motor Acústico
 
 El pipeline de procesamiento de AutoPrevias consta de 5 fases estructuradas:
@@ -196,6 +235,129 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 ---
 
 ### 📈 Registro Oficial de Versiones y Parches
+
+---
+
+#### 🔒 [v2.9.1] — 2026-10-08 (Pantalla de activación con identidad visual oficial y enlace directo de compra)
+- **Diálogo de activación rediseñado**: colores rojos corporativos, logo oficial de AutoPrevias (72×72 px) y campo de clave con fuente monoespaciada para mayor legibilidad.
+- **Enlace de compra contextual**: el botón "Obtener licencia" abre directamente la tienda `payhip.com/RADICALRECVLC`.
+- **Reverificación cada 7 días** con período de gracia de 14 días sin conexión.
+
+---
+
+#### 🆕 [v2.9.0] — 2026-10-08 (Sistema completo de licencias Basic/Plus con verificación segura y activación por clave)
+- **Sistema de licencias completo**: al arrancar la app en versión compilada se verifica la licencia contra los servidores de Payhip a través de un proxy seguro. Si no hay licencia activa aparece la pantalla de activación donde el usuario introduce su clave de compra. Las claves de Basic y Plus desbloquean cada edición automáticamente.
+- **Período de gracia de 14 días**: la app funciona sin conexión hasta 14 días desde la última verificación exitosa.
+- **Verificación en segundo plano cada 7 días**: completamente silenciosa, sin interrumpir el trabajo.
+
+---
+
+#### 🟢 [v2.8.2] — 2026-10-08 (WAV con firma y carátula completa; secciones exclusivas ocultas en Basic)
+- **WAV exportado con metadatos y carátula completos**: igual que el MP3, el archivo WAV ahora incluye artista, sello, álbum, BPM, clave y carátula incrustada. Antes salía completamente sin etiquetas.
+- **Edición Básica sin sección de Firma**: los campos de artista, sello, álbum y carátula quedan ocultos en Basic — exclusivos de Plus.
+- **Edición Básica sin efectos de estudio**: Flanger, Filter Sweep y Master LUFS ocultos en Basic — exclusivos de Plus.
+
+---
+
+#### 🟢 [v2.8.1] — 2026-10-08 (Auto-update simplificado: consulta directa a la API pública de GitHub)
+- **Comprobador de versiones simplificado**: consulta directamente la API pública de GitHub, eliminando la necesidad del proxy Cloudflare. Requiere repositorio público (ya lo es).
+
+---
+
+#### 🚀 [v2.8.0] — 2026-10-08 (Corrección manual de BPM, notificaciones nativas, informe de lote, auto-update y log de fallos)
+- **Corrección manual de BPM**: doble clic sobre la tarjeta de BPM para introducir el valor real. El motor usa el BPM corregido sin necesidad de reanalizar.
+- **Notificaciones nativas del sistema operativo**: al terminar una exportación (individual o lote), el SO muestra una notificación emergente con el nombre del archivo. Funciona en macOS y Windows.
+- **Informe de lote exportado automáticamente**: al completar el modo Lote, se genera `autoprevias_lote_YYYYMMDD_HHMMSS.txt` con el resumen de archivos producidos.
+- **Sistema de actualizaciones automáticas**: al arrancar, la app comprueba si hay versión nueva. Si hay actualización, aparece un banner discreto con enlace directo a la descarga.
+- **Registro de fallos con rotación**: los errores no capturados se guardan en `~/Library/Logs/AutoPrevias/crashes.log` (macOS) o `%LOCALAPPDATA%\AutoPrevias\logs\crashes.log` (Windows), máx. 3 ficheros de 512 KB.
+
+---
+
+#### 🚀 [v2.7.0] — 2026-10-08 (FLAC/AIFF con firma completa, batch con firma, FX recordados, 8 correcciones de bugs)
+- **FLAC y AIFF con firma y carátula completas**: todos los metadatos y portada incrustados, igual que el MP3. Antes salían completamente sin etiquetas.
+- **Procesamiento por lote con firma**: los temas del modo Lote usan el artista, sello, álbum y género guardados en la sección de Firma.
+- **FX recordados entre sesiones**: Flanger, Filter Sweep y Master LUFS se guardan y restauran automáticamente.
+- **Firma y carátula no se recordaban entre sesiones**: corregido — artista, sello, álbum y género ahora persisten al cerrar la app.
+- **Carpeta de destino incorrecta en Basic**: la tarjeta de éxito mostraba una ruta de caché interna en vez de la carpeta real del usuario.
+- **Archivo temporal aparecía en el listado de exportación**: `autoprevias_temp_XXX.wav` ya no aparece junto a los archivos reales.
+- **Basic exportaba WAV oculto sin metadatos**: el checkbox WAV estaba oculto pero activo; ahora Basic solo exporta MP3.
+- **Año del copyright hardcodeado a 2026**: ahora se usa el año real del sistema, evitando metadatos incorrectos en 2027+.
+- **Carpeta vigilada detectaba el mismo archivo dos veces en macOS**: corregido el filtrado de extensiones en sistemas de archivos sin distinción de mayúsculas.
+- **Timer del playhead no se detenía al cerrar**: el timer de 45 ms ya se detiene correctamente al destruir el widget.
+- **Guardado de configuración atómico**: escribe primero a un archivo temporal y luego reemplaza, evitando JSON corrupto si la app se cierra a mitad de escritura.
+
+---
+
+#### 🟢 [v2.6.2] — 2026-10-07 (Fix definitivo ventana fantasma "Vinilo" en macOS y correcciones de arranque en Basic)
+- **Ventana fantasma de "Vinilo" eliminada definitivamente**: la causa raíz era `QSplashScreen.finish()` inicializando handles nativos antes de que la ventana principal fuera visible. Ahora la ventana se muestra primero (`win.show()`) y el splash se cierra 80 ms después mediante timer, evitando cualquier inicialización prematura de controles nativos.
+- **Email de soporte tapado por el badge de edición**: header ampliado de 58 px a 72 px para que todos los elementos (logo, estado, badge, email) quepan sin solaparse.
+- **Edición Básica no arrancaba correctamente**: el splash no se cerraba debido al orden previo de `win.show()` + `splash.finish()`. Resuelto con el nuevo patrón con timer.
+
+---
+
+#### 🟢 [v2.6.1] — 2026-10-07 (Animaciones de UI: tarjetas de estadísticas, filas de tabla y brillo pulsante en playhead)
+- **Animación de tarjetas de estadísticas**: las 6 tarjetas (BPM, clave, drops, etc.) aparecen con fundido escalonado al cargar un tema.
+- **Filas de tabla de cortes animadas**: cada fila aparece de forma escalonada de arriba abajo al regenerar los cortes.
+- **Brillo pulsante en el playhead**: la línea roja del reproductor pulsa sutilmente mientras hay audio cargado.
+- **Ventana fantasma de "Vinilo" en macOS (primer fix)**: eliminado el `processEvents()` que inicializaba controles nativos prematuramente.
+
+---
+
+#### 🚀 [v2.6.0] — 2026-10-07 (Splash Screen animado, pantalla de análisis animada, botón "← Nuevo track" siempre visible, cache de hardware)
+- **Splash Screen animado al arranque**: logo de Radical Records con barra de progreso y mensajes de estado mientras carga el motor de audio.
+- **Pantalla de análisis animada**: al cargar un archivo se muestra el logo RR pulsando con barra de progreso en tiempo real.
+- **Botón "← Nuevo track" siempre visible** en la barra de presets del panel de resultados, sin necesidad de desplazarse.
+- **Cache de hardware**: los specs del PC (CPU, cores, RAM, plataforma) se guardan en `hw_cache.json` en el primer inicio.
+- **Badge de edición Plus/Básica mejorado**: gradiente de color, tipografía más grande y padding ampliado.
+- **Badge "PRO STUDIO" con versión real**: muestra la versión instalada actual en lugar de un número fijo.
+
+---
+
+#### 🟢 [v2.5.1] — 2026-10-07 (Cortes más musicales: buildups detectados correctamente en todos los géneros)
+- **Cortes de previa más musicales**: el algoritmo ya no descartaba buildups de temas donde el bombo continúa durante la subida (dance, house, hardstyle). Los cortes ahora aterrizan correctamente en el inicio de la subida o breakdown más cercano.
+- **Detección de buildup mejorada**: eliminada la restricción errónea que exigía ausencia de bombo para detectar una subida. Los 1-2 compases antes del drop (redoble / corte vocal) siempre se incluyen como buildup.
+- **Inicio de INTRO ajustado**: los primeros 8 compases se clasifican como INTRO (antes 12), evitando solapamiento con buildups cortos al inicio.
+
+---
+
+#### 🚀 [v2.5.0] — 2026-10-07 (Voice Drop con región visual dorada y ducking profesional 1s/20%; Keylock eliminado)
+- **Voice Drop con región visual**: la waveform muestra una región sombreada dorada que indica exactamente cuánto dura el voice drop (no solo una línea). El label muestra también la duración del archivo.
+- **Ducking profesional de 1 segundo a 20%**: el master baja progresivamente al 20% antes del voice drop, se mantiene durante él y sube de vuelta al 100% con rampa suave. Sin cortes bruscos.
+- **Keylock eliminado**: la app usa siempre modo Vinilo (+Pitch Armónico). La opción se ha retirado de la interfaz.
+
+---
+
+#### 🚀 [v2.4.0] — 2026-10-07 (4 instaladores por release: Basic/Plus × macOS/Windows; edición horneada en compilación)
+- **4 instaladores compilados por release**: Basic macOS, Basic Windows, Plus macOS, Plus Windows. La edición queda horneada en el binario en tiempo de compilación mediante `src/_edition.py` generado por el CI — el usuario no puede cambiar de edición editando archivos.
+- **`BAKED_EDITION` autoritativo**: si el módulo `src._edition` existe (build compilado), su valor no puede ser sobreescrito por el JSON de configuración.
+- **Inno Setup actualizado**: acepta `/DEdition=basic|plus`, genera `AppId`, `DefaultDirName` y nombre del instalador distintos por edición, permitiendo que Basic y Plus coexistan instalados en el mismo PC sin conflicto.
+
+---
+
+#### 🚀 [v2.3.0] — 2026-10-07 (Sistema de ediciones Basic/Plus con badge de color, launchers dedicados y argumento --edition)
+- **Edición PLUS**: acceso completo — exportación WAV/FLAC/AIFF/Vídeo, Voice Drop, editor avanzado de cortes/BPM, modo lote y vigilar carpeta.
+- **Edición BÁSICA**: solo MP3, modo Vinyl fijo, sin vídeo, sin Voice Drop, sin editor avanzado ni lote. Pensada para precio de entrada.
+- **Badge de edición en el header**: etiqueta de color diferenciada ("✦ PLUS" o "◈ BÁSICA") siempre visible.
+- **4 launchers dedicados**: `AutoPrevias_Plus.command`, `AutoPrevias_Basic.command`, `AutoPrevias_Plus.bat`, `AutoPrevias_Basic.bat`.
+- **Argumento `--edition=`** en `main.py` para forzar la edición desde línea de comandos.
+
+---
+
+#### 🟢 [v2.2.0] — 2026-10-07 (Botón "Generar otra previa" en la tarjeta de éxito)
+- **Botón "Generar otra previa"**: tras exportar, un botón rojo abre directamente un selector de archivos para cargar un nuevo track y generar su previa sin reiniciar la app. El análisis se lanza automáticamente.
+
+---
+
+#### 🟢 [v2.1.0] — 2026-10-06 (7 correcciones de bugs críticos: Keylock, vídeo, carátula, tempo, voice drop y persistencia)
+- **Keylock corregido**: el factor de time-stretch estaba invertido (`1/rate`), haciendo la previa más lenta. Corregido para que el tempo aumente correctamente.
+- **Keylock incluye spin-up/spin-down**: los primeros y últimos segundos usan varispeed vinilo mientras el cuerpo central mantiene el tono bloqueado.
+- **Vídeo en 1:1 corregido**: el `aspect_ratio` no se incluía en el diccionario de metadatos — vídeo siempre exportaba en 9:16 aunque se seleccionara 1:1.
+- **Tempo máximo reducido a 3%**: el valor por defecto era 15%, causando variaciones de hasta ~19 BPM. Ahora el rango es sutil y profesional.
+- **Carátula guardada no se cargaba**: corregido el orden de prioridad (carátula guardada → carátula embebida → logo oficial).
+- **Preferencias de exportación no persistían**: modo de velocidad, paleta de vídeo y ratio de aspecto ahora se guardan junto a la firma/carátula.
+- **Voice Drop con marcador visual arrastrable**: línea dorada discontinua en la waveform que el usuario puede arrastrar para elegir la posición exacta (modo "Manual") o usar Pre-Drop/Intro automáticos.
+
+---
 
 #### 🌟 [v2.0.0] — 2026-10-06 (BIG UPDATE: Modo DJ Vinyl vs Keylock, Voice Drop con Auto-Ducking, Plantilla de Vídeo Hiper-Pro con Paletas Neón y Barra TikTok, Extracción Automática de Carátulas, Historial Recientes y Carpeta Vigilada)
 - **Modo DJ Vinyl Speedup vs Keylock Digital (Apartado 1: 1):**
