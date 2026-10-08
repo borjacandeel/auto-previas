@@ -3,6 +3,11 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.8.1] - 2026-10-08
+
+### Cambiado
+- **Auto-update simplificado**: el comprobador de versiones ahora consulta directamente la API pública de GitHub, eliminando la necesidad del proxy Cloudflare Worker. Requiere que el repositorio sea público (ya lo es).
+
 ## [2.8.0] - 2026-10-08
 
 ### Añadido
