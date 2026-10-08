@@ -1320,15 +1320,17 @@ class BrandingCard(QFrame):
         return self._drop_area.get_cover_path()
 
     def persist_if_requested(self):
-        if self._chk_remember.isChecked():
-            c = load_cfg()
-            c["tag_artist"]  = self._edit_artist.text().strip()
-            c["tag_label"]   = self._edit_label.text().strip()
-            c["tag_album"]   = self._edit_album.text().strip()
-            c["tag_genre"]   = self._edit_genre.text().strip()
-            c["tag_comment"] = self._edit_comment.text().strip()
-            c["save_signature_default"] = True
+        c = load_cfg()
+        # Los campos de texto siempre se guardan al generar (para no perderse entre sesiones)
+        c["tag_artist"]  = self._edit_artist.text().strip()
+        c["tag_label"]   = self._edit_label.text().strip()
+        c["tag_album"]   = self._edit_album.text().strip()
+        c["tag_genre"]   = self._edit_genre.text().strip()
+        c["tag_comment"] = self._edit_comment.text().strip()
 
+        # La carátula personalizada y el flag "por defecto" solo se guardan si el usuario marcó "Recordar"
+        if self._chk_remember.isChecked():
+            c["save_signature_default"] = True
             cover_p = self._drop_area.get_cover_path()
             if cover_p:
                 saved_cover = save_custom_cover(cover_p)
@@ -1336,16 +1338,22 @@ class BrandingCard(QFrame):
             else:
                 c["custom_cover_path"] = ""
 
-            # Persistir también las preferencias de exportación del ResultPanel padre
-            parent = self.parent()
-            while parent is not None and not hasattr(parent, "_combo_speed_mode"):
-                parent = parent.parent() if hasattr(parent, "parent") else None
-            if parent and hasattr(parent, "_combo_speed_mode"):
-                c["speed_mode"]    = parent._combo_speed_mode.currentData()
+        # Persistir también las preferencias de exportación del ResultPanel padre
+        parent = self.parent()
+        while parent is not None and not hasattr(parent, "_speed_mode"):
+            parent = parent.parent() if hasattr(parent, "parent") else None
+        if parent and hasattr(parent, "_speed_mode"):
+            c["speed_mode"]    = parent._speed_mode
+            if hasattr(parent, "_combo_video_pal"):
                 c["video_palette"] = parent._combo_video_pal.currentData()
+            if hasattr(parent, "_combo_aspect"):
                 c["aspect_ratio"]  = parent._combo_aspect.currentData()
+            if hasattr(parent, "_chk_fx_flanger"):
+                c["fx_flanger"]      = parent._chk_fx_flanger.isChecked()
+                c["fx_filter_sweep"] = parent._chk_fx_filter.isChecked()
+                c["studio_mastering"] = parent._chk_fx_master.isChecked()
 
-            save_cfg(c)
+        save_cfg(c)
 
 
 # ── Panel de resultados ───────────────────────────────────────────────────────
@@ -1733,11 +1741,10 @@ class ResultPanel(QWidget):
         self._chk_fx_master.setToolTip("Normalización y limitador analógico transparente (-9 LUFS Club / Beatport)")
 
         # Modo DJ: solo Vinilo (Keylock eliminado por decisión de producto)
-        self._combo_speed_mode = QComboBox()
-        self._combo_speed_mode.setFixedHeight(24)
-        self._combo_speed_mode.setStyleSheet(_input_style())
-        self._combo_speed_mode.addItem("💿 Vinilo (+Pitch Armónico)", "vinyl")
-        self._combo_speed_mode.setToolTip("Modo de aceleración: Vinilo analógico con spin-up/spin-down armónico")
+        # Modo siempre Vinilo (+Pitch Armónico) — keylock eliminado, un único modo posible.
+        # No se usa QComboBox para evitar que macOS muestre una ventana flotante al inicializar
+        # el widget nativo NSPopUpButton antes de que la ventana principal sea visible.
+        self._speed_mode = "vinyl"
 
         self._btn_voice_drop = QPushButton("🎙️ Voice Drop…")
         self._btn_voice_drop.setFixedHeight(22)
@@ -1761,7 +1768,6 @@ class ResultPanel(QWidget):
         row_fx.addWidget(self._chk_fx_flanger)
         row_fx.addWidget(self._chk_fx_filter)
         row_fx.addWidget(self._chk_fx_master)
-        self._combo_speed_mode.setVisible(False)  # una sola opción — ocultamos el combo
         row_fx.addSpacing(4)
         row_fx.addWidget(self._btn_voice_drop)
         row_fx.addWidget(self._combo_voice_pos)
@@ -2163,18 +2169,17 @@ class ResultPanel(QWidget):
 
         self._out_path = str(get_output_dir(file_path, cfg))
         self._lbl_folder_path.setText(short_path(self._out_path))
-        self._chk_wav.setChecked(cfg.get("export_wav", True))
+        from src.config import get_edition as _get_ed
+        if _get_ed() == "plus":
+            self._chk_wav.setChecked(cfg.get("export_wav", True))
         self._chk_mp3.setChecked(cfg.get("export_mp3", True))
         if hasattr(self, "_branding_card"):
             self._branding_card.load_from_cfg(cfg)
 
-        # Restaurar preferencias guardadas (speed_mode, palette, aspect_ratio)
+        # Restaurar preferencias guardadas (speed_mode, palette, aspect_ratio, fx)
         persisted_cfg = load_cfg()
-        if hasattr(self, "_combo_speed_mode") and persisted_cfg.get("speed_mode"):
-            for i in range(self._combo_speed_mode.count()):
-                if self._combo_speed_mode.itemData(i) == persisted_cfg["speed_mode"]:
-                    self._combo_speed_mode.setCurrentIndex(i)
-                    break
+        if persisted_cfg.get("speed_mode"):
+            self._speed_mode = persisted_cfg["speed_mode"]
         if hasattr(self, "_combo_video_pal") and persisted_cfg.get("video_palette"):
             for i in range(self._combo_video_pal.count()):
                 if self._combo_video_pal.itemData(i) == persisted_cfg["video_palette"]:
@@ -2185,6 +2190,13 @@ class ResultPanel(QWidget):
                 if self._combo_aspect.itemData(i) == persisted_cfg["aspect_ratio"]:
                     self._combo_aspect.setCurrentIndex(i)
                     break
+        # Restaurar estado de FX (los tres checkboxes se persisten entre sesiones)
+        if "fx_flanger" in persisted_cfg:
+            self._chk_fx_flanger.setChecked(persisted_cfg["fx_flanger"])
+        if "fx_filter_sweep" in persisted_cfg:
+            self._chk_fx_filter.setChecked(persisted_cfg["fx_filter_sweep"])
+        if "studio_mastering" in persisted_cfg:
+            self._chk_fx_master.setChecked(persisted_cfg["studio_mastering"])
 
         default_name = preview_filename(file_path)
         self._edit_name.setText(default_name)
@@ -2335,7 +2347,7 @@ class ResultPanel(QWidget):
                     break
 
     def get_export_options(self) -> dict:
-        speed_mode = self._combo_speed_mode.currentData() if hasattr(self, "_combo_speed_mode") else "vinyl"
+        speed_mode = getattr(self, "_speed_mode", "vinyl")
         video_pal = self._combo_video_pal.currentData() if hasattr(self, "_combo_video_pal") else "radical"
         promo_txt = self._edit_promo.text().strip() if hasattr(self, "_edit_promo") else ""
         aspect = self._combo_aspect.currentData() if hasattr(self, "_combo_aspect") else "9:16"
@@ -2386,8 +2398,11 @@ class ResultPanel(QWidget):
 
         # Mostrar tarjeta de confirmación con los archivos y la carpeta exacta
         if generated:
-            out_dir = str(Path(generated[0]).parent)
-            file_names = [Path(p).name for p in generated]
+            # Excluir temp WAVs internos del nombre de archivo y cálculo de carpeta
+            user_files = [p for p in generated if not Path(p).name.startswith("autoprevias_temp_")]
+            display_files = user_files if user_files else generated
+            out_dir = str(Path(display_files[0]).parent)
+            file_names = [Path(p).name for p in display_files]
             has_vid = any(p.lower().endswith(".mp4") for p in generated)
 
             title_text = "🎉 ¡Previa y Vídeo Social exportados con éxito!" if has_vid else "✅ ¡Previa de audio exportada con éxito!"
@@ -2396,8 +2411,9 @@ class ResultPanel(QWidget):
             self._lbl_succ_dir.setText(f"📁 Carpeta de guardado:\n{out_dir}")
             self._card_export_success.setVisible(True)
 
-            # Priorizar archivo WAV sin comprimir para evitar retrasos de búsqueda y advertencias [mp3float]
-            prev_file = next((p for p in generated if p.lower().endswith(".wav")), generated[0])
+            # Priorizar WAV de usuario (no temp) para el reproductor interno
+            prev_file = next((p for p in generated if p.lower().endswith(".wav") and not Path(p).name.startswith("autoprevias_temp_")),
+                             next((p for p in generated if p.lower().endswith(".wav")), generated[0]))
             if HAS_WAVEFORM and self._plan:
                 self._waveform.load_preview(prev_file, self._plan.segments)
             if self._player:
@@ -3444,6 +3460,8 @@ class ResultPanel(QWidget):
         # Formatos de exportación: WAV y FLAC solo en Plus
         for w in (self._chk_wav, self._chk_flac):
             w.setVisible(plus)
+        if not plus:
+            self._chk_wav.setChecked(False)
 
         # Vídeo solo en Plus
         self._chk_video.setVisible(plus)
@@ -3452,12 +3470,7 @@ class ResultPanel(QWidget):
             self._chk_video.setChecked(False)
             self._row_video_widget.setVisible(False)
 
-        # Keylock solo en Plus (Basic usa siempre Vinyl)
-        self._combo_speed_mode.setVisible(plus)
-        if not plus:
-            idx = self._combo_speed_mode.findData("vinyl")
-            if idx >= 0:
-                self._combo_speed_mode.setCurrentIndex(idx)
+        # Siempre modo Vinyl — _speed_mode ya es "vinyl", sin combo que gestionar.
 
         # Voice Drop solo en Plus
         for w in (self._btn_voice_drop, self._combo_voice_pos, self._lbl_voice_drop):
@@ -4241,8 +4254,10 @@ class MainWindow(QMainWindow):
         self._stop_dots()
         self._results.on_export_done(generated, seed)
         if generated:
-            names = ", ".join(Path(p).name for p in generated)
-            folder = str(Path(generated[0]).parent)
+            user_files = [p for p in generated if not Path(p).name.startswith("autoprevias_temp_")]
+            display = user_files if user_files else generated
+            names = ", ".join(Path(p).name for p in display)
+            folder = str(Path(display[0]).parent)
             self._set_progress(100,
                 f"✅  Guardado en: {folder}  ·  ({names})"
             )
@@ -4405,25 +4420,19 @@ class MainWindow(QMainWindow):
             return
 
         new_files = []
-        for ext in AUDIO_EXTS:
-            for f in p_dir.glob(f"*{ext}"):
-                rf = str(f.resolve())
-                if rf not in self._watched_processed:
-                    try:
-                        sz1 = f.stat().st_size
-                        if sz1 > 10000:
-                            new_files.append(f)
-                    except Exception:
-                        pass
-            for f in p_dir.glob(f"*{ext.upper()}"):
-                rf = str(f.resolve())
-                if rf not in self._watched_processed:
-                    try:
-                        sz1 = f.stat().st_size
-                        if sz1 > 10000:
-                            new_files.append(f)
-                    except Exception:
-                        pass
+        _seen_in_scan = set()
+        for f in p_dir.glob("*"):
+            if f.suffix.lower() not in AUDIO_EXTS:
+                continue
+            rf = str(f.resolve())
+            if rf in self._watched_processed or rf in _seen_in_scan:
+                continue
+            _seen_in_scan.add(rf)
+            try:
+                if f.stat().st_size > 10000:
+                    new_files.append(f)
+            except Exception:
+                pass
 
         if new_files:
             target = new_files[0]

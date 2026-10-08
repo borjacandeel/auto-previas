@@ -54,6 +54,15 @@ _DEFAULTS = {
     # Edición del producto: "plus" (completa) o "basic" (limitada)
     # La licencia sobreescribirá este valor al activarse.
     "edition": "plus",
+    # Formatos de exportación adicionales
+    "export_flac": False,
+    "export_aiff": False,
+    "export_video": False,
+    "aspect_ratio": "9:16",
+    # FX checkboxes
+    "fx_flanger": False,
+    "fx_filter_sweep": False,
+    "studio_mastering": True,
 }
 
 
@@ -203,18 +212,30 @@ def load() -> dict:
             for k, v in _DEFAULTS.items():
                 data.setdefault(k, v)
             return data
-        except Exception:
-            pass
+        except Exception as e:
+            # JSON corrupto: hacer backup antes de devolver defaults
+            print(f"Advertencia: config corrupta ({e}), usando valores por defecto.")
+            try:
+                backup = cfg_file.with_suffix(".bak")
+                shutil.copy2(str(cfg_file), str(backup))
+            except Exception:
+                pass
     return dict(_DEFAULTS)
 
 
 def save(cfg: dict) -> None:
     cfg_file = get_config_path()
+    tmp_file = cfg_file.with_suffix(".tmp")
     try:
-        with open(cfg_file, "w", encoding="utf-8") as f:
+        with open(tmp_file, "w", encoding="utf-8") as f:
             json.dump(cfg, f, indent=2, ensure_ascii=False)
+        tmp_file.replace(cfg_file)  # operación atómica en la mayoría de sistemas
     except Exception as e:
         print(f"Advertencia: No se pudo guardar configuración en {cfg_file}: {e}")
+        try:
+            tmp_file.unlink(missing_ok=True)
+        except Exception:
+            pass
 
 
 def get_output_dir(source_file: str | Path, cfg: dict | None = None) -> Path:

@@ -453,7 +453,8 @@ def export_files(
     label   = meta.get("label") or "Radical Records"
     genre   = meta.get("genre") or "Electronic"
     comment = meta.get("comment") or "AutoPrevias · Radical Records Studio"
-    year    = str(meta.get("year") or "2026")
+    import datetime as _dt
+    year    = str(meta.get("year") or _dt.datetime.now().year)
     bpm_val = meta.get("bpm")
 
     # Preparar carátula optimizada
@@ -568,17 +569,83 @@ def export_files(
             except Exception as e:
                 _prog(98, f"⚠ MP3 no disponible: {e}")
 
-    if "flac" in paths:
-        _prog(98, "Exportando FLAC Lossless…")
-        flac_target = str(paths["flac"])
-        sf.write(flac_target, audio.T, sr, format="FLAC")
-        generated.append(flac_target)
+    if "flac" in paths or "aiff" in paths:
+        import subprocess as _sp, os as _os
+        from src.config import get_ffmpeg_path as _get_ffmpeg, get_cache_dir as _get_cache
+        _ffmpeg = _get_ffmpeg()
 
-    if "aiff" in paths:
-        _prog(98, "Exportando AIFF 24-bit…")
-        aiff_target = str(paths["aiff"])
-        sf.write(aiff_target, audio.T, sr, format="AIFF", subtype="PCM_24")
-        generated.append(aiff_target)
+        # Fuente WAV reutilizable para FLAC/AIFF (evita re-escribir si ya existe)
+        _flac_src = (str(paths["wav"]) if "wav" in paths and Path(paths["wav"]).exists() else None) or temp_wav_for_mp3
+        if not _flac_src:
+            _flac_src = str(_get_cache() / f"autoprevias_lossless_{_os.getpid()}.wav")
+            sf.write(_flac_src, audio.T, sr, subtype="PCM_16")
+
+        def _meta_flags():
+            flags = [
+                "-metadata", f"title={meta.get('title') or Path(list(paths.values())[0]).stem}",
+                "-metadata", f"artist={artist}",
+                "-metadata", f"album={album}",
+                "-metadata", f"publisher={label}",
+                "-metadata", f"genre={genre}",
+                "-metadata", f"comment={comment}",
+                "-metadata", f"date={year}",
+            ]
+            if bpm_val:
+                try:
+                    flags += ["-metadata", f"TBPM={int(round(float(bpm_val)))}"]
+                except Exception:
+                    pass
+            key_val = meta.get("key") or meta.get("camelot")
+            if key_val:
+                flags += ["-metadata", f"TKEY={key_val}"]
+            return flags
+
+        if "flac" in paths:
+            _prog(98, "Exportando FLAC Lossless con firma y metadatos…")
+            flac_target = str(paths["flac"])
+            flac_done = False
+            if _ffmpeg and _flac_src and Path(_flac_src).exists():
+                try:
+                    cmd_flac = [_ffmpeg, "-y", "-i", _flac_src,
+                                "-c:a", "flac", "-compression_level", "8"]
+                    cmd_flac += _meta_flags()
+                    # Carátula en FLAC via stream de imagen
+                    if optimized_cover and Path(optimized_cover).exists():
+                        cmd_flac = [_ffmpeg, "-y", "-i", _flac_src, "-i", str(optimized_cover),
+                                    "-map", "0:a", "-map", "1:v",
+                                    "-c:a", "flac", "-compression_level", "8",
+                                    "-c:v", "copy", "-disposition:v:0", "attached_pic"]
+                        cmd_flac += _meta_flags()
+                    cmd_flac.append(flac_target)
+                    res = _sp.run(cmd_flac, stdout=_sp.DEVNULL, stderr=_sp.DEVNULL)
+                    if res.returncode == 0 and Path(flac_target).exists():
+                        generated.append(flac_target)
+                        flac_done = True
+                except Exception:
+                    pass
+            if not flac_done:
+                sf.write(flac_target, audio.T, sr, format="FLAC")
+                generated.append(flac_target)
+
+        if "aiff" in paths:
+            _prog(98, "Exportando AIFF 24-bit con metadatos…")
+            aiff_target = str(paths["aiff"])
+            aiff_done = False
+            if _ffmpeg and _flac_src and Path(_flac_src).exists():
+                try:
+                    cmd_aiff = [_ffmpeg, "-y", "-i", _flac_src,
+                                "-c:a", "pcm_s24be"]
+                    cmd_aiff += _meta_flags()
+                    cmd_aiff.append(aiff_target)
+                    res = _sp.run(cmd_aiff, stdout=_sp.DEVNULL, stderr=_sp.DEVNULL)
+                    if res.returncode == 0 and Path(aiff_target).exists():
+                        generated.append(aiff_target)
+                        aiff_done = True
+                except Exception:
+                    pass
+            if not aiff_done:
+                sf.write(aiff_target, audio.T, sr, format="AIFF", subtype="PCM_24")
+                generated.append(aiff_target)
 
     if "video" in paths:
         _prog(99, "Generando vídeo de previa (TikTok / Reels / Shorts)…")

@@ -131,13 +131,19 @@ class BatchWorker(QThread):
                     "key": f"{key_res.camelot} · {key_res.notation}",
                     "camelot": key_res.camelot,
                     "title": p.stem,
+                    "artist":  self.cfg.get("tag_artist", ""),
+                    "label":   self.cfg.get("tag_label", ""),
+                    "album":   self.cfg.get("tag_album", ""),
+                    "genre":   self.cfg.get("tag_genre", "Electronic"),
+                    "comment": self.cfg.get("tag_comment", "AutoPrevias · Radical Records Studio"),
                 }
+                cover_path = self.cfg.get("custom_cover_path") or self.cfg.get("cover_path")
                 generated = export_files(
                     audio=audio,
                     sr=preview_sr,
                     paths=paths,
                     metadata=meta,
-                    cover_image_path=self.cfg.get("cover_path"),
+                    cover_image_path=cover_path,
                 )
 
                 ok_count += 1

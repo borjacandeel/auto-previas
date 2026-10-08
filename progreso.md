@@ -46,9 +46,50 @@
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-07 (Sesión 32 — v2.6.2: fix definitivo ventana fantasma + header solapado)
+**Fecha última actualización:** 2026-10-08 (Sesión 33 — v2.7.0: auditoría completa + firma persistente)
 **Fase activa:** Publicado en GitHub Releases con 4 instaladores (Basic/Plus × macOS/Windows)
-**Versión Actual:** **v2.6.2**
+**Versión Actual:** **v2.7.0**
+
+---
+
+### Resumen de Mejoras — Sesión 33 (2026-10-08): Versión v2.7.0 — Auditoría Completa y Firma Persistente
+
+#### 🔴 Bugs críticos corregidos
+
+| Archivo | Problema | Fix |
+|---------|----------|-----|
+| `app.py:2388` | Tarjeta de éxito mostraba carpeta de caché del sistema como destino en edición Básica (tras desmarcar WAV) | Filtrar `autoprevias_temp_*` al calcular `out_dir` y `file_names` |
+| `app.py:2389` | `autoprevias_temp_{pid}.wav` aparecía en el listado "Archivos:" de la UI | Misma filtración — solo se muestran archivos de usuario |
+
+#### 🟠 Bugs altos corregidos
+
+| Archivo | Problema | Fix |
+|---------|----------|-----|
+| `batch.py:129` | Batch exportaba todos los MP3 con "Radical Records Studio" sin importar la firma guardada | `meta` dict ampliado con `tag_artist/label/album/genre/comment` y `custom_cover_path` desde `cfg` |
+| `waveform.py:331` | `_glow_timer` (45ms) no se detenía al cerrar la app → posible crash con widget destruido | `cleanup_threads()` llama `_glow_timer.stop()` al inicio |
+| `export.py:456` | Año ID3 hardcodeado a `"2026"` | Sustituido por `datetime.datetime.now().year` |
+| `app.py:4404` | Watch folder: en macOS HFS+ `*.wav` + `*.WAV` devolvían el mismo archivo → doble procesamiento | Refactorizado con `glob("*")` + `suffix.lower()` + set `_seen_in_scan` |
+| `app.py:1708` | Checkboxes FX (Flanger, Filter Sweep, Master LUFS) no persistían entre sesiones | Guardados en `persist_if_requested()` y restaurados en `populate()` desde `load_cfg()` |
+
+#### 🟡 Mejoras medias
+
+| Archivo | Cambio | Detalle |
+|---------|--------|---------|
+| `export.py:572` | FLAC exportado con metadatos completos + carátula | FFmpeg con `-c:a flac` + flags `-metadata` + stream de imagen adjunto; fallback a `sf.write` si FFmpeg no disponible |
+| `export.py:578` | AIFF exportado con metadatos | FFmpeg con `-c:a pcm_s24be` + flags `-metadata`; fallback a `sf.write` |
+| `config.py:19` | `_DEFAULTS` ahora cubre todas las claves usadas en la app | Añadidos `export_flac/aiff/video`, `aspect_ratio`, `fx_flanger/filter_sweep/studio_mastering` |
+| `config.py:211` | `save()` escribe de forma atómica | Escritura a `.tmp` + `Path.replace()` — evita JSON corrupto si el proceso muere a mitad |
+| `config.py:200` | `load()` avisa al usuario si el JSON está corrupto | Mensaje en consola + backup `.bak` antes de devolver defaults |
+
+#### 🐛 Bug de BrandingCard corregido (pre-v2.7.0)
+
+| Archivo | Problema | Fix |
+|---------|----------|-----|
+| `app.py:1322` | `persist_if_requested()` solo guardaba si "Recordar" estaba marcado → firma vacía entre sesiones | Los campos de texto siempre se guardan al generar; el checkbox solo controla la carátula personalizada |
+| `app.py:3440` | Edición Básica: WAV oculto pero marcado → exportaba WAV sin metadatos | `_apply_edition_limits()` desmarca WAV en Básica; `populate()` no lo reactiva en Básica |
+
+#### 🧪 Tests
+- 30/30 tests pasados sin regresiones
 
 ---
 

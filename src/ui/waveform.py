@@ -330,6 +330,8 @@ class WaveformWidget(QWidget):
 
     def cleanup_threads(self):
         """Detiene de forma limpia e inmediata cualquier hilo de carga de onda activo."""
+        if hasattr(self, "_glow_timer") and self._glow_timer.isActive():
+            self._glow_timer.stop()
         for loader_attr in ["_loader", "_preview_loader"]:
             ldr = getattr(self, loader_attr, None)
             if ldr and ldr.isRunning():

@@ -3,6 +3,27 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.7.0] - 2026-10-08
+
+### Añadido
+- **FLAC y AIFF con firma completa**: los archivos FLAC y AIFF exportados ahora incluyen todos los metadatos (artista, sello, álbum, género, comentario, BPM, clave) y la carátula incrustada, igual que el MP3. Hasta ahora salían completamente vacíos de etiquetas.
+- **Procesamiento por lote con firma**: los temas generados desde el modo Lote (batch) ahora utilizan el artista, sello, álbum y género guardados en la sección de Firma, en lugar de usar siempre "Radical Records Studio".
+- **FX recordados entre sesiones**: los ajustes de Flanger, Filter Sweep y Master LUFS se guardan automáticamente y se restauran al cargar un nuevo tema.
+
+### Corregido
+- **Firma y carátula no se recordaban entre sesiones**: al cerrar y abrir la app, los campos de artista, sello, álbum, género y comentario aparecían vacíos aunque el usuario los hubiera rellenado antes. Ahora se guardan siempre al generar una previa, sin necesidad de marcar "Recordar".
+- **Carpeta de destino incorrecta en edición Básica**: la tarjeta de éxito mostraba una carpeta interna de caché del sistema como destino en lugar de la carpeta real del usuario.
+- **Archivo interno aparecía en el listado de archivos generados**: el archivo temporal `autoprevias_temp_XXX.wav` aparecía junto a los archivos reales en la notificación de exportación completada.
+- **Edición Básica exportaba WAV sin metadatos**: el checkbox de WAV estaba oculto pero activo en Básica, generando un archivo sin tags que confundía al usuario. Ahora Básica solo exporta MP3.
+- **Año del copyright hardcodeado a 2026**: en 2027 y siguientes todos los MP3 tendrían fecha incorrecta. Ahora usa el año del sistema.
+- **Carpeta vigilada detectaba el mismo archivo dos veces en macOS**: en sistemas de archivos sin distinción de mayúsculas, `*.wav` y `*.WAV` devolvían el mismo archivo, causando doble procesamiento ocasional.
+- **Timer de brillo del playhead no se detenía al cerrar**: el timer de 45ms seguía activo tras destruir el widget, pudiendo causar un crash al acceder a memoria liberada.
+- **Guardar configuración podía corromperse**: si la app se cerraba a mitad de escritura del archivo de ajustes, el JSON quedaba incompleto y se perdían todas las preferencias. Ahora escribe a un archivo temporal y hace un reemplazo atómico.
+- **Configuración corrupta fallaba silenciosamente**: si el JSON de ajustes estaba dañado, la app lo ignoraba sin aviso. Ahora muestra un mensaje en consola y guarda una copia de seguridad `.bak` antes de usar los valores por defecto.
+
+### Cambiado
+- **Configuración por defecto más completa**: añadidos los valores iniciales para todos los ajustes que antes faltaban (`export_flac`, `export_video`, `aspect_ratio`, `fx_flanger`, `fx_filter_sweep`, `studio_mastering`), evitando inconsistencias en instalaciones nuevas.
+
 ## [2.6.2] - 2026-10-07
 
 ### Corregido
