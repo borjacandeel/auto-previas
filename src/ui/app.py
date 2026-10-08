@@ -904,11 +904,12 @@ class DropZone(QWidget):
 # ── Stat Card ─────────────────────────────────────────────────────────────────
 
 class StatCard(QFrame):
-    """Tarjeta de estadística individual con valor grande y etiqueta."""
+    """Tarjeta de estadística individual con valor grande y etiqueta. Opcional: editable con doble clic."""
     def __init__(self, label: str, value: str = "—",
-                 accent: str = TEXT, parent=None):
+                 accent: str = TEXT, on_edit=None, parent=None):
         super().__init__(parent)
-        self._accent = accent
+        self._accent  = accent
+        self._on_edit = on_edit
         self.setStyleSheet(f"""
             QFrame {{
                 background: {BG3};
@@ -937,6 +938,15 @@ class StatCard(QFrame):
             "letter-spacing: 1.5px; background: transparent; border: none;"
         )
         lay.addWidget(lbl)
+
+        if on_edit:
+            self.setCursor(Qt.PointingHandCursor)
+            self.setToolTip("Doble clic para corregir")
+
+    def mouseDoubleClickEvent(self, event):
+        if self._on_edit:
+            self._on_edit()
+        super().mouseDoubleClickEvent(event)
 
     def set_value(self, v: str):
         self._val_lbl.setText(v)
@@ -1367,6 +1377,7 @@ class ResultPanel(QWidget):
     load_file_requested   = Signal(str)   # path de nuevo audio a cargar directamente
     generate_requested    = Signal()
     play_requested        = Signal(str)   # path del archivo para reproducir
+    bpm_corrected         = Signal(float) # BPM corregido manualmente por el usuario
 
     def __init__(self):
         super().__init__()
@@ -1454,7 +1465,7 @@ class ResultPanel(QWidget):
         stats_row.setSpacing(6)
 
         self._card_file  = StatCard("ARCHIVO",   "—",   TEXT)
-        self._card_bpm   = StatCard("BPM",       "—",   ACCENT)
+        self._card_bpm   = StatCard("BPM",       "—",   ACCENT,   on_edit=self._edit_bpm)
         self._card_key   = StatCard("CLAVE / CAMELOT", "—", "#a855f7")
         self._card_dur   = StatCard("DURACIÓN",  "—",   TEXT)
         self._card_drops = StatCard("DROPS",     "—",   GREEN)
@@ -2433,6 +2444,22 @@ class ResultPanel(QWidget):
 
     def get_export_formats(self) -> tuple:
         return self._chk_wav.isChecked(), self._chk_mp3.isChecked()
+
+    def _edit_bpm(self):
+        from PySide6.QtWidgets import QInputDialog
+        current_text = self._card_bpm._val_lbl.text()
+        try:
+            current_val = float(current_text)
+        except ValueError:
+            current_val = 128.0
+        val, ok = QInputDialog.getDouble(
+            self, "Corregir BPM", "Introduce el BPM real del track:",
+            current_val, 40.0, 250.0, 1
+        )
+        if ok and abs(val - current_val) > 0.01:
+            self._card_bpm.set_value(f"{val:.1f}")
+            self._bpm = val
+            self.bpm_corrected.emit(val)
 
     def get_seed(self) -> int:
         return self._spin_seed.value()
@@ -3964,6 +3991,7 @@ class MainWindow(QMainWindow):
         self._results.new_file_requested.connect(self._back_to_drop)
         self._results.generate_requested.connect(self._generate)
         self._results.load_file_requested.connect(self._load_file)
+        self._results.bpm_corrected.connect(self._on_bpm_corrected)
         scroll.setWidget(self._results)
         self._stack.addWidget(scroll)  # índice 2
 
@@ -4015,6 +4043,33 @@ class MainWindow(QMainWindow):
         pf.addWidget(self._progress_label, stretch=1)
         pf.addWidget(self._progress_bar)
         root.addWidget(prog_frame)
+
+        # ── Banner de actualización (oculto por defecto) ──────────────────
+        self._update_banner = QLabel()
+        self._update_banner.setOpenExternalLinks(True)
+        self._update_banner.setAlignment(Qt.AlignCenter)
+        self._update_banner.setVisible(False)
+        self._update_banner.setStyleSheet(f"""
+            QLabel {{
+                background: #1e1b4b;
+                color: #c4b5fd;
+                border: 1px solid #6d28d9;
+                border-radius: 6px;
+                font-size: 11px;
+                padding: 5px 12px;
+            }}
+        """)
+        root.addWidget(self._update_banner)
+
+        # ── Lanzar comprobador de actualizaciones en segundo plano ────────
+        try:
+            from src.update import UpdateChecker
+            from src.__version__ import __version__
+            self._update_checker = UpdateChecker(__version__, parent=self)
+            self._update_checker.update_available.connect(self._on_update_available)
+            self._update_checker.start()
+        except Exception:
+            self._update_banner = None
 
     # ── Animación de puntos en progreso ──────────────────────────────────
 
@@ -4262,8 +4317,36 @@ class MainWindow(QMainWindow):
                 f"✅  Guardado en: {folder}  ·  ({names})"
             )
             self._results._btn_open_folder.setStyleSheet(_btn("#059669", "#ffffff", "#10b981", radius=5, fs=10.5))
+            # F6 — Notificación nativa del SO
+            try:
+                from src.notifications import notify
+                track = Path(self._current_file).stem if self._current_file else "Track"
+                notify("AutoPrevias", f"✅ Previa exportada: {track}")
+            except Exception:
+                pass
         else:
             self._set_progress(0, "⚠  No se generaron archivos.")
+
+    def _on_bpm_corrected(self, bpm: float):
+        """F4 — Actualiza el beat grid con el BPM corregido manualmente."""
+        if self._beat_grid is not None:
+            try:
+                from src.analysis.bpm import BeatGrid
+                import dataclasses
+                self._beat_grid = dataclasses.replace(self._beat_grid, bpm=bpm)
+            except Exception:
+                pass
+
+    def _on_update_available(self, version: str, notes: str):
+        """Muestra un banner discreto cuando hay actualización disponible."""
+        if not hasattr(self, "_update_banner") or self._update_banner is None:
+            return
+        self._update_banner.setText(
+            f"🆕  AutoPrevias {version} disponible — "
+            f"<a href='https://github.com/borjacandel/auto-previas/releases/latest' "
+            f"style='color:#a78bfa;'>Descargar</a>"
+        )
+        self._update_banner.setVisible(True)
 
     def _on_export_error(self, msg: str):
         self._stop_dots()

@@ -3,6 +3,15 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.8.0] - 2026-10-08
+
+### Añadido
+- **Corrección manual de BPM (doble clic)**: haz doble clic sobre la tarjeta de BPM en el panel de resultados para introducir el BPM real del track. El motor usa el valor corregido al generar la siguiente previa, sin necesidad de reanalizar.
+- **Notificaciones nativas del sistema operativo**: al terminar una exportación (individual o por lote), el sistema operativo muestra una notificación emergente con el nombre del archivo exportado. Funciona en macOS y Windows.
+- **Informe de lote exportado automáticamente**: al completar el modo Lote, se genera un fichero `autoprevias_lote_YYYYMMDD_HHMMSS.txt` en la misma carpeta de destino con el resumen de archivos producidos.
+- **Sistema de actualizaciones automáticas**: la app comprueba al arrancar si existe una versión nueva (usando un proxy Cloudflare Worker que oculta el repositorio privado). Si hay actualización disponible, aparece un banner discreto en la parte inferior de la ventana con un enlace directo a la descarga.
+- **Registro de fallos con rotación**: los errores no capturados se guardan automáticamente en un archivo de log con rotación automática (máx. 3 ficheros de 512 KB). Ubicación: `~/Library/Logs/AutoPrevias/crashes.log` en macOS, `%LOCALAPPDATA%\AutoPrevias\logs\crashes.log` en Windows.
+
 ## [2.7.0] - 2026-10-08
 
 ### Añadido

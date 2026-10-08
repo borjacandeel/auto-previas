@@ -618,6 +618,35 @@ class BatchDialog(QDialog):
         self._prog.setValue(100)
         self._btn_start.setText("🚀 Iniciar Lote")
 
+        # F8 — Informe de exportación en TXT
+        try:
+            import datetime as _dt
+            real_files = [p for p in all_generated if not Path(p).name.startswith("autoprevias_temp_")]
+            if real_files:
+                report_dir = Path(real_files[0]).parent
+                ts = _dt.datetime.now().strftime("%Y%m%d_%H%M%S")
+                report_path = report_dir / f"autoprevias_lote_{ts}.txt"
+                lines_report = [
+                    f"AutoPrevias — Informe de Procesamiento por Lote",
+                    f"Fecha: {_dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}",
+                    f"",
+                    f"Resumen: {ok} OK · {err} errores · {len(real_files)} archivos",
+                    f"",
+                    f"Archivos generados:",
+                ]
+                for p in real_files:
+                    lines_report.append(f"  • {Path(p).name}")
+                report_path.write_text("\n".join(lines_report), encoding="utf-8")
+        except Exception:
+            pass
+
+        # F6 — Notificación nativa
+        try:
+            from src.notifications import notify
+            notify("AutoPrevias", f"✅ Lote completado: {ok} previas exportadas")
+        except Exception:
+            pass
+
         out_dirs = list(dict.fromkeys(str(Path(p).parent) for p in all_generated if Path(p).exists()))
         dirs_text = "<br>".join(f"• <code>{d}</code>" for d in out_dirs[:4])
         if len(out_dirs) > 4:

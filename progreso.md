@@ -12,8 +12,9 @@
 | # | Tarea | Prioridad | Notas |
 |---|-------|-----------|-------|
 | 1 | **Sistema de Licencias** — Implementación completa en 3 fases: Payhip activación → Cloudflare Worker proxy → pantalla de activación en la app (`src/licensing/license.py`, `src/ui/activate.py`, `src/main.py`) | 🔴 Alta | Arquitectura ya diseñada y documentada. Artifact: `https://claude.ai/artifact/7B2pW4byKK9p7yjhJoY7Qe` |
-| 2 | **Panel de previas recientes** — Lista de previas ya generadas (carpeta de ficheros) con reproductor rápido y opción de "abrir proyecto" para recargar el track original | 🟡 Media | Feature solicitada en sesión 29 |
-| 3 | **Presets de firma guardados como archivos** — Carpeta `presets/` en datos de usuario con JSONs nombrados (ej. "Radical Records Main", "Set de Verano"). UI para crear/cargar/borrar presets | 🟡 Media | Feature solicitada en sesión 29 |
+| 2 | **Cloudflare Worker de actualizaciones** — El Worker proxy para el auto-update necesita ser creado por el usuario. Código: consultar sesión 33 / v2.7.0. Tras crear el Worker, actualizar `_EP_B64` en `src/update.py` con la URL codificada en base64. | 🔴 Alta | `src/update.py` ya implementado; solo falta el Worker en Cloudflare |
+| 3 | **Panel de previas recientes** — Lista de previas ya generadas (carpeta de ficheros) con reproductor rápido y opción de "abrir proyecto" para recargar el track original | 🟡 Media | Feature solicitada en sesión 29 |
+| 4 | **Presets de firma guardados como archivos** — Carpeta `presets/` en datos de usuario con JSONs nombrados (ej. "Radical Records Main", "Set de Verano"). UI para crear/cargar/borrar presets | 🟡 Media | Feature solicitada en sesión 29 |
 
 ---
 
@@ -46,9 +47,26 @@
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-08 (Sesión 33 — v2.7.0: auditoría completa + firma persistente)
+**Fecha última actualización:** 2026-10-08 (Sesión 34 — v2.8.0: BPM manual, notificaciones, informe lote, auto-update, crash log)
 **Fase activa:** Publicado en GitHub Releases con 4 instaladores (Basic/Plus × macOS/Windows)
-**Versión Actual:** **v2.7.0**
+**Versión Actual:** **v2.8.0**
+
+---
+
+### Resumen de Mejoras — Sesión 34 (2026-10-08): Versión v2.8.0 — Nuevas Funcionalidades de Productividad
+
+#### 🟣 Nuevas funcionalidades
+
+| # | Feature | Archivo(s) |
+|---|---------|------------|
+| F4 | **Corrección manual de BPM** — doble clic sobre la tarjeta de BPM abre un diálogo; el valor corregido se propaga al beat grid para la siguiente generación | `app.py`: `StatCard.mouseDoubleClickEvent`, `ResultPanel._edit_bpm`, `MainWindow._on_bpm_corrected` |
+| F6 | **Notificaciones nativas del SO** — al finalizar una exportación (individual o batch) aparece una notificación emergente con el nombre del track/lote | `src/notifications.py` (nuevo), `app.py:_on_export_done`, `batch.py:_on_batch_finished` |
+| F8 | **Informe de exportación batch** — genera `autoprevias_lote_YYYYMMDD_HHMMSS.txt` en la carpeta de destino con el listado de archivos producidos | `src/ui/batch.py:_on_batch_finished` |
+| AU | **Comprobador de actualizaciones automático** — al arrancar consulta un Cloudflare Worker proxy; si hay versión nueva muestra un banner discreto con enlace de descarga | `src/update.py` (nuevo), `app.py:_build_ui`, `app.py:_on_update_available` |
+| F9 | **Crash logging con rotación** — los errores fatales no capturados se guardan en `crashes.log` con rotación automática (3 ficheros × 512 KB) | `src/main.py:_setup_crash_logger` |
+
+#### ✅ Tests
+- 30/30 pasando (`pytest tests/ -x -q`)
 
 ---
 

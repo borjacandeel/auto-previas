@@ -8,6 +8,8 @@ import traceback
 from pathlib import Path
 import time
 import multiprocessing
+import logging
+import logging.handlers
 
 # Prevenir fork-bombs o spawns descontrolados en Windows en ejecutables standalone
 multiprocessing.freeze_support()
@@ -85,7 +87,42 @@ def _global_exception_handler(exc_type, exc_value, exc_tb):
             pass
     sys.__excepthook__(exc_type, exc_value, exc_tb)
 
-sys.excepthook = _global_exception_handler
+# F9 — Crash log con rotación (máx 3 archivos de 512 KB)
+def _setup_crash_logger() -> logging.Logger:
+    if sys.platform == "win32":
+        local = os.environ.get("LOCALAPPDATA", str(Path.home()))
+        log_dir = Path(local) / "AutoPrevias" / "logs"
+    else:
+        log_dir = Path.home() / "Library" / "Logs" / "AutoPrevias" if sys.platform == "darwin" \
+                  else Path.home() / ".local" / "share" / "autoprevias" / "logs"
+    try:
+        log_dir.mkdir(parents=True, exist_ok=True)
+        handler = logging.handlers.RotatingFileHandler(
+            log_dir / "crashes.log",
+            maxBytes=512 * 1024,
+            backupCount=3,
+            encoding="utf-8",
+        )
+        handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
+        logger = logging.getLogger("autoprevias.crash")
+        logger.setLevel(logging.ERROR)
+        logger.addHandler(handler)
+        return logger
+    except Exception:
+        return logging.getLogger("autoprevias.crash")
+
+_crash_logger = _setup_crash_logger()
+
+_orig_excepthook = sys.excepthook
+
+def _global_exception_handler_with_log(exc_type, exc_value, exc_tb):
+    try:
+        _crash_logger.error("UNHANDLED EXCEPTION", exc_info=(exc_type, exc_value, exc_tb))
+    except Exception:
+        pass
+    _global_exception_handler(exc_type, exc_value, exc_tb)
+
+sys.excepthook = _global_exception_handler_with_log
 
 # Asegurar raíz en sys.path
 _ROOT = Path(__file__).resolve().parent.parent
