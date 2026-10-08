@@ -22,10 +22,10 @@ from pathlib import Path
 # Worker URL en base64 para no exponerla en texto plano
 _W_B64 = b"aHR0cHM6Ly9hdXRvcHJldmlhcy1saWNlbnNlLnJhZGljYWxyZWNvcmRzdmxjLndvcmtlcnMuZGV2"
 
-# Product IDs de Payhip (Basic y Plus)
+# Product links de Payhip (Basic y Plus) — URL completa requerida por la API
 PRODUCT_IDS = {
-    "basic": "NVkaK",
-    "plus":  "mTjEL",
+    "basic": "https://payhip.com/b/NVkaK",
+    "plus":  "https://payhip.com/b/mTjEL",
 }
 
 # Tiempo entre verificaciones en línea (7 días en segundos)

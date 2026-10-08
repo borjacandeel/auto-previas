@@ -3,6 +3,11 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.9.2] - 2026-10-08
+
+### Corregido
+- **Verificación de licencia siempre fallaba con "clave no válida"**: la API de Payhip requiere la URL completa del producto (`https://payhip.com/b/XXXXX`) en el campo `product_link`, no solo el código corto. Al enviar únicamente el código, Payhip no encontraba el producto y rechazaba todas las claves. Ahora se envía la URL completa correctamente.
+
 ## [2.9.1] - 2026-10-08
 
 ### Cambiado
