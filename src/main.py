@@ -303,6 +303,63 @@ def run_selftest() -> int:
         return 1
 
 
+def _check_license_on_startup() -> bool:
+    """
+    Comprueba la licencia al arrancar. Muestra la pantalla de activación
+    si no hay licencia válida. Devuelve True si puede continuar.
+    En modo desarrollo (sin BAKED_EDITION) siempre devuelve True.
+    """
+    try:
+        from src.config import _get_baked_edition
+        # En desarrollo (sin binario compilado) no bloquear
+        if _get_baked_edition() is None:
+            return True
+    except Exception:
+        return True
+
+    try:
+        from src.licensing.license import check_license, LicenseStatus, PRODUCT_IDS
+        from src.config import set_edition
+
+        status, edition = check_license()
+
+        if status == LicenseStatus.VALID:
+            set_edition(edition)
+            return True
+
+        if status == LicenseStatus.GRACE:
+            # Dentro del período de gracia — dejar pasar con aviso
+            set_edition(edition)
+            return True
+
+        # Sin licencia o expirada — mostrar pantalla de activación
+        from PySide6.QtWidgets import QApplication
+        _app = QApplication.instance() or QApplication(sys.argv)
+
+        from src.ui.activate import ActivationDialog
+        expired = (status == LicenseStatus.EXPIRED)
+        dlg = ActivationDialog(expired=expired)
+
+        activated_edition = []
+
+        def _on_activated(ed):
+            activated_edition.append(ed)
+
+        dlg.activated.connect(_on_activated)
+        result = dlg.exec()
+
+        if activated_edition:
+            set_edition(activated_edition[0])
+            return True
+
+        return False
+
+    except Exception as ex:
+        _log_startup(f"Error en verificación de licencia: {ex}")
+        # En caso de error inesperado, dejar pasar para no bloquear
+        return True
+
+
 def main():
     _log_startup(f"Iniciando AutoPrevias v{__version__} (argv={sys.argv})")
     _log_startup(f"Plataforma: {sys.platform} | Python: {sys.version.split()[0]}")
@@ -333,6 +390,16 @@ def main():
     try:
         _log_startup("Importando módulo de interfaz gráfica src.ui.app...")
         from src.ui.app import launch
+
+        # ── Comprobación de licencia ──────────────────────────────────────
+        # Solo en builds compilados (BAKED_EDITION presente) o si la config
+        # tiene licencia guardada. En modo desarrollo se salta.
+        _log_startup("Verificando licencia...")
+        _license_ok = _check_license_on_startup()
+        if not _license_ok:
+            _log_startup("Licencia no válida — cerrando.")
+            sys.exit(0)
+
         _log_startup("Módulo UI cargado. Invocando launch()...")
         launch(target)
     except Exception as e:

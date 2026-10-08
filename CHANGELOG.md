@@ -3,6 +3,13 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.9.0] - 2026-10-08
+
+### Añadido
+- **Sistema de licencias completo**: al arrancar la app en versión compilada, se verifica la licencia contra los servidores de Payhip a través de un proxy Cloudflare Worker seguro. Si no hay licencia activada, aparece una pantalla de activación donde el usuario introduce su clave de compra. Las claves de Basic y Plus desbloquean cada edición automáticamente.
+- **Período de gracia de 14 días**: si no hay conexión a internet, la app funciona hasta 14 días desde la última verificación exitosa, sin interrumpir el trabajo.
+- **Verificación cada 7 días**: la licencia se reverifica en segundo plano cada 7 días de forma silenciosa.
+
 ## [2.8.2] - 2026-10-08
 
 ### Corregido
