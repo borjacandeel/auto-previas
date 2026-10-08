@@ -4,24 +4,30 @@ Se muestra al arrancar si no hay licencia válida guardada.
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 from PySide6.QtCore import Qt, QThread, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QPixmap
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel,
     QLineEdit, QPushButton, QFrame,
 )
 
-# Colores (mismos que app.py)
-BG      = "#0d0d0d"
-BG2     = "#141414"
-BG3     = "#1e1e1e"
-BORDER  = "#2a2a2a"
-TEXT    = "#f0f0f0"
-TEXT2   = "#888"
-ACCENT  = "#7c3aed"
-ACCENT2 = "#a78bfa"
+_ASSETS_DIR = Path(__file__).resolve().parent.parent.parent / "assets"
+
+# Colores — mismos que app.py
+BG      = "#0a0b0e"
+BG2     = "#121419"
+BG3     = "#1a1c22"
+BORDER  = "#232733"
+TEXT    = "#eceef2"
+TEXT2   = "#8c93a4"
+ACCENT  = "#ff1e38"
+ACCENT2 = "#ff3e55"
 GREEN   = "#22c55e"
 RED     = "#ef4444"
+
+_STORE_URL = "https://payhip.com/RADICALRECVLC"
 
 
 class _ActivateWorker(QThread):
@@ -63,9 +69,13 @@ class ActivationDialog(QDialog):
                 font-size: 14px;
                 padding: 10px 14px;
                 letter-spacing: 1px;
+                font-family: 'JetBrains Mono', 'Courier New', monospace;
             }}
             QLineEdit:focus {{
                 border-color: {ACCENT};
+            }}
+            QLineEdit::placeholder {{
+                color: {TEXT2};
             }}
         """)
         self._expired = expired
@@ -77,10 +87,19 @@ class ActivationDialog(QDialog):
         root.setContentsMargins(40, 36, 40, 36)
         root.setSpacing(0)
 
-        # Logo / título
-        lbl_icon = QLabel("🎵")
+        # Logo oficial de la app
+        lbl_icon = QLabel()
         lbl_icon.setAlignment(Qt.AlignCenter)
-        lbl_icon.setStyleSheet("font-size: 44px; background: transparent;")
+        lbl_icon.setStyleSheet("background: transparent;")
+        logo_path = _ASSETS_DIR / "logo_emblem.png"
+        if logo_path.exists():
+            pix = QPixmap(str(logo_path)).scaled(
+                72, 72, Qt.KeepAspectRatio, Qt.SmoothTransformation
+            )
+            lbl_icon.setPixmap(pix)
+        else:
+            lbl_icon.setText("🎵")
+            lbl_icon.setStyleSheet("font-size: 44px; background: transparent;")
         root.addWidget(lbl_icon)
         root.addSpacing(12)
 
@@ -97,7 +116,7 @@ class ActivationDialog(QDialog):
             msg = "Tu período de gracia ha expirado.\nIntroduce tu clave para continuar usando la app."
             color = RED
         else:
-            msg = "Introduce tu clave de licencia para activar AutoPrevias.\nPuedes obtenerla en payhip.com/RadicalRecords."
+            msg = "Introduce tu clave de licencia para activar AutoPrevias.\nPuedes obtenerla en payhip.com/RADICALRECVLC"
             color = TEXT2
 
         lbl_msg = QLabel(msg)
@@ -128,7 +147,7 @@ class ActivationDialog(QDialog):
                 font-size: 14px;
                 font-weight: 700;
             }}
-            QPushButton:hover {{ background: #6d28d9; }}
+            QPushButton:hover {{ background: {ACCENT2}; }}
             QPushButton:disabled {{ background: {BG3}; color: {TEXT2}; }}
         """)
         self._btn.clicked.connect(self._activate)
@@ -144,10 +163,10 @@ class ActivationDialog(QDialog):
 
         root.addStretch()
 
-        # Enlace tienda
+        # Enlace a la tienda principal de Radical Records en Payhip
         lbl_link = QLabel(
-            f'<a href="https://payhip.com/RadicalRecords" '
-            f'style="color:{ACCENT2}; text-decoration:none;">Obtener licencia en payhip.com</a>'
+            f'<a href="{_STORE_URL}" '
+            f'style="color:{ACCENT2}; text-decoration:none;">Obtener licencia en payhip.com/RADICALRECVLC</a>'
         )
         lbl_link.setAlignment(Qt.AlignCenter)
         lbl_link.setOpenExternalLinks(True)

@@ -3,6 +3,13 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.9.1] - 2026-10-08
+
+### Cambiado
+- **Diálogo de activación con identidad visual**: colores rojos de la app, logo oficial de AutoPrevias y campo de clave con fuente monoespaciada.
+- **Enlace de compra directo**: el botón "Obtener licencia" abre `payhip.com/RADICALRECVLC`.
+- **Reverificación cada 7 días** con período de gracia de 14 días sin conexión.
+
 ## [2.9.0] - 2026-10-08
 
 ### Añadido
