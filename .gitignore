@@ -41,3 +41,9 @@ ffmpeg_bin/
 ejemplos/*.flac
 ejemplos/*.wav
 src/_edition.py
+
+# Cloudflare Worker code (secrets stored in Cloudflare, not here)
+worker_license.txt
+
+# Claude session data
+.claude/

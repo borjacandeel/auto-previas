@@ -11,10 +11,9 @@
 
 | # | Tarea | Prioridad | Notas |
 |---|-------|-----------|-------|
-| 1 | **Sistema de Licencias** — Implementación completa en 3 fases: Payhip activación → Cloudflare Worker proxy → pantalla de activación en la app (`src/licensing/license.py`, `src/ui/activate.py`, `src/main.py`) | 🔴 Alta | Arquitectura ya diseñada y documentada. Artifact: `https://claude.ai/artifact/7B2pW4byKK9p7yjhJoY7Qe` |
-| 2 | **Cloudflare Worker de actualizaciones** — El Worker proxy para el auto-update necesita ser creado por el usuario. Código: consultar sesión 33 / v2.7.0. Tras crear el Worker, actualizar `_EP_B64` en `src/update.py` con la URL codificada en base64. | 🔴 Alta | `src/update.py` ya implementado; solo falta el Worker en Cloudflare |
-| 3 | **Panel de previas recientes** — Lista de previas ya generadas (carpeta de ficheros) con reproductor rápido y opción de "abrir proyecto" para recargar el track original | 🟡 Media | Feature solicitada en sesión 29 |
-| 4 | **Presets de firma guardados como archivos** — Carpeta `presets/` en datos de usuario con JSONs nombrados (ej. "Radical Records Main", "Set de Verano"). UI para crear/cargar/borrar presets | 🟡 Media | Feature solicitada en sesión 29 |
+| 1 | **Actualizar Cloudflare Worker** — Pegar nuevo código (`worker_license.txt`), añadir secrets `PAYHIP_SECRET_BASIC` y `PAYHIP_SECRET_PLUS`, borrar `PAYHIP_API_KEY`. Tras esto, probar con curl y publicar v2.9.3 | 🔴 Alta | Código listo. Pendiente solo el deploy manual en dash.cloudflare.com |
+| 2 | **Panel de previas recientes** — Lista de previas ya generadas (carpeta de ficheros) con reproductor rápido y opción de "abrir proyecto" para recargar el track original | 🟡 Media | Feature solicitada en sesión 29 |
+| 3 | **Presets de firma guardados como archivos** — Carpeta `presets/` en datos de usuario con JSONs nombrados (ej. "Radical Records Main", "Set de Verano"). UI para crear/cargar/borrar presets | 🟡 Media | Feature solicitada en sesión 29 |
 
 ---
 
@@ -47,9 +46,46 @@
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-08 (Sesión 34 — v2.8.0: BPM manual, notificaciones, informe lote, auto-update, crash log)
-**Fase activa:** Publicado en GitHub Releases con 4 instaladores (Basic/Plus × macOS/Windows)
-**Versión Actual:** **v2.8.0**
+**Fecha última actualización:** 2026-10-11 (Sesión 35 — v2.9.2: debug sistema de licencias, Worker reescrito con product-secret-key)
+**Fase activa:** Código listo, pendiente actualizar Cloudflare Worker para que el sistema de licencias funcione end-to-end
+**Versión Actual:** **v2.9.2** (publicada en GitHub, pero licencias aún no operativas hasta actualizar Cloudflare)
+
+---
+
+### Resumen de Trabajo — Sesión 35 (2026-10-11): Debug y corrección del sistema de licencias
+
+#### Contexto
+El usuario descargó v2.9.1, compró una licencia Plus en Payhip y la clave era rechazada con "clave no válida o sin conexión". Se investigó el problema completo.
+
+#### Bugs encontrados y corregidos
+
+| # | Problema | Fix | Versión |
+|---|---------|-----|---------|
+| 1 | `license.py` enviaba `product_id: "NVkaK"` pero Payhip requería URL completa `https://payhip.com/b/NVkaK` | Cambiado a URL completa en `PRODUCT_IDS` | v2.9.2 |
+| 2 | **Problema raíz:** Payhip NO usa API Key de cuenta para licencias — usa `product-secret-key` por producto vía GET. El Worker usaba `Authorization: Bearer <api_key>` que Payhip siempre rechaza | Worker reescrito completamente: GET con header `product-secret-key`, prueba Plus → Basic automáticamente | pendiente deploy |
+
+#### Estado del Worker (PENDIENTE de deploy por el usuario)
+- Código nuevo en `worker_license.txt` y `/Users/borjacandel/Downloads/worker_license.txt`
+- El Worker nuevo usa `env.PAYHIP_SECRET_PLUS` y `env.PAYHIP_SECRET_BASIC` (dos secrets)
+- Las product-secret-keys verificadas y funcionando con curl directo a Payhip:
+  - Basic: `prod_sk_NVkaK_b6359b99d5e7e31309cb0246f7c4cab395c6981e`
+  - Plus: `prod_sk_mTjEL_fc8511b7394cb3a18f093a3bd6706830b47faee3`
+- La clave de prueba del usuario fue verificada directamente → devuelve `enabled: true, edition: plus`
+
+#### `src/licensing/license.py` actualizado (ya en repo)
+- Eliminado el bucle sobre `PRODUCT_IDS` (el Worker ahora gestiona internamente qué producto usar)
+- `verify_online()` ahora solo envía `{ license_key }` al Worker (sin `product_id`)
+- Parsea la respuesta normalizada `{ success, edition }` que devuelve el nuevo Worker
+
+#### README actualizado (ya en repo)
+- Historial completo v2.1.0 → v2.9.1 documentado
+- Nueva sección "🔐 Sistema de Activación y Licencias" con tabla Basic/Plus y pasos de activación
+
+#### ⚠️ Próximo paso concreto (usuario)
+1. Abrir [dash.cloudflare.com](https://dash.cloudflare.com) → Workers & Pages → `autoprevias-license` → Edit code
+2. Pegar contenido de `/Users/borjacandel/Downloads/worker_license.txt` → Deploy
+3. Settings → Variables and Secrets → añadir `PAYHIP_SECRET_BASIC` y `PAYHIP_SECRET_PLUS` → borrar `PAYHIP_API_KEY`
+4. Avisar para probar con curl y si va → bump v2.9.2 → v2.9.3 + CI
 
 ---
 

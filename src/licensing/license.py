@@ -22,11 +22,6 @@ from pathlib import Path
 # Worker URL en base64 para no exponerla en texto plano
 _W_B64 = b"aHR0cHM6Ly9hdXRvcHJldmlhcy1saWNlbnNlLnJhZGljYWxyZWNvcmRzdmxjLndvcmtlcnMuZGV2"
 
-# Product links de Payhip (Basic y Plus) — URL completa requerida por la API
-PRODUCT_IDS = {
-    "basic": "https://payhip.com/b/NVkaK",
-    "plus":  "https://payhip.com/b/mTjEL",
-}
 
 # Tiempo entre verificaciones en línea (7 días en segundos)
 REVERIFY_INTERVAL = 7 * 24 * 3600
@@ -62,33 +57,27 @@ def _obfuscate(key: str) -> str:
 
 def verify_online(license_key: str) -> dict:
     """
-    Envía la clave al Worker y devuelve el resultado de Payhip.
+    Envía la clave al Worker y devuelve el resultado normalizado.
     Retorna dict con 'success', 'edition' y opcionalmente 'error'.
+    El Worker prueba Plus y Basic internamente usando las product-secret-keys.
     """
     key = license_key.strip().upper()
+    try:
+        payload = json.dumps({"license_key": key}).encode()
+        req = urllib.request.Request(
+            _worker_url(),
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            data = json.loads(resp.read().decode())
 
-    # Intentar Basic primero, luego Plus
-    for edition, product_id in PRODUCT_IDS.items():
-        try:
-            payload = json.dumps({
-                "license_key": key,
-                "product_id":  product_id,
-            }).encode()
-            req = urllib.request.Request(
-                _worker_url(),
-                data=payload,
-                headers={"Content-Type": "application/json"},
-                method="POST",
-            )
-            with urllib.request.urlopen(req, timeout=8) as resp:
-                data = json.loads(resp.read().decode())
+        if data.get("success"):
+            return {"success": True, "edition": data.get("edition", "basic"), "raw": data}
 
-            # Payhip devuelve {"success": true/false, ...}
-            if data.get("success") or data.get("code") == "success":
-                return {"success": True, "edition": edition, "raw": data}
-
-        except Exception:
-            continue
+    except Exception:
+        pass
 
     return {"success": False, "error": "Clave no válida o sin conexión"}
 
