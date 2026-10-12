@@ -45,9 +45,9 @@
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-12 (Sesión 36e — v2.9.7: causa real = Cloudflare 1010 por User-Agent; certifi eliminado)
-**Fase activa:** Licencias: fix aplicado en v2.9.7, pendiente de probar en el binario. Después: verificar segfault en `_build_ui` tras activación exitosa.
-**Versión Actual:** **v2.9.7**
+**Fecha última actualización:** 2026-10-12 (Sesión 36f — v2.10.0: auto-update completo con ventana + fix licencias de v2.9.7)
+**Fase activa:** v2.10.0 en CI. Pendiente de probar en binario: activación de licencia (UA propio) y segfault en `_build_ui` tras activar. El auto-update solo se podrá probar de extremo a extremo cuando exista una Release posterior a la instalada.
+**Versión Actual:** **v2.10.0**
 
 ### Credenciales de desarrollo (solo usar en sesiones de trabajo, nunca commitear)
 - `PAYHIP_SECRET_BASIC` = `prod_sk_NVkaK_b6359b99d5e7e31309cb0246f7c4cab395c6981e`
@@ -57,6 +57,30 @@
 
 ### Regla de oro — recordatorio permanente
 > Al terminar cualquier cambio: actualizar `progreso.md` + commit + push. Sin excepción.
+
+---
+
+### Resumen de Trabajo — Sesión 36f (2026-10-12): v2.10.0 — Auto-update completo
+
+#### Auditoría del actualizador previo (v2.8.x)
+- Solo mostraba un banner con enlace **roto** (`borjacandel` en vez de `borjacandeel`); sin ventana, descarga ni verificación.
+- Dependía de `packaging` (no está en requirements; llega transitivo) → riesgo de updater muerto en silencio en el binario.
+- Funciona solo porque el repo es **público** (API sin token → 200). **Aviso:** `CLAUDE.md §0` exige repo privado; si se hiciera privado, la API devolvería 404 y el updater y los enlaces `releases/latest/download/...` dejarían de funcionar para los usuarios. Pendiente de decisión del usuario (no se ha tocado la visibilidad).
+
+#### Implementación
+| Archivo | Contenido |
+|---------|-----------|
+| `src/updater_core.py` (nuevo, sin Qt) | `parse_version/is_newer` (tuplas enteras, sin `packaging`), `parse_release` (ignora draft/prerelease), `installer_asset_name` (`AutoPrevias-{Basic\|Plus}-macOS-arm64.dmg` / `-Windows-x64-Setup.exe`; Intel Mac → None), `parse_sha256sums`, `sha256_file`, versión omitida persistida en `update_state.json`. User-Agent propio. |
+| `src/update.py` | `UpdateChecker` (emite `ReleaseInfo`, respeta versión omitida) y `UpdateDownloader` (descarga a `~/Downloads` o temp con `.part`, progreso, cancelación, **verificación SHA-256 obligatoria** contra `SHA256SUMS.txt`; sin sums o hash distinto → borra y falla). |
+| `src/ui/update_dialog.py` (nuevo) | Ventana con novedades (notas del CHANGELOG), barra de progreso, botones *Descargar e instalar / Más tarde / Omitir esta versión*; tras verificar: *Instalar y cerrar AutoPrevias* (macOS `open` DMG, Windows `os.startfile`, luego `QApplication.quit()`). Fallback a página de descargas. |
+| `src/ui/app.py` | `_on_update_available(info)` muestra banner (clic → ventana) y abre la ventana a 1 s. |
+| `src/main.py` | `--selftest` comprueba que updater y diálogos están empaquetados. |
+| `tests/test_updater_core.py` | 5 tests de lógica pura (pasan). |
+
+#### Pruebas
+- `pytest tests/test_updater_core.py`: 5 passed.
+- Prueba de humo offscreen (PySide6 en venv temporal) con servidor HTTP local: descarga 3 MB con hash correcto → "Instalar y cerrar" abre instalador + quit; hash incorrecto → rechazado y borrado; sin SHA256SUMS → rechazado. Captura de la ventana revisada.
+- No probado aún: contra una Release real en el binario Nuitka (necesita una versión posterior publicada) ni en Windows.
 
 ---
 

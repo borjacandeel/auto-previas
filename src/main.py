@@ -188,6 +188,13 @@ def run_selftest() -> int:
         print(f"  ✓ Directorio assets: {assets_dir}")
         print(f"  ✓ Directorio caché: {cache_dir}")
 
+        # Actualizador y activación: deben quedar empaquetados en el binario
+        from src import update as _upd, updater_core as _upc
+        from src.ui import update_dialog as _upd_dlg, activate as _act
+        assert _upc.is_newer("2.10.0", "2.9.9") and not _upc.is_newer("2.9.7", "2.9.7")
+        assert _upc.installer_asset_name("plus", "darwin", "arm64") == "AutoPrevias-Plus-macOS-arm64.dmg"
+        print("  ✓ Actualizador y diálogo de activación empaquetados")
+
         try:
             tmp_ctx = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         except TypeError:

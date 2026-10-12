@@ -4067,7 +4067,9 @@ class MainWindow(QMainWindow):
         # ── Banner de actualización (oculto por defecto) ──────────────────
         _log("_build_ui: construyendo banner actualización...")
         self._update_banner = QLabel()
-        self._update_banner.setOpenExternalLinks(True)
+        self._update_banner.setOpenExternalLinks(False)
+        self._update_banner.linkActivated.connect(lambda _l: self._show_update_dialog())
+        self._update_info = None
         self._update_banner.setAlignment(Qt.AlignCenter)
         self._update_banner.setVisible(False)
         self._update_banner.setStyleSheet(f"""
@@ -4358,16 +4360,33 @@ class MainWindow(QMainWindow):
             except Exception:
                 pass
 
-    def _on_update_available(self, version: str, notes: str):
-        """Muestra un banner discreto cuando hay actualización disponible."""
+    def _on_update_available(self, info):
+        """Hay versión nueva: banner discreto y ventana de actualización."""
         if not hasattr(self, "_update_banner") or self._update_banner is None:
             return
+        self._update_info = info
         self._update_banner.setText(
-            f"🆕  AutoPrevias {version} disponible — "
-            f"<a href='https://github.com/borjacandel/auto-previas/releases/latest' "
-            f"style='color:#a78bfa;'>Descargar</a>"
+            f"🆕  AutoPrevias {info.version} disponible — "
+            f"<a href='update' style='color:#a78bfa;'>Actualizar</a>"
         )
         self._update_banner.setVisible(True)
+        QTimer.singleShot(1000, self._show_update_dialog)
+
+    def _show_update_dialog(self):
+        info = getattr(self, "_update_info", None)
+        if info is None or getattr(self, "_update_dialog_open", False):
+            return
+        self._update_dialog_open = True
+        try:
+            from src.ui.update_dialog import UpdateDialog
+            from src.config import get_edition
+            from src.__version__ import __version__
+            UpdateDialog(info, __version__, get_edition(), parent=self).exec()
+        except Exception:
+            import webbrowser
+            webbrowser.open(getattr(info, "page_url", ""))
+        finally:
+            self._update_dialog_open = False
 
     def _on_export_error(self, msg: str):
         self._stop_dots()

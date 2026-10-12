@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v2.9.7-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v2.10.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -238,7 +238,11 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v2.9.7] — 2026-10-12 (Hotfix: la clave de licencia ya se acepta)
+#### 🟢 [v2.10.0] — 2026-10-12 (Actualizaciones automáticas con ventana propia)
+- **Auto-update completo**: al arrancar, AutoPrevias avisa de versiones nuevas en una ventana con las novedades, descarga el instalador de tu sistema y edición con barra de progreso, verifica su integridad (SHA-256) y lo abre. Puedes elegir *Más tarde* u *Omitir esta versión*.
+- Incluye la corrección de activación de licencia de v2.9.7.
+
+#### [v2.9.7] — 2026-10-12 (Hotfix: la clave de licencia ya se acepta)
 - **Activación corregida**: el servidor de licencias bloqueaba la identificación que enviaba la app. Ahora la clave se verifica correctamente.
 - **Sin cierres al activar**: se elimina el componente de certificados de v2.9.6 que provocaba un cierre inesperado.
 

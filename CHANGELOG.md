@@ -3,6 +3,16 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.10.0] - 2026-10-12
+
+### Añadido
+- **Actualizaciones automáticas con ventana propia**: al abrir AutoPrevias comprueba si hay una versión nueva. Si la hay, aparece una ventana con las novedades y tres opciones: *Descargar e instalar*, *Más tarde* u *Omitir esta versión*. La app descarga el instalador que corresponde a tu sistema y a tu edición (Basic o Plus), muestra el progreso y comprueba que el archivo no está dañado antes de abrirlo. Al pulsar *Instalar y cerrar AutoPrevias* se abre el instalador y la app se cierra para poder actualizarse.
+- Si por cualquier motivo no se puede descargar o verificar el instalador, la ventana te lleva a la página de descargas en vez de instalar algo dudoso.
+
+### Corregido
+- **El aviso de nueva versión llevaba a un enlace roto**: la dirección de descarga tenía un error tipográfico. Ahora el aviso de la parte inferior abre la ventana de actualización.
+- La comprobación de versiones ya no depende de un componente externo que podía faltar en el instalador.
+
 ## [2.9.7] - 2026-10-12
 
 ### Corregido
