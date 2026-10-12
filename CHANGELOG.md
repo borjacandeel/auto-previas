@@ -3,6 +3,11 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.9.3] - 2026-10-12
+
+### Corregido
+- **Activación de licencia fallaba siempre en los instaladores**: la app compilada (v2.9.1–v2.9.2) seguía usando el código antiguo que enviaba un campo `product_id` que el nuevo Worker ya no acepta. Ahora solo se envía `license_key` y el Worker gestiona internamente la verificación contra los productos Basic y Plus.
+
 ## [2.9.2] - 2026-10-08
 
 ### Corregido

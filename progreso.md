@@ -11,9 +11,8 @@
 
 | # | Tarea | Prioridad | Notas |
 |---|-------|-----------|-------|
-| 1 | **Actualizar Cloudflare Worker** — Pegar nuevo código (`worker_license.txt`), añadir secrets `PAYHIP_SECRET_BASIC` y `PAYHIP_SECRET_PLUS`, borrar `PAYHIP_API_KEY`. Tras esto, probar con curl y publicar v2.9.3 | 🔴 Alta | Código listo. Pendiente solo el deploy manual en dash.cloudflare.com |
-| 2 | **Panel de previas recientes** — Lista de previas ya generadas (carpeta de ficheros) con reproductor rápido y opción de "abrir proyecto" para recargar el track original | 🟡 Media | Feature solicitada en sesión 29 |
-| 3 | **Presets de firma guardados como archivos** — Carpeta `presets/` en datos de usuario con JSONs nombrados (ej. "Radical Records Main", "Set de Verano"). UI para crear/cargar/borrar presets | 🟡 Media | Feature solicitada en sesión 29 |
+| 1 | **Panel de previas recientes** — Lista de previas ya generadas (carpeta de ficheros) con reproductor rápido y opción de "abrir proyecto" para recargar el track original | 🟡 Media | Feature solicitada en sesión 29 |
+| 2 | **Presets de firma guardados como archivos** — Carpeta `presets/` en datos de usuario con JSONs nombrados (ej. "Radical Records Main", "Set de Verano"). UI para crear/cargar/borrar presets | 🟡 Media | Feature solicitada en sesión 29 |
 
 ---
 
@@ -46,9 +45,15 @@
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-11 (Sesión 35 — v2.9.2: debug sistema de licencias, Worker reescrito con product-secret-key)
-**Fase activa:** Código listo, pendiente actualizar Cloudflare Worker para que el sistema de licencias funcione end-to-end
-**Versión Actual:** **v2.9.2** (publicada en GitHub, pero licencias aún no operativas hasta actualizar Cloudflare)
+**Fecha última actualización:** 2026-10-12 (Sesión 36 — v2.9.3: sistema de licencias 100% operativo)
+**Fase activa:** Sistema de licencias completo y funcional. Worker desplegado y verificado. Instaladores v2.9.3 en compilación CI.
+**Versión Actual:** **v2.9.3**
+
+### Credenciales de desarrollo (solo usar en sesiones de trabajo, nunca commitear)
+- `PAYHIP_SECRET_BASIC` = `prod_sk_NVkaK_b6359b99d5e7e31309cb0246f7c4cab395c6981e`
+- `PAYHIP_SECRET_PLUS`  = `prod_sk_mTjEL_fc8511b7394cb3a18f093a3bd6706830b47faee3`
+- Worker URL: `https://autoprevias-license.radicalrecordsvlc.workers.dev`
+- Test verificado con curl: clave `VPTBV-JCC7C-8GW36-4VRGU` → `{"success":true,"edition":"plus"}`
 
 ---
 
