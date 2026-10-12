@@ -46,7 +46,7 @@
 
 ## Estado actual
 **Fecha última actualización:** 2026-10-12 (Sesión 36j — v3.0.1: auto-update sin abrir páginas web)
-**Fase activa:** v3.0.0 PUBLICADA y VERIFICADA en macOS (activación Plus OK + ventana principal abre sin crash). Pendiente: probar en Windows, rotar claves de Payhip, probar el auto-update con una versión posterior. El auto-update solo se podrá probar de extremo a extremo cuando exista una Release posterior a la instalada (p. ej. 3.0.1).
+**Fase activa:** v3.0.1 PUBLICADA. Verificado en macOS de punta a punta: activación, ventana principal y auto-update 3.0.0→3.0.1. Pendiente: Windows real, edición Basic, rotar claves de Payhip, y limpiar el formato markdown de las novedades en la ventana de actualización (muestra `### ` y `*`; agrupar en 3.0.2). El auto-update solo se podrá probar de extremo a extremo cuando exista una Release posterior a la instalada (p. ej. 3.0.1).
 **Versión Actual:** **v3.0.1**
 
 ### Credenciales de desarrollo — NO se guardan en el repo (público)
@@ -83,7 +83,7 @@
 | Ventana principal macOS | ✅ | Abre sin crash (causa anterior = Nuitka 4.3) |
 | Auto-update: lógica | ✅ | 5 tests unitarios + prueba offscreen con servidor local (hash ok / corrupto / sin sums) |
 | Auto-update: contra Release REAL | ✅ | Consulta a la API detecta 3.0.0; elige los 4 instaladores correctos (existen en la Release y en SHA256SUMS); descarga real de 145,6 MB en 8 s con verificación SHA-256 correcta |
-| Auto-update: ventana en el binario compilado | ⏳ | No se ha visto aún: solo aparece si hay versión posterior a la instalada (publicar 3.0.1 y abrir una app 3.0.0) |
+| Auto-update: ventana en el binario compilado | ✅ | Usuario (macOS): app 3.0.0 mostró la ventana de 3.0.1, descargó, instaló y reabrió ya como v3.0.1 con licencia Plus intacta y sin banner |
 | Windows (instalador real en PC) | ⏳ | Selftest de CI OK, pero nadie lo ha abierto en un Windows real |
 | Edición Basic | ⏳ | Compila y pasa selftest; sin prueba manual con clave Basic |
 | Rotación de claves Payhip + licencia de prueba | ❌ pendiente del usuario | Estuvieron en el historial público de git |
@@ -99,7 +99,7 @@
 #### Pendientes
 1. (Usuario) Rotar product-secret-keys de Payhip + secrets del Worker + licencia de prueba.
 2. Probar instalador en Windows real y edición Basic.
-3. Publicar 3.0.1 (cuando haya cambios) para ver la ventana de auto-update en el binario.
+3. ~~Ver la ventana de auto-update en el binario~~ HECHO (3.0.0→3.0.1 OK en macOS). Pendiente cosmético 3.0.2: `_clean_notes` debe convertir `### Título`→`Título`, `- `→`• ` y quitar `*cursiva*`.
 4. Panel de previas recientes; presets de firma como archivos.
 
 ---
