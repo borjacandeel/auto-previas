@@ -280,7 +280,19 @@ def build_preview_audio(
     # ── paso 4: Inserción de firma de voz / Voice Drop (v2.0) ──────────────────
     voice_drop = cfg.get("voice_drop_path")
     voice_enabled = bool(cfg.get("voice_drop_enabled", True if voice_drop else False))
-    if voice_enabled and voice_drop and Path(voice_drop).exists():
+    promo_mode = bool(cfg.get("promo_mode")) and bool(voice_drop) and Path(voice_drop).exists()
+    if promo_mode:
+        _prog(93, "Modo promo antifugas: repitiendo la firma sobre toda la previa…")
+        from src.engine.effects import inject_repeating_tags
+        result = inject_repeating_tags(
+            result, SR_OUT, voice_drop,
+            interval_sec=float(cfg.get("promo_interval_sec", 20.0)),
+            jitter_sec=float(cfg.get("promo_jitter_sec", 3.0)),
+            first_sec=float(cfg.get("promo_first_sec", 8.0)),
+            volume_db=float(cfg.get("promo_tag_volume_db", -3.0)),
+            seed=int(seed_used),
+        )
+    elif voice_enabled and voice_drop and Path(voice_drop).exists():
         _prog(93, "Incrustando firma de voz / Voice Drop con auto-ducking…")
         from src.engine.effects import inject_voice_drop
         pos = cfg.get("voice_drop_position", "predrop").lower()
@@ -519,7 +531,8 @@ def export_files(
         generated.append(wav_target)
 
     if "mp3" in paths:
-        _prog(98, "Exportando MP3 320kbps con firma y carátula…")
+        kbps = int(meta.get("mp3_kbps") or 320)
+        _prog(98, f"Exportando MP3 {kbps}kbps con firma y carátula…")
         mp3_target = str(paths["mp3"])
         mp3_done = False
 
@@ -548,7 +561,7 @@ def export_files(
                         "-i", src_wav,
                         "-i", str(optimized_cover),
                         "-map", "0:a", "-map", "1:v",
-                        "-codec:a", "libmp3lame", "-b:a", "320k",
+                        "-codec:a", "libmp3lame", "-b:a", f"{kbps}k",
                         "-codec:v", "copy",
                         "-disposition:v:0", "attached_pic",
                         "-write_xing", "1", "-id3v2_version", "3",
@@ -583,7 +596,7 @@ def export_files(
                 try:
                     cmd_nopic = [
                         ffmpeg_bin, "-y", "-i", src_wav,
-                        "-codec:a", "libmp3lame", "-b:a", "320k",
+                        "-codec:a", "libmp3lame", "-b:a", f"{kbps}k",
                         "-write_xing", "1", "-id3v2_version", "3",
                         "-metadata", f"title={track_title}",
                         "-metadata", f"artist={artist}",
@@ -615,7 +628,7 @@ def export_files(
             try:
                 from pedalboard.io import AudioFile
                 with AudioFile(mp3_target, "w", samplerate=sr,
-                                num_channels=2, quality=320) as f:
+                                num_channels=2, quality=kbps) as f:
                     f.write(audio)
                 generated.append(mp3_target)
             except Exception as e:

@@ -333,6 +333,8 @@ def _check_license_on_startup() -> bool:
         return True
 
     try:
+        from src import i18n
+        i18n.init_from_config()          # el diálogo de activación también respeta el idioma
         from src.licensing.license import check_license, LicenseStatus
         from src.config import set_edition
 

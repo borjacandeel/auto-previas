@@ -56,6 +56,8 @@ from src.analysis.structure import analyze_structure, SectionType
 from src.analysis.segments import build_preview_plan
 from src.engine.export import build_preview_audio, export_files, output_paths
 from src.engine.variations import compute_preview_tempo_curve
+from src import i18n
+from src.i18n import tr
 
 try:
     import pyqtgraph as pg
@@ -251,6 +253,8 @@ class ExportWorker(QThread):
             metadata["video_palette"]    = self.cfg.get("video_palette", "radical")
             metadata["video_promo_text"] = self.cfg.get("video_promo_text", "RADICAL RECORDS · PROMO EXCLUSIVA")
             metadata["aspect_ratio"]     = self.cfg.get("aspect_ratio", "9:16")
+            if self.cfg.get("mp3_kbps"):
+                metadata["mp3_kbps"] = int(self.cfg["mp3_kbps"])
 
             cover_path = self.cfg.get("cover_path")
 
@@ -1329,6 +1333,17 @@ class BrandingCard(QFrame):
     def get_cover_path(self) -> str:
         return self._drop_area.get_cover_path()
 
+    def apply_signature(self, sig: dict):
+        """Aplica una firma guardada (solo las claves presentes) y su carátula si existe."""
+        for key, edit in (("artist", self._edit_artist), ("label", self._edit_label),
+                          ("album", self._edit_album), ("genre", self._edit_genre),
+                          ("comment", self._edit_comment)):
+            if key in sig:
+                edit.setText(sig.get(key) or "")
+        cover = sig.get("cover_path") or ""
+        if cover and Path(cover).exists():
+            self._drop_area.set_cover(cover)
+
     def persist_if_requested(self):
         c = load_cfg()
         # Los campos de texto siempre se guardan al generar (para no perderse entre sesiones)
@@ -1378,6 +1393,7 @@ class ResultPanel(QWidget):
     generate_requested    = Signal()
     play_requested        = Signal(str)   # path del archivo para reproducir
     bpm_corrected         = Signal(float) # BPM corregido manualmente por el usuario
+    status_message        = Signal(str)   # avisos breves para la barra de estado
 
     def __init__(self):
         super().__init__()
@@ -1399,6 +1415,7 @@ class ResultPanel(QWidget):
         self._voice_drop_path     = ""
         self._voice_drop_time_sec = -1.0  # -1 = usar cálculo automático
         self._voice_drop_dur_sec  = 0.0   # duración del archivo de voice drop
+        self._promo_saved         = None  # formatos del usuario mientras el modo promo está activo
         self._build_ui()
         self._apply_edition_limits()
 
@@ -1516,6 +1533,14 @@ class ResultPanel(QWidget):
         self._update_preset_styles(120)
 
         p_lay.addStretch()
+
+        # Presets guardados (firma y estilo como archivos con nombre) — solo Plus
+        from src.ui.presets_bar import PresetBar
+        self._preset_bar = PresetBar()
+        self._preset_bar.apply_requested.connect(self._on_preset_apply)
+        self._preset_bar.save_requested.connect(self._on_preset_save)
+        self._preset_bar.delete_requested.connect(self._on_preset_delete)
+        p_lay.addWidget(self._preset_bar)
 
         # Botón "Nuevo Track" — accesible desde la barra de presets
         self._btn_new_track_top = QPushButton("← Nuevo track")
@@ -1783,8 +1808,40 @@ class ResultPanel(QWidget):
         row_fx.addWidget(self._btn_voice_drop)
         row_fx.addWidget(self._combo_voice_pos)
         row_fx.addWidget(self._lbl_voice_drop)
+
+        # Modo promo antifugas (Plus): repite la firma y exporta MP3 128 kbps
+        self._row_promo_widget = QWidget()
+        row_promo = QHBoxLayout(self._row_promo_widget)
+        row_promo.setContentsMargins(0, 0, 0, 0)
+        row_promo.setSpacing(6)
+        self._chk_promo = QCheckBox("🛡️ Modo promo")
+        self._chk_promo.setStyleSheet(chk_style)
+        self._chk_promo.setToolTip(
+            "Modo promo antifugas: repite tu firma de voz cada pocos segundos sobre toda la previa y exporta "
+            "solo en MP3 128 kbps, para que el audio no se pueda reutilizar sin tu firma")
+        self._spin_promo = QSpinBox()
+        self._spin_promo.setRange(10, 60)
+        self._spin_promo.setValue(20)
+        self._spin_promo.setSuffix(" s")
+        self._spin_promo.setFixedSize(64, 22)
+        self._spin_promo.setStyleSheet(_input_style())
+        self._spin_promo.setToolTip("Cada cuántos segundos se repite la firma")
+        self._spin_promo.setEnabled(False)
+        self._lbl_promo = QLabel("")
+        self._lbl_promo.setStyleSheet("font-size: 10px; font-weight: 600; background: transparent; border: none;")
+        row_promo.addWidget(self._chk_promo)
+        row_promo.addWidget(self._spin_promo)
+        row_promo.addWidget(self._lbl_promo)
+        row_fx.addSpacing(10)
+        row_fx.addWidget(self._row_promo_widget)
+        self._chk_promo.toggled.connect(self._on_promo_toggled)
+        self._spin_promo.valueChanged.connect(lambda _v: self._update_promo_hint())
+
         row_fx.addStretch()
         exp_lay.addLayout(row_fx)
+
+        self._chk_promo.toggled.connect(self._on_promo_toggled)
+        self._spin_promo.valueChanged.connect(lambda _v: self._update_promo_hint())
 
         # Fila Opciones de Vídeo Viral v2.0 (Apartado 2: 3 y 4)
         self._row_video_widget = QWidget()
@@ -2306,24 +2363,28 @@ class ResultPanel(QWidget):
             "Archivos de Audio (*.wav *.mp3 *.aiff *.flac *.m4a)",
         )
         if file:
-            self._voice_drop_path = file
-            # Leer duración del archivo para mostrar región en la waveform
-            dur = 0.0
+            self._set_voice_drop_path(file)
+
+    def _set_voice_drop_path(self, file: str):
+        self._voice_drop_path = file
+        # Leer duración del archivo para mostrar región en la waveform
+        dur = 0.0
+        try:
+            import soundfile as _sf
+            dur = float(_sf.info(file).duration)
+        except Exception:
             try:
-                import soundfile as _sf
-                dur = float(_sf.info(file).duration)
+                import librosa as _lr
+                dur = float(_lr.get_duration(path=file))
             except Exception:
-                try:
-                    import librosa as _lr
-                    dur = float(_lr.get_duration(path=file))
-                except Exception:
-                    pass
-            self._voice_drop_dur_sec = dur
-            p = Path(file)
-            dur_str = f" · {dur:.1f}s" if dur > 0 else ""
-            self._lbl_voice_drop.setText(f"✓ {p.name[:14]}{dur_str}")
-            self._btn_voice_drop.setText("🎙️ Cambiar Drop")
-            self._update_voice_drop_marker()
+                pass
+        self._voice_drop_dur_sec = dur
+        p = Path(file)
+        dur_str = f" · {dur:.1f}s" if dur > 0 else ""
+        self._lbl_voice_drop.setText(f"✓ {p.name[:14]}{dur_str}")
+        self._btn_voice_drop.setText(tr("🎙️ Cambiar Drop"))
+        self._update_voice_drop_marker()
+        self._update_promo_hint()
 
     def _update_voice_drop_marker(self):
         """Calcula y muestra el marcador dorado de Voice Drop en la waveform."""
@@ -2381,7 +2442,182 @@ class ResultPanel(QWidget):
             "voice_drop_position": voice_pos,
             "voice_drop_time_sec": self._voice_drop_time_sec,
             "key_str": self._key_str,
+            **self._promo_options(),
         }
+
+    def refresh_language(self):
+        """Repinta lo que se genera por código (leyendas de la gráfica, pista del modo promo)."""
+        try:
+            self._update_promo_hint()
+            if HAS_WAVEFORM and self._plan is not None and self._source_path:
+                self._waveform.update_plan_highlights(self._plan.segments)
+                self._waveform._update_badges()
+                self._update_voice_drop_marker()
+        except Exception:
+            pass
+        i18n.translate_tree(self)
+
+    # ── Modo promo antifugas ──────────────────────────────────────────────────
+    def _promo_options(self) -> dict:
+        """Opciones del modo promo. Con el modo activo solo se exporta MP3 128 kbps."""
+        on = bool(self._chk_promo.isChecked()) and get_edition() == "plus"
+        opts = {"promo_mode": on, "promo_interval_sec": int(self._spin_promo.value())}
+        if on:
+            opts.update({"export_wav": False, "export_flac": False, "export_mp3": True, "mp3_kbps": 128})
+        return opts
+
+    def _on_promo_toggled(self, on: bool):
+        self._spin_promo.setEnabled(on)
+        fmt = (self._chk_wav, self._chk_flac, self._chk_mp3)
+        if on:
+            self._promo_saved = (self._chk_wav.isChecked(), self._chk_flac.isChecked(), self._chk_mp3.isChecked())
+            self._chk_wav.setChecked(False)
+            self._chk_flac.setChecked(False)
+            self._chk_mp3.setChecked(True)
+            self._chk_mp3.setText("MP3 128k")
+            for w in fmt:
+                w.setEnabled(False)
+        else:
+            for w in fmt:
+                w.setEnabled(True)
+            self._chk_mp3.setText("MP3 320k")
+            if self._promo_saved:
+                self._chk_wav.setChecked(self._promo_saved[0])
+                self._chk_flac.setChecked(self._promo_saved[1])
+                self._chk_mp3.setChecked(self._promo_saved[2])
+            self._promo_saved = None
+        self._update_promo_hint()
+
+    def _update_promo_hint(self):
+        if not self._chk_promo.isChecked():
+            self._lbl_promo.setText("")
+            return
+        if not self._voice_drop_path:
+            self._lbl_promo.setStyleSheet(f"color: {WARN}; font-size: 10px; font-weight: 600; background: transparent; border: none;")
+            i18n.set_text(self._lbl_promo, "⚠ Elige tu firma (Voice Drop)")
+        else:
+            self._lbl_promo.setStyleSheet(f"color: {GREEN}; font-size: 10px; font-weight: 600; background: transparent; border: none;")
+            i18n.set_text(self._lbl_promo, "«{name}» cada ~{sec} s · MP3 128k",
+                          name=Path(self._voice_drop_path).stem[:14], sec=self._spin_promo.value())
+
+    # ── Estado guardable (presets e historial) ────────────────────────────────
+    def get_state(self, signature: bool = True, style: bool = True) -> dict:
+        state: dict = {}
+        if style:
+            saved = self._promo_saved if (self._chk_promo.isChecked() and self._promo_saved) else None
+            wav, flac, mp3 = saved if saved else (self._chk_wav.isChecked(), self._chk_flac.isChecked(),
+                                                  self._chk_mp3.isChecked())
+            state["style"] = {
+                "duration_sec": int(getattr(self, "_active_preset_sec", 120)),
+                "export": {"wav": wav, "mp3": mp3, "flac": flac, "video": self._chk_video.isChecked()},
+                "fx": {"flanger": self._chk_fx_flanger.isChecked(), "filter_sweep": self._chk_fx_filter.isChecked(),
+                       "master": self._chk_fx_master.isChecked()},
+                "voice": {"path": self._voice_drop_path, "position": self._combo_voice_pos.currentData(),
+                          "time_sec": self._voice_drop_time_sec},
+                "promo": {"enabled": self._chk_promo.isChecked(), "interval_sec": int(self._spin_promo.value())},
+                "video": {"palette": self._combo_video_pal.currentData(), "aspect": self._combo_aspect.currentData(),
+                          "banner": self._edit_promo.text().strip()},
+            }
+        if signature and hasattr(self, "_branding_card"):
+            md = self._branding_card.get_metadata()
+            state["signature"] = {k: md.get(k, "") for k in ("artist", "label", "album", "genre", "comment")}
+            state["signature"]["cover_path"] = self._branding_card.get_cover_path()
+        return state
+
+    @staticmethod
+    def _set_combo_by_data(combo, value):
+        for i in range(combo.count()):
+            if combo.itemData(i) == value:
+                combo.setCurrentIndex(i)
+                return
+
+    def apply_state(self, state: dict):
+        """Aplica firma y/o estilo (solo los grupos presentes). Respeta las limitaciones de la edición."""
+        plus = get_edition() == "plus"
+        sig = state.get("signature") or {}
+        if sig and plus and hasattr(self, "_branding_card"):
+            self._branding_card.apply_signature(sig)
+        st = state.get("style") or {}
+        if not st:
+            return
+        if self._chk_promo.isChecked():
+            self._chk_promo.setChecked(False)           # libera los formatos antes de fijarlos
+        ex = st.get("export") or {}
+        for key, chk in (("wav", self._chk_wav), ("mp3", self._chk_mp3), ("flac", self._chk_flac),
+                         ("video", self._chk_video)):
+            if key in ex and not chk.isHidden():
+                chk.setChecked(bool(ex[key]))
+        if plus:
+            fx = st.get("fx") or {}
+            for key, chk in (("flanger", self._chk_fx_flanger), ("filter_sweep", self._chk_fx_filter),
+                             ("master", self._chk_fx_master)):
+                if key in fx:
+                    chk.setChecked(bool(fx[key]))
+        sec = st.get("duration_sec")
+        if sec in (15, 30, 60, 120):
+            self._apply_duration_preset(int(sec))
+        voice = st.get("voice") or {}
+        if plus and voice:
+            vp = voice.get("path") or ""
+            if vp and Path(vp).exists():
+                self._set_voice_drop_path(vp)
+            elif vp:
+                self.status_message.emit(tr("⚠ No se encuentra el audio de firma del preset: {name}", name=Path(vp).name))
+            self._set_combo_by_data(self._combo_voice_pos, voice.get("position", "predrop"))
+            self._voice_drop_time_sec = float(voice.get("time_sec", -1.0))
+            self._update_voice_drop_marker()
+        vid = st.get("video") or {}
+        if vid:
+            self._set_combo_by_data(self._combo_video_pal, vid.get("palette"))
+            self._set_combo_by_data(self._combo_aspect, vid.get("aspect"))
+            self._edit_promo.setText(vid.get("banner", ""))
+        promo = st.get("promo") or {}
+        if plus and promo:
+            self._spin_promo.setValue(int(promo.get("interval_sec", 20)))
+            self._chk_promo.setChecked(bool(promo.get("enabled")))
+
+    def restore_project(self, settings: dict, seed: int):
+        """«Reabrir proyecto»: mismos ajustes, mismo tempo y misma seed que la previa original."""
+        self.apply_state(settings.get("state") or {})
+        try:
+            mode = settings.get("tempo_mode")
+            events = settings.get("tempo_events") or []
+            if mode == "manual" and events:
+                self._set_tempo_mode("manual")
+                self._load_tempo_events(events)
+        except Exception:
+            pass
+        self._spin_seed.setValue(int(seed))
+
+    def _on_preset_apply(self, name: str):
+        from src.presets import load_preset
+        data = load_preset(name)
+        if data is None:
+            self.status_message.emit(tr("⚠ No se pudo leer el preset «{name}»", name=name))
+            return
+        self.apply_state(data)
+        parts = []
+        if "signature" in data:
+            parts.append(tr("firma"))
+        if "style" in data:
+            parts.append(tr("estilo"))
+        self.status_message.emit(tr("✅ Preset «{name}» aplicado ({what})", name=name, what=" + ".join(parts)))
+
+    def _on_preset_save(self, name: str, with_signature: bool, with_style: bool):
+        from src.presets import save_preset
+        try:
+            saved = save_preset(name, self.get_state(signature=with_signature, style=with_style))
+        except Exception as exc:
+            self.status_message.emit(tr("⚠ No se pudo guardar el preset: {err}", err=str(exc)))
+            return
+        self._preset_bar.reload(select=saved)
+        self.status_message.emit(tr("💾 Preset «{name}» guardado", name=saved))
+
+    def _on_preset_delete(self, name: str):
+        from src.presets import delete_preset
+        delete_preset(name)
+        self._preset_bar.reload()
+        self.status_message.emit(tr("🗑️ Preset «{name}» borrado", name=name))
 
     def update_after_regen(self, plan):
         self._plan = plan
@@ -3521,6 +3757,12 @@ class ResultPanel(QWidget):
         if hasattr(self, "_branding_card"):
             self._branding_card.setVisible(plus)
 
+        # Presets y modo promo antifugas — solo Plus
+        self._preset_bar.setVisible(plus)
+        self._row_promo_widget.setVisible(plus)
+        if not plus:
+            self._chk_promo.setChecked(False)
+
         # Badge informativo en modo Básico
         if not plus and not hasattr(self, "_badge_basic"):
             from PySide6.QtWidgets import QLabel
@@ -3684,6 +3926,9 @@ class MainWindow(QMainWindow):
         self._beat_grid     = None
         self._worker        = None
         self._export_worker = None
+        self._pending_project = None     # «Reabrir proyecto»: ajustes a aplicar tras el análisis
+        self._update_info   = None
+        i18n.init_from_config(self._cfg)
 
         self._dot_count    = 0
         self._progress_msg = ""   # mensaje limpio (sin puntos animados)
@@ -3706,6 +3951,8 @@ class MainWindow(QMainWindow):
 
         _log_startup("MainWindow: construyendo widgets de interfaz de usuario...")
         self._build_ui()
+        if i18n.get_language() != "es":
+            i18n.translate_tree(self)
         _log_startup("MainWindow: interfaz de usuario lista.")
 
         if initial_file:
@@ -3875,7 +4122,7 @@ class MainWindow(QMainWindow):
         self._btn_recents.setCursor(Qt.PointingHandCursor)
         self._btn_recents.setStyleSheet(_btn(BG3, TEXT_MID, BG4, radius=4, fs=10))
         self._btn_recents.setToolTip("Ver y cargar archivos de audio procesados recientemente")
-        self._btn_recents.clicked.connect(self._show_recent_menu)
+        self._btn_recents.clicked.connect(self._open_history_dialog)
         logo_row.addWidget(self._btn_recents)
 
         self._btn_batch_hdr = QPushButton("📁 Modo Lote")
@@ -3893,6 +4140,25 @@ class MainWindow(QMainWindow):
         self._btn_watch.setToolTip("Vigilar una carpeta y generar previas automáticamente cuando caiga un nuevo tema")
         self._btn_watch.clicked.connect(self._toggle_watch_folder)
         logo_row.addWidget(self._btn_watch)
+
+        self._btn_license = QPushButton("⚙ Licencia")
+        self._btn_license.setFixedHeight(22)
+        self._btn_license.setCursor(Qt.PointingHandCursor)
+        self._btn_license.setStyleSheet(_btn(BG3, TEXT_MID, BG4, radius=4, fs=10))
+        self._btn_license.setToolTip("Versión, licencia, idioma y actualizaciones")
+        self._btn_license.clicked.connect(self._open_license_dialog)
+        logo_row.addWidget(self._btn_license)
+
+        self._btn_lang = QPushButton(i18n.get_language().upper())
+        self._btn_lang.setFixedSize(34, 22)
+        self._btn_lang.setCursor(Qt.PointingHandCursor)
+        self._btn_lang.setStyleSheet(
+            f"QPushButton {{ background: {BG3}; color: {TEXT_MID}; border: none; border-radius: 4px;"
+            "font-size: 10px; font-weight: 800; padding: 0; }"
+            f"QPushButton:hover {{ background: {BG4}; color: {TEXT}; }}")
+        self._btn_lang.setToolTip("Idioma · Language (ES / EN)")
+        self._btn_lang.clicked.connect(self._toggle_language)
+        logo_row.addWidget(self._btn_lang)
 
         # Ocultar features de lote en edición Básica
         _plus = get_edition() == "plus"
@@ -4011,6 +4277,7 @@ class MainWindow(QMainWindow):
         self._results.generate_requested.connect(self._generate)
         self._results.load_file_requested.connect(self._load_file)
         self._results.bpm_corrected.connect(self._on_bpm_corrected)
+        self._results.status_message.connect(lambda m: self._progress_label.setText(i18n.translate(m)))
         scroll.setWidget(self._results)
         self._stack.addWidget(scroll)  # índice 2
 
@@ -4157,7 +4424,7 @@ class MainWindow(QMainWindow):
         self._current_file = path
         name = Path(path).name
         self._hint_lbl.setText(name[:50] + ("…" if len(name) > 50 else ""))
-        self._set_progress(0, f"Analizando  {name}")
+        self._set_progress(0, "Analizando  {name}", name=name)
         self._start_dots()
 
         # Mostrar página de análisis animada con crossfade
@@ -4197,10 +4464,20 @@ class MainWindow(QMainWindow):
 
         drops = len(analysis.drops())
         key_str = f"  ·  {key_res.camelot} ({key_res.notation})" if key_res else ""
-        self._set_progress(100,
-            f"✅  {Path(self._current_file).name}  ·  "
-            f"{bpm:.1f} BPM{key_str}  ·  {drops} drop{'s' if drops != 1 else ''}"
+        self._set_progress(
+            100, "✅  {name}  ·  {bpm} BPM{key}  ·  {drops} {word}",
+            name=Path(self._current_file).name, bpm=f"{bpm:.1f}", key=key_str, drops=drops,
+            word="drop" if drops == 1 else "drops",
         )
+
+        # «Reabrir proyecto»: restaurar ajustes y seed de la previa original
+        if self._pending_project is not None:
+            entry, self._pending_project = self._pending_project, None
+            try:
+                self._results.restore_project(entry.get("settings") or {}, int(entry.get("seed", 0)))
+                self._set_progress(100, "🔄 Proyecto reabierto: mismos ajustes y misma seed que la previa original")
+            except Exception:
+                pass
 
     def _on_error(self, msg: str):
         self._stop_dots()
@@ -4211,11 +4488,15 @@ class MainWindow(QMainWindow):
         short = lines[-1] if lines else msg
         self._set_progress(0, f"❌  {short}")
 
-    def _set_progress(self, pct: int, msg: str):
+    def _set_progress(self, pct: int, msg: str, **kw):
+        """`msg` es el texto fuente en castellano (plantilla si lleva `kw`): se traduce según el idioma
+        activo y se recuerda para poder volver a pintarlo al cambiar de idioma."""
+        self._progress_src = (msg, kw)
+        text = tr(msg, **kw) if kw else i18n.translate(msg)
         self._progress_bar.setValue(pct)
         # Guardar el mensaje limpio para la animación de puntos
-        self._progress_msg = msg.rstrip(".… ")
-        self._progress_label.setText(msg)
+        self._progress_msg = text.rstrip(".… ")
+        self._progress_label.setText(text)
 
     # ── Acciones ──────────────────────────────────────────────────────────
 
@@ -4286,12 +4567,20 @@ class MainWindow(QMainWindow):
         mp3 = options.get("export_mp3", True)
         flac = options.get("export_flac", False)
         video = options.get("export_video", False)
+        if options.get("promo_mode") and not (options.get("voice_drop_path")
+                                               and Path(options["voice_drop_path"]).exists()):
+            self._set_progress(0, "⚠  El modo promo necesita tu firma: elige un audio con 🎙️ Voice Drop…")
+            return
         if not any([wav, mp3, flac, video]):
             self._set_progress(0, "⚠  Selecciona al menos un formato para exportar")
             return
 
         seed = self._results.get_seed()
         metadata = self._results.get_branding_metadata()
+        if options.get("promo_mode"):
+            metadata = dict(metadata)
+            base = (metadata.get("comment") or "").strip()
+            metadata["comment"] = (base + " · " if base else "") + "PROMO — NO DISTRIBUIR / NOT FOR DISTRIBUTION"
         cover_path = self._results.get_branding_cover_path()
         self._results.persist_branding_if_requested()
 
@@ -4336,15 +4625,14 @@ class MainWindow(QMainWindow):
             display = user_files if user_files else generated
             names = ", ".join(Path(p).name for p in display)
             folder = str(Path(display[0]).parent)
-            self._set_progress(100,
-                f"✅  Guardado en: {folder}  ·  ({names})"
-            )
+            self._set_progress(100, "✅  Guardado en: {folder}  ·  ({names})", folder=folder, names=names)
+            self._record_history(generated, seed)
             self._results._btn_open_folder.setStyleSheet(_btn("#059669", "#ffffff", "#10b981", radius=5, fs=10.5))
             # F6 — Notificación nativa del SO
             try:
                 from src.notifications import notify
                 track = Path(self._current_file).stem if self._current_file else "Track"
-                notify("AutoPrevias", f"✅ Previa exportada: {track}")
+                notify("AutoPrevias", tr("✅ Previa exportada: {track}", track=track))
             except Exception:
                 pass
         else:
@@ -4365,10 +4653,7 @@ class MainWindow(QMainWindow):
         if not hasattr(self, "_update_banner") or self._update_banner is None:
             return
         self._update_info = info
-        self._update_banner.setText(
-            f"🆕  AutoPrevias {info.version} disponible — "
-            f"<a href='update' style='color:#a78bfa;'>Actualizar</a>"
-        )
+        self._render_update_banner()
         self._update_banner.setVisible(True)
         QTimer.singleShot(1000, self._show_update_dialog)
 
@@ -4419,7 +4704,7 @@ class MainWindow(QMainWindow):
             dlg = BatchDialog(initial_files=initial_files, parent=self)
             dlg.exec()
         except Exception as ex:
-            self._set_progress(0, f"❌ Error abriendo Modo Lote: {ex}")
+            self._set_progress(0, "❌ Error abriendo Modo Lote: {err}", err=str(ex))
 
     def _update_watch_button_style(self):
         if not hasattr(self, "_btn_watch"):
@@ -4446,51 +4731,74 @@ class MainWindow(QMainWindow):
             self._btn_watch.setText("👁️ Vigilar Carpeta")
             self._btn_watch.setStyleSheet(_btn(BG3, TEXT_MID, BG4, radius=4, fs=10))
 
-    def _show_recent_menu(self):
-        from src.config import get_recent_files
-        recents = get_recent_files(self._cfg)
-        menu = QMenu(self)
-        menu.setStyleSheet(f"""
-            QMenu {{
-                background-color: {BG2};
-                color: {TEXT};
-                border: 1px solid {BORDER};
-                border-radius: 8px;
-                padding: 4px;
-            }}
-            QMenu::item {{
-                padding: 6px 14px;
-                border-radius: 4px;
-            }}
-            QMenu::item:selected {{
-                background-color: {BG4};
-                color: {ACCENT};
-            }}
-        """)
-        if not recents:
-            act = menu.addAction("No hay archivos recientes")
-            act.setEnabled(False)
-        else:
-            for item in recents:
-                p = Path(item)
-                lbl = p.name if len(p.name) <= 50 else p.name[:47] + "…"
-                action = menu.addAction(f"🎵 {lbl}")
-                action.setData(item)
-                action.setToolTip(item)
-            menu.addSeparator()
-            act_clear = menu.addAction("🗑️ Borrar historial")
-            act_clear.setData("__clear__")
+    def _open_history_dialog(self):
+        from src.ui.history_dialog import HistoryDialog
+        dlg = HistoryDialog(plus=get_edition() == "plus", parent=self)
+        dlg.reopen_requested.connect(self._reopen_project)
+        dlg.open_track_requested.connect(self._load_file)
+        dlg.reveal_requested.connect(self._reveal_in_os)
+        dlg.exec()
 
-        pos = self._btn_recents.mapToGlobal(QPoint(0, self._btn_recents.height() + 2))
-        selected_act = menu.exec(pos)
-        if selected_act:
-            data = selected_act.data()
-            if data == "__clear__":
-                self._cfg["recent_files"] = []
-                from src.config import save as save_cfg
-                save_cfg(self._cfg)
-            elif data and Path(data).exists():
-                self._load_file(data)
+    def _reopen_project(self, entry: dict):
+        src = entry.get("source") or ""
+        if not (src and Path(src).exists()):
+            self._set_progress(0, "⚠ No se encuentra la pista original: {name}", name=Path(src).name or "—")
+            return
+        self._pending_project = entry
+        self._load_file(src)
+
+    def _record_history(self, generated: list, seed: int):
+        """Guarda la previa en el historial («Recientes») con los ajustes para poder reabrirla."""
+        try:
+            from src.history import add_entry
+            r = self._results
+            est = r._plan.estimated_duration_after_stretch if r._plan else 0.0
+            settings = {"state": r.get_state(True, True), "tempo_mode": r.get_tempo_mode(),
+                        "tempo_events": r.get_tempo_events()}
+            add_entry(self._current_file, generated, seed=seed, bpm=r._bpm, key=r._key_str, duration_sec=est,
+                      settings=settings, promo=bool(r.get_export_options().get("promo_mode")))
+        except Exception:
+            pass
+
+    def _render_update_banner(self):
+        info = self._update_info
+        if info is None or getattr(self, "_update_banner", None) is None:
+            return
+        self._update_banner.setText(tr(
+            "🆕  AutoPrevias {v} disponible — <a href='update' style='color:#a78bfa;'>Actualizar</a>",
+            v=info.version))
+
+    def _open_license_dialog(self):
+        from src.ui.about import LicenseDialog
+        found = []
+        dlg = LicenseDialog(VERSION, get_edition(), parent=self)
+        dlg.language_changed.connect(self._apply_language)
+        dlg.update_found.connect(found.append)
+        dlg.license_removed.connect(lambda: QTimer.singleShot(0, self.close))
+        dlg.exec()
+        if found:
+            self._on_update_available(found[0])
+
+    def _toggle_language(self):
+        self._apply_language("en" if i18n.get_language() == "es" else "es")
+
+    def _apply_language(self, code: str):
+        """Cambia el idioma en caliente y lo recuerda para el próximo arranque."""
+        code = i18n.set_language(code)
+        self._cfg["language"] = code
+        try:
+            c = load_cfg()
+            c["language"] = code
+            save_cfg(c)
+        except Exception:
+            pass
+        i18n.translate_tree(self)
+        self._btn_lang.setText(code.upper())
+        self._render_update_banner()
+        src = getattr(self, "_progress_src", None)
+        if src is not None:
+            self._set_progress(self._progress_bar.value(), src[0], **src[1])
+        self._results.refresh_language()
 
     def _toggle_watch_folder(self):
         if self._watching:
@@ -4528,7 +4836,7 @@ class MainWindow(QMainWindow):
         self._watching = True
         self._watch_timer.start()
         self._update_watch_button_style()
-        self._set_progress(0, f"👁️ Vigilando: {Path(folder).name} (escanea nuevos audios cada 4s)")
+        self._set_progress(0, "👁️ Vigilando: {name} (escanea nuevos audios cada 4s)", name=Path(folder).name)
 
     def _scan_watch_folder(self):
         if not self._watching or not self._watched_folder:
@@ -4559,7 +4867,7 @@ class MainWindow(QMainWindow):
         if new_files:
             target = new_files[0]
             self._watched_processed.add(str(target.resolve()))
-            self._set_progress(0, f"👁️ Detectado nuevo tema en carpeta vigilada: {target.name}")
+            self._set_progress(0, "👁️ Detectado nuevo tema en carpeta vigilada: {name}", name=target.name)
             self._load_file(str(target))
 
     def keyPressEvent(self, e):

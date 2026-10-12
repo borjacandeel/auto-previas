@@ -220,6 +220,60 @@ def apply_predrop_effects(
     return out
 
 
+def _mix_tag(
+    out: np.ndarray,
+    sr: int,
+    tag_audio: np.ndarray,
+    insert_time_sec: float,
+    ducking_db: float = -14.0,
+    fade_ramp_sec: float = 1.0,
+) -> None:
+    """Mezcla (in situ) un tag ya cargado sobre `out` con ducking del master alrededor."""
+    total = out.shape[1]
+    channels = min(out.shape[0], tag_audio.shape[0])
+
+    vd_start = max(0, int(insert_time_sec * sr))
+    vd_end = min(total, vd_start + tag_audio.shape[1])
+    vd_len = vd_end - vd_start
+    if vd_len <= 0:
+        return
+
+    duck_gain = 10.0 ** (ducking_db / 20.0)   # ≈ 0.2 a -14 dB
+    fade_samps = int(fade_ramp_sec * sr)
+
+    duck_start = max(0, vd_start - fade_samps)
+    duck_end = min(total, vd_end + fade_samps)
+
+    env_len = duck_end - duck_start
+    envelope = np.ones(env_len, dtype=np.float32)
+
+    pre_len = vd_start - duck_start
+    if pre_len > 0:
+        envelope[:pre_len] = np.linspace(1.0, duck_gain, pre_len)
+
+    vd_env_start = vd_start - duck_start
+    vd_env_end = vd_end - duck_start
+    envelope[vd_env_start:vd_env_end] = duck_gain
+
+    post_len = duck_end - vd_end
+    if post_len > 0:
+        envelope[vd_env_end:vd_env_end + post_len] = np.linspace(duck_gain, 1.0, post_len)
+
+    for ch in range(out.shape[0]):
+        out[ch, duck_start:duck_end] *= envelope
+    for ch in range(channels):
+        out[ch, vd_start:vd_end] += tag_audio[ch, :vd_len]
+
+
+def _load_tag(drop_file_path: str, sr: int, volume_db: float) -> np.ndarray:
+    from src.engine.audio_io import load_audio_file
+
+    tag_audio, _ = load_audio_file(drop_file_path, sr=sr, mono=False, dtype=np.float32)
+    if tag_audio.ndim == 1:
+        tag_audio = np.stack([tag_audio, tag_audio])
+    return tag_audio * (10.0 ** (volume_db / 20.0))
+
+
 def inject_voice_drop(
     base_audio: np.ndarray,
     sr: int,
@@ -236,59 +290,62 @@ def inject_voice_drop(
       · Durante el voice drop el master queda al 20 %
       · 1 s de rampa ascendente de vuelta al 100 % tras el voice drop
     """
-    from src.engine.audio_io import load_audio_file
+    tag_audio = _load_tag(drop_file_path, sr, volume_db)
+    out = np.copy(base_audio)
+    _mix_tag(out, sr, tag_audio, insert_time_sec, ducking_db, fade_ramp_sec)
+    return np.clip(out, -0.98, 0.98).astype(np.float32)
 
-    tag_audio, _ = load_audio_file(drop_file_path, sr=sr, mono=False, dtype=np.float32)
-    if tag_audio.ndim == 1:
-        tag_audio = np.stack([tag_audio, tag_audio])
 
-    tag_gain  = 10.0 ** (volume_db / 20.0)
-    tag_audio = tag_audio * tag_gain
+def promo_tag_times(
+    total_sec: float,
+    tag_len_sec: float,
+    interval_sec: float = 20.0,
+    jitter_sec: float = 3.0,
+    first_sec: float = 8.0,
+    seed: int = 0,
+    end_guard_sec: float = 2.0,
+) -> list:
+    """
+    Instantes (s) en que se repite el tag en el modo promo antifugas.
+    Determinista para una misma `seed`. Los tags nunca se solapan ni se cortan
+    contra el final de la previa.
+    """
+    import random
 
-    out      = np.copy(base_audio)
-    total    = out.shape[1]
-    channels = min(out.shape[0], tag_audio.shape[0])
+    rng = random.Random(int(seed))
+    min_gap = tag_len_sec + 2.0           # hueco mínimo entre tags
+    interval = max(float(interval_sec), min_gap)
+    times: list = []
+    t = max(0.0, float(first_sec))
+    while t + tag_len_sec <= total_sec - end_guard_sec:
+        times.append(round(t, 3))
+        step = interval + rng.uniform(-jitter_sec, jitter_sec)
+        t += max(step, min_gap)
+    return times
 
-    vd_start = max(0, int(insert_time_sec * sr))
-    vd_end   = min(total, vd_start + tag_audio.shape[1])
-    vd_len   = vd_end - vd_start
-    if vd_len <= 0:
-        return out
 
-    duck_gain  = 10.0 ** (ducking_db / 20.0)   # ≈ 0.2 a -14 dB
-    fade_samps = int(fade_ramp_sec * sr)
-
-    # Zona de ducking extendida: [duck_start, duck_end]
-    duck_start = max(0, vd_start - fade_samps)
-    duck_end   = min(total, vd_end + fade_samps)
-
-    # Construir envolvente para toda la zona de ducking
-    env_len = duck_end - duck_start
-    envelope = np.ones(env_len, dtype=np.float32)
-
-    # Rampa de bajada: duck_start → vd_start
-    pre_len = vd_start - duck_start
-    if pre_len > 0:
-        envelope[:pre_len] = np.linspace(1.0, duck_gain, pre_len)
-
-    # Zona plana durante el voice drop
-    vd_env_start = vd_start - duck_start
-    vd_env_end   = vd_end   - duck_start
-    envelope[vd_env_start:vd_env_end] = duck_gain
-
-    # Rampa de subida: vd_end → duck_end
-    post_len = duck_end - vd_end
-    if post_len > 0:
-        envelope[vd_env_end:vd_env_end + post_len] = np.linspace(duck_gain, 1.0, post_len)
-
-    # Aplicar envolvente al master
-    for ch in range(out.shape[0]):
-        out[ch, duck_start:duck_end] *= envelope
-
-    # Mezclar el voice drop sobre el master ya duckeado
-    for ch in range(channels):
-        out[ch, vd_start:vd_end] += tag_audio[ch, :vd_len]
-
+def inject_repeating_tags(
+    base_audio: np.ndarray,
+    sr: int,
+    tag_file_path: str,
+    interval_sec: float = 20.0,
+    jitter_sec: float = 3.0,
+    first_sec: float = 8.0,
+    volume_db: float = -3.0,
+    seed: int = 0,
+    ducking_db: float = -10.0,
+) -> np.ndarray:
+    """
+    Modo promo antifugas: superpone el tag de voz/jingle repetidamente sobre toda
+    la previa (con ducking suave), de modo que el audio sea inservible para
+    reutilizarlo sin la firma.
+    """
+    tag_audio = _load_tag(tag_file_path, sr, volume_db)
+    out = np.copy(base_audio)
+    total_sec = out.shape[1] / float(sr)
+    tag_len = tag_audio.shape[1] / float(sr)
+    for t in promo_tag_times(total_sec, tag_len, interval_sec, jitter_sec, first_sec, seed):
+        _mix_tag(out, sr, tag_audio, t, ducking_db=ducking_db, fade_ramp_sec=0.4)
     return np.clip(out, -0.98, 0.98).astype(np.float32)
 
 

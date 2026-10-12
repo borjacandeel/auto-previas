@@ -6,6 +6,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from src import i18n
+from src.i18n import tr
+
 from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QFont, QPixmap
 from PySide6.QtWidgets import (
@@ -81,6 +84,8 @@ class ActivationDialog(QDialog):
         self._expired = expired
         self._worker  = None
         self._build_ui()
+        i18n.mark_dynamic(self._lbl_status)
+        i18n.translate_tree(self)
 
     def _build_ui(self):
         root = QVBoxLayout(self)
@@ -176,12 +181,12 @@ class ActivationDialog(QDialog):
     def _activate(self):
         key = self._input.text().strip()
         if not key:
-            self._set_status("Introduce una clave de licencia.", RED)
+            self._set_status(tr("Introduce una clave de licencia."), RED)
             return
 
         self._btn.setEnabled(False)
-        self._btn.setText("Verificando…")
-        self._set_status("Conectando con el servidor de licencias…", TEXT2)
+        self._btn.setText(tr("Verificando…"))
+        self._set_status(tr("Conectando con el servidor de licencias…"), TEXT2)
 
         self._worker = _ActivateWorker(key)
         self._worker.done.connect(self._on_done)
@@ -189,17 +194,17 @@ class ActivationDialog(QDialog):
 
     def _on_done(self, ok: bool, edition: str, error: str):
         self._btn.setEnabled(True)
-        self._btn.setText("Activar licencia")
+        self._btn.setText(tr("Activar licencia"))
 
         if ok:
             plan = "Plus ✨" if edition == "plus" else "Basic"
-            self._set_status(f"✅ Licencia {plan} activada correctamente.", GREEN)
+            self._set_status(tr("✅ Licencia {plan} activada correctamente.", plan=plan), GREEN)
             self.activated.emit(edition)
             # Cerrar el diálogo automáticamente tras 1 segundo
             from PySide6.QtCore import QTimer
             QTimer.singleShot(1200, self.accept)
         else:
-            self._set_status(f"❌ {error}", RED)
+            self._set_status(f"❌ {tr(error)}", RED)
 
     def _set_status(self, msg: str, color: str):
         self._lbl_status.setText(msg)

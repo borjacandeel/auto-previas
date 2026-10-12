@@ -19,6 +19,8 @@ from PySide6.QtWidgets import (
     QProgressBar, QPushButton, QVBoxLayout,
 )
 
+from src import i18n
+from src.i18n import tr
 from src.updater_core import ReleaseInfo, installer_asset_name, set_skipped_version, strip_links
 
 BG, BG3, BORDER = "#0a0b0e", "#1a1c22", "#232733"
@@ -77,7 +79,9 @@ class UpdateDialog(QDialog):
         title.setStyleSheet("font-size: 17px; font-weight: 800;")
         root.addWidget(title)
 
-        sub = QLabel(f"Versión <b>{info.version}</b> disponible &nbsp;·&nbsp; tienes la {current_version}")
+        sub = QLabel(tr("Versión <b>{v}</b> disponible &nbsp;·&nbsp; tienes la {cur}",
+                        v=info.version, cur=current_version))
+        i18n.mark_dynamic(sub)
         sub.setStyleSheet(f"font-size: 13px; color: {TEXT2};")
         root.addWidget(sub)
 
@@ -119,6 +123,8 @@ class UpdateDialog(QDialog):
         if not (self._asset and self._asset in info.assets):
             self._btn_main.setVisible(False)
             self._set_status("Esta versión todavía no tiene instalador disponible para tu sistema.")
+        i18n.mark_dynamic(self._status)
+        i18n.translate_tree(self)
 
     @staticmethod
     def _clean_notes(notes: str) -> str:
@@ -128,7 +134,7 @@ class UpdateDialog(QDialog):
         return text[:4000] + ("…" if len(text) > 4000 else "")
 
     def _set_status(self, msg: str, color: str = TEXT2):
-        self._status.setText(msg)
+        self._status.setText(i18n.translate(msg))
         self._status.setStyleSheet(f"font-size: 12px; color: {color};")
 
     def _on_main(self):
@@ -159,7 +165,7 @@ class UpdateDialog(QDialog):
         self._state = _DOWNLOADING
         self._btn_main.setEnabled(False)
         self._btn_skip.setEnabled(False)
-        self._btn_later.setText("Cancelar")
+        self._btn_later.setText(tr("Cancelar"))
         self._bar.setVisible(True)
         self._bar.setRange(0, 0)
         self._set_status("Preparando descarga…")
@@ -175,36 +181,36 @@ class UpdateDialog(QDialog):
         if total > 0:
             self._bar.setRange(0, 100)
             self._bar.setValue(int(done * 100 / total))
-            self._set_status(f"Descargando… {_fmt_mb(done)} de {_fmt_mb(total)}")
+            self._set_status(tr("Descargando… {done} de {total}", done=_fmt_mb(done), total=_fmt_mb(total)))
         else:
-            self._set_status(f"Descargando… {_fmt_mb(done)}")
+            self._set_status(tr("Descargando… {done}", done=_fmt_mb(done)))
 
     def _on_downloaded(self, path: str):
         self._state = _READY
         self._installer_path = path
         self._bar.setRange(0, 100)
         self._bar.setValue(100)
-        self._btn_later.setText("Más tarde")
+        self._btn_later.setText(tr("Más tarde"))
         self._btn_skip.setEnabled(True)
         self._btn_main.setEnabled(True)
-        self._btn_main.setText("Instalar y cerrar AutoPrevias")
+        self._btn_main.setText(tr("Instalar y cerrar AutoPrevias"))
         folder = os.path.basename(os.path.dirname(path))
         folder = "Descargas" if folder.lower() == "downloads" else (folder or "Descargas")
         if sys.platform == "darwin":
-            self._set_status(f"✅ Descargado en «{folder}» y verificado. Se abrirá el instalador: "
-                             "arrastra AutoPrevias a Aplicaciones y vuelve a abrir la app.", GREEN)
+            self._set_status(tr("✅ Descargado en «{folder}» y verificado. Se abrirá el instalador: "
+                                "arrastra AutoPrevias a Aplicaciones y vuelve a abrir la app.", folder=folder), GREEN)
         else:
-            self._set_status(f"✅ Descargado en «{folder}» y verificado. Se abrirá el instalador y "
-                             "AutoPrevias se cerrará para poder actualizarse.", GREEN)
+            self._set_status(tr("✅ Descargado en «{folder}» y verificado. Se abrirá el instalador y "
+                                "AutoPrevias se cerrará para poder actualizarse.", folder=folder), GREEN)
 
     def _on_failed(self, msg: str):
         self._state = _FAILED
         self._bar.setVisible(False)
-        self._btn_later.setText("Cerrar")
+        self._btn_later.setText(tr("Cerrar"))
         self._btn_skip.setEnabled(True)
         self._btn_main.setEnabled(True)
-        self._btn_main.setText("Reintentar")
-        self._set_status(f"❌ {msg}", RED)
+        self._btn_main.setText(tr("Reintentar"))
+        self._set_status(f"❌ {i18n.translate(msg)}", RED)
 
     def _install_and_quit(self):
         try:

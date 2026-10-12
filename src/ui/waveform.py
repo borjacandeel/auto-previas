@@ -21,6 +21,9 @@ from typing import Optional
 import numpy as np
 
 from PySide6.QtCore import Qt, Signal, QThread, QTimer
+
+from src import i18n
+from src.i18n import tr
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QPushButton
 
 try:
@@ -367,14 +370,15 @@ class WaveformWidget(QWidget):
                     if i < len(self._cut_badges):
                         dur = s_end - s_start
                         type_name = seg.section.type.value.lower()
-                        sec_title = SECTION_LABELS.get(type_name, type_name.capitalize()).upper()
+                        sec_title = tr(SECTION_LABELS.get(type_name, type_name.capitalize())).upper()
                         icon = SECTION_ICONS.get(type_name, "✂")
                         self._cut_badges[i].setPos((s_start + s_end) / 2.0, 0.80)
                         self._cut_badges[i].setHtml(
                             f"<div style='color:#ffffff; font-weight:800; font-size:9pt; "
                             f"background:#1b080b; border:1px solid #ff2542; border-radius:4px; "
                             f"padding:2px 7px; letter-spacing:0.3px;'>"
-                            f"✂ CORTE {i + 1} · {icon} {sec_title} ({dur:.1f}s)</div>"
+                            + tr("✂ CORTE {n} · {icon} {title} ({dur}s)", n=i + 1, icon=icon, title=sec_title,
+                                 dur=f"{dur:.1f}") + "</div>"
                         )
                 self._update_omitted_masks_positions()
             else:
@@ -510,7 +514,7 @@ class WaveformWidget(QWidget):
     def _update_badges(self):
         if self._mode == "source":
             n_cuts = len(self._plan_segs)
-            self._badge_mode.setText(f"🎵 Pista Original · {n_cuts} Cortes Activos")
+            i18n.set_text(self._badge_mode, "🎵 Pista Original · {n} Cortes Activos", n=n_cuts)
             self._badge_mode.setStyleSheet("""
                 color: #eceef2; font-size: 10px; font-weight: 700;
                 background: #181b22; border: 1px solid #2a2f3c;
@@ -642,7 +646,7 @@ class WaveformWidget(QWidget):
                 cut_line = pg.InfiniteLine(pos=t_start, angle=90, pen=cut_pen, movable=False)
                 cut_line.setZValue(8)
                 lbl = pg.InfLineLabel(
-                    cut_line, text="  ✂ CORTE 1s", position=0.88,
+                    cut_line, text=tr("  ✂ CORTE 1s"), position=0.88,
                     rotateAxis=(1, 0), anchor=(0.5, 0.5),
                 )
                 lbl.setColor((255, 255, 255, 200))
@@ -699,16 +703,16 @@ class WaveformWidget(QWidget):
             )
             hl.setZValue(6)
             hl.setCursor(Qt.OpenHandCursor)
-            hl.setToolTip(f"✂ Corte {i + 1} ({dur:.1f}s) — Arrastra el bloque para desplazarlo")
+            hl.setToolTip(tr("✂ Corte {n} ({dur}s) — Arrastra el bloque para desplazarlo", n=i + 1, dur=f"{dur:.1f}"))
 
             # Línea de INICIO (Verde esmeralda neón arrastrable)
             line_s = hl.lines[0]
             line_s.setPen(pg.mkPen(color=START_LINE_COLOR, width=2.5))
             line_s.setHoverPen(pg.mkPen(color=(255, 255, 255, 255), width=3.5))
             line_s.setCursor(Qt.SizeHorCursor)
-            line_s.setToolTip(f"Inicio Corte {i + 1} ({s_start:.1f}s) — Arrastra horizontalmente")
+            line_s.setToolTip(tr("Inicio Corte {n} ({t}s) — Arrastra horizontalmente", n=i + 1, t=f"{s_start:.1f}"))
             lbl_s = pg.InfLineLabel(
-                line_s, text=" INICIO ", position=0.92,
+                line_s, text=tr(" INICIO "), position=0.92,
                 anchor=(1.0, 0.5),
             )
             lbl_s.setColor(START_LINE_COLOR[:3])
@@ -718,9 +722,9 @@ class WaveformWidget(QWidget):
             line_e.setPen(pg.mkPen(color=END_LINE_COLOR, width=2.5))
             line_e.setHoverPen(pg.mkPen(color=(255, 255, 255, 255), width=3.5))
             line_e.setCursor(Qt.SizeHorCursor)
-            line_e.setToolTip(f"Fin Corte {i + 1} ({s_end:.1f}s) — Arrastra horizontalmente")
+            line_e.setToolTip(tr("Fin Corte {n} ({t}s) — Arrastra horizontalmente", n=i + 1, t=f"{s_end:.1f}"))
             lbl_e = pg.InfLineLabel(
-                line_e, text=" FIN ", position=0.92,
+                line_e, text=tr(" FIN "), position=0.92,
                 anchor=(0.0, 0.5),
             )
             lbl_e.setColor(END_LINE_COLOR[:3])
@@ -732,7 +736,7 @@ class WaveformWidget(QWidget):
                     f"<div style='color:#ffffff; font-weight:700; font-size:8.5pt; "
                     f"background:rgba(18, 20, 26, 0.90); border:1px solid #ff2542; "
                     f"border-radius:10px; padding:1px 8px; letter-spacing:0.2px;'>"
-                    f"✂ Corte {i + 1} · {dur:.1f}s</div>"
+                    + tr("✂ Corte {n} · {dur}s", n=i + 1, dur=f"{dur:.1f}") + "</div>"
                 ),
                 anchor=(0.5, 0),
             )
@@ -831,13 +835,12 @@ class WaveformWidget(QWidget):
                 f"<div style='color:#ffffff; font-weight:700; font-size:8.5pt; "
                 f"background:rgba(18, 20, 26, 0.90); border:1px solid #ff2542; "
                 f"border-radius:10px; padding:1px 8px; letter-spacing:0.2px;'>"
-                f"✂ Corte {idx + 1} · {dur:.1f}s</div>"
+                + tr("✂ Corte {n} · {dur}s", n=idx + 1, dur=f"{dur:.1f}") + "</div>"
             )
 
         # Actualizar texto explicativo en la barra superior
-        self._hint_lbl.setText(
-            f"✂️ Editando Corte {idx + 1}: {start:.1f}s – {end:.1f}s (duración: {dur:.1f}s)"
-        )
+        i18n.set_text(self._hint_lbl, "✂️ Editando Corte {n}: {a}s – {b}s (duración: {d}s)",
+                      n=idx + 1, a=f"{start:.1f}", b=f"{end:.1f}", d=f"{dur:.1f}")
 
         # Actualizar máscaras de zonas omitidas en vivo
         self._update_omitted_masks_positions()
@@ -1074,7 +1077,7 @@ class WaveformWidget(QWidget):
 
         # Línea arrastrable en el inicio
         pen = pg.mkPen(color="#FFD700", width=2, style=_Qt.DashLine)
-        label_text = f"🎙 Voice Drop{f'  ({self._voice_drop_dur:.1f}s)' if self._voice_drop_dur > 0.05 else ''}"
+        label_text = "🎙 Voice Drop" + (f"  ({self._voice_drop_dur:.1f}s)" if self._voice_drop_dur > 0.05 else "")
         self._voice_drop_line = pg.InfiniteLine(
             pos=t, angle=90, pen=pen, movable=True,
             label=label_text,
