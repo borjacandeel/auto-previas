@@ -47,7 +47,7 @@
 ## Estado actual
 **Fecha última actualización:** 2026-10-12 (Sesión 36j — v3.0.1: auto-update sin abrir páginas web)
 **Fase activa:** v3.0.0 PUBLICADA y VERIFICADA en macOS (activación Plus OK + ventana principal abre sin crash). Pendiente: probar en Windows, rotar claves de Payhip, probar el auto-update con una versión posterior. El auto-update solo se podrá probar de extremo a extremo cuando exista una Release posterior a la instalada (p. ej. 3.0.1).
-**Versión Actual:** **v3.0.0**
+**Versión Actual:** **v3.0.1**
 
 ### Credenciales de desarrollo — NO se guardan en el repo (público)
 > Las claves secretas de Payhip (`PAYHIP_SECRET_BASIC/PLUS`) viven solo como *secrets* del Worker de Cloudflare. Las versiones antiguas aparecieron en el historial público de git: **deben rotarse** (ver sesión 36g).
@@ -67,6 +67,7 @@
 - Cambios: eliminado `RELEASES_PAGE`/`page_url` y el botón/fallback "Abrir página de descarga" (diálogo y `app.py`). El diálogo usa una máquina de estados (idle/downloading/ready/failed): si falla → mensaje genérico en la ventana + **Reintentar**; si no hay instalador para el sistema (p. ej. Intel Mac) → solo informa. Los errores técnicos (pueden contener URLs) van a `$TMPDIR/autoprevias_update.log`, nunca a la UI. Mensaje de integridad ya no menciona ficheros internos.
 - Pruebas (offscreen + servidor local): hash incorrecto → Reintentar; reintento tras corregir → OK; sin sums → rechazado; servidor caído → mensaje sin URL/host/"github"; sin instalador → botón oculto; **0 URLs/páginas abiertas** (QDesktopServices y webbrowser interceptados). 5 tests unitarios OK.
 - Nota: la URL de descarga sigue siendo de GitHub Releases internamente (repo público, necesario), pero el usuario no la ve ni se abre.
+- **Resultado CI #54 (v3.0.1):** success en 23 min (19:04→19:27 UTC). Release publicada con 8 instaladores (versionado + nombre estable; macOS 223,2 MB, Windows 145,6 MB) + `SHA256SUMS.txt` (8 entradas, 0 discrepancias con los digest de GitHub). Prueba real desde aquí simulando la app 3.0.0: el actualizador detecta 3.0.1 como nueva, resuelve los 4 instaladores y descarga + verifica SHA-256 el de Windows Basic en 9 s.
 - 3.0.0→3.0.1 sirve de **primera prueba real del auto-update** en el binario (la app 3.0.0 instalada usa el diálogo anterior, cuyo camino de éxito ya descarga directo).
 
 ---
