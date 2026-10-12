@@ -53,7 +53,7 @@
 ## Estado actual
 **Fecha última actualización:** 2026-10-12 (Sesión 37 — v3.1.0: modo promo, presets, Recientes, Licencia y ajustes, ES/EN)
 **Fase activa:** v3.0.1 PUBLICADA. Verificado en macOS de punta a punta: activación, ventana principal y auto-update 3.0.0→3.0.1. Pendiente: Windows real, edición Basic, rotar claves de Payhip, y limpiar el formato markdown de las novedades en la ventana de actualización (muestra `### ` y `*`; agrupar en 3.0.2). El auto-update solo se podrá probar de extremo a extremo cuando exista una Release posterior a la instalada (p. ej. 3.0.1).
-**Versión Actual:** **v3.1.0** (en CI)
+**Versión Actual:** **v3.1.0** (publicada; pendiente de prueba del usuario en macOS)
 
 ### Credenciales de desarrollo — NO se guardan en el repo (público)
 > Las claves secretas de Payhip (`PAYHIP_SECRET_BASIC/PLUS`) viven solo como *secrets* del Worker de Cloudflare. Las versiones antiguas aparecieron en el historial público de git: **deben rotarse** (ver sesión 36g).
@@ -92,6 +92,10 @@ Elegidas de la lista de opciones: **1** Recientes con reproductor y reabrir proy
 - **Presets** guardan firma y/o estilo según casillas; al aplicar solo se tocan los grupos presentes.
 - Edición Basic: barra de presets, modo promo e historial de previas ocultos/bloqueados.
 - **Idioma**: nunca se detecta del SO. Texto con valores → `tr("... {n} ...", n=…)`/`set_text`; mensajes del motor → patrones. README corregido: lote y carpeta vigilada son solo Plus (así lo hace el código).
+
+#### Resultado CI #55 (v3.1.0, Nuitka 4.2.2)
+- **success en 24 min** (20:42→21:06 UTC). `pytest tests`: **65 passed, 1 skipped** en macOS y en Windows (con librosa 0.11 pasan también los 2 tests de `test_structure`). `--selftest` de los binarios compilados OK en ambos, incluida la línea «✓ Presets, historial, licencia, idioma y modo promo construidos sin crash».
+- Release v3.1.0 publicada 21:06 UTC: 8 instaladores (versionado + nombre estable; macOS 223,4 MB, Windows 145,7 MB) + `SHA256SUMS.txt`.
 
 #### Pruebas ejecutadas
 - Tests nuevos: `test_promo_mode` (4), `test_presets_history` (6), `test_i18n` (9), `test_ui_features` (11) + `test_updater_core` (6) = 36 pasan. Suite completa: 63 pasan, 1 skip; **2 fallos en `test_structure.py` que fallan igual con el código 3.0.1 en el entorno de pruebas (librosa 1.0 vs 0.11 del CI)**, ajenos a esta versión.
