@@ -45,8 +45,8 @@
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-12 (Sesión 36 — v2.9.3: sistema de licencias 100% operativo)
-**Fase activa:** Sistema de licencias completo y funcional. Worker desplegado y verificado. Instaladores v2.9.3 en compilación CI.
+**Fecha última actualización:** 2026-10-12 (Sesión 36 — v2.9.3: sistema de licencias 100% operativo + CI lanzado)
+**Fase activa:** Sistema de licencias completo y funcional. CI corriendo (run #38267412107). Próximo: panel de recientes y presets de firma.
 **Versión Actual:** **v2.9.3**
 
 ### Credenciales de desarrollo (solo usar en sesiones de trabajo, nunca commitear)
@@ -54,6 +54,35 @@
 - `PAYHIP_SECRET_PLUS`  = `prod_sk_mTjEL_fc8511b7394cb3a18f093a3bd6706830b47faee3`
 - Worker URL: `https://autoprevias-license.radicalrecordsvlc.workers.dev`
 - Test verificado con curl: clave `VPTBV-JCC7C-8GW36-4VRGU` → `{"success":true,"edition":"plus"}`
+
+### Regla de oro — recordatorio permanente
+> Al terminar cualquier cambio: actualizar `progreso.md` + commit + push. Sin excepción.
+
+---
+
+### Resumen de Trabajo — Sesión 36 (2026-10-12): v2.9.3 — Sistema de licencias 100% operativo
+
+#### Contexto
+Primera sesión en la nube (claude.ai/code). El usuario migró desde agente local. Se continuó desde donde lo dejó la sesión 35.
+
+#### Lo que se hizo
+
+| # | Acción | Detalle |
+|---|--------|---------|
+| 1 | **Verificación del Worker** | `curl -X POST` al Worker → `{"success":true,"edition":"plus","email":"djborjacandel@gmail.com"}` con clave `VPTBV-JCC7C-8GW36-4VRGU`. Worker correcto. |
+| 2 | **Diagnóstico del fallo** | La app instalada era v2.9.1 (código viejo con `product_id`). El Worker nuevo ya no acepta ese campo. El código de `license.py` ya estaba corregido en el repo (sesión 35), pero faltaba compilar. |
+| 3 | **Bump v2.9.3** | `src/__version__.py`, `CHANGELOG.md`, `README.md`, `progreso.md` actualizados. |
+| 4 | **Fix `workflow_dispatch`** | El workflow solo usaba `inputs.tag_name` si el ref era "main". Corregido: ahora usa el input siempre que se proporcione. |
+| 5 | **CI lanzado** | `workflow_dispatch` desde rama `claude/dazzling-tesla-28cppy` con `tag_name=v2.9.3`. Run [#38267412107](https://github.com/borjacandeel/auto-previas/actions/runs/38267412107). Los 4 jobs en paralelo: macOS basic/plus + Windows basic/plus. |
+
+#### Nota técnica — por qué no se pudo hacer `git push origin v2.9.3`
+El token del entorno cloud no tiene permiso para push de tags (solo branches). Solución permanente: usar `workflow_dispatch` con `inputs.tag_name` en lugar de push de tag.
+
+#### Estado al cierre
+- Worker ✅ desplegado y verificado
+- Código ✅ correcto en rama
+- CI ▶️ corriendo — ~40 min hasta tener los 4 instaladores
+- Tras el CI: usuario puede descargar v2.9.3 y activar su licencia Plus
 
 ---
 
