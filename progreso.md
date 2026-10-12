@@ -45,9 +45,9 @@
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-12 (Sesión 36d — v2.9.6: certifi para SSL robusto en macOS Nuitka)
-**Fase activa:** Sistema de licencias en corrección. CI v2.9.6 lanzado. Pendiente: verificar segfault en `_build_ui` tras activación exitosa.
-**Versión Actual:** **v2.9.6**
+**Fecha última actualización:** 2026-10-12 (Sesión 36e — v2.9.7: causa real = Cloudflare 1010 por User-Agent; certifi eliminado)
+**Fase activa:** Licencias: fix aplicado en v2.9.7, pendiente de probar en el binario. Después: verificar segfault en `_build_ui` tras activación exitosa.
+**Versión Actual:** **v2.9.7**
 
 ### Credenciales de desarrollo (solo usar en sesiones de trabajo, nunca commitear)
 - `PAYHIP_SECRET_BASIC` = `prod_sk_NVkaK_b6359b99d5e7e31309cb0246f7c4cab395c6981e`
@@ -60,7 +60,25 @@
 
 ---
 
-### Resumen de Trabajo — Sesión 36d (2026-10-12): v2.9.6 — certifi para SSL robusto en macOS Nuitka
+### Resumen de Trabajo — Sesión 36e (2026-10-12): v2.9.7 — causa real del "Clave no válida"
+
+#### Diagnóstico
+- El informe de crash de macOS (`~/Library/Logs/DiagnosticReports/AutoPrevias-*.ips`) de v2.9.6 mostró el segfault dentro de `import certifi` (`module_code_certifi$core`, compilado por Nuitka). Se disparaba al pulsar "Activar" (hilo `_ActivateWorker` → `_make_ssl_context`).
+- Reproducido desde Python: `urllib` con su User-Agent por defecto (`Python-urllib/3.x`) recibe **HTTP 403 "error code: 1010"** de Cloudflare; con un User-Agent propio responde 200 con JSON. Esta era la causa real del "Clave no válida o sin conexión" desde v2.9.3 (curl funcionaba porque su UA no se bloquea). La hipótesis SSL de v2.9.5/v2.9.6 era errónea.
+
+#### Cambios
+| # | Acción | Detalle |
+|---|--------|---------|
+| 1 | `verify_online()` | Cabeceras `User-Agent: AutoPrevias-License/1.0` y `Accept: application/json`. |
+| 2 | Eliminar certifi | Fuera de `requirements.txt`, `--include-package-data=certifi` quitado de macOS y Windows, `_make_ssl_context()` vuelve a contexto por defecto + bundle `/etc/ssl/cert.pem` si existe. |
+| 3 | Bump v2.9.7 | version, CHANGELOG, README, progreso. |
+
+#### Pruebas
+- Petición real al Worker con UA nuevo: 200, sin excepciones ni `autoprevias_ssl.log`. Suite completa no ejecutable en el contenedor (faltan soundfile/audio); se ejecuta en CI.
+
+---
+
+### Resumen de Trabajo — Sesión 36d (2026-10-12): v2.9.6 — certifi para SSL robusto en macOS Nuitka (REVERTIDO en v2.9.7: causaba segfault)
 
 #### Contexto
 v2.9.5 no resolvió el SSL: `ssl.create_default_context()` + carga manual de `/etc/ssl/cert.pem` no es suficiente en todos los entornos macOS con Nuitka standalone. La solución definitiva es certifi, que incluye su propio bundle de CAs y no depende del sistema.

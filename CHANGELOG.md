@@ -3,6 +3,12 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.9.7] - 2026-10-12
+
+### Corregido
+- **Por fin se acepta la clave de licencia**: el servidor de licencias rechazaba las peticiones de la app por la forma en que se identificaba ante Cloudflare (no tenía nada que ver con los certificados). Ahora la app se identifica correctamente y la activación funciona.
+- **La app se cerraba de golpe al pulsar "Activar licencia"**: la versión 2.9.6 incluía un componente de certificados que provocaba un cierre inesperado. Se ha eliminado por completo.
+
 ## [2.9.6] - 2026-10-12
 
 ### Corregido

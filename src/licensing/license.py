@@ -56,30 +56,21 @@ def _obfuscate(key: str) -> str:
 # ── Verificación online ────────────────────────────────────────────────────────
 
 def _make_ssl_context():
-    """Crea un contexto SSL con certifi (primero) o certs del sistema como fallback."""
+    """Contexto SSL por defecto; en macOS añade el bundle del sistema si existe.
+
+    No importar certifi: su módulo compilado con Nuitka provoca un segfault.
+    """
     import ssl, os
-    cafile = None
-
-    # 1. Certifi: bundle propio, funciona en cualquier plataforma (incluye binarios Nuitka)
-    try:
-        import certifi
-        candidate = certifi.where()
-        if candidate and os.path.exists(candidate):
-            cafile = candidate
-    except Exception:
-        pass
-
-    # 2. Fallback: certs raíz del sistema (macOS y Linux)
-    if not cafile:
-        for path in ("/etc/ssl/cert.pem", "/usr/local/etc/openssl/cert.pem",
-                     "/usr/local/etc/openssl@3/cert.pem", "/usr/local/share/ca-certificates/cacert.pem"):
-            if os.path.exists(path) and os.path.getsize(path) > 0:
-                cafile = path
-                break
-
-    if cafile:
-        return ssl.create_default_context(cafile=cafile)
-    return ssl.create_default_context()
+    ctx = ssl.create_default_context()
+    for path in ("/etc/ssl/cert.pem", "/usr/local/etc/openssl@3/cert.pem",
+                 "/usr/local/etc/openssl/cert.pem"):
+        if os.path.exists(path) and os.path.getsize(path) > 0:
+            try:
+                ctx.load_verify_locations(cafile=path)
+            except Exception:
+                pass
+            break
+    return ctx
 
 
 def _ssl_log(msg: str) -> None:
@@ -105,7 +96,10 @@ def verify_online(license_key: str) -> dict:
         req = urllib.request.Request(
             _worker_url(),
             data=payload,
-            headers={"Content-Type": "application/json"},
+            # Cloudflare bloquea (403, error 1010) el User-Agent por defecto de urllib
+            headers={"Content-Type": "application/json",
+                     "User-Agent": "AutoPrevias-License/1.0",
+                     "Accept": "application/json"},
             method="POST",
         )
         ctx = _make_ssl_context()
