@@ -402,9 +402,10 @@ jobs:
       - name: Extraer notas de versión de CHANGELOG.md
         id: notes
         run: |
+          INPUT_TAG="${{ github.event.inputs.tag_name }}"
           TAG_NAME="${{ github.ref_name }}"
-          if [ -z "$TAG_NAME" ] || [ "$TAG_NAME" = "main" ]; then
-            TAG_NAME="${{ github.event.inputs.tag_name }}"
+          if [ -n "$INPUT_TAG" ]; then
+            TAG_NAME="$INPUT_TAG"
           fi
           CLEAN_VER="${TAG_NAME#v}"
           awk "/## \[?$CLEAN_VER\]?/{flag=1; next} /## \[?[0-9]/{flag=0} flag" CHANGELOG.md > release_notes.md || true
@@ -417,9 +418,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          INPUT_TAG="${{ github.event.inputs.tag_name }}"
           TAG_NAME="${{ github.ref_name }}"
-          if [ -z "$TAG_NAME" ] || [ "$TAG_NAME" = "main" ]; then
-            TAG_NAME="${{ github.event.inputs.tag_name }}"
+          if [ -n "$INPUT_TAG" ]; then
+            TAG_NAME="$INPUT_TAG"
           fi
 
           if gh release view "$TAG_NAME" >/dev/null 2>&1; then
