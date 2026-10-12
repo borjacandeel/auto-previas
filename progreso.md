@@ -46,7 +46,7 @@
 
 ## Estado actual
 **Fecha última actualización:** 2026-10-12 (Sesión 36f — v3.0.0: auto-update completo con ventana + fix licencias de v2.9.7)
-**Fase activa:** v3.0.0 en CI. Pendiente de probar en binario: activación de licencia (UA propio) y segfault en `_build_ui` tras activar. El auto-update solo se podrá probar de extremo a extremo cuando exista una Release posterior a la instalada.
+**Fase activa:** v3.0.0 PUBLICADA (CI #53, Nuitka 4.2.2). Pendiente de confirmar en el Mac del usuario que la ventana principal abre sin crash. El auto-update solo se podrá probar de extremo a extremo cuando exista una Release posterior a la instalada (p. ej. 3.0.1).
 **Versión Actual:** **v3.0.0**
 
 ### Credenciales de desarrollo — NO se guardan en el repo (público)
@@ -67,6 +67,8 @@
 - Comparación de logs de CI (instalar dependencias): v2.6.0 (funcionaba) usaba **nuitka 4.2.2**; hoy **nuitka 4.3**. PySide6 6.12.0, pyqtgraph 0.14.0, numpy 2.2.6, scipy 1.17.1, librosa 0.11.0, pedalboard 0.9.26 idénticos. El crash anterior de certifi.core (v2.9.6) también fue en `Nuitka_Function_New` ⇒ regresión de Nuitka 4.3 en creación de funciones.
 - Fix: `requirements-dev.txt` → `nuitka==4.2.2` (antes `>=2.6.0`, sin fijar). Selftest ampliado: construye `WaveformWidget` y `ActivationDialog` reales en el binario compilado; un segfault tumba el job y bloquea la Release. Probado sin compilar (offscreen): OK.
 - v3.0.0 no llegó a publicarse (run con Nuitka 4.3 cancelado), se reutiliza el número.
+- **Resultado CI #53 (v3.0.0, Nuitka 4.2.2):** success, 36 min (17:52→18:29 UTC). Selftest OK en macOS con las líneas de updater y de widgets (waveform + activación) construidos sin crash. Release publicada 18:28 UTC con 8 instaladores (versionado + nombre estable) y `SHA256SUMS.txt` (844 B). Tamaños: macOS ≈223 MB, Windows ≈146 MB. Hashes de cada par versionado/estable coinciden.
+- Nota: el selftest no está demostrado como capaz de detectar el crash de Nuitka 4.3 (no se compiló esa combinación con el selftest nuevo); la prueba real es abrir el binario en el Mac.
 - Pendiente: confirmar en el binario que MainWindow abre. Si no, plan B: compilar pyqtgraph como paquete de datos (`--nofollow-import-to=pyqtgraph` + `--include-data-dir`, mismo patrón que librosa).
 
 ---
