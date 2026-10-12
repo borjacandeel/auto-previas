@@ -318,7 +318,7 @@ def _check_license_on_startup() -> bool:
         return True
 
     try:
-        from src.licensing.license import check_license, LicenseStatus, PRODUCT_IDS
+        from src.licensing.license import check_license, LicenseStatus
         from src.config import set_edition
 
         status, edition = check_license()

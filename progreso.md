@@ -45,9 +45,9 @@
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-12 (Sesión 36 — v2.9.3: sistema de licencias 100% operativo + CI lanzado)
-**Fase activa:** Sistema de licencias completo y funcional. CI corriendo (run #38267412107). Próximo: panel de recientes y presets de firma.
-**Versión Actual:** **v2.9.3**
+**Fecha última actualización:** 2026-10-12 (Sesión 36 — v2.9.4: fix arranque sin pantalla de activación + diagnóstico segfault)
+**Fase activa:** Sistema de licencias en corrección. CI v2.9.3 completando (run #38267412107), v2.9.4 pendiente de lanzar CI. Próximo: verificar segfault tras activación con v2.9.4.
+**Versión Actual:** **v2.9.4**
 
 ### Credenciales de desarrollo (solo usar en sesiones de trabajo, nunca commitear)
 - `PAYHIP_SECRET_BASIC` = `prod_sk_NVkaK_b6359b99d5e7e31309cb0246f7c4cab395c6981e`
@@ -57,6 +57,28 @@
 
 ### Regla de oro — recordatorio permanente
 > Al terminar cualquier cambio: actualizar `progreso.md` + commit + push. Sin excepción.
+
+---
+
+### Resumen de Trabajo — Sesión 36b (2026-10-12): v2.9.4 — Fix arranque + diagnóstico segfault
+
+#### Contexto
+Continuación de sesión 36. El usuario descargó e instaló el DMG compilado de v2.9.3 y reportó que la app se cerraba sin mostrar la pantalla de activación.
+
+#### Lo que se hizo
+
+| # | Acción | Detalle |
+|---|--------|---------|
+| 1 | **Diagnóstico del crash de arranque** | Log del usuario: `Error en verificación de licencia: cannot import name 'PRODUCT_IDS' from 'src.licensing.license'`. El `src/main.py:321` importaba `PRODUCT_IDS` que ya no existe en `license.py` (fue eliminado en la refactorización del Worker). La excepción se capturaba y la función devolvía `True`, saltando el diálogo de activación. |
+| 2 | **Fix: eliminar import obsoleto** | `src/main.py:321`: quitado `PRODUCT_IDS` del import. Ahora el flujo de activación funciona: `check_license()` → ActivationDialog si no hay licencia. |
+| 3 | **Diagnóstico del segfault** | Después del fix, la app llegará a construir `MainWindow._build_ui()` → segfault pre-existente. Era invisible antes porque la app siempre salía en el diálogo de activación (Worker rechazaba claves). Añadidos logs granulares dentro de `_build_ui` (`creando root widget`, `construyendo header`, `construyendo stack`, `construyendo progress frame`, `construyendo banner`) para pinpointear el crash en la próxima compilación. |
+| 4 | **Bump v2.9.4** | `src/__version__.py`, `CHANGELOG.md`, `README.md`, `progreso.md` actualizados. |
+| 5 | **CI pendiente de lanzar** | v2.9.4 commiteado y pusheado a `main`. CI v2.9.3 (run #38267412107) completándose en paralelo (macOS OK, Windows pendiente). |
+
+#### Estado del segfault
+- **Síntoma**: `Nuitka: A segmentation fault has occurred` en `MainWindow: construyendo widgets de interfaz de usuario...`
+- **Causa probable**: algún widget en `_build_ui` (header, stack o progress frame) crashea en el binario compilado pero no en modo desarrollo
+- **Próximo paso**: cuando compile v2.9.4, relanzar y ver hasta qué log llega antes del segfault para identificar el widget exacto
 
 ---
 

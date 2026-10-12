@@ -3,6 +3,12 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.9.4] - 2026-10-12
+
+### Corregido
+- **La app arrancaba pero se cerraba sin mostrar la pantalla de activación**: un import obsoleto (`PRODUCT_IDS`) en el código de arranque causaba un error silencioso que saltaba la pantalla de activación y dejaba la edición sin inicializar, provocando un cierre inmediato. Ahora el flujo de activación funciona correctamente al arrancar.
+- **Diagnóstico mejorado de inicio de interfaz**: se añaden mensajes de log más detallados durante la construcción de la ventana principal para facilitar la identificación de problemas en futuras compilaciones.
+
 ## [2.9.3] - 2026-10-12
 
 ### Corregido

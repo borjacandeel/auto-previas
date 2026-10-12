@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v2.9.3-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v2.9.4-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -238,7 +238,10 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v2.9.3] — 2026-10-12 (Hotfix: activación de licencia fallaba en instaladores compilados)
+#### 🟢 [v2.9.4] — 2026-10-12 (Hotfix: la app se cerraba sin mostrar pantalla de activación)
+- **Corrección crítica de arranque**: un import obsoleto causaba que la pantalla de activación no apareciera y la app se cerrara de inmediato al arrancar. Ahora la pantalla de activación se muestra correctamente.
+
+#### [v2.9.3] — 2026-10-12 (Hotfix: activación de licencia fallaba en instaladores compilados)
 - **Corrección crítica del sistema de licencias**: los instaladores v2.9.1–v2.9.2 enviaban un campo `product_id` que el Worker ya no acepta tras la reescritura. Ahora solo se envía `license_key` y el Worker gestiona internamente la verificación. Las claves compradas ya funcionan.
 
 ---

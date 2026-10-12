@@ -3794,6 +3794,11 @@ class MainWindow(QMainWindow):
     # ── Layout ────────────────────────────────────────────────────────────
 
     def _build_ui(self):
+        try:
+            from src.main import _log_startup as _log
+        except Exception:
+            def _log(msg): pass
+        _log("_build_ui: creando root widget...")
         root_w = QWidget()
         self.setCentralWidget(root_w)
         root = QVBoxLayout(root_w)
@@ -3801,6 +3806,7 @@ class MainWindow(QMainWindow):
         root.setSpacing(8)
 
         # ── HEADER ───────────────────────────────────────────────────────
+        _log("_build_ui: construyendo header...")
         self._hdr = QFrame()
         self._hdr.setFixedHeight(72)
         self._hdr.setObjectName("hdr")
@@ -3964,6 +3970,7 @@ class MainWindow(QMainWindow):
         root.addWidget(self._hdr)
 
         # ── STACK ────────────────────────────────────────────────────────
+        _log("_build_ui: construyendo stack...")
         self._stack = QStackedWidget()
         self._stack.setStyleSheet("background: transparent;")
 
@@ -4010,6 +4017,7 @@ class MainWindow(QMainWindow):
         root.addWidget(self._stack, stretch=1)
 
         # ── PROGRESS FRAME ────────────────────────────────────────────────
+        _log("_build_ui: construyendo progress frame...")
         prog_frame = QFrame()
         prog_frame.setFixedHeight(40)
         prog_frame.setStyleSheet(f"""
@@ -4057,6 +4065,7 @@ class MainWindow(QMainWindow):
         root.addWidget(prog_frame)
 
         # ── Banner de actualización (oculto por defecto) ──────────────────
+        _log("_build_ui: construyendo banner actualización...")
         self._update_banner = QLabel()
         self._update_banner.setOpenExternalLinks(True)
         self._update_banner.setAlignment(Qt.AlignCenter)
