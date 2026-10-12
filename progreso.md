@@ -61,6 +61,16 @@
 
 ---
 
+### Resumen de Trabajo — Sesión 36h (2026-10-12): crash de MainWindow = regresión de Nuitka 4.3
+
+- v3.0.0 (build con Nuitka 4.3): licencia Plus activada OK (`license.json` guardado, edición plus) y luego **segfault** en `MainWindow._build_ui` → `WaveformWidget._build_ui` → `pg.PlotWidget` → `GraphicsView.setBackground` → `mkBrush` → `mkColor`, en `Nuitka_Function_New` (informe `.ips`).
+- Comparación de logs de CI (instalar dependencias): v2.6.0 (funcionaba) usaba **nuitka 4.2.2**; hoy **nuitka 4.3**. PySide6 6.12.0, pyqtgraph 0.14.0, numpy 2.2.6, scipy 1.17.1, librosa 0.11.0, pedalboard 0.9.26 idénticos. El crash anterior de certifi.core (v2.9.6) también fue en `Nuitka_Function_New` ⇒ regresión de Nuitka 4.3 en creación de funciones.
+- Fix: `requirements-dev.txt` → `nuitka==4.2.2` (antes `>=2.6.0`, sin fijar). Selftest ampliado: construye `WaveformWidget` y `ActivationDialog` reales en el binario compilado; un segfault tumba el job y bloquea la Release. Probado sin compilar (offscreen): OK.
+- v3.0.0 no llegó a publicarse (run con Nuitka 4.3 cancelado), se reutiliza el número.
+- Pendiente: confirmar en el binario que MainWindow abre. Si no, plan B: compilar pyqtgraph como paquete de datos (`--nofollow-import-to=pyqtgraph` + `--include-data-dir`, mismo patrón que librosa).
+
+---
+
 ### Resumen de Trabajo — Sesión 36g (2026-10-12): repo PÚBLICO fijado + secretos expuestos
 
 - **Decisión del usuario:** el repositorio es y seguirá **público**. `CLAUDE.md §0` y `§3` actualizados (antes decían privado).

@@ -11,6 +11,7 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 - Si por cualquier motivo no se puede descargar o verificar el instalador, la ventana te lleva a la página de descargas en vez de instalar algo dudoso.
 
 ### Corregido
+- **La app se cerraba sola justo después de activar la licencia**: el instalador se estaba construyendo con una versión nueva del compilador que generaba un programa inestable al abrir la ventana principal (el visor de forma de onda). Se fija la versión del compilador que funcionaba y se añade una comprobación automática que impide publicar un instalador que se cierre al abrir esa ventana.
 - **El aviso de nueva versión llevaba a un enlace roto**: la dirección de descarga tenía un error tipográfico. Ahora el aviso de la parte inferior abre la ventana de actualización.
 - La comprobación de versiones ya no depende de un componente externo que podía faltar en el instalador.
 

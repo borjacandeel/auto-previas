@@ -195,6 +195,14 @@ def run_selftest() -> int:
         assert _upc.installer_asset_name("plus", "darwin", "arm64") == "AutoPrevias-Plus-macOS-arm64.dmg"
         print("  ✓ Actualizador y diálogo de activación empaquetados")
 
+        # Construir widgets reales: detecta crashes del binario compilado (p. ej. pyqtgraph)
+        from src.ui.waveform import WaveformWidget
+        _wf = WaveformWidget()
+        _dlg = _act.ActivationDialog()
+        _wf.deleteLater()
+        _dlg.deleteLater()
+        print("  ✓ Widgets de forma de onda y activación construidos sin crash")
+
         try:
             tmp_ctx = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         except TypeError:
