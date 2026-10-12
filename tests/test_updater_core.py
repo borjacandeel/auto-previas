@@ -3,7 +3,7 @@ import hashlib
 
 from src.updater_core import (
     installer_asset_name, is_newer, parse_release, parse_sha256sums,
-    parse_version, sha256_file,
+    parse_version, sha256_file, strip_links,
 )
 
 
@@ -56,3 +56,9 @@ def test_parse_sha256sums_y_sha256_file(tmp_path):
     assert sha256_file(f) == digest
     sums = parse_sha256sums(f"{digest}  a.bin\n{digest.upper()} *b.bin\nlinea invalida\n")
     assert sums == {"a.bin": digest, "b.bin": digest}
+
+
+def test_strip_links_no_deja_urls():
+    t = strip_links("Mira [el enlace](https://github.com/x/y) y https://example.com/z fin")
+    assert "http" not in t and "github" not in t and "el enlace" in t and t.endswith("fin")
+    assert strip_links(None) == ""

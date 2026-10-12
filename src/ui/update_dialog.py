@@ -15,11 +15,11 @@ import sys
 from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
-    QApplication, QDialog, QHBoxLayout, QLabel, QPlainTextEdit,
+    QApplication, QDialog, QHBoxLayout, QLabel, QTextEdit,
     QProgressBar, QPushButton, QVBoxLayout,
 )
 
-from src.updater_core import ReleaseInfo, installer_asset_name, set_skipped_version
+from src.updater_core import ReleaseInfo, installer_asset_name, set_skipped_version, strip_links
 
 BG, BG3, BORDER = "#0a0b0e", "#1a1c22", "#232733"
 TEXT, TEXT2 = "#eceef2", "#8c93a4"
@@ -47,7 +47,7 @@ class UpdateDialog(QDialog):
         self.setStyleSheet(f"""
             QDialog {{ background: {BG}; }}
             QLabel {{ background: transparent; color: {TEXT}; }}
-            QPlainTextEdit {{
+            QTextEdit {{
                 background: {BG3}; border: 1px solid {BORDER}; border-radius: 8px;
                 color: {TEXT}; font-size: 12px; padding: 8px;
             }}
@@ -85,9 +85,9 @@ class UpdateDialog(QDialog):
         notes_title.setStyleSheet("font-size: 12px; font-weight: 700; margin-top: 6px;")
         root.addWidget(notes_title)
 
-        self._notes = QPlainTextEdit()
+        self._notes = QTextEdit()
         self._notes.setReadOnly(True)
-        self._notes.setPlainText(self._clean_notes(info.notes))
+        self._notes.setMarkdown(self._clean_notes(info.notes))
         root.addWidget(self._notes, stretch=1)
 
         self._bar = QProgressBar()
@@ -122,7 +122,7 @@ class UpdateDialog(QDialog):
 
     @staticmethod
     def _clean_notes(notes: str) -> str:
-        text = (notes or "").replace("**", "").replace("`", "").strip()
+        text = strip_links(notes).strip()
         if not text:
             return "Mejoras y correcciones de la nueva versión."
         return text[:4000] + ("…" if len(text) > 4000 else "")

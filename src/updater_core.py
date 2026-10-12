@@ -70,6 +70,12 @@ def installer_asset_name(edition: str, plat: str | None = None, machine: str | N
     return None
 
 
+def strip_links(text: str) -> str:
+    """Quita enlaces y URLs de las notas: se muestra solo el texto, nunca direcciones."""
+    text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text or "")
+    return re.sub(r"https?://\S+", "", text)
+
+
 def parse_sha256sums(text: str) -> dict[str, str]:
     """Lee el formato de sha256sum/shasum: '<hash>  <nombre>' o '<hash> *<nombre>'."""
     out: dict[str, str] = {}

@@ -99,7 +99,7 @@
 #### Pendientes
 1. (Usuario) Rotar product-secret-keys de Payhip + secrets del Worker + licencia de prueba.
 2. Probar instalador en Windows real y edición Basic.
-3. ~~Ver la ventana de auto-update en el binario~~ HECHO (3.0.0→3.0.1 OK en macOS). Pendiente cosmético 3.0.2: `_clean_notes` debe convertir `### Título`→`Título`, `- `→`• ` y quitar `*cursiva*`.
+3. ~~Ver la ventana de auto-update en el binario~~ HECHO (3.0.0→3.0.1 OK en macOS). Novedades con formato: HECHO en código (sin publicar, sin subir versión): `QTextEdit.setMarkdown` (títulos/viñetas/negrita) + `strip_links` (nunca enlaces ni URLs en la ventana). Se publicará junto con la próxima Release (3.1.0 propuesta: Recientes + presets + modo promo antifugas; el usuario aún debe elegir funciones).
 4. Panel de previas recientes; presets de firma como archivos.
 
 ---
