@@ -46,7 +46,7 @@
 
 ## Estado actual
 **Fecha última actualización:** 2026-10-12 (Sesión 36f — v3.0.0: auto-update completo con ventana + fix licencias de v2.9.7)
-**Fase activa:** v3.0.0 PUBLICADA (CI #53, Nuitka 4.2.2). Pendiente de confirmar en el Mac del usuario que la ventana principal abre sin crash. El auto-update solo se podrá probar de extremo a extremo cuando exista una Release posterior a la instalada (p. ej. 3.0.1).
+**Fase activa:** v3.0.0 PUBLICADA y VERIFICADA en macOS (activación Plus OK + ventana principal abre sin crash). Pendiente: probar en Windows, rotar claves de Payhip, probar el auto-update con una versión posterior. El auto-update solo se podrá probar de extremo a extremo cuando exista una Release posterior a la instalada (p. ej. 3.0.1).
 **Versión Actual:** **v3.0.0**
 
 ### Credenciales de desarrollo — NO se guardan en el repo (público)
@@ -69,7 +69,7 @@
 - v3.0.0 no llegó a publicarse (run con Nuitka 4.3 cancelado), se reutiliza el número.
 - **Resultado CI #53 (v3.0.0, Nuitka 4.2.2):** success, 36 min (17:52→18:29 UTC). Selftest OK en macOS con las líneas de updater y de widgets (waveform + activación) construidos sin crash. Release publicada 18:28 UTC con 8 instaladores (versionado + nombre estable) y `SHA256SUMS.txt` (844 B). Tamaños: macOS ≈223 MB, Windows ≈146 MB. Hashes de cada par versionado/estable coinciden.
 - Nota: el selftest no está demostrado como capaz de detectar el crash de Nuitka 4.3 (no se compiló esa combinación con el selftest nuevo); la prueba real es abrir el binario en el Mac.
-- Pendiente: confirmar en el binario que MainWindow abre. Si no, plan B: compilar pyqtgraph como paquete de datos (`--nofollow-import-to=pyqtgraph` + `--include-data-dir`, mismo patrón que librosa).
+- **CONFIRMADO por el usuario (macOS, v3.0.0):** la ventana principal abre sin crash ⇒ la causa era la regresión de Nuitka 4.3; fijar `nuitka==4.2.2` lo resuelve. No actualizar Nuitka sin probar el binario. Si no, plan B: compilar pyqtgraph como paquete de datos (`--nofollow-import-to=pyqtgraph` + `--include-data-dir`, mismo patrón que librosa).
 
 ---
 
