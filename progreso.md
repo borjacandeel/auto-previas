@@ -45,7 +45,7 @@
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-12 (Sesión 36f — v3.0.0: auto-update completo con ventana + fix licencias de v2.9.7)
+**Fecha última actualización:** 2026-10-12 (Sesión 36i — v3.0.0 publicada y verificada en macOS; estado consolidado)
 **Fase activa:** v3.0.0 PUBLICADA y VERIFICADA en macOS (activación Plus OK + ventana principal abre sin crash). Pendiente: probar en Windows, rotar claves de Payhip, probar el auto-update con una versión posterior. El auto-update solo se podrá probar de extremo a extremo cuando exista una Release posterior a la instalada (p. ej. 3.0.1).
 **Versión Actual:** **v3.0.0**
 
@@ -58,6 +58,38 @@
 
 ### Regla de oro — recordatorio permanente
 > Al terminar cualquier cambio: actualizar `progreso.md` + commit + push. Sin excepción.
+
+---
+
+### Resumen de Trabajo — Sesión 36i (2026-10-12): ESTADO CONSOLIDADO tras v3.0.0 (leer primero)
+
+#### Matriz de verificación de v3.0.0
+| Área | Estado | Cómo se verificó |
+|------|--------|------------------|
+| Arranque macOS (binario Nuitka) | ✅ | Log del usuario: llega a `app.exec()` sin segfault, 2 arranques |
+| Activación de licencia Plus | ✅ | Usuario activó con su clave; `license.json` guardado (hash+edición) |
+| Reactivación (borrar `license.json`) | ✅ | Usuario: "va de locos"; diálogo → clave → ventana principal |
+| Ventana principal macOS | ✅ | Abre sin crash (causa anterior = Nuitka 4.3) |
+| Auto-update: lógica | ✅ | 5 tests unitarios + prueba offscreen con servidor local (hash ok / corrupto / sin sums) |
+| Auto-update: contra Release REAL | ✅ | Consulta a la API detecta 3.0.0; elige los 4 instaladores correctos (existen en la Release y en SHA256SUMS); descarga real de 145,6 MB en 8 s con verificación SHA-256 correcta |
+| Auto-update: ventana en el binario compilado | ⏳ | No se ha visto aún: solo aparece si hay versión posterior a la instalada (publicar 3.0.1 y abrir una app 3.0.0) |
+| Windows (instalador real en PC) | ⏳ | Selftest de CI OK, pero nadie lo ha abierto en un Windows real |
+| Edición Basic | ⏳ | Compila y pasa selftest; sin prueba manual con clave Basic |
+| Rotación de claves Payhip + licencia de prueba | ❌ pendiente del usuario | Estuvieron en el historial público de git |
+
+#### Decisiones y reglas vigentes (resumen)
+- Versión **3.0.0** (MAJOR confirmado por el usuario). Repo **público** por decisión del usuario.
+- **Nuitka fijado a 4.2.2** (`requirements-dev.txt`): 4.3 genera binarios que crashean (`Nuitka_Function_New`). No subir sin probar el binario en Mac.
+- **No usar certifi** (segfault compilado). El rechazo de claves era Cloudflare 1010 por User-Agent de urllib → siempre enviar `User-Agent` propio a Worker/GitHub.
+- Antes de lanzar un run de CI, **cancelar los activos**. Lanzar por `workflow_dispatch` (el token cloud no puede empujar tags).
+- Nunca escribir secretos, claves de licencia ni emails de compradores en archivos/commits.
+- Pruebas locales de binario: `sudo xattr -cr "/Applications/AutoPrevias.app"` y lanzar `…/Contents/MacOS/AutoPrevias 2>&1 | tee /tmp/autoprevias_debug.log`; reset de licencia: `rm ~/Library/Application\ Support/AutoPrevias/license.json`; crash: informe `.ips` en `~/Library/Logs/DiagnosticReports/` (frames del hilo `triggered`).
+
+#### Pendientes
+1. (Usuario) Rotar product-secret-keys de Payhip + secrets del Worker + licencia de prueba.
+2. Probar instalador en Windows real y edición Basic.
+3. Publicar 3.0.1 (cuando haya cambios) para ver la ventana de auto-update en el binario.
+4. Panel de previas recientes; presets de firma como archivos.
 
 ---
 

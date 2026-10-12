@@ -65,3 +65,14 @@ Cada vez que se complete un cambio, mejora o corrección solicitada por el usuar
 - El proyecto utiliza `pedalboard` (GPL-3) y `Rubber Band` (GPL).
 - Mantener siempre la documentación de licencias al día en `THIRD_PARTY_LICENSES.txt`.
 - No alterar dependencias críticas ni licenciamiento sin validación y confirmación previa del usuario.
+
+---
+
+## 5. Reglas Técnicas Aprendidas (no repetir errores)
+- **Nuitka fijado en `nuitka==4.2.2`** (`requirements-dev.txt`). La 4.3 produjo binarios que crashean en macOS. No actualizar sin compilar y abrir el binario en un Mac.
+- **No importar `certifi`** en el código compilado (segfault con Nuitka). Usar el contexto SSL por defecto.
+- **Cloudflare bloquea el User-Agent por defecto de `urllib`** (403, error 1010): toda petición HTTP de la app lleva un `User-Agent` propio.
+- **Lanzar CI con `workflow_dispatch` (`tag_name`)**, no con push de tags (el token cloud no puede). Antes de cada run nuevo, cancelar los activos.
+- **El selftest del binario** (`--selftest`) debe seguir construyendo widgets reales (waveform y activación) para detectar crashes antes de publicar.
+- **Secretos:** nunca en archivos, commits ni logs. El repo es público.
+
