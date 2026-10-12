@@ -30,6 +30,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from src import i18n
+from src.i18n import tr
 from src.analysis.bpm import detect_beat_grid, SR_ANALYSIS
 from src.analysis.key import detect_musical_key
 from src.analysis.segments import build_preview_plan
@@ -467,7 +469,7 @@ class BatchDialog(QDialog):
                 item_act.setTextAlignment(Qt.AlignCenter)
                 self._table.setItem(row, 4, item_act)
 
-        self._lbl_count.setText(f"{len(self._files)} pistas en cola")
+        i18n.set_text(self._lbl_count, "{n} pistas en cola", n=len(self._files))
         self._btn_start.setEnabled(len(self._files) > 0)
 
     def _choose_dest_folder(self):
@@ -479,7 +481,7 @@ class BatchDialog(QDialog):
 
     def _reset_dest_folder(self):
         self._custom_out_dir = None
-        self._lbl_dest_path.setText("Subcarpeta 'Previas' en cada pista de origen (Predeterminado)")
+        i18n.set_text(self._lbl_dest_path, "Subcarpeta 'Previas' en cada pista de origen (Predeterminado)")
         self._lbl_dest_path.setStyleSheet(f"color: {GREEN}; font-size: 11px; font-weight: 600; border: none; background: transparent;")
 
     def _open_current_dest(self):
@@ -527,13 +529,13 @@ class BatchDialog(QDialog):
             return
         self._files.clear()
         self._table.setRowCount(0)
-        self._lbl_count.setText("0 pistas en cola")
+        i18n.set_text(self._lbl_count, "0 pistas en cola")
         self._btn_start.setEnabled(False)
 
     def _toggle_batch(self):
         if self._worker and self._worker.isRunning():
             self._worker.cancel()
-            self._btn_start.setText("🚀 Iniciar Lote")
+            i18n.set_text(self._btn_start, "🚀 Iniciar Lote")
             return
 
         if not self._files:
@@ -552,7 +554,7 @@ class BatchDialog(QDialog):
 
         self._generated_map = {}
         self._prog.setValue(0)
-        self._btn_start.setText("⏹ Detener")
+        i18n.set_text(self._btn_start, "⏹ Detener")
 
         self._worker = BatchWorker(self._files, cfg)
         self._worker.file_started.connect(self._on_file_started)
@@ -564,7 +566,7 @@ class BatchDialog(QDialog):
     def _on_file_started(self, idx: int, name: str):
         item = self._table.item(idx, 3)
         if item:
-            item.setText("⚙️ Procesando…")
+            i18n.set_text(item, "⚙️ Procesando…")
             item.setForeground(QColor(WARN))
 
     def _on_file_progress(self, idx: int, pct: int, msg: str):
@@ -616,7 +618,7 @@ class BatchDialog(QDialog):
 
     def _on_batch_finished(self, ok: int, err: int, all_generated: list):
         self._prog.setValue(100)
-        self._btn_start.setText("🚀 Iniciar Lote")
+        i18n.set_text(self._btn_start, "🚀 Iniciar Lote")
 
         # F8 — Informe de exportación en TXT
         try:
@@ -650,25 +652,25 @@ class BatchDialog(QDialog):
         out_dirs = list(dict.fromkeys(str(Path(p).parent) for p in all_generated if Path(p).exists()))
         dirs_text = "<br>".join(f"• <code>{d}</code>" for d in out_dirs[:4])
         if len(out_dirs) > 4:
-            dirs_text += f"<br><i>... y {len(out_dirs) - 4} carpetas adicionales.</i>"
+            dirs_text += "<br><i>" + tr("... y {n} carpetas adicionales.", n=len(out_dirs) - 4) + "</i>"
 
         vid_count = sum(1 for p in all_generated if p.lower().endswith(".mp4"))
 
         from PySide6.QtWidgets import QMessageBox
         msg = QMessageBox(self)
-        msg.setWindowTitle("🎉 Procesamiento por Lote Completado")
+        msg.setWindowTitle(tr("🎉 Procesamiento por Lote Completado"))
         msg.setIcon(QMessageBox.Information)
-        msg.setText(
-            f"<h3>¡Procesamiento por lote finalizado con éxito!</h3>"
-            f"<p>✓ <b>{ok}</b> pistas procesadas correctamente.<br>"
-            f"✓ <b>{len(all_generated)}</b> archivos generados en total"
-            f" (incluyendo <b>{vid_count}</b> vídeos MP4 9:16 para redes).<br>"
-            f"✗ <b>{err}</b> errores.</p>"
-            f"<hr>"
-            f"<p><b>📁 Archivos guardados en:</b><br>{dirs_text}</p>"
-        )
-        btn_open = msg.addButton("📂 Abrir Carpeta en Finder / Explorador", QMessageBox.ActionRole)
-        msg.addButton("Cerrar", QMessageBox.RejectRole)
+        msg.setText(tr(
+            "<h3>¡Procesamiento por lote finalizado con éxito!</h3>"
+            "<p>✓ <b>{ok}</b> pistas procesadas correctamente.<br>"
+            "✓ <b>{total}</b> archivos generados en total"
+            " (incluyendo <b>{vids}</b> vídeos MP4 9:16 para redes).<br>"
+            "✗ <b>{err}</b> errores.</p>"
+            "<hr>"
+            "<p><b>📁 Archivos guardados en:</b><br>{dirs}</p>",
+            ok=ok, total=len(all_generated), vids=vid_count, err=err, dirs=dirs_text))
+        btn_open = msg.addButton(tr("📂 Abrir Carpeta en Finder / Explorador"), QMessageBox.ActionRole)
+        msg.addButton(tr("Cerrar"), QMessageBox.RejectRole)
         msg.exec()
 
         if msg.clickedButton() == btn_open and out_dirs:

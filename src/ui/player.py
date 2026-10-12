@@ -16,6 +16,8 @@ from pathlib import Path
 
 import numpy as np
 from PySide6.QtCore import Qt, Signal, QUrl, QTimer
+
+from src import i18n
 from PySide6.QtGui import QPainter, QColor, QFont
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
@@ -709,7 +711,7 @@ class PlayerWidget(QWidget):
             self._btn_play.setEnabled(True)
             self._slider.setEnabled(True)
             self._lbl_time.setText(f"0:00 / {_fmt(ms)}")
-            if self._lbl_status.text() == "Cargando…":
+            if getattr(self, "_status_src", "") == "Cargando…":
                 tag = "🎵 Pista original lista" if self.is_playing_source() else "✨ Previa lista"
                 self._set_status(f"✅ {tag}", _GREEN)
 
@@ -892,7 +894,8 @@ class PlayerWidget(QWidget):
         return 0.0
 
     def _set_status(self, msg: str, color: str = _TEXT_DIM):
-        self._lbl_status.setText(msg)
+        self._status_src = msg
+        i18n.set_text(self._lbl_status, msg)
         self._lbl_status.setStyleSheet(
             f"color: {color}; font-size: 11px; font-weight: 600; background: transparent; border: none;"
         )

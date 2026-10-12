@@ -394,7 +394,7 @@ class WaveformWidget(QWidget):
             if self._preview_rms is not None:
                 self._draw_preview_view()
             else:
-                self._lbl_sec_live.setText("⏳ Cargando onda de la previa…")
+                i18n.set_text(self._lbl_sec_live, "⏳ Cargando onda de la previa…")
 
 
     def _tick_playhead_glow(self):
@@ -521,16 +521,16 @@ class WaveformWidget(QWidget):
                 border-left: 3px solid #ff1e38;
                 border-radius: 4px; padding: 2px 7px; letter-spacing: 0.5px;
             """)
-            self._hint_lbl.setText("Arrastra las líneas 🟩 verdes (inicio) o 🟥 rojas (fin) para ajustar qué va a la previa")
+            i18n.set_text(self._hint_lbl, "Arrastra las líneas 🟩 verdes (inicio) o 🟥 rojas (fin) para ajustar qué va a la previa")
         else:
-            self._badge_mode.setText("✨ Previa Generada · Escucha Final")
+            i18n.set_text(self._badge_mode, "✨ Previa Generada · Escucha Final")
             self._badge_mode.setStyleSheet("""
                 color: #ff3e55; font-size: 10px; font-weight: 700;
                 background: #25070a; border: 1px solid #ff1e3888;
                 border-left: 3px solid #ff1e38;
                 border-radius: 4px; padding: 2px 7px; letter-spacing: 0.5px;
             """)
-            self._hint_lbl.setText("Previa lista · Haz clic en la onda para saltar a cualquier punto")
+            i18n.set_text(self._hint_lbl, "Previa lista · Haz clic en la onda para saltar a cualquier punto")
 
     def _draw_source_view(self):
         """Dibuja la onda completa original con cortes interactivos y zonas fuera de previa."""
@@ -861,7 +861,7 @@ class WaveformWidget(QWidget):
                 hl.blockSignals(False)
             cuts.append((start, end))
 
-        self._hint_lbl.setText("Arrastra las líneas 🟩 verdes (inicio) y 🟥 rojas (fin) para ajustar los cortes")
+        i18n.set_text(self._hint_lbl, "Arrastra las líneas 🟩 verdes (inicio) y 🟥 rojas (fin) para ajustar los cortes")
         self.cuts_changed.emit(cuts)
         QTimer.singleShot(80, lambda: setattr(self, "_dragging", False))
 

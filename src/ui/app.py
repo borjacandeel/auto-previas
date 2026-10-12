@@ -638,7 +638,7 @@ class AnalysisPage(QWidget):
 
     def start(self, filename: str):
         self._file_lbl.setText(filename[:60] + ("…" if len(filename) > 60 else ""))
-        self._status_lbl.setText("Preparando análisis…")
+        i18n.set_text(self._status_lbl, "Preparando análisis…")
         self._bar.setValue(0)
         self._anim_timer.start(35)
 
@@ -647,7 +647,7 @@ class AnalysisPage(QWidget):
 
     def update_progress(self, pct: int, msg: str):
         self._bar.setValue(pct)
-        self._status_lbl.setText(msg)
+        i18n.set_text(self._status_lbl, msg)
 
     def _tick(self):
         self._pulse_phase = (self._pulse_phase + 0.05) % (2 * math.pi)
@@ -1300,7 +1300,7 @@ class BrandingCard(QFrame):
 
     def _on_cover_changed(self, path: str):
         if path:
-            self._badge.setText("PERSONALIZADA")
+            i18n.set_text(self._badge, "PERSONALIZADA")
             self._badge.setStyleSheet(f"""
                 background: {GREEN}22; color: {GREEN};
                 font-size: 8.5px; font-weight: 700;
@@ -1308,7 +1308,7 @@ class BrandingCard(QFrame):
             """)
             self._btn_reset_cover.setVisible(True)
         else:
-            self._badge.setText("OFICIAL")
+            i18n.set_text(self._badge, "OFICIAL")
             self._badge.setStyleSheet(f"""
                 background: {BG4}; color: {TEXT_SUB};
                 font-size: 8.5px; font-weight: 700;
@@ -2077,15 +2077,11 @@ class ResultPanel(QWidget):
     def _on_toggle_advanced(self, checked: bool):
         self._tabs.setVisible(checked)
         if checked:
-            self._chk_advanced.setText("⚙️  Ocultar Personalización")
-            self._lbl_simple_desc.setText(
-                "Ajustes manuales activos: edita la tabla de cortes, curva de tempo o estructura."
-            )
+            i18n.set_text(self._chk_advanced, "⚙️  Ocultar Personalización")
+            i18n.set_text(self._lbl_simple_desc, "Ajustes manuales activos: edita la tabla de cortes, curva de tempo o estructura.")
         else:
-            self._chk_advanced.setText("⚙️  Personalizar Cortes & BPM")
-            self._lbl_simple_desc.setText(
-                "3 cortes listos · Arrastra en la onda para retocar o pulsa abajo en Generar Previa"
-            )
+            i18n.set_text(self._chk_advanced, "⚙️  Personalizar Cortes & BPM")
+            i18n.set_text(self._lbl_simple_desc, "3 cortes listos · Arrastra en la onda para retocar o pulsa abajo en Generar Previa")
 
     def _apply_generate_style(self, ready: bool):
         if ready:
@@ -2147,7 +2143,7 @@ class ResultPanel(QWidget):
     def _on_regen(self):
         self.regen_requested.emit(self._spin_seed.value())
         # Resetear apariencia del botón al estado normal
-        self._btn_regen.setText("⟳  Regenerar con esta seed")
+        i18n.set_text(self._btn_regen, "⟳  Regenerar con esta seed")
         self._btn_regen.setStyleSheet(
             _btn(BG3, ACCENT, BG4, radius=10, fs=12, border=ACCENT + "44")
         )
@@ -2285,7 +2281,8 @@ class ResultPanel(QWidget):
 
         self._active_preset_sec = 120
         self._update_preset_styles(120)
-        self._lbl_simple_desc.setText(f"Preset 120s (2 Min · Defecto) aplicado ({len(plan.segments)} cortes calculados)")
+        i18n.set_text(self._lbl_simple_desc, "Preset 120s (2 Min · Defecto) aplicado ({n} cortes calculados)",
+                      n=len(plan.segments))
 
         self._btn_generate.setEnabled(True)
         self._apply_generate_style(True)
@@ -2340,9 +2337,11 @@ class ResultPanel(QWidget):
         new_plan = build_preview_plan(self._analysis, target_duration_sec=float(seconds), cfg=cfg)
         self.update_after_regen(new_plan)
         if seconds == 120:
-            self._lbl_simple_desc.setText(f"Preset 120s (2 Min · Defecto) aplicado ({len(new_plan.segments)} cortes calculados)")
+            i18n.set_text(self._lbl_simple_desc, "Preset 120s (2 Min · Defecto) aplicado ({n} cortes calculados)",
+                          n=len(new_plan.segments))
         else:
-            self._lbl_simple_desc.setText(f"Preset {seconds}s aplicado ({len(new_plan.segments)} cortes calculados)")
+            i18n.set_text(self._lbl_simple_desc, "Preset {s}s aplicado ({n} cortes calculados)",
+                          s=seconds, n=len(new_plan.segments))
 
     def _pick_new_file(self):
         """Abre selector de archivo y emite load_file_requested sin salir de la app."""
@@ -2639,7 +2638,7 @@ class ResultPanel(QWidget):
         self._generated_paths  = generated
         self._spin_seed.setValue(seed)
         self._btn_generate.setEnabled(True)
-        self._btn_generate.setText("▶   GENERAR PREVIA")
+        i18n.set_text(self._btn_generate, "▶   GENERAR PREVIA")
         self._apply_generate_style(True)
         self._btn_generate.start_shimmer()
 
@@ -2653,9 +2652,9 @@ class ResultPanel(QWidget):
             has_vid = any(p.lower().endswith(".mp4") for p in generated)
 
             title_text = "🎉 ¡Previa y Vídeo Social exportados con éxito!" if has_vid else "✅ ¡Previa de audio exportada con éxito!"
-            self._lbl_succ_title.setText(title_text)
-            self._lbl_succ_files.setText("Archivos:  " + "  ·  ".join(file_names))
-            self._lbl_succ_dir.setText(f"📁 Carpeta de guardado:\n{out_dir}")
+            i18n.set_text(self._lbl_succ_title, title_text)
+            i18n.set_text(self._lbl_succ_files, "Archivos:  {files}", files="  ·  ".join(file_names))
+            i18n.set_text(self._lbl_succ_dir, "📁 Carpeta de guardado:\n{dir}", dir=out_dir)
             self._card_export_success.setVisible(True)
 
             # Priorizar WAV de usuario (no temp) para el reproductor interno
@@ -2671,7 +2670,7 @@ class ResultPanel(QWidget):
         if hasattr(self, "_card_export_success"):
             self._card_export_success.setVisible(False)
         self._btn_generate.setEnabled(False)
-        self._btn_generate.setText("⏳   Generando previa…")
+        i18n.set_text(self._btn_generate, "⏳   Generando previa…")
         self._btn_generate.stop_shimmer()
         self._apply_generate_style(False)
 
@@ -2926,9 +2925,8 @@ class ResultPanel(QWidget):
             estimated_duration_after_stretch=est_stretch,
         )
 
-        self._lbl_cuts_summary.setText(
-            f"{len(new_segs)} cortes  ·  Total: {raw_dur:.1f}s  ·  Previa est: {fmt_time_short(est_stretch)}"
-        )
+        i18n.set_text(self._lbl_cuts_summary, "{n} cortes  ·  Total: {raw}s  ·  Previa est: {est}",
+                      n=len(new_segs), raw=f"{raw_dur:.1f}", est=fmt_time_short(est_stretch))
         ok = 120 <= est_stretch <= 180
         self._card_pv.set_value(fmt_time_short(est_stretch))
         self._card_pv.set_accent(GREEN if ok else WARN)
@@ -3170,9 +3168,8 @@ class ResultPanel(QWidget):
 
         raw_dur = sum(s.duration for s in plan.segments)
         est = plan.estimated_duration_after_stretch
-        self._lbl_cuts_summary.setText(
-            f"{len(plan.segments)} cortes  ·  Total: {raw_dur:.1f}s  ·  Previa est: {fmt_time_short(est)}"
-        )
+        i18n.set_text(self._lbl_cuts_summary, "{n} cortes  ·  Total: {raw}s  ·  Previa est: {est}",
+                      n=len(plan.segments), raw=f"{raw_dur:.1f}", est=fmt_time_short(est))
         self._animate_cuts_rows()
 
     def _animate_cuts_rows(self):
@@ -3407,11 +3404,9 @@ class ResultPanel(QWidget):
             self._btn_mode_manual.setStyleSheet(
                 _btn(BG3, TEXT_DIM, BG4, radius=6, fs=10, bold=False, border="")
             )
-            self._lbl_auto_info.setText(
-                "🛡️  Modo Automático activo: El motor aplica micro-variaciones matemáticas orgánicas según la semilla (Seed). "
+            i18n.set_text(self._lbl_auto_info, "🛡️  Modo Automático activo: El motor aplica micro-variaciones matemáticas orgánicas según la semilla (Seed). "
                 "La música suena natural al oído, pero resulta imposible de pinchar o mezclar en reproductores DJ. "
-                "Para acelerar en los Drops o crear tus propias subidas, pulsa en 'Manual'."
-            )
+                "Para acelerar en los Drops o crear tus propias subidas, pulsa en 'Manual'.")
             self._lbl_auto_info.setStyleSheet(
                 f"color: {TEXT_MID}; font-size: 10px; padding: 4px 8px; background: {BG3}; "
                 f"border-radius: 5px; border: 1px solid {BORDER}; border-left: 3px solid {ACCENT};"
@@ -3424,10 +3419,8 @@ class ResultPanel(QWidget):
             self._btn_mode_manual.setStyleSheet(
                 _btn(BG4, ACCENT, BG5, radius=6, fs=10, bold=True, border=ACCENT)
             )
-            self._lbl_auto_info.setText(
-                "🎛️  Modo Manual activo: Elige cualquiera de los Presets DJ ('+5 BPM en Drops', 'Rampa Final') "
-                "o añade momentos en la tabla para acelerar (+BPM) o ralentizar (-BPM) tramos de la previa."
-            )
+            i18n.set_text(self._lbl_auto_info, "🎛️  Modo Manual activo: Elige cualquiera de los Presets DJ ('+5 BPM en Drops', 'Rampa Final') "
+                "o añade momentos en la tabla para acelerar (+BPM) o ralentizar (-BPM) tramos de la previa.")
             self._lbl_auto_info.setStyleSheet(
                 f"color: {TEXT_MID}; font-size: 10px; padding: 4px 8px; background: {BG3}; "
                 f"border-radius: 5px; border: 1px solid {BORDER}; border-left: 3px solid {WARN};"
@@ -3929,6 +3922,7 @@ class MainWindow(QMainWindow):
         self._pending_project = None     # «Reabrir proyecto»: ajustes a aplicar tras el análisis
         self._update_info   = None
         i18n.init_from_config(self._cfg)
+        i18n.install_auto_translate()
 
         self._dot_count    = 0
         self._progress_msg = ""   # mensaje limpio (sin puntos animados)
@@ -4514,7 +4508,7 @@ class MainWindow(QMainWindow):
     def _back_to_drop(self):
         self._analysis_page.stop()
         self._fade_to_page(0)
-        self._hint_lbl.setText("Arrastra un track para comenzar")
+        i18n.set_text(self._hint_lbl, "Arrastra un track para comenzar")
         self._set_progress(0, "Listo — arrastra un track o pulsa Abrir archivo")
 
     def _set_folder(self):
@@ -4677,7 +4671,7 @@ class MainWindow(QMainWindow):
         lines = [ln for ln in msg.strip().splitlines() if ln.strip()]
         short = lines[-1] if lines else msg
         self._results._btn_generate.setEnabled(True)
-        self._results._btn_generate.setText("▶   GENERAR PREVIA")
+        i18n.set_text(self._results._btn_generate, "▶   GENERAR PREVIA")
         self._results._apply_generate_style(True)
         self._set_progress(0, f"❌  {short}")
 
@@ -4728,7 +4722,7 @@ class MainWindow(QMainWindow):
                 }
             """)
         else:
-            self._btn_watch.setText("👁️ Vigilar Carpeta")
+            i18n.set_text(self._btn_watch, "👁️ Vigilar Carpeta")
             self._btn_watch.setStyleSheet(_btn(BG3, TEXT_MID, BG4, radius=4, fs=10))
 
     def _open_history_dialog(self):

@@ -97,3 +97,34 @@ def test_traductor_de_widgets_en_caliente():
         ("⏳   Generando previa…", "Semilla aleatoria", "Carpeta", "  📊 Estructura Musical  ")
     assert edit.placeholderText() == "PREVIA - NombreOriginal" and table.horizontalHeaderItem(0).text() == "Cambiar"
     root.deleteLater()
+
+
+def test_texto_traducido_a_mano_vuelve_a_castellano_aunque_se_repase_varias_veces():
+    pytest.importorskip("PySide6")
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget
+    app = QApplication.instance() or QApplication([])
+    root = QWidget(); lay = QVBoxLayout(root)
+    btn = QPushButton("🎙️ Voice Drop…"); lay.addWidget(btn)
+    i18n.set_language("en"); i18n.translate_tree(root)
+    btn.setText(i18n.tr("🎙️ Cambiar Drop"))                  # el código lo traduce a mano en inglés
+    i18n.translate_tree(root)
+    i18n.set_language("es")
+    i18n.translate_tree(root); i18n.translate_tree(root)      # varias pasadas seguidas no deben revertirlo
+    assert btn.text() == "🎙️ Cambiar Drop"
+    root.deleteLater()
+
+
+def test_set_text_recuerda_la_plantilla_y_cambia_de_idioma():
+    pytest.importorskip("PySide6")
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    from PySide6.QtWidgets import QApplication, QLabel
+    app = QApplication.instance() or QApplication([])
+    lbl = QLabel()
+    i18n.set_language("en")
+    i18n.set_text(lbl, "{n} cortes  ·  Total: {raw}s  ·  Previa est: {est}", n=3, raw="50.3", est="0:46")
+    assert lbl.text() == "3 cuts  ·  Total: 50.3s  ·  Est. preview: 0:46"
+    i18n.set_language("es"); i18n.translate_widget(lbl)
+    assert lbl.text() == "3 cortes  ·  Total: 50.3s  ·  Previa est: 0:46"
+    i18n.set_language("en"); i18n.translate_widget(lbl)
+    assert lbl.text() == "3 cuts  ·  Total: 50.3s  ·  Est. preview: 0:46"
