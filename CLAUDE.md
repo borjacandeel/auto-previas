@@ -1,7 +1,7 @@
 # AutoPrevias — Reglas Operativas Permanentes del Repositorio
 
 ## 0. Confidencialidad y Seguridad del Repositorio y Tokens
-- **Repositorio PRIVADO:** Este repositorio es y debe permanecer **privado**. No cambiar la visibilidad a público bajo ninguna circunstancia sin confirmación explícita del usuario.
+- **Repositorio PÚBLICO (decisión del usuario, 2026-10-12):** Este repositorio es y debe permanecer **público**. El auto-update y los enlaces de descarga `releases/latest/download/...` dependen de ello (API de GitHub sin token). No cambiar la visibilidad a privado bajo ninguna circunstancia sin confirmación explícita del usuario. Por ser público, NUNCA commitear secretos (ver reglas de tokens más abajo).
 - **Seguridad estricta de Tokens y Credenciales:**
   - NUNCA escribir ningún token (`ghp_...`, `github_pat_...`), clave o credencial en archivos de código, configs, `.git/config`, URLs de git remoto, scripts, logs ni mensajes de commit.
   - NUNCA imprimir tokens por pantalla ni repetirlos en el chat.
@@ -54,7 +54,7 @@ Cada vez que se complete un cambio, mejora o corrección solicitada por el usuar
 ---
 
 ## 3. Control de Minutos y Recursos de GitHub Actions
-- El repositorio es privado y los runners de macOS y Windows consumen cuota de minutos a mayor tasa que Linux.
+- El repositorio es público (los minutos de Actions en repos públicos no consumen cuota de pago), pero se mantiene el ahorro de ejecuciones redundantes. Antes de lanzar un run nuevo, cancelar siempre los runs activos.
 - Mantener `concurrency` activa en `.github/workflows/release.yml` para cancelar automáticamente ejecuciones redundantes de tags obsoletos.
 - Usar cachés eficientes de pip y Nuitka.
 - Revisar el consumo mensual de minutos y avisar si supera el 70% de la cuota disponible.

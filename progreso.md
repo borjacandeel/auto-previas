@@ -49,14 +49,24 @@
 **Fase activa:** v2.10.0 en CI. Pendiente de probar en binario: activación de licencia (UA propio) y segfault en `_build_ui` tras activar. El auto-update solo se podrá probar de extremo a extremo cuando exista una Release posterior a la instalada.
 **Versión Actual:** **v2.10.0**
 
-### Credenciales de desarrollo (solo usar en sesiones de trabajo, nunca commitear)
-- `PAYHIP_SECRET_BASIC` = `prod_sk_NVkaK_b6359b99d5e7e31309cb0246f7c4cab395c6981e`
-- `PAYHIP_SECRET_PLUS`  = `prod_sk_mTjEL_fc8511b7394cb3a18f093a3bd6706830b47faee3`
+### Credenciales de desarrollo — NO se guardan en el repo (público)
+> Las claves secretas de Payhip (`PAYHIP_SECRET_BASIC/PLUS`) viven solo como *secrets* del Worker de Cloudflare. Las versiones antiguas aparecieron en el historial público de git: **deben rotarse** (ver sesión 36g).
+- `PAYHIP_SECRET_BASIC` = `prod_sk_[REDACTADA]`
+- `PAYHIP_SECRET_PLUS`  = `prod_sk_[REDACTADA]`
 - Worker URL: `https://autoprevias-license.radicalrecordsvlc.workers.dev`
-- Test verificado con curl: clave `VPTBV-JCC7C-8GW36-4VRGU` → `{"success":true,"edition":"plus"}`
+- Test verificado con curl: clave `[CLAVE-DE-PRUEBA-REDACTADA]` → `{"success":true,"edition":"plus"}`
 
 ### Regla de oro — recordatorio permanente
 > Al terminar cualquier cambio: actualizar `progreso.md` + commit + push. Sin excepción.
+
+---
+
+### Resumen de Trabajo — Sesión 36g (2026-10-12): repo PÚBLICO fijado + secretos expuestos
+
+- **Decisión del usuario:** el repositorio es y seguirá **público**. `CLAUDE.md §0` y `§3` actualizados (antes decían privado).
+- **Incidente de seguridad:** al ser público, las dos *product-secret-keys* de Payhip (Basic y Plus) y una clave de licencia Plus de prueba (con email del comprador en un commit) estaban en `progreso.md` y en el historial git (commits `a7cbf28`, `f99d400`, `1c14721`, `cf6e0fb`, `b19a4c8`). Quien las tenga puede consultar licencias/compradores de Payhip y usar esa licencia Plus.
+- **Hecho:** valores redactados en el `progreso.md` actual. **Pendiente del usuario:** regenerar ambas product-secret-keys en Payhip, actualizar los secrets `PAYHIP_SECRET_BASIC`/`PAYHIP_SECRET_PLUS` del Worker de Cloudflare, y revocar/regenerar la licencia de prueba. Reescribir el historial no es recomendable (repo público ya clonable); la rotación es la solución real.
+- Regla a mantener: no volver a escribir secretos, claves de licencia ni emails de compradores en archivos ni commits.
 
 ---
 
@@ -122,7 +132,7 @@ v2.9.5 no resolvió el SSL: `ssl.create_default_context()` + carga manual de `/e
 ### Resumen de Trabajo — Sesión 36c (2026-10-12): v2.9.5 — Fix SSL certificados macOS en Nuitka
 
 #### Contexto
-El usuario activó v2.9.4 pero la clave `VPTBV-JCC7C-8GW36-4VRGU` siempre devolvía "Clave no válida o sin conexión". Worker verificado OK con curl. Causa: el binario Nuitka standalone no hereda la ruta de certificados SSL del sistema Python, por lo que `urllib.request.urlopen` no puede verificar el certificado TLS del Worker de Cloudflare y lanza excepción silenciosa.
+El usuario activó v2.9.4 pero la clave `[CLAVE-DE-PRUEBA-REDACTADA]` siempre devolvía "Clave no válida o sin conexión". Worker verificado OK con curl. Causa: el binario Nuitka standalone no hereda la ruta de certificados SSL del sistema Python, por lo que `urllib.request.urlopen` no puede verificar el certificado TLS del Worker de Cloudflare y lanza excepción silenciosa.
 
 #### Lo que se hizo
 
@@ -169,7 +179,7 @@ Primera sesión en la nube (claude.ai/code). El usuario migró desde agente loca
 
 | # | Acción | Detalle |
 |---|--------|---------|
-| 1 | **Verificación del Worker** | `curl -X POST` al Worker → `{"success":true,"edition":"plus","email":"djborjacandel@gmail.com"}` con clave `VPTBV-JCC7C-8GW36-4VRGU`. Worker correcto. |
+| 1 | **Verificación del Worker** | `curl -X POST` al Worker → `{"success":true,"edition":"plus","email":"djborjacandel@gmail.com"}` con clave `[CLAVE-DE-PRUEBA-REDACTADA]`. Worker correcto. |
 | 2 | **Diagnóstico del fallo** | La app instalada era v2.9.1 (código viejo con `product_id`). El Worker nuevo ya no acepta ese campo. El código de `license.py` ya estaba corregido en el repo (sesión 35), pero faltaba compilar. |
 | 3 | **Bump v2.9.3** | `src/__version__.py`, `CHANGELOG.md`, `README.md`, `progreso.md` actualizados. |
 | 4 | **Fix `workflow_dispatch`** | El workflow solo usaba `inputs.tag_name` si el ref era "main". Corregido: ahora usa el input siempre que se proporcione. |
@@ -202,8 +212,8 @@ El usuario descargó v2.9.1, compró una licencia Plus en Payhip y la clave era 
 - Código nuevo en `worker_license.txt` y `/Users/borjacandel/Downloads/worker_license.txt`
 - El Worker nuevo usa `env.PAYHIP_SECRET_PLUS` y `env.PAYHIP_SECRET_BASIC` (dos secrets)
 - Las product-secret-keys verificadas y funcionando con curl directo a Payhip:
-  - Basic: `prod_sk_NVkaK_b6359b99d5e7e31309cb0246f7c4cab395c6981e`
-  - Plus: `prod_sk_mTjEL_fc8511b7394cb3a18f093a3bd6706830b47faee3`
+  - Basic: `prod_sk_[REDACTADA]`
+  - Plus: `prod_sk_[REDACTADA]`
 - La clave de prueba del usuario fue verificada directamente → devuelve `enabled: true, edition: plus`
 
 #### `src/licensing/license.py` actualizado (ya en repo)
