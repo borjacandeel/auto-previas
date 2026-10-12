@@ -3,6 +3,11 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.9.5] - 2026-10-12
+
+### Corregido
+- **La clave de licencia siempre mostraba "Clave no válida o sin conexión" en macOS**: en los instaladores compilados con Nuitka, el proceso de verificación HTTPS no encontraba el paquete de certificados SSL del sistema, haciendo que la conexión al servidor de licencias fallara en silencio aunque la clave fuese correcta. Ahora se carga explícitamente el certificado raíz del sistema (`/etc/ssl/cert.pem`) y la verificación funciona correctamente.
+
 ## [2.9.4] - 2026-10-12
 
 ### Corregido

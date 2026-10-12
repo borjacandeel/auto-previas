@@ -45,9 +45,9 @@
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-12 (Sesión 36 — v2.9.4: fix arranque sin pantalla de activación + diagnóstico segfault)
-**Fase activa:** Sistema de licencias en corrección. CI v2.9.3 completando (run #38267412107), v2.9.4 pendiente de lanzar CI. Próximo: verificar segfault tras activación con v2.9.4.
-**Versión Actual:** **v2.9.4**
+**Fecha última actualización:** 2026-10-12 (Sesión 36c — v2.9.5: fix SSL certificados macOS en binario Nuitka)
+**Fase activa:** Sistema de licencias en corrección. CI v2.9.5 lanzado. Pendiente: verificar segfault en `_build_ui` con logs de v2.9.5.
+**Versión Actual:** **v2.9.5**
 
 ### Credenciales de desarrollo (solo usar en sesiones de trabajo, nunca commitear)
 - `PAYHIP_SECRET_BASIC` = `prod_sk_NVkaK_b6359b99d5e7e31309cb0246f7c4cab395c6981e`
@@ -57,6 +57,25 @@
 
 ### Regla de oro — recordatorio permanente
 > Al terminar cualquier cambio: actualizar `progreso.md` + commit + push. Sin excepción.
+
+---
+
+### Resumen de Trabajo — Sesión 36c (2026-10-12): v2.9.5 — Fix SSL certificados macOS en Nuitka
+
+#### Contexto
+El usuario activó v2.9.4 pero la clave `VPTBV-JCC7C-8GW36-4VRGU` siempre devolvía "Clave no válida o sin conexión". Worker verificado OK con curl. Causa: el binario Nuitka standalone no hereda la ruta de certificados SSL del sistema Python, por lo que `urllib.request.urlopen` no puede verificar el certificado TLS del Worker de Cloudflare y lanza excepción silenciosa.
+
+#### Lo que se hizo
+
+| # | Acción | Detalle |
+|---|--------|---------|
+| 1 | **Fix SSL en `verify_online()`** | Añadida función `_make_ssl_context()` en `src/licensing/license.py` que crea un contexto SSL explícito y carga `/etc/ssl/cert.pem` (bundle de certificados raíz de macOS, disponible en binarios standalone). Fallback a `/usr/local/etc/openssl/cert.pem` (Homebrew). El contexto se pasa a `urlopen(req, timeout=8, context=ctx)`. |
+| 2 | **Bump v2.9.5** | `src/__version__.py`, `CHANGELOG.md`, `README.md`, `progreso.md` actualizados. |
+| 3 | **CI lanzado** | `workflow_dispatch` con `tag_name=v2.9.5`. |
+
+#### Estado del segfault
+- Diagnóstico logs añadidos en v2.9.4 → pendiente obtener output de v2.9.5 tras activación exitosa
+- Secciones logeadas: `creando root widget`, `construyendo header`, `construyendo stack`, `construyendo progress frame`, `construyendo banner actualización`
 
 ---
 

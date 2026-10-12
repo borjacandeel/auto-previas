@@ -55,6 +55,22 @@ def _obfuscate(key: str) -> str:
 
 # ── Verificación online ────────────────────────────────────────────────────────
 
+def _make_ssl_context():
+    """Crea un contexto SSL con los certificados del sistema (necesario en binarios Nuitka macOS)."""
+    import ssl, os
+    ctx = ssl.create_default_context()
+    # En macOS el bundle del sistema está en /etc/ssl/cert.pem; cargarlo explícitamente
+    # porque los binarios Nuitka standalone no heredan la ruta por defecto de Python.
+    for cafile in ("/etc/ssl/cert.pem", "/usr/local/etc/openssl/cert.pem"):
+        if os.path.exists(cafile):
+            try:
+                ctx.load_verify_locations(cafile=cafile)
+            except Exception:
+                pass
+            break
+    return ctx
+
+
 def verify_online(license_key: str) -> dict:
     """
     Envía la clave al Worker y devuelve el resultado normalizado.
@@ -70,7 +86,8 @@ def verify_online(license_key: str) -> dict:
             headers={"Content-Type": "application/json"},
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=8) as resp:
+        ctx = _make_ssl_context()
+        with urllib.request.urlopen(req, timeout=8, context=ctx) as resp:
             data = json.loads(resp.read().decode())
 
         if data.get("success"):
