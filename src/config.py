@@ -18,6 +18,7 @@ from pathlib import Path
 
 _DEFAULTS = {
     "output_dir": "",          # vacío = misma carpeta que el archivo fuente
+    "language": "es",          # idioma de la interfaz: "es" (por defecto) o "en"
     "export_mp3": True,
     "export_wav": True,
     "mp3_bitrate": 320,

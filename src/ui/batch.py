@@ -428,13 +428,13 @@ class BatchDialog(QDialog):
         """
 
     def _browse_files(self):
-        ext_filter = "Archivos de Audio (*.wav *.mp3 *.aiff *.flac *.m4a *.ogg)"
-        files, _ = QFileDialog.getOpenFileNames(self, "Seleccionar pistas de audio", "", ext_filter)
+        ext_filter = tr("Archivos de Audio (*.wav *.mp3 *.aiff *.flac *.m4a *.ogg)")
+        files, _ = QFileDialog.getOpenFileNames(self, tr("Seleccionar pistas de audio"), "", ext_filter)
         if files:
             self._add_files(files)
 
     def _browse_dir(self):
-        folder = QFileDialog.getExistingDirectory(self, "Seleccionar carpeta con pistas")
+        folder = QFileDialog.getExistingDirectory(self, tr("Seleccionar carpeta con pistas"))
         if folder:
             p = Path(folder)
             found = [str(f) for f in p.glob("*") if f.suffix.lower() in AUDIO_EXTS]
@@ -473,7 +473,7 @@ class BatchDialog(QDialog):
         self._btn_start.setEnabled(len(self._files) > 0)
 
     def _choose_dest_folder(self):
-        folder = QFileDialog.getExistingDirectory(self, "Seleccionar carpeta destino para el lote")
+        folder = QFileDialog.getExistingDirectory(self, tr("Seleccionar carpeta destino para el lote"))
         if folder:
             self._custom_out_dir = folder
             self._lbl_dest_path.setText(str(folder))

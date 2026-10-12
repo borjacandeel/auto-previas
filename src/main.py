@@ -203,6 +203,25 @@ def run_selftest() -> int:
         _dlg.deleteLater()
         print("  ✓ Widgets de forma de onda y activación construidos sin crash")
 
+        # Funciones 3.1: idioma, presets, historial, licencia y modo promo (panel de resultados real)
+        from src import i18n as _i18n, presets as _pre
+        from src.engine.effects import promo_tag_times
+        from src.ui.about import LicenseDialog
+        from src.ui.app import ResultPanel
+        from src.ui.history_dialog import HistoryDialog
+        from src.ui.presets_bar import PresetBar, SavePresetDialog
+        _i18n.set_language("en")
+        assert _i18n.translate("▶   GENERAR PREVIA") == "▶   GENERATE PREVIEW"
+        _i18n.set_language("es")
+        assert _i18n.get_language() == "es" and _i18n.DEFAULT_LANGUAGE == "es"
+        assert _pre.slugify("Radical Main") == "Radical Main" and len(promo_tag_times(90.0, 1.5)) >= 3
+        _panel = ResultPanel()
+        assert "style" in _panel.get_state() and _panel.get_export_options()["promo_mode"] is False
+        for _x in (PresetBar(), SavePresetDialog([]), HistoryDialog(plus=True, entries=[], recent_tracks=[]),
+                   LicenseDialog(__version__, "plus"), _panel):
+            _x.deleteLater()
+        print("  ✓ Presets, historial, licencia, idioma y modo promo construidos sin crash")
+
         try:
             tmp_ctx = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         except TypeError:

@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v3.0.1-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v3.1.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -150,6 +150,16 @@ Si Windows muestra la pantalla azul con el mensaje *"Windows protegió su PC"* d
 - 💽 **Exportación Simultánea Dual:**
   - **WAV de Estudio:** 24-bit PCM a máxima fidelidad sonora.
   - **MP3 de Difusión:** 320 kbps codificado mediante FFmpeg integrado de alto rendimiento, con carátula oficial incrustada de Radical Records y metadatos ID3v2.3 (título, artista, álbum, año y comentarios de estudio).
+- 🛡️ **Modo Promo Antifugas (Plus):**
+  Repite tu firma de voz cada pocos segundos sobre toda la previa y la exporta solo en MP3 128 kbps con la marca «PROMO — NO DISTRIBUIR», para que el audio no se pueda reutilizar sin tu firma.
+- 💾 **Presets de Firma y de Estilo (Plus):**
+  Guarda con nombre tu firma (artista, sello, carátula…) y/o tu estilo (duración, formatos, efectos, voice drop, promo, vídeo) como archivos portables y aplícalos con un clic.
+- 🕒 **Panel de Recientes (Plus):**
+  Historial de previas generadas con reproductor rápido, «Mostrar archivo» y «Reabrir proyecto» (misma pista, mismos ajustes, misma seed).
+- 🌐 **Interfaz Español / English:**
+  Arranca siempre en castellano; cambia a inglés al instante con el botón ES/EN o desde «⚙ Licencia».
+- 🔄 **Actualizaciones Automáticas:**
+  Al arrancar avisa de versiones nuevas y, si aceptas, descarga el instalador en tu carpeta de Descargas, verifica su SHA-256 y lo abre.
 - 🩺 **Diagnóstico Automatizado Headless (`--selftest`):**
   Comprobación interna integral en menos de 2 segundos que valida la síntesis acústica, separación espectral, limitador y exportadores WAV/MP3 sin levantar interfaz gráfica.
 
@@ -181,8 +191,12 @@ AutoPrevias se distribuye en dos ediciones (**Basic** y **Plus**), protegidas po
 | :--- | :---: | :---: |
 | Exportación MP3 320k con metadatos | ✅ | ✅ |
 | Análisis automático de BPM y clave | ✅ | ✅ |
-| Procesamiento por lote (Batch) | ✅ | ✅ |
-| Historial recientes y carpeta vigilada | ✅ | ✅ |
+| Pistas abiertas recientemente | ✅ | ✅ |
+| Interfaz Español / English y actualizaciones automáticas | ✅ | ✅ |
+| Procesamiento por lote (Batch) y carpeta vigilada | ❌ | ✅ |
+| Historial de previas generadas y «Reabrir proyecto» | ❌ | ✅ |
+| Presets de firma y de estilo | ❌ | ✅ |
+| Modo promo antifugas | ❌ | ✅ |
 | Exportación WAV 24-bit | ❌ | ✅ |
 | Exportación FLAC y AIFF | ❌ | ✅ |
 | Vídeo social MP4 (TikTok / Reels) | ❌ | ✅ |
@@ -238,7 +252,10 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v3.0.1] — 2026-10-12 (Actualización directa, sin páginas web)
+#### 🟢 [v3.1.0] — 2026-10-12 (Modo promo antifugas, presets, Recientes, Licencia y ajustes, inglés)
+- **Modo promo antifugas**, **presets de firma y de estilo**, **panel de Recientes con «Reabrir proyecto»**, pantalla **«⚙ Licencia»** e **interfaz en inglés** (siempre arranca en castellano). Novedades de actualización con formato limpio.
+
+#### [v3.0.1] — 2026-10-12 (Actualización directa, sin páginas web)
 - El auto-update descarga el instalador directamente en la carpeta Descargas, lo verifica y lo abre. Si falla, ofrece *Reintentar* dentro de la propia ventana; no abre el navegador.
 
 #### [v3.0.0] — 2026-10-12 (Licencias operativas + actualizaciones automáticas con ventana propia)

@@ -11,6 +11,12 @@
 
 | # | Tarea | Prioridad | Notas |
 |---|-------|-----------|-------|
+| 1 | **(Usuario) Rotar las product-secret-keys de Payhip** (Basic y Plus), actualizar los secrets del Worker y revocar/regenerar la licencia de prueba | 🔴 Alta | Estuvieron en el historial público de git (sesión 36g) |
+| 2 | Probar el instalador en un **Windows real** y la edición **Basic** con clave Basic | 🟡 Media | CI solo valida selftest |
+| 3 | Probar en el Mac las funciones 3.1.0 (modo promo, presets, Recientes, Licencia, inglés) | 🟡 Media | Probadas offscreen y con tests; falta uso real en binario |
+| 4 | Posibles siguientes funciones Plus: previas múltiples (30/60/90 s en un clic), propuestas A/B/C, vídeo social v2, objetivos LUFS por plataforma, informe PDF/CSV del lote | 🟢 Baja | Propuestas de la sesión 36 |
+
+---|-------|-----------|-------|
 | 1 | **Panel de previas recientes** — Lista de previas ya generadas (carpeta de ficheros) con reproductor rápido y opción de "abrir proyecto" para recargar el track original | 🟡 Media | Feature solicitada en sesión 29 |
 | 2 | **Presets de firma guardados como archivos** — Carpeta `presets/` en datos de usuario con JSONs nombrados (ej. "Radical Records Main", "Set de Verano"). UI para crear/cargar/borrar presets | 🟡 Media | Feature solicitada en sesión 29 |
 
@@ -45,9 +51,9 @@
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-12 (Sesión 36j — v3.0.1: auto-update sin abrir páginas web)
+**Fecha última actualización:** 2026-10-12 (Sesión 37 — v3.1.0: modo promo, presets, Recientes, Licencia y ajustes, ES/EN)
 **Fase activa:** v3.0.1 PUBLICADA. Verificado en macOS de punta a punta: activación, ventana principal y auto-update 3.0.0→3.0.1. Pendiente: Windows real, edición Basic, rotar claves de Payhip, y limpiar el formato markdown de las novedades en la ventana de actualización (muestra `### ` y `*`; agrupar en 3.0.2). El auto-update solo se podrá probar de extremo a extremo cuando exista una Release posterior a la instalada (p. ej. 3.0.1).
-**Versión Actual:** **v3.0.1**
+**Versión Actual:** **v3.1.0** (en CI)
 
 ### Credenciales de desarrollo — NO se guardan en el repo (público)
 > Las claves secretas de Payhip (`PAYHIP_SECRET_BASIC/PLUS`) viven solo como *secrets* del Worker de Cloudflare. Las versiones antiguas aparecieron en el historial público de git: **deben rotarse** (ver sesión 36g).
@@ -58,6 +64,41 @@
 
 ### Regla de oro — recordatorio permanente
 > Al terminar cualquier cambio: actualizar `progreso.md` + commit + push. Sin excepción.
+
+---
+
+### Resumen de Trabajo — Sesión 37 (2026-10-12): v3.1.0 — 5 funciones nuevas para Plus
+
+#### Petición del usuario
+Elegidas de la lista de opciones: **1** Recientes con reproductor y reabrir proyecto, **2** presets de firma/estilo como archivos, **3** modo promo antifugas, **9** pantalla Licencia/Acerca de, **10** interfaz ES/EN **con castellano siempre por defecto**.
+
+#### Arquitectura (módulos nuevos, `app.py` solo recibe los enganches)
+| Módulo | Contenido |
+|--------|-----------|
+| `src/engine/effects.py` | `_mix_tag` (ducking compartido), `promo_tag_times` (instantes deterministas por seed, sin solapes ni cortes al final), `inject_repeating_tags`; `inject_voice_drop` refactorizado sin cambiar su comportamiento |
+| `src/engine/export.py` | `build_preview_audio`: con `promo_mode` repite el tag (y no inserta el voice drop único); `export_files`: MP3 con `meta["mp3_kbps"]` (defecto 320) |
+| `src/presets.py` | Presets como `presets/<slug>.json` en datos de usuario; carátula copiada junto al JSON (portable); `save/load/list/delete`; `slugify` seguro |
+| `src/history.py` | `history.json` (máx. 200, más reciente primero, sin WAV temporales); `list_entries` calcula `exists/source_exists` |
+| `src/i18n.py` + `src/i18n_en.py` | Idioma (`es` por defecto, ignora el idioma del sistema), `tr()` con marcadores `{n}`, `translate()` con diccionario exacto + patrones, `set_text()` (plantilla re-renderizable), `translate_tree/translate_widget` (recuerda el original; vuelve a castellano; rescata textos ya traducidos con `_to_spanish`), filtro global al mostrar widgets y para tooltips, `mark_dynamic`. ~430 entradas |
+| `src/ui/about.py` | `LicenseDialog` («Licencia y ajustes»): versión/edición, estado (`describe_license` pura), idioma, buscar actualizaciones (`UpdateChecker(ignore_skipped=True)`), desactivar licencia (`clear_local` + cierra la app) |
+| `src/ui/history_dialog.py` | `HistoryDialog`: pestañas «Previas generadas» (Plus; reproductor QMediaPlayer, mostrar archivo, reabrir proyecto, quitar) y «Pistas abiertas» |
+| `src/ui/presets_bar.py` | `PresetBar` (junto a los presets de duración) y `SavePresetDialog` (firma y/o estilo) |
+| `src/ui/app.py` | Cabecera: botones «⚙ Licencia» y «ES/EN»; `ResultPanel`: fila Modo promo junto al Voice Drop, `get_state/apply_state/restore_project`, handlers de presets, `_promo_options`; `MainWindow`: `_open_history_dialog`, `_reopen_project`, `_record_history`, `_apply_language`, `_set_progress(msg, **kw)` con plantilla |
+| `src/main.py` | `--selftest` construye PresetBar, SavePresetDialog, HistoryDialog, LicenseDialog y ResultPanel; el diálogo de activación respeta el idioma |
+
+#### Decisiones de diseño
+- **Modo promo**: reutiliza el audio de «Voice Drop» como firma; fuerza MP3 128 kbps y desactiva WAV/FLAC (los formatos reales del usuario se recuerdan y restauran; un preset guardado con el modo activo conserva los formatos reales); comentario ID3 «… · PROMO — NO DISTRIBUIR / NOT FOR DISTRIBUTION»; sin firma, avisa y no genera. El WAV temporal interno queda en la carpeta de caché, no en la de salida.
+- **Reabrir proyecto** regenera lo mismo porque el análisis es determinista: guarda seed, duración preset, opciones y curva de tempo manual (no los cortes editados a mano).
+- **Presets** guardan firma y/o estilo según casillas; al aplicar solo se tocan los grupos presentes.
+- Edición Basic: barra de presets, modo promo e historial de previas ocultos/bloqueados.
+- **Idioma**: nunca se detecta del SO. Texto con valores → `tr("... {n} ...", n=…)`/`set_text`; mensajes del motor → patrones. README corregido: lote y carpeta vigilada son solo Plus (así lo hace el código).
+
+#### Pruebas ejecutadas
+- Tests nuevos: `test_promo_mode` (4), `test_presets_history` (6), `test_i18n` (9), `test_ui_features` (11) + `test_updater_core` (6) = 36 pasan. Suite completa: 63 pasan, 1 skip; **2 fallos en `test_structure.py` que fallan igual con el código 3.0.1 en el entorno de pruebas (librosa 1.0 vs 0.11 del CI)**, ajenos a esta versión.
+- Arnés offscreen con la app real (PySide6 + librosa en venv temporal): e2e promo (sin firma bloquea; con firma exporta solo MP3 ≈128 kbps; las 3 firmas aparecen en los instantes esperados, correlación 0,40 vs 0,0003 fuera), historial, presets guardar/aplicar, reabrir proyecto (seed 77 y promo restaurados).
+- Escaneos de idioma con la app real: tras usar todo en inglés quedan solo nombres de archivo/presets; vuelta a castellano sin textos en inglés atascados.
+- Bug cazado por test: señal `toggled` del modo promo conectada dos veces (pisaba los formatos guardados). Corregido.
+- `--selftest` desde código fuente: OK con las comprobaciones nuevas.
 
 ---
 

@@ -3,6 +3,20 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [3.1.0] - 2026-10-12
+
+### Añadido
+- **Modo promo antifugas (Plus)**: nueva casilla «🛡️ Modo promo» junto al Voice Drop. Repite tu firma de voz cada pocos segundos (tú eliges cada cuántos, por defecto 20 s) sobre toda la previa y la exporta solo en MP3 de 128 kbps con la nota «PROMO — NO DISTRIBUIR» en las etiquetas. Así la previa es inservible para reutilizarla sin tu firma. La app avisa si todavía no has elegido tu audio de firma, y al desactivar el modo recuperas tus formatos de exportación.
+- **Presets de firma y de estilo (Plus)**: guarda con nombre (por ejemplo «Radical Main» o «Set de Verano») tu firma (artista, sello, álbum, género, comentario y carátula) y/o tu estilo (duración, formatos, efectos, voice drop, modo promo y vídeo). Se aplican con un clic desde la nueva barra «MIS PRESETS», junto a los presets de duración. Cada preset es un archivo, así que se puede copiar a otro ordenador.
+- **Panel «Recientes» renovado**: ahora muestra tus previas generadas (fecha, pista, duración, BPM, formatos y si eran promo) con reproductor rápido, «Mostrar archivo», «Reabrir proyecto» (carga la pista original con los mismos ajustes y la misma seed para regenerar exactamente la misma previa) y «Quitar de la lista». Incluye también la pestaña de pistas abiertas recientemente. El historial de previas generadas es una función Plus.
+- **Pantalla «Licencia y ajustes»**: nuevo botón «⚙ Licencia» con la versión, la edición, el estado de tu licencia (ID, última verificación y hasta cuándo es válida sin conexión), buscador manual de actualizaciones y la opción de desactivar la licencia en este equipo para poder activarla en otro.
+- **Interfaz en inglés**: nuevo botón «ES/EN» en la cabecera (y selector en «Licencia y ajustes») para cambiar el idioma al instante. **AutoPrevias siempre arranca en castellano** salvo que elijas inglés; la elección se recuerda para la próxima vez. Incluye la forma de onda, los avisos, la ventana de actualización y la de activación.
+
+### Cambiado
+- Las novedades de la ventana de actualización se muestran ahora con títulos y viñetas en lugar de texto sin formato, sin enlaces ni direcciones de internet.
+- Los botones «Cambiar» y «Abrir» de la carpeta de destino ya no aparecen cortados.
+- La comprobación interna que se ejecuta antes de publicar cada versión ahora también abre las pantallas nuevas (presets, historial, licencia y modo promo) para evitar publicar instaladores que se cierren al usarlas.
+
 ## [3.0.1] - 2026-10-12
 
 ### Cambiado

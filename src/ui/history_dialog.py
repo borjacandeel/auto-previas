@@ -93,7 +93,7 @@ class HistoryDialog(QDialog):
         self._table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self._table.verticalHeader().setVisible(False)
         self._table.horizontalHeader().setStretchLastSection(True)
-        self._table.setColumnWidth(0, 130)
+        self._table.setColumnWidth(0, 150)
         self._table.setColumnWidth(1, 270)
         self._table.setColumnWidth(2, 80)
         self._table.setColumnWidth(3, 60)

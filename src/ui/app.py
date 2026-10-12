@@ -898,8 +898,8 @@ class DropZone(QWidget):
 
     def _open_dialog(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Selecciona un tema de audio", "",
-            "Audio (*.wav *.mp3 *.flac *.aiff *.aif *.m4a)"
+            self, tr("Selecciona un tema de audio"), "",
+            tr("Audio (*.wav *.mp3 *.flac *.aiff *.aif *.m4a)")
         )
         if path:
             self.file_dropped.emit(path)
@@ -1130,8 +1130,8 @@ class CoverDropArea(QFrame):
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             fpath, _ = QFileDialog.getOpenFileName(
-                self, "Seleccionar carátula para la previa", "",
-                "Imágenes (*.png *.jpg *.jpeg *.webp);;Todos los archivos (*.*)"
+                self, tr("Seleccionar carátula para la previa"), "",
+                tr("Imágenes (*.png *.jpg *.jpeg *.webp);;Todos los archivos (*.*)")
             )
             if fpath:
                 self.set_cover(fpath)
@@ -1834,8 +1834,6 @@ class ResultPanel(QWidget):
         row_promo.addWidget(self._lbl_promo)
         row_fx.addSpacing(10)
         row_fx.addWidget(self._row_promo_widget)
-        self._chk_promo.toggled.connect(self._on_promo_toggled)
-        self._spin_promo.valueChanged.connect(lambda _v: self._update_promo_hint())
 
         row_fx.addStretch()
         exp_lay.addLayout(row_fx)
@@ -1902,14 +1900,14 @@ class ResultPanel(QWidget):
             f"color: {TEXT_MID}; font-size: 11px; background: transparent; border: none;"
         )
         self._btn_folder = QPushButton("Cambiar")
-        self._btn_folder.setFixedSize(60, 24)
+        self._btn_folder.setFixedSize(84, 24)
         self._btn_folder.setStyleSheet(_btn(BG4, TEXT_MID, BG5, radius=5, fs=10.5))
         self._btn_folder.setCursor(Qt.PointingHandCursor)
         self._btn_folder.setToolTip("Cambiar la carpeta de destino donde se guardan las previas")
         self._btn_folder.clicked.connect(self.folder_requested.emit)
 
         self._btn_open_folder = QPushButton("📂 Abrir")
-        self._btn_open_folder.setFixedSize(60, 24)
+        self._btn_open_folder.setFixedSize(84, 24)
         self._btn_open_folder.setStyleSheet(_btn(BG4, TEXT_MID, BG5, radius=5, fs=10.5))
         self._btn_open_folder.setCursor(Qt.PointingHandCursor)
         self._btn_open_folder.setToolTip("Abrir la carpeta de destino en Finder / Explorador de archivos")
@@ -2347,9 +2345,9 @@ class ResultPanel(QWidget):
         """Abre selector de archivo y emite load_file_requested sin salir de la app."""
         file, _ = QFileDialog.getOpenFileName(
             self,
-            "Seleccionar track para nueva previa",
+            tr("Seleccionar track para nueva previa"),
             "",
-            "Audio (*.mp3 *.wav *.flac *.aiff *.m4a *.ogg *.opus *.wma)",
+            tr("Audio (*.mp3 *.wav *.flac *.aiff *.m4a *.ogg *.opus *.wma)"),
         )
         if file:
             self.load_file_requested.emit(file)
@@ -2357,9 +2355,9 @@ class ResultPanel(QWidget):
     def _select_voice_drop(self):
         file, _ = QFileDialog.getOpenFileName(
             self,
-            "Seleccionar firma de voz / Voice Drop / Jingle",
+            tr("Seleccionar firma de voz / Voice Drop / Jingle"),
             "",
-            "Archivos de Audio (*.wav *.mp3 *.aiff *.flac *.m4a)",
+            tr("Archivos de Audio (*.wav *.mp3 *.aiff *.flac *.m4a)"),
         )
         if file:
             self._set_voice_drop_path(file)
@@ -2688,7 +2686,7 @@ class ResultPanel(QWidget):
         except ValueError:
             current_val = 128.0
         val, ok = QInputDialog.getDouble(
-            self, "Corregir BPM", "Introduce el BPM real del track:",
+            self, tr("Corregir BPM"), tr("Introduce el BPM real del track:"),
             current_val, 40.0, 250.0, 1
         )
         if ok and abs(val - current_val) > 0.01:
@@ -4513,7 +4511,7 @@ class MainWindow(QMainWindow):
 
     def _set_folder(self):
         folder = QFileDialog.getExistingDirectory(
-            self, "Carpeta donde guardar las previas",
+            self, tr("Carpeta donde guardar las previas"),
             self._cfg.get("output_dir", "") or str(Path.home())
         )
         if folder:
@@ -4806,7 +4804,7 @@ class MainWindow(QMainWindow):
             return
 
         folder = QFileDialog.getExistingDirectory(
-            self, "Seleccionar carpeta para vigilar (Watch Folder)",
+            self, tr("Seleccionar carpeta para vigilar (Watch Folder)"),
             self._watched_folder or str(Path.home())
         )
         if not folder:
