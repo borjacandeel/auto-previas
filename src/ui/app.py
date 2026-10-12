@@ -4383,8 +4383,7 @@ class MainWindow(QMainWindow):
             from src.__version__ import __version__
             UpdateDialog(info, __version__, get_edition(), parent=self).exec()
         except Exception:
-            import webbrowser
-            webbrowser.open(getattr(info, "page_url", ""))
+            pass
         finally:
             self._update_dialog_open = False
 

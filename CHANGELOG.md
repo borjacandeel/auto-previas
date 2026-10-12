@@ -3,6 +3,11 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [3.0.1] - 2026-10-12
+
+### Cambiado
+- **La actualización ya no te lleva a ninguna página web**: al aceptar, AutoPrevias descarga el instalador directamente en tu carpeta de Descargas, comprueba que no está dañado y lo abre. Si algo falla (sin conexión, archivo dañado), te lo dice en la propia ventana y puedes pulsar *Reintentar*; nunca se abre un navegador ni se muestran direcciones de internet.
+
 ## [3.0.0] - 2026-10-12
 
 ### Añadido

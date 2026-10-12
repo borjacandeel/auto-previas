@@ -16,7 +16,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 RELEASES_URL = "https://api.github.com/repos/borjacandeel/auto-previas/releases/latest"
-RELEASES_PAGE = "https://github.com/borjacandeel/auto-previas/releases/latest"
 SUMS_NAME = "SHA256SUMS.txt"
 # GitHub exige User-Agent; Cloudflare bloquea el de urllib por defecto (error 1010)
 USER_AGENT = "AutoPrevias-Updater/1.0"
@@ -26,7 +25,6 @@ USER_AGENT = "AutoPrevias-Updater/1.0"
 class ReleaseInfo:
     version: str
     notes: str
-    page_url: str = RELEASES_PAGE
     assets: dict[str, str] = field(default_factory=dict)   # nombre -> URL de descarga
 
 
@@ -55,7 +53,6 @@ def parse_release(data: dict) -> ReleaseInfo | None:
     return ReleaseInfo(
         version=tag,
         notes=(data.get("body") or "").strip(),
-        page_url=data.get("html_url") or RELEASES_PAGE,
         assets=assets,
     )
 
@@ -112,6 +109,17 @@ def open_url(url: str, timeout: int = 15):
 def fetch_latest_release() -> ReleaseInfo | None:
     with open_url(RELEASES_URL, timeout=8) as resp:
         return parse_release(json.loads(resp.read().decode("utf-8")))
+
+
+def log_update_error(detail: str) -> None:
+    """Detalle técnico solo en un log local; nunca se muestra al usuario (puede contener URLs)."""
+    try:
+        import tempfile, time
+        path = Path(tempfile.gettempdir()) / "autoprevias_update.log"
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {detail}\n")
+    except Exception:
+        pass
 
 
 # ── Versión omitida por el usuario ────────────────────────────────────────────

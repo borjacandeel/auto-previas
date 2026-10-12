@@ -2,7 +2,9 @@
 AutoPrevias — Ventana de actualización.
 
 Se muestra al arrancar si hay una versión nueva: notas de la versión, descarga
-con progreso, verificación de integridad y apertura del instalador.
+directa del instalador a la carpeta Descargas del usuario con progreso,
+verificación de integridad y apertura del instalador. Nunca abre ni muestra
+páginas web: si algo falla, lo indica aquí mismo y permite reintentar.
 """
 from __future__ import annotations
 
@@ -10,20 +12,20 @@ import os
 import subprocess
 import sys
 
-from PySide6.QtCore import Qt, QUrl
+from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QApplication, QDialog, QHBoxLayout, QLabel, QPlainTextEdit,
     QProgressBar, QPushButton, QVBoxLayout,
 )
 
-from src.updater_core import (
-    RELEASES_PAGE, ReleaseInfo, installer_asset_name, set_skipped_version,
-)
+from src.updater_core import ReleaseInfo, installer_asset_name, set_skipped_version
 
 BG, BG3, BORDER = "#0a0b0e", "#1a1c22", "#232733"
 TEXT, TEXT2 = "#eceef2", "#8c93a4"
 ACCENT, ACCENT2, GREEN, RED = "#ff1e38", "#ff3e55", "#22c55e", "#ef4444"
+
+_IDLE, _DOWNLOADING, _READY, _FAILED = "idle", "downloading", "ready", "failed"
 
 
 def _fmt_mb(n: int) -> str:
@@ -37,6 +39,7 @@ class UpdateDialog(QDialog):
         self._asset = installer_asset_name(edition)
         self._installer_path = ""
         self._downloader = None
+        self._state = _IDLE
 
         self.setWindowTitle("AutoPrevias — Actualización disponible")
         self.setModal(True)
@@ -100,7 +103,7 @@ class UpdateDialog(QDialog):
         row.setSpacing(8)
         self._btn_skip = QPushButton("Omitir esta versión")
         self._btn_later = QPushButton("Más tarde")
-        self._btn_main = QPushButton()
+        self._btn_main = QPushButton("Descargar e instalar")
         self._btn_main.setObjectName("primary")
         self._btn_main.setDefault(True)
         row.addWidget(self._btn_skip)
@@ -111,37 +114,34 @@ class UpdateDialog(QDialog):
 
         self._btn_skip.clicked.connect(self._on_skip)
         self._btn_later.clicked.connect(self._on_later)
+        self._btn_main.clicked.connect(self._on_main)
 
-        if self._asset and self._asset in info.assets:
-            self._btn_main.setText("Descargar e instalar")
-            self._btn_main.clicked.connect(self._start_download)
-        else:
-            self._btn_main.setText("Abrir página de descarga")
-            self._btn_main.clicked.connect(self._open_page)
-            self._status.setText("Abriremos la página de descargas para que elijas tu instalador.")
+        if not (self._asset and self._asset in info.assets):
+            self._btn_main.setVisible(False)
+            self._set_status("Esta versión todavía no tiene instalador disponible para tu sistema.")
 
     @staticmethod
     def _clean_notes(notes: str) -> str:
         text = (notes or "").replace("**", "").replace("`", "").strip()
         if not text:
-            return "Mejoras y correcciones. Consulta el historial completo en la página de la versión."
+            return "Mejoras y correcciones de la nueva versión."
         return text[:4000] + ("…" if len(text) > 4000 else "")
 
     def _set_status(self, msg: str, color: str = TEXT2):
         self._status.setText(msg)
         self._status.setStyleSheet(f"font-size: 12px; color: {color};")
 
+    def _on_main(self):
+        if self._state == _READY:
+            self._install_and_quit()
+        elif self._state in (_IDLE, _FAILED):
+            self._start_download()
+
     def _on_later(self):
-        self._cancel_download()
         self.reject()
 
     def _on_skip(self):
-        self._cancel_download()
         set_skipped_version(self._info.version)
-        self.reject()
-
-    def _open_page(self):
-        QDesktopServices.openUrl(QUrl(self._info.page_url or RELEASES_PAGE))
         self.reject()
 
     def _cancel_download(self):
@@ -156,11 +156,13 @@ class UpdateDialog(QDialog):
     # ── Descarga ──────────────────────────────────────────────────────────
     def _start_download(self):
         from src.update import UpdateDownloader
+        self._state = _DOWNLOADING
         self._btn_main.setEnabled(False)
         self._btn_skip.setEnabled(False)
         self._btn_later.setText("Cancelar")
         self._bar.setVisible(True)
         self._bar.setRange(0, 0)
+        self._set_status("Preparando descarga…")
 
         self._downloader = UpdateDownloader(self._asset, self._info, parent=self)
         self._downloader.progress.connect(self._on_progress)
@@ -178,6 +180,7 @@ class UpdateDialog(QDialog):
             self._set_status(f"Descargando… {_fmt_mb(done)}")
 
     def _on_downloaded(self, path: str):
+        self._state = _READY
         self._installer_path = path
         self._bar.setRange(0, 100)
         self._bar.setValue(100)
@@ -185,23 +188,22 @@ class UpdateDialog(QDialog):
         self._btn_skip.setEnabled(True)
         self._btn_main.setEnabled(True)
         self._btn_main.setText("Instalar y cerrar AutoPrevias")
-        self._btn_main.clicked.disconnect()
-        self._btn_main.clicked.connect(self._install_and_quit)
+        folder = os.path.basename(os.path.dirname(path))
+        folder = "Descargas" if folder.lower() == "downloads" else (folder or "Descargas")
         if sys.platform == "darwin":
-            self._set_status("✅ Descarga verificada. Se abrirá el instalador: arrastra AutoPrevias a "
-                             "Aplicaciones y vuelve a abrir la app.", GREEN)
+            self._set_status(f"✅ Descargado en «{folder}» y verificado. Se abrirá el instalador: "
+                             "arrastra AutoPrevias a Aplicaciones y vuelve a abrir la app.", GREEN)
         else:
-            self._set_status("✅ Descarga verificada. Se abrirá el instalador y AutoPrevias se cerrará "
-                             "para poder actualizarse.", GREEN)
+            self._set_status(f"✅ Descargado en «{folder}» y verificado. Se abrirá el instalador y "
+                             "AutoPrevias se cerrará para poder actualizarse.", GREEN)
 
     def _on_failed(self, msg: str):
+        self._state = _FAILED
         self._bar.setVisible(False)
         self._btn_later.setText("Cerrar")
         self._btn_skip.setEnabled(True)
         self._btn_main.setEnabled(True)
-        self._btn_main.setText("Abrir página de descarga")
-        self._btn_main.clicked.disconnect()
-        self._btn_main.clicked.connect(self._open_page)
+        self._btn_main.setText("Reintentar")
         self._set_status(f"❌ {msg}", RED)
 
     def _install_and_quit(self):
@@ -212,8 +214,9 @@ class UpdateDialog(QDialog):
                 os.startfile(self._installer_path)  # type: ignore[attr-defined]
             else:
                 QDesktopServices.openUrl(QUrl.fromLocalFile(self._installer_path))
-        except Exception as exc:
-            self._set_status(f"❌ No se pudo abrir el instalador: {exc}", RED)
+        except Exception:
+            self._set_status("❌ No se pudo abrir el instalador. Búscalo en tu carpeta Descargas "
+                             "y ábrelo manualmente.", RED)
             return
         self.accept()
         QApplication.quit()

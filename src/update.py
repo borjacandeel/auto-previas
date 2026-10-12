@@ -15,7 +15,7 @@ from PySide6.QtCore import QThread, Signal
 
 from src.updater_core import (
     SUMS_NAME, ReleaseInfo, fetch_latest_release, get_skipped_version,
-    is_newer, open_url, parse_sha256sums, sha256_file,
+    is_newer, log_update_error, open_url, parse_sha256sums, sha256_file,
 )
 
 
@@ -104,7 +104,7 @@ class UpdateDownloader(QThread):
             if expected is None:
                 part.unlink(missing_ok=True)
                 self.failed.emit(
-                    "No se pudo verificar la integridad del archivo (falta SHA256SUMS.txt). "
+                    "No se pudo verificar la integridad del archivo descargado. "
                     "Por seguridad no se instalará."
                 )
                 return
@@ -122,4 +122,5 @@ class UpdateDownloader(QThread):
                     part.unlink(missing_ok=True)
             except Exception:
                 pass
-            self.failed.emit(f"No se pudo descargar la actualización: {exc}")
+            log_update_error(f"{type(exc).__name__}: {exc}")
+            self.failed.emit("No se pudo descargar la actualización. Comprueba tu conexión a internet e inténtalo de nuevo.")
