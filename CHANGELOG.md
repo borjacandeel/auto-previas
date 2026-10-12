@@ -3,9 +3,10 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
-## [2.10.0] - 2026-10-12
+## [3.0.0] - 2026-10-12
 
 ### Añadido
+- **Sistema de licencias plenamente operativo**: la activación con clave de Payhip funciona de forma fiable (incluye las correcciones de la serie 2.9).
 - **Actualizaciones automáticas con ventana propia**: al abrir AutoPrevias comprueba si hay una versión nueva. Si la hay, aparece una ventana con las novedades y tres opciones: *Descargar e instalar*, *Más tarde* u *Omitir esta versión*. La app descarga el instalador que corresponde a tu sistema y a tu edición (Basic o Plus), muestra el progreso y comprueba que el archivo no está dañado antes de abrirlo. Al pulsar *Instalar y cerrar AutoPrevias* se abre el instalador y la app se cierra para poder actualizarse.
 - Si por cualquier motivo no se puede descargar o verificar el instalador, la ventana te lleva a la página de descargas en vez de instalar algo dudoso.
 

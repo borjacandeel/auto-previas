@@ -45,9 +45,9 @@
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-12 (Sesión 36f — v2.10.0: auto-update completo con ventana + fix licencias de v2.9.7)
-**Fase activa:** v2.10.0 en CI. Pendiente de probar en binario: activación de licencia (UA propio) y segfault en `_build_ui` tras activar. El auto-update solo se podrá probar de extremo a extremo cuando exista una Release posterior a la instalada.
-**Versión Actual:** **v2.10.0**
+**Fecha última actualización:** 2026-10-12 (Sesión 36f — v3.0.0: auto-update completo con ventana + fix licencias de v2.9.7)
+**Fase activa:** v3.0.0 en CI. Pendiente de probar en binario: activación de licencia (UA propio) y segfault en `_build_ui` tras activar. El auto-update solo se podrá probar de extremo a extremo cuando exista una Release posterior a la instalada.
+**Versión Actual:** **v3.0.0**
 
 ### Credenciales de desarrollo — NO se guardan en el repo (público)
 > Las claves secretas de Payhip (`PAYHIP_SECRET_BASIC/PLUS`) viven solo como *secrets* del Worker de Cloudflare. Las versiones antiguas aparecieron en el historial público de git: **deben rotarse** (ver sesión 36g).
@@ -70,7 +70,7 @@
 
 ---
 
-### Resumen de Trabajo — Sesión 36f (2026-10-12): v2.10.0 — Auto-update completo
+### Resumen de Trabajo — Sesión 36f (2026-10-12): v3.0.0 — Auto-update completo
 
 #### Auditoría del actualizador previo (v2.8.x)
 - Solo mostraba un banner con enlace **roto** (`borjacandel` en vez de `borjacandeel`); sin ventana, descarga ni verificación.
