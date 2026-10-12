@@ -45,9 +45,9 @@
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-12 (Sesión 36c — v2.9.5: fix SSL certificados macOS en binario Nuitka)
-**Fase activa:** Sistema de licencias en corrección. CI v2.9.5 lanzado. Pendiente: verificar segfault en `_build_ui` con logs de v2.9.5.
-**Versión Actual:** **v2.9.5**
+**Fecha última actualización:** 2026-10-12 (Sesión 36d — v2.9.6: certifi para SSL robusto en macOS Nuitka)
+**Fase activa:** Sistema de licencias en corrección. CI v2.9.6 lanzado. Pendiente: verificar segfault en `_build_ui` tras activación exitosa.
+**Versión Actual:** **v2.9.6**
 
 ### Credenciales de desarrollo (solo usar en sesiones de trabajo, nunca commitear)
 - `PAYHIP_SECRET_BASIC` = `prod_sk_NVkaK_b6359b99d5e7e31309cb0246f7c4cab395c6981e`
@@ -57,6 +57,23 @@
 
 ### Regla de oro — recordatorio permanente
 > Al terminar cualquier cambio: actualizar `progreso.md` + commit + push. Sin excepción.
+
+---
+
+### Resumen de Trabajo — Sesión 36d (2026-10-12): v2.9.6 — certifi para SSL robusto en macOS Nuitka
+
+#### Contexto
+v2.9.5 no resolvió el SSL: `ssl.create_default_context()` + carga manual de `/etc/ssl/cert.pem` no es suficiente en todos los entornos macOS con Nuitka standalone. La solución definitiva es certifi, que incluye su propio bundle de CAs y no depende del sistema.
+
+#### Lo que se hizo
+
+| # | Acción | Detalle |
+|---|--------|---------|
+| 1 | **Añadir certifi a requirements.txt** | `certifi>=2024.2.2` |
+| 2 | **`--include-package-data=certifi` en release.yml** | Añadido en los bloques Nuitka de macOS y Windows para incluir `cacert.pem` en el binario standalone |
+| 3 | **Reescribir `_make_ssl_context()`** | Ahora intenta `certifi.where()` primero; solo si falla intenta paths del sistema. Usa `ssl.create_default_context(cafile=...)` en lugar de crear el contexto primero y cargar después. |
+| 4 | **Logging de errores SSL** | `_ssl_log()` escribe el traceback real en `$TMPDIR/autoprevias_ssl.log` para facilitar diagnóstico futuro. |
+| 5 | **Bump v2.9.6** | `src/__version__.py`, `CHANGELOG.md`, `README.md`, `progreso.md` actualizados. |
 
 ---
 

@@ -56,19 +56,41 @@ def _obfuscate(key: str) -> str:
 # ── Verificación online ────────────────────────────────────────────────────────
 
 def _make_ssl_context():
-    """Crea un contexto SSL con los certificados del sistema (necesario en binarios Nuitka macOS)."""
+    """Crea un contexto SSL con certifi (primero) o certs del sistema como fallback."""
     import ssl, os
-    ctx = ssl.create_default_context()
-    # En macOS el bundle del sistema está en /etc/ssl/cert.pem; cargarlo explícitamente
-    # porque los binarios Nuitka standalone no heredan la ruta por defecto de Python.
-    for cafile in ("/etc/ssl/cert.pem", "/usr/local/etc/openssl/cert.pem"):
-        if os.path.exists(cafile):
-            try:
-                ctx.load_verify_locations(cafile=cafile)
-            except Exception:
-                pass
-            break
-    return ctx
+    cafile = None
+
+    # 1. Certifi: bundle propio, funciona en cualquier plataforma (incluye binarios Nuitka)
+    try:
+        import certifi
+        candidate = certifi.where()
+        if candidate and os.path.exists(candidate):
+            cafile = candidate
+    except Exception:
+        pass
+
+    # 2. Fallback: certs raíz del sistema (macOS y Linux)
+    if not cafile:
+        for path in ("/etc/ssl/cert.pem", "/usr/local/etc/openssl/cert.pem",
+                     "/usr/local/etc/openssl@3/cert.pem", "/usr/local/share/ca-certificates/cacert.pem"):
+            if os.path.exists(path) and os.path.getsize(path) > 0:
+                cafile = path
+                break
+
+    if cafile:
+        return ssl.create_default_context(cafile=cafile)
+    return ssl.create_default_context()
+
+
+def _ssl_log(msg: str) -> None:
+    """Log rápido de errores SSL a /tmp para diagnóstico."""
+    try:
+        import os, traceback
+        log = os.path.join(os.environ.get("TMPDIR", "/tmp"), "autoprevias_ssl.log")
+        with open(log, "a", encoding="utf-8") as f:
+            f.write(msg + "\n")
+    except Exception:
+        pass
 
 
 def verify_online(license_key: str) -> dict:
@@ -93,8 +115,9 @@ def verify_online(license_key: str) -> dict:
         if data.get("success"):
             return {"success": True, "edition": data.get("edition", "basic"), "raw": data}
 
-    except Exception:
-        pass
+    except Exception as exc:
+        import traceback
+        _ssl_log(f"verify_online error [{type(exc).__name__}]: {exc}\n{traceback.format_exc()}")
 
     return {"success": False, "error": "Clave no válida o sin conexión"}
 

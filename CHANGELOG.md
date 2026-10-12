@@ -3,6 +3,11 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.9.6] - 2026-10-12
+
+### Corregido
+- **La clave de licencia seguía sin aceptarse en macOS (v2.9.5 insuficiente)**: el intento anterior de cargar los certificados SSL del sistema no era suficiente en todos los entornos. Ahora se utiliza el paquete `certifi`, que incluye su propio bundle de certificados de confianza directamente en el instalador. La verificación de licencia funciona de forma fiable en macOS sin depender de la configuración del sistema.
+
 ## [2.9.5] - 2026-10-12
 
 ### Corregido

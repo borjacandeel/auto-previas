@@ -118,6 +118,7 @@ jobs:
             --include-data-dir="$LIBROSA_DIR"=librosa \
             --include-package-data=pedalboard \
             --include-package-data=_soundfile_data \
+            --include-package-data=certifi \
             --output-dir=dist \
             --output-filename=AutoPrevias \
             --assume-yes-for-downloads \
@@ -290,6 +291,7 @@ jobs:
             --include-data-dir="%LIBROSA_DIR%"=librosa ^
             --include-package-data=pedalboard ^
             --include-package-data=_soundfile_data ^
+            --include-package-data=certifi ^
             --include-package-data=llvmlite ^
             --include-package-data=numba ^
             --output-dir=dist ^
