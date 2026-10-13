@@ -1,6 +1,6 @@
 """Vídeo 5 · 20 previas mientras tomas café (voz en castellano)."""
 SPEC = dict(
-    voice="em_alex", lang="es", speed=1.04, groove_from=3.4,
+    voice="edge:es-ES-AlvaroNeural", lang="es", speed=1.10, groove_from=3.4,
     scenes=[
         dict(type="words", dur=3.4, bars=True, top=640, gap=0.55, vo="Tienes veinte temas y un sello que mover.",
              lines=[dict(t="20 TEMAS", size=210), dict(t="1 SELLO", cls="red", size=210, big=True), dict(t="0 TIEMPO", size=190)]),
@@ -16,5 +16,5 @@ SPEC = dict(
              vo="Añade tus pistas, o una carpeta entera, pulsa iniciar lote, y la app trabaja sola."),
         dict(type="words", dur=3.4, top=640, gap=0.6, vo="Mientras tanto, tú te tomas el café.",
              lines=[dict(t="TÚ", size=190), dict(t="TE TOMAS", size=170), dict(t="EL CAFÉ ☕", cls="red", size=180, big=True)]),
-        dict(type="cta", dur=7.0, click_at=4.4, line1="Del sello al reel", line2="sin tocar el DAW.", vo="Auto Previas, de Radical Récords. Consíguelo en Pei jip.", vo_at=1.2),
+        dict(type="cta", dur=7.0, click_at=4.4, line1="Del sello al reel", line2="sin tocar el DAW.", vo="Autoprevias, de Radical Récords. Consíguelo en Peijip.", vo_at=1.2),
     ])

@@ -1,8 +1,8 @@
 """Vídeo 4 · La app que escucha tu tema (voz en castellano)."""
 SPEC = dict(
-    voice="em_alex", lang="es", speed=1.04, groove_from=3.4,
+    voice="edge:es-ES-XimenaNeural", lang="es", speed=1.10, groove_from=3.4,
     scenes=[
-        dict(type="words", dur=3.4, bars=True, top=650, gap=0.6, vo="Auto Previas escucha tu tema como lo haría un productor.",
+        dict(type="words", dur=3.4, bars=True, top=650, gap=0.6, vo="Autoprevias escucha tu tema como lo haría un productor.",
              lines=[dict(t="ELLA", size=200), dict(t="ESCUCHA", cls="red", size=200, big=True), dict(t="TU TEMA", size=190)]),
         dict(type="scan", dur=7.0, title="DETECTA", sweep_at=0.9, sweep_d=3.6,
              secs=[dict(name="INTRO", color="#8a8fa3", **{"from": 0.0}, to=0.14), dict(name="SUBIDA", color="#ff9a2f", **{"from": 0.14}, to=0.34),
@@ -19,5 +19,5 @@ SPEC = dict(
              vo="Y corta la previa justo donde mejor suena, siempre en compás."),
         dict(type="words", dur=3.4, top=700, gap=0.6, vo="Tú produces. Ella escucha.",
              lines=[dict(t="TÚ PRODUCES", size=160), dict(t="ELLA", cls="red", size=200, big=True), dict(t="ESCUCHA", size=190)]),
-        dict(type="cta", dur=7.0, click_at=4.4, line1="Tu previa profesional,", line2="lista en segundos.", vo="Auto Previas, de Radical Récords. Consíguelo en Pei jip.", vo_at=1.2),
+        dict(type="cta", dur=7.0, click_at=4.4, line1="Tu previa profesional,", line2="lista en segundos.", vo="Autoprevias, de Radical Récords. Consíguelo en Peijip.", vo_at=1.2),
     ])

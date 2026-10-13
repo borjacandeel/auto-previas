@@ -6,5 +6,5 @@ for vid in sys.argv[1:]:
     print("==", vid)
     for k, sc in enumerate(spec["scenes"]):
         if sc.get("vo"):
-            p, d = build.voice_line(sc["vo"], spec["voice"], spec["lang"], spec.get("speed", 1.0))
+            p, d = build.voice_line(sc["vo"], sc.get("voice", spec["voice"]), spec["lang"], spec.get("speed", 1.0))
             print(f"  s{k} {sc['type']:9s} dur={sc.get('dur')} vo={d:.2f}s (+{sc.get('vo_at',0.3)}) -> {'OK' if sc.get('dur',3) >= sc.get('vo_at',0.3)+d+0.45 else 'ALARGA'}  {sc['vo'][:50]}")

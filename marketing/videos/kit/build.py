@@ -560,7 +560,7 @@ def build(vid: str, render=True, voice=True):
         sc["t0"] = t
         d = float(sc.get("dur", 3.0))
         if sc.get("vo") and voice:
-            path, vlen = voice_line(sc["vo"], spec["voice"], spec["lang"], spec.get("speed", 1.0))
+            path, vlen = voice_line(sc["vo"], sc.get("voice", spec["voice"]), spec["lang"], spec.get("speed", 1.0))
             at = sc.get("vo_at", 0.3)
             d = max(d, at + vlen + sc.get("vo_pad", 0.45))
             vo.append((t + at, t + at + vlen, path))

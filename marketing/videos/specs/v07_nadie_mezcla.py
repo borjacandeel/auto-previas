@@ -1,6 +1,6 @@
 """Vídeo 7 · Nadie puede mezclar tu previa (voz en castellano)."""
 SPEC = dict(
-    voice="em_alex", lang="es", speed=1.04, groove_from=3.6,
+    voice="edge:es-ES-AlvaroNeural", lang="es", speed=1.10, groove_from=3.6,
     scenes=[
         dict(type="words", dur=3.6, bars=True, top=560, gap=0.55, vo="Le mandas una previa a ese DJ… y acaba mezclándola en su set.",
              lines=[dict(t="ENVÍAS", size=210), dict(t="TU PREVIA", size=190), dict(t="Y LA", size=200), dict(t="MEZCLAN", cls="red", size=260, big=True)]),
@@ -16,5 +16,5 @@ SPEC = dict(
              vo="Lo controlas en el editor de be pe eme de la edición Plus.", vo_at=0.3),
         dict(type="words", dur=3.6, top=500, gap=0.6, vo="Tu previa suena a ti, no a su set.",
              lines=[dict(t="SUENA", cls="red", size=260, big=True), dict(t="A TI", cls="red", size=260), dict(t="NO A", size=200), dict(t="SU SET", size=220)]),
-        dict(type="cta", dur=7.0, click_at=4.4, line1="Tu previa suena a ti.", line2="Solo a ti.", vo="Auto Previas, de Radical Récords. Consíguelo en Pei jip.", vo_at=1.2),
+        dict(type="cta", dur=7.0, click_at=4.4, line1="Tu previa suena a ti.", line2="Solo a ti.", vo="Autoprevias, de Radical Récords. Consíguelo en Peijip.", vo_at=1.2),
     ])
