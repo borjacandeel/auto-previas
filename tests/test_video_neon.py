@@ -1,4 +1,5 @@
 """Tests del generador de vídeo animado Radical Neón."""
+from pathlib import Path
 import numpy as np
 import pytest
 from PIL import Image
@@ -51,3 +52,21 @@ def test_cierre_tiene_firma_y_enlace(aspect):
     r = vn._Renderer(_analysis(), None, "T", "A", 120.0, "1A", aspect, "crimson", "", "PREVIA EXCLUSIVA", 0.25)
     assert (np.asarray(r.outro.convert("L")) > 245).sum() > 3000
     assert vn._Renderer(_analysis(), None, "T", "A", 120.0, "1A", aspect, "crimson", "", "EXCLUSIVE PREVIEW", 0.25).lang_en
+
+
+def test_vista_previa_devuelve_fotogramas_y_audio(tmp_path):
+    sf = pytest.importorskip("soundfile")
+    from src.config import get_ffmpeg_path
+    if not get_ffmpeg_path():
+        pytest.skip("sin ffmpeg")
+    sr = 44100
+    t = np.linspace(0, 8.0, sr * 8, endpoint=False)
+    y = (0.4 * np.sin(2 * np.pi * 60 * t) * (np.sin(2 * np.pi * 2 * t) > 0)).astype(np.float32)
+    wav = tmp_path / "a.wav"
+    sf.write(str(wav), np.stack([y, y], 1), sr)
+    for asp in ("9:16", "16:9"):
+        res = vn.render_preview(str(wav), None, "Mi Tema", "Radical", 120.0, "8A", asp, "cyber", "B", seconds=3.0, out_height=240, fps=10)
+        w, h = res["frames"][0].size
+        assert h == 240 and (w < h) == (asp == "9:16")
+        assert len(res["frames"]) >= 3 * 10 + 10          # muestra + cierre
+        assert Path(res["audio"]).exists()

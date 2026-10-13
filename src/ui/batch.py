@@ -121,7 +121,7 @@ class BatchWorker(QThread):
                     source_path=file_path,
                     out_dir=out_dir,
                     export_wav=self.cfg.get("export_wav", True),
-                    export_mp3=self.cfg.get("export_mp3", True),
+                    export_mp3=self.cfg.get("export_mp3", True) or bool(self.cfg.get("export_video", False)),
                     export_flac=self.cfg.get("export_flac", False),
                     export_aiff=self.cfg.get("export_aiff", False),
                     export_video=self.cfg.get("export_video", False),
@@ -336,6 +336,11 @@ class BatchDialog(QDialog):
         self._chk_video.setChecked(False)
         self._chk_video.setStyleSheet("color: #a855f7; font-size: 11px; font-weight: 700; border: none; background: transparent;")
         opt_lay.addWidget(self._chk_video)
+        def _lock_mp3(on):
+            if on:
+                self._chk_mp3.setChecked(True)
+            self._chk_mp3.setEnabled(not on)
+        self._chk_video.toggled.connect(_lock_mp3)
 
         opt_lay.addStretch()
 
@@ -543,7 +548,7 @@ class BatchDialog(QDialog):
 
         cfg = dict(self._cfg)
         cfg["export_wav"] = self._chk_wav.isChecked()
-        cfg["export_mp3"] = self._chk_mp3.isChecked()
+        cfg["export_mp3"] = self._chk_mp3.isChecked() or self._chk_video.isChecked()   # sin previa no hay vídeo
         cfg["export_flac"] = self._chk_flac.isChecked()
         cfg["export_video"] = self._chk_video.isChecked()
         cfg["fx_flanger"] = self._chk_flanger.isChecked()

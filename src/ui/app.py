@@ -239,7 +239,7 @@ class ExportWorker(QThread):
             paths   = output_paths(
                 self.source_path, out_dir,
                 export_wav=self.cfg.get("export_wav", True),
-                export_mp3=self.cfg.get("export_mp3", True),
+                export_mp3=self.cfg.get("export_mp3", True) or bool(self.cfg.get("export_video", False)),
                 export_flac=self.cfg.get("export_flac", False),
                 export_aiff=self.cfg.get("export_aiff", False),
                 export_video=self.cfg.get("export_video", False),
@@ -1896,13 +1896,21 @@ class ResultPanel(QWidget):
         self._edit_vtitle.setFixedHeight(24)
         self._edit_vtitle.setStyleSheet(_input_style())
         self._edit_vtitle.setToolTip("Nombre que aparece en el centro del vídeo. Si lo dejas vacío se usa el nombre de la pista (sin «PREVIA - »).")
+        self._btn_vprev = QPushButton("👁 Vista previa")
+        self._btn_vprev.setFixedHeight(24)
+        self._btn_vprev.setCursor(Qt.PointingHandCursor)
+        self._btn_vprev.setStyleSheet(_btn("#7c3aed", "#ffffff", "#8b5cf6", radius=5, fs=10.5))
+        self._btn_vprev.setToolTip("Mira unos segundos del vídeo (a baja resolución y con sonido) antes de generarlo, con tu título, paleta, formato y banner.")
+        self._btn_vprev.clicked.connect(self._open_video_preview)
         row_vt.addWidget(lbl_vt)
         row_vt.addWidget(self._edit_vtitle, stretch=1)
+        row_vt.addWidget(self._btn_vprev)
         self._row_video_title_widget.setVisible(False)
         exp_lay.addWidget(self._row_video_title_widget)
 
         self._chk_video.toggled.connect(self._row_video_widget.setVisible)
         self._chk_video.toggled.connect(self._row_video_title_widget.setVisible)
+        self._chk_video.toggled.connect(lambda _on: self._sync_video_mp3())
         self._combo_voice_pos.currentIndexChanged.connect(
             lambda _: self._update_voice_drop_marker()
         )
@@ -2230,6 +2238,7 @@ class ResultPanel(QWidget):
         self._analysis    = analysis
         self._plan        = plan
         self._source_path = file_path
+        self._session_cover = cfg.get("cover_path", "") if isinstance(cfg, dict) else ""
         if hasattr(self, "_edit_vtitle"):
             self._edit_vtitle.clear()        # el título del vídeo es por pista
         self._bpm         = bpm
@@ -2448,7 +2457,7 @@ class ResultPanel(QWidget):
 
         return {
             "export_wav": self._chk_wav.isChecked(),
-            "export_mp3": self._chk_mp3.isChecked(),
+            "export_mp3": self._chk_mp3.isChecked() or self._chk_video.isChecked(),   # sin previa no hay vídeo
             "export_flac": self._chk_flac.isChecked(),
             "export_video": self._chk_video.isChecked(),
             "fx_flanger": self._chk_fx_flanger.isChecked(),
@@ -2488,6 +2497,48 @@ class ResultPanel(QWidget):
             opts.update({"export_wav": False, "export_flac": False, "export_mp3": True, "mp3_kbps": 128})
         return opts
 
+    def _open_video_preview(self):
+        """Vista previa rápida del vídeo con los ajustes actuales (título, paleta, formato, banner, carátula)."""
+        src = getattr(self, "_source_path", "") or ""
+        if not src or not Path(src).exists():
+            return
+        from src.ui.video_preview import VideoPreviewDialog
+        from src.config import load as _lc
+        md = self.get_branding_metadata() or {}
+        opts = self.get_export_options()
+        title = (opts.get("video_title") or md.get("title") or self.get_export_name()).replace("PREVIA - ", "").strip()
+        start = -1.0
+        try:
+            drops = self._analysis.drops() if self._analysis else []
+            if drops:
+                start = max(0.0, float(drops[0].start_time) - 1.0)
+        except Exception:
+            pass
+        en = str(_lc().get("language", "es")) == "en"
+        params = dict(
+            audio_path=src,
+            cover_image_path=self.get_branding_cover_path() or getattr(self, "_session_cover", "") or None,
+            title=title or "Previa", artist=md.get("artist") or "Radical Records",
+            bpm=float(self._bpm or 128.0), key_str=str(getattr(self, "_key_str", "") or "8A · Am"),
+            aspect_ratio=opts.get("aspect_ratio", "9:16"), palette_key=opts.get("video_palette", "crimson"),
+            promo_text=opts.get("video_promo_text", ""), kicker="EXCLUSIVE PREVIEW" if en else "PREVIA EXCLUSIVA",
+            start_sec=start,
+        )
+        dlg = VideoPreviewDialog(params, self)
+        dlg.setAttribute(Qt.WA_DeleteOnClose, True)
+        self._video_preview_dlg = dlg
+        dlg.show()
+
+    def _sync_video_mp3(self):
+        """El vídeo se hace a partir de la previa: con «Vídeo animado» marcado el MP3 queda marcado y bloqueado."""
+        if self._chk_video.isChecked():
+            self._chk_mp3.setChecked(True)
+            self._chk_mp3.setEnabled(False)
+            self._chk_mp3.setToolTip("El vídeo se genera a partir de la previa, por eso siempre se exporta también el MP3.")
+        elif not self._chk_promo.isChecked():
+            self._chk_mp3.setEnabled(True)
+            self._chk_mp3.setToolTip("")
+
     def _on_promo_toggled(self, on: bool):
         self._spin_promo.setEnabled(on)
         fmt = (self._chk_wav, self._chk_flac, self._chk_mp3)
@@ -2508,6 +2559,7 @@ class ResultPanel(QWidget):
                 self._chk_flac.setChecked(self._promo_saved[1])
                 self._chk_mp3.setChecked(self._promo_saved[2])
             self._promo_saved = None
+        self._sync_video_mp3()
         self._update_promo_hint()
 
     def _update_promo_hint(self):
@@ -4618,6 +4670,8 @@ class MainWindow(QMainWindow):
         mp3 = options.get("export_mp3", True)
         flac = options.get("export_flac", False)
         video = options.get("export_video", False)
+        if video:
+            mp3 = options["export_mp3"] = True      # sin previa no hay vídeo
         if options.get("promo_mode") and not (options.get("voice_drop_path")
                                                and Path(options["voice_drop_path"]).exists()):
             self._set_progress(0, "⚠  El modo promo necesita tu firma: elige un audio con 🎙️ Voice Drop…")

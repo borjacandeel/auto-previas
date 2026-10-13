@@ -3,6 +3,14 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [3.4.0] - 2026-10-13
+
+### Añadido
+- **Vista previa del vídeo antes de generarlo**: junto al campo «Título» hay un botón «👁 Vista previa». Muestra en una ventana unos segundos del vídeo (a baja resolución y con sonido), con tu título, paleta de color, formato, banner y carátula, y el cierre con la firma de Radical Records. Así compruebas cómo queda sin esperar a la exportación completa. La muestra sale del momento del primer drop de tu pista.
+
+### Cambiado
+- **El vídeo siempre exporta también el MP3**: como el vídeo se hace a partir de la previa, al marcar «🎬 Vídeo animado» la casilla del MP3 se marca y queda bloqueada (en la exportación normal y en el Lote), de modo que nunca se pide un vídeo sin previa.
+
 ## [3.3.1] - 2026-10-13
 
 ### Añadido

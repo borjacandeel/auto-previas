@@ -612,3 +612,63 @@ def render_neon_video(
             pass
     _prog(100, "¡Vídeo Radical Neón exportado!")
     return str(out)
+
+
+def render_preview(
+    audio_path: str,
+    cover_image_path: Optional[str],
+    title: str = "Pista sin título",
+    artist: str = "Radical Records",
+    bpm: float = 128.0,
+    key_str: str = "8A · Am",
+    aspect_ratio: str = "9:16",
+    palette_key: str = "crimson",
+    promo_text: str = "",
+    kicker: str = "PREVIA EXCLUSIVA",
+    start_sec: float = -1.0,
+    seconds: float = 6.0,
+    out_height: int = 540,
+    fps: int = 15,
+    progress_cb: Optional[Callable[[int, str], None]] = None,
+) -> dict:
+    """Vista previa rápida del vídeo: unos segundos de la pista (desde `start_sec`, o desde el 30 % si es <0)
+    a baja resolución, seguidos del cierre con firma. Devuelve {"frames": [PIL.Image RGB], "fps": fps, "audio": wav|None}."""
+    def _prog(p, m):
+        if progress_cb:
+            progress_cb(int(p), m)
+
+    ffmpeg = get_ffmpeg_path()
+    if not ffmpeg:
+        raise RuntimeError("FFmpeg no encontrado.")
+    if aspect_ratio not in ASPECTS:
+        aspect_ratio = "9:16"
+    _prog(5, "Preparando la muestra de audio…")
+    total = len(_load_mono(audio_path, 8000)) / 8000.0
+    seconds = max(2.0, min(float(seconds), max(2.0, total)))
+    if start_sec is None or start_sec < 0:
+        start_sec = total * 0.30
+    start_sec = max(0.0, min(float(start_sec), max(0.0, total - seconds)))
+    clip = Path(tempfile.gettempdir()) / f"autoprevias_vprev_{os.getpid()}.wav"
+    subprocess.run([ffmpeg, "-y", "-v", "error", "-ss", f"{start_sec:.3f}", "-t", f"{seconds:.3f}", "-i", str(audio_path),
+                    "-ac", "2", "-ar", "44100", str(clip)], check=True, capture_output=True)
+    _prog(20, "Analizando el ritmo…")
+    an = analyze_audio(str(clip))
+    r = _Renderer(an, cover_image_path, title, artist, bpm, key_str, aspect_ratio, palette_key, promo_text, kicker, 1.0)
+    W, H = r.L.W, r.L.H
+    k = out_height / float(H)
+    size = (max(2, int(W * k)) // 2 * 2, out_height)
+    step = max(1, round(FPS / fps))
+    n = max(1, int(an.duration * fps))
+    frames = []
+    for j in range(n):
+        i = j * step
+        im = r.frame(i, i / FPS)
+        frames.append(im.convert("RGB").resize(size, Image.BILINEAR))
+        if j % 6 == 0:
+            _prog(25 + 70 * j / n, "Dibujando la vista previa…")
+    last = frames[-1]
+    out_img = r.outro.convert("RGB").resize(size, Image.BILINEAR)
+    for j in range(int(1.8 * fps)):          # cierre con firma y enlace
+        frames.append(Image.blend(last, out_img, min(1.0, _ease_out(j / (0.6 * fps)))))
+    _prog(100, "Lista")
+    return {"frames": frames, "fps": fps, "audio": str(clip)}

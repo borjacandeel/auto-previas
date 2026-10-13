@@ -213,6 +213,10 @@ def run_selftest() -> int:
             assert _r.frame(3, 0.1).size
         print("  ✓ Generador de vídeo Radical Neón construye fotogramas en los 3 formatos")
 
+        from src.ui import video_preview as _vp
+        assert hasattr(_vp, "VideoPreviewDialog")
+        print("  ✓ Vista previa del vídeo empaquetada")
+
         # Licencia «un equipo por clave»: el identificador de equipo debe poder calcularse en el binario compilado
         from src.licensing.device import get_device_id as _gdi
         from src.licensing import license as _lic

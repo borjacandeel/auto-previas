@@ -243,3 +243,41 @@ def test_titulo_del_video_por_defecto_es_el_nombre_de_la_pista(tmp_path, monkeyp
 def test_titulo_del_video_elegido_manda(tmp_path, monkeypatch):
     seen = _export_con_titulo(tmp_path, monkeypatch, {"video_title": "Mi Título Propio", "title": "Otro"})
     assert seen["title"] == "Mi Título Propio"
+
+
+def test_video_marcado_fuerza_y_bloquea_el_mp3(monkeypatch):
+    """Sin previa no hay vídeo: con el vídeo marcado el MP3 se exporta siempre y no se puede desmarcar."""
+    p = _panel(monkeypatch)
+    p._chk_mp3.setChecked(False)
+    assert p.get_export_options()["export_mp3"] is False
+    p._chk_video.setChecked(True)
+    o = p.get_export_options()
+    assert o["export_mp3"] and p._chk_mp3.isChecked() and not p._chk_mp3.isEnabled()
+    p._chk_promo.setChecked(True); p._chk_promo.setChecked(False)       # el modo promo no libera el bloqueo
+    assert p._chk_mp3.isChecked() and not p._chk_mp3.isEnabled()
+    p._chk_video.setChecked(False)
+    assert p._chk_mp3.isEnabled()
+
+
+def test_vista_previa_del_video_abre_y_cierra(tmp_path, monkeypatch):
+    import src.ui.video_preview as VP
+    from PIL import Image
+    fr = [Image.new("RGB", (60, 100), (i * 10 % 255, 0, 0)) for i in range(6)]
+    monkeypatch.setattr(VP.PreviewWorker, "run", lambda self: self.done.emit({"frames": fr, "fps": 15, "audio": ""}))
+    d = VP.VideoPreviewDialog({})
+    for _ in range(50):
+        QApplication.processEvents()
+        if d._pix:
+            break
+        d._worker.wait(50)
+    assert len(d._pix) == 6 and d._pix[0].width() == 60
+    d._tick()
+    assert d._lbl_video.pixmap() is not None
+    d.close()
+
+
+def test_boton_vista_previa_presente(monkeypatch):
+    p = _panel(monkeypatch)
+    assert p._btn_vprev.text().endswith("Vista previa")
+    p._source_path = ""
+    p._open_video_preview()          # sin pista cargada no hace nada ni falla

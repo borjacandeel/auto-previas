@@ -67,6 +67,14 @@
 
 ---
 
+### Resumen de Trabajo — Sesión 45 (2026-10-13): v3.4.0 — vista previa del vídeo, MP3 siempre con vídeo y plan de 6 vídeos de marketing
+
+- **MP3 siempre con el vídeo (petición del usuario)**: `ResultPanel._sync_video_mp3()` marca y bloquea la casilla MP3 mientras «Vídeo animado» está marcado (también tras alternar el modo promo); `get_export_options()["export_mp3"]` es verdadero si hay vídeo; `MainWindow._generate` lo fuerza; el motor lo garantiza en `ExportWorker` (`export_mp3 or export_video`) y en el Lote (`batch.py`: opción, bloqueo de la casilla y `output_paths`).
+- **Vista previa del vídeo**: `video_neon.render_preview()` corta con FFmpeg unos 6 s de la pista (desde 1 s antes del primer drop, o el 30 % si no hay), los analiza y dibuja a 15 fps con salida de 540 px de alto, y añade 1,8 s de cierre con la firma. `src/ui/video_preview.py`: `PreviewWorker` (QThread) + `VideoPreviewDialog` (reproduce en bucle con QTimer y audio con QMediaPlayer si hay multimedia; limpia el WAV temporal al cerrar). Botón «👁 Vista previa» en la fila del título (`_open_video_preview`) con título/paleta/formato/banner/carátula actuales. Prueba con muestra sintética: ~6,5 s hasta ver el primer fotograma. Traducciones EN añadidas.
+- **Pruebas**: `tests/test_video_neon.py` (render_preview en 9:16 y 16:9), `tests/test_ui_features.py` (bloqueo del MP3, diálogo de vista previa, botón sin pista). Selftest: comprueba que `video_preview` está empaquetado.
+- **Plan de marketing**: `marketing/PLAN-VIDEOS.md` — 6 vídeos nuevos + el general, calendario de 3 semanas (2 por semana), ganchos, guiones, publicación y medición; orden de producción 1, 3, 2, 4, 5, 6. Pendiente de producir (a petición del usuario).
+- Versión 3.4.0, CHANGELOG, README, manual y PDF regenerados.
+
 ### Resumen de Trabajo — Sesión 44 (2026-10-13): v3.3.1 — título del vídeo elegible
 
 - **Petición del usuario**: «en los vídeos que el autor pueda elegir el nombre que sale en medio»; el vídeo mostraba «Previa» (`meta.get("title") or "Previa"` en `export_files`, porque el título de metadatos suele ir vacío).
