@@ -77,6 +77,34 @@
 - **Docs/PDF**: README (tabla de ediciones), CHANGELOG [3.5.0], manual Basic y Plus (sección de vídeo, marca de agua, final del vídeo, capítulo «Pasar a Plus»), plan de vídeos (#3 y #6). **A actualizar a mano por el usuario**: las descripciones de los productos Basic y Plus en Payhip (Basic ahora incluye vídeo con marca de agua).
 - **Pendientes anotados** (tabla en esta sesión): producción de los 11 vídeos del plan + pruebas del usuario + tareas opcionales.
 
+
+#### 📋 Tabla de pendientes (2026-10-13)
+
+| # | Pendiente | Tipo | Estado |
+|---|---|---|---|
+| V1 | Vídeo 1 · De 5 min a 30 s: la carrera (pantalla dividida) | Marketing (Claude produce) | Pendiente |
+| V2 | Vídeo 2 · Previa antifugas | Marketing | Pendiente |
+| V3 | Vídeo 3 · Vídeo animado en 1 clic (con la marca de agua de Basic / sin ella en Plus) | Marketing | Pendiente |
+| V4 | Vídeo 4 · La app que escucha tu tema | Marketing | Pendiente |
+| V5 | Vídeo 5 · 20 previas mientras tomas café | Marketing | Pendiente |
+| V6 | Vídeo 6 · Basic o Plus: cuál te toca | Marketing | Pendiente |
+| V7 | Vídeo 7 · Nadie puede mezclar tu previa | Marketing | Pendiente |
+| V8 | Vídeo 8 · 3 errores que arruinan una previa | Marketing | Pendiente |
+| V9 | Vídeo 9 · Tu estilo en 1 clic | Marketing | Pendiente |
+| V10 | Vídeo 10 · Un tema, 5 looks | Marketing | Pendiente |
+| V11 | Vídeo 11 · AutoPrevias in English | Marketing | Pendiente |
+| U1 | Probar en el Mac la 3.5.0: vídeo en Basic (marca de agua) y Plus (finales), vista previa y MP3 forzado | Usuario | Pendiente |
+| U2 | Checklist de la sesión 41 que queda: revocación con la app abierta, uso sin conexión, instalación y auto-update en Windows | Usuario | Pendiente |
+| U3 | Día de lanzamiento: si los productos de Payhip pasan de privado a público, abrir el enlace en incógnito; si cambia, actualizar app, PDF, vídeos, README y sacar PATCH | Usuario + Claude | Pendiente |
+| U4 | Actualizar las descripciones de los productos Basic y Plus en Payhip (Basic ahora incluye vídeo con marca de agua) | Usuario | Pendiente |
+| V12 | Verificar la Release v3.5.0 cuando el usuario avise de que terminó el CI | Claude | Pendiente |
+| O1 | Arreglo del log SSL de Windows (`/tmp` no existe en Windows) | Opcional | Pendiente |
+| O2 | Respuestas del Worker firmadas (anti-crack) | Opcional | Pendiente |
+| O3 | `REQUIRE_DEVICE=1` en el Worker más adelante | Opcional | Pendiente |
+| O4 | Firma de código de macOS/Windows | Opcional (coste) | Pendiente |
+| O5 | Vídeos: título por pista editable en el Lote, elegir el fragmento del vídeo | Opcional | Pendiente |
+| O6 | Aclarar con el usuario el mensaje cortado «…o que se haga oscuro y au…» (se implementó «sin cierre» como tercera opción) | Claude | Pendiente de respuesta |
+
 ### Resumen de Trabajo — Sesión 45 (2026-10-13): v3.4.0 — vista previa del vídeo, MP3 siempre con vídeo y plan de 6 vídeos de marketing
 
 - **MP3 siempre con el vídeo (petición del usuario)**: `ResultPanel._sync_video_mp3()` marca y bloquea la casilla MP3 mientras «Vídeo animado» está marcado (también tras alternar el modo promo); `get_export_options()["export_mp3"]` es verdadero si hay vídeo; `MainWindow._generate` lo fuerza; el motor lo garantiza en `ExportWorker` (`export_mp3 or export_video`) y en el Lote (`batch.py`: opción, bloqueo de la casilla y `output_paths`).
