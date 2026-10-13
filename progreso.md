@@ -53,7 +53,7 @@
 ## Estado actual
 **Fecha última actualización:** 2026-10-13 (Sesión 40 — v3.2.0: licencia 1 equipo por clave)
 **Fase activa:** v3.0.1 PUBLICADA. Verificado en macOS de punta a punta: activación, ventana principal y auto-update 3.0.0→3.0.1. Pendiente: Windows real, edición Basic, rotar claves de Payhip, y limpiar el formato markdown de las novedades en la ventana de actualización (muestra `### ` y `*`; agrupar en 3.0.2). El auto-update solo se podrá probar de extremo a extremo cuando exista una Release posterior a la instalada (p. ej. 3.0.1).
-**Versión Actual:** **v3.2.0** (licencia 1 equipo por clave; CI en curso/publicada, ver sesión 40)
+**Versión Actual:** **v3.2.0** (publicada y verificada; licencia 1 equipo por clave)
 
 ### Credenciales de desarrollo — NO se guardan en el repo (público)
 > Las claves secretas de Payhip (`PAYHIP_SECRET_BASIC/PLUS`) viven solo como *secrets* del Worker de Cloudflare. Las versiones antiguas aparecieron en el historial público de git: **deben rotarse** (ver sesión 36g).
@@ -72,6 +72,7 @@
 - **Prueba real en producción** (Mac del usuario, `worker/smoke_test.sh` con licencia de prueba real de Payhip): **11 correctas, 0 fallidas** (clave falsa rechazada, A activa, B rechazado `in_use`, reverificación, desactivar libera, B activa, A queda `in_use`, `reset` con token, `reset` sin token rechazado, modo compatible sin `device_id`).
 - **Versión 3.2.0:** `src/__version__.py`, CHANGELOG (`[3.2.0] - 2026-10-13`), README (badge, sección «Una licencia = un equipo», tabla de funcionamiento, historial), PDF Basic y Plus regenerados (capítulo de activación con la regla de un equipo, verificación automática, FAQ). Los PDF no mencionan GitHub.
 - **Pruebas locales:** 83 passed, 1 skipped (+ `test_structure.py` que falla en local por librosa 1.0 y pasa en CI); selftest OK.
+- **CI y Release v3.2.0 (run 38384164986, `workflow_dispatch` desde `main`, commit 67fd656):** los 4 builds y la publicación en **success** (Windows basic 17 min, Windows plus 16 min, macOS plus 9 min, macOS basic 10 min; total ~18 min). Release publicada (no draft) con 11 archivos: 4 instaladores versionados + 4 alias estables (`AutoPrevias-{Basic,Plus}-macOS-arm64.dmg` 223,5 MB y `AutoPrevias-{Basic,Plus}-Windows-x64-Setup.exe` 145,7 MB), `SHA256SUMS.txt` (10 líneas, incluye los PDF) y los dos manuales PDF (1,9 y 2,7 MB, idénticos a los del repo). `releases/latest` = v3.2.0; la descarga estable responde (206 en GET parcial).
 - **Pendiente del usuario:** rotar las `product-secret-key` de Payhip y recrearlas como **Secret** en Cloudflare (hoy son tipo *Variable* en claro y se vieron en una captura); revocar/regenerar la licencia de prueba usada; (el `ADMIN_TOKEN` se mantiene: decisión del usuario); más adelante `REQUIRE_DEVICE=1` en el Worker cuando casi todos tengan ≥3.2.0. Probar en el Mac: actualización automática 3.1.0→3.2.0 (las licencias guardadas por ≤3.1.0 no tienen clave local: pedirán reactivar una vez al cumplir 14 días).
 
 ### Resumen de Trabajo — Sesión 39 (2026-10-13): licencia «1 equipo por clave» (PREPARADA, sin publicar)
