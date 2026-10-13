@@ -111,6 +111,10 @@ def html_words(sc, i):
 
 def html_shot(sc, i):
     ed = sc.get("edition", "plus")
+    try:
+        sc["img_size"] = list(Image.open(ROOT / "docs" / "manual" / "_work" / ed / f"{sc['imgs'][0]['name']}.png").size)
+    except Exception:
+        sc["img_size"] = None
     caps = "".join(f'<div class="cap"><div class="num">{c["num"]}</div><div class="ttl">{c["title"]}</div><div class="sub">{c["sub"]}</div></div>' for c in sc["caps"])
     imgs = "".join(f'<img class="shot" data-n="{n}" src="assets/{n}.jpg" alt="" />' for n in sorted({m["name"] for m in sc["imgs"]}))
     dlg = f'<img class="dlg" src="assets/{sc["dlg"]["name"]}.jpg" style="left:{sc["dlg"]["x"]}px;top:{sc["dlg"]["y"]}px;width:{sc["dlg"]["w"]}px" alt="" />' if sc.get("dlg") else ""
@@ -192,7 +196,7 @@ def html_scan(sc, i):
         col = next((s["color"] for s in sc["secs"] if s["from"] <= k / n < s["to"]), "#8a8fa3")
         h = a * (H - 130)
         rects_ += f'<rect x="{k * bw + 1:.1f}" y="{(H - h) / 2 + 40:.1f}" width="{bw - 2:.1f}" height="{h:.1f}" rx="2" fill="{col}"/>'
-    lbls = "".join(f'<div class="seclbl" style="left:{s["from"] * W + 6:.0f}px;background:{s["color"]}">{s["name"]}</div>' for s in sc["secs"])
+    lbls = "".join(f'<div class="seclbl" style="left:{s["from"] * W + 4:.0f}px;max-width:{(s["to"] - s["from"]) * W - 8:.0f}px;overflow:hidden;white-space:nowrap;font-size:26px;padding:8px 12px;background:{s["color"]}">{s["name"]}</div>' for s in sc["secs"])
     cards = "".join(f'<div class="scard" style="left:{c["x"]}px;top:{c["y"]}px"><div class="v">{c["v"]}</div><div class="l">{c["l"]}</div></div>' for c in sc["cards"])
     head = word(sc["title"], "red", 100) if sc.get("title") else ""
     return (f'<div style="position:absolute;left:0;right:0;top:300px">{head}</div>'
@@ -208,7 +212,7 @@ def html_antileak(sc, i):
     badges = "".join(f'<div class="badge" style="left:{b["x"]}px;top:{b["y"]}px;background:{b.get("bg", "#ff1f3a")};color:{b.get("fg", "#fff")}">{b["t"]}</div>' for b in sc["badges"])
     head = f'<div style="position:absolute;left:0;right:0;top:230px">{word(sc["title"], "red", 100)}</div>' if sc.get("title") else ""
     return (head + f'<div class="tlbar" style="top:560px"><svg width="{W}" height="{H}">{rects_}</svg>{marks}</div>' + badges +
-            f'<div class="stamp big" style="left:120px;top:1260px">PROMO — NO DISTRIBUIR</div>')
+            f'<div style="position:absolute;left:0;right:0;top:1260px;display:flex;justify-content:center"><div class="stamp big" style="position:relative;font-size:58px">PROMO — NO DISTRIBUIR</div></div>')
 
 
 def html_tempo(sc, i):

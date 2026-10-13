@@ -76,7 +76,14 @@
     const CK = [];
     function cam(a) {
       const S = S0 * a.z; CK.push({ t: a.at, d: a.d, z: a.z });
-      const props = { x: 500 - a.cx * S, y: 530 - a.cy * S, scale: S };
+      // la cámara no sale de la captura (evita bandas negras)
+      let cx = a.cx, cy = a.cy;
+      if (sc.img_size) {
+        const vw = 1000 / S, vh = 1060 / S;
+        cx = sc.img_size[0] <= vw ? sc.img_size[0] / 2 : Math.min(Math.max(cx, vw / 2), sc.img_size[0] - vw / 2);
+        cy = sc.img_size[1] <= vh ? sc.img_size[1] / 2 : Math.min(Math.max(cy, vh / 2), sc.img_size[1] - vh / 2);
+      }
+      const props = { x: 500 - cx * S, y: 530 - cy * S, scale: S };
       const cs = 2.0 / S;
       if (a.d <= 0) { tl.set(camEl, props, t0 + a.at); tl.set(cin, { scale: cs }, t0 + a.at); }
       else { tl.to(camEl, Object.assign({ duration: a.d, ease: a.ease || "power3.inOut" }, props), t0 + a.at); tl.to(cin, { scale: cs, duration: a.d, ease: a.ease || "power3.inOut" }, t0 + a.at); }

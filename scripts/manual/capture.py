@@ -81,6 +81,7 @@ import src.config as C
 cfg = C.load()
 cfg["edition"] = EDITION
 cfg["output_dir"] = str(HOME / "Music" / "Previas")
+cfg["language"] = os.environ.get("CAPTURE_LANG", "es")   # capturas en inglés para el vídeo en inglés
 C.save(cfg)
 from src import i18n
 i18n.set_language(os.environ.get("CAPTURE_LANG", "es"))
