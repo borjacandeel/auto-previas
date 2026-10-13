@@ -6,7 +6,7 @@ Objetivo: que la gente **vea el programa funcionando** y llegue a Payhip (`payhi
 Formato: vertical 9:16, 20–30 s, sin voz (texto grande + música + efectos, como el vídeo general), mismo estilo Radical Records.
 Regla: ningún vídeo menciona GitHub ni sus Releases; la llamada final siempre es Payhip.
 
-## Calendario (2 vídeos por semana, ~3 semanas)
+## Calendario (2 vídeos por semana, ~6 semanas)
 
 | Día | Vídeo | Para quién | Gancho (primeros 2 s) |
 |---|---|---|---|
@@ -17,7 +17,6 @@ Regla: ningún vídeo menciona GitHub ni sus Releases; la llamada final siempre 
 | 14 | **4 · La app que escucha tu tema** | Curiosos / técnicos | «Detecta BPM, clave y drops. Solo.» |
 | 17 | **5 · 20 previas mientras tomas café** | Sellos y promotores | «Un sello. 20 temas. 1 clic.» |
 | 21 | **6 · Basic o Plus: cuál te toca** | Indecisos (conversión) | «¿Basic o Plus? 10 segundos» |
-
 | 24 | **7 · Nadie puede mezclar tu previa** | Quien teme que se la «retoquen» | «Tu previa, imposible de mezclar» |
 | 28 | **8 · 3 errores que arruinan una previa** | Productores que empiezan | «3 errores que arruinan tu previa» |
 | 31 | **9 · Tu estilo en 1 clic** | Sellos y artistas con marca | «Tu firma. Tu estilo. 1 clic.» |
