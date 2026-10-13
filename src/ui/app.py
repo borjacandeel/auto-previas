@@ -4353,6 +4353,40 @@ class MainWindow(QMainWindow):
         except Exception:
             self._update_banner = None
 
+        self._start_license_watch()
+
+    # ── Vigilancia de la licencia (la verificación con el servidor la hace un hilo aparte) ──
+    def _start_license_watch(self):
+        try:
+            from src.config import _get_baked_edition
+            if _get_baked_edition() is None:        # en desarrollo no hay licencia
+                return
+        except Exception:
+            return
+        self._license_timer = QTimer(self)
+        self._license_timer.setInterval(30_000)
+        self._license_timer.timeout.connect(self._check_license_watch)
+        self._license_timer.start()
+
+    def _check_license_watch(self):
+        """Si el servidor revocó la licencia (otro equipo, reembolso…), avisa y cierra al terminar de exportar."""
+        from src.licensing.license import revoked_reason
+        reason = revoked_reason()
+        if not reason:
+            return
+        worker = getattr(self, "_export_worker", None)
+        if worker is not None and worker.isRunning():
+            return                                  # no cortar una exportación en curso
+        self._license_timer.stop()
+        from PySide6.QtWidgets import QApplication, QMessageBox
+        if reason == "in_use":
+            msg = ("Esta licencia se ha activado en otro equipo.\nSolo puede estar activa en un equipo a la vez.\n"
+                   "AutoPrevias se cerrará.")
+        else:
+            msg = "Tu licencia ya no es válida.\nAutoPrevias se cerrará."
+        QMessageBox.critical(self, "AutoPrevias", tr(msg))
+        QApplication.quit()
+
     # ── Animación de puntos en progreso ──────────────────────────────────
 
     def _tick_dots(self):

@@ -102,3 +102,22 @@ test("identificador de equipo mal formado", async () => {
   const r = await call(makeEnv(), { action: "activate", license_key: KEY, device_id: "zzz" });
   assert.equal(r.code, "bad_request");
 });
+
+test("no gasta escrituras de KV en cada verificación (plan gratuito: 1.000 al día)", async () => {
+  const env = makeEnv(); let puts = 0;
+  const put = env.LICENSES.put; env.LICENSES.put = async (k, v) => { puts++; return put(k, v); };
+  await call(env, { action: "activate", license_key: KEY, device_id: DEV_A });
+  for (let i = 0; i < 10; i++) await call(env, { action: "verify", license_key: KEY, device_id: DEV_A });
+  assert.equal(puts, 1);
+});
+
+test("si KV falla (cuota agotada) un cliente ya activado sigue funcionando; uno nuevo recibe un aviso", async () => {
+  const env = makeEnv();
+  await call(env, { action: "activate", license_key: KEY, device_id: DEV_A });
+  const k = [...env.LICENSES.m.keys()][0];
+  const rec = JSON.parse(env.LICENSES.m.get(k)); rec.last_seen = Date.now() - 13 * 3600000; env.LICENSES.m.set(k, JSON.stringify(rec));
+  env.LICENSES.put = async () => { throw new Error("KV put() limit exceeded"); };
+  assert.equal((await call(env, { action: "verify", license_key: KEY, device_id: DEV_A })).success, true);
+  env.LICENSES.m.clear();
+  assert.equal((await call(env, { action: "activate", license_key: KEY, device_id: DEV_B })).success, false);
+});

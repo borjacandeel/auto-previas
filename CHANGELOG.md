@@ -14,7 +14,7 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 - Tu clave se guarda en el equipo cifrada y ligada a él: copiar el archivo de licencia a otro ordenador no sirve.
 
 ### Corregido
-- La licencia se reverificaba solo «en teoría»: tras 14 días la app volvía a pedir la clave. Ahora se reverifica de verdad cada 7 días en segundo plano, sin bloquear el arranque.
+- La licencia se reverificaba solo «en teoría»: tras 14 días la app volvía a pedir la clave. Ahora la app se verifica sola con el servidor en cada arranque y cada 6 horas, en segundo plano y sin volver a pedirte nunca la clave. Si pasa más de 14 días sin conexión, la verifica al abrirse (y solo te pide conexión, no la clave). Si el servidor revoca la licencia mientras trabajas, te avisa y se cierra al terminar de exportar.
 
 ## [3.1.0] - 2026-10-12
 

@@ -185,3 +185,50 @@ def test_desactivar_desde_la_ventana_de_licencia_libera_en_el_servidor(monkeypat
     monkeypatch.setattr(L, "deactivate_online", lambda: (llamadas.append(1), (True, "ok"))[1])
     dlg = LicenseDialog("9.9.9", "plus")
     assert dlg._release_on_server() is True and llamadas == [1]
+
+
+def test_licencia_caducada_se_verifica_sola_sin_pedir_la_clave(monkeypatch):
+    import src.main as M
+    L.save_local(KEY, "plus")
+    d = L.load_local(); d["verified_at"] = d["last_check"] = int(time.time()) - 20 * 86400; L._write_local(d)
+    assert L.check_license()[0] == L.LicenseStatus.EXPIRED
+    enviados = _fake_request(monkeypatch, {"success": True, "edition": "plus"})
+    assert M._reverify_expired_blocking(None) == L.LicenseStatus.VALID
+    assert enviados[0]["license_key"] == KEY and enviados[0]["action"] == "verify"
+
+
+def test_licencia_caducada_con_negativa_del_servidor_queda_revocada(monkeypatch):
+    import src.main as M
+    L.save_local(KEY, "plus")
+    d = L.load_local(); d["verified_at"] = d["last_check"] = int(time.time()) - 20 * 86400; L._write_local(d)
+    _fake_request(monkeypatch, {"success": False, "code": "in_use"})
+    assert M._reverify_expired_blocking(None) == L.LicenseStatus.REVOKED
+    assert L.revoked_reason() == "in_use"
+
+
+def test_licencia_antigua_caducada_pide_la_clave_una_vez(monkeypatch):
+    import src.main as M
+    L._write_local({"key_hash": "x", "edition": "basic", "verified_at": 1, "last_check": 1})
+    assert M._reverify_expired_blocking(None) == L.LicenseStatus.EXPIRED
+
+
+def test_vigilancia_cierra_la_app_si_el_servidor_revoca(monkeypatch):
+    _qapp()
+    from types import SimpleNamespace
+    from PySide6.QtWidgets import QApplication, QMessageBox
+    from src.ui.app import MainWindow
+    cerrada, avisos = [], []
+    monkeypatch.setattr(QApplication, "quit", staticmethod(lambda: cerrada.append(1)))
+    monkeypatch.setattr(QMessageBox, "critical", staticmethod(lambda *a, **k: avisos.append(a[2])))
+    parado = []
+    falso = SimpleNamespace(_export_worker=None, _license_timer=SimpleNamespace(stop=lambda: parado.append(1)))
+    MainWindow._check_license_watch(falso)                      # sin revocación: no hace nada
+    assert not cerrada
+    L.save_local(KEY, "plus"); d = L.load_local(); d["revoked"] = "in_use"; L._write_local(d)
+    MainWindow._check_license_watch(falso)
+    assert cerrada and parado and "otro equipo" in avisos[0]
+    # una exportación en curso no se corta
+    cerrada.clear()
+    corriendo = SimpleNamespace(_export_worker=SimpleNamespace(isRunning=lambda: True), _license_timer=falso._license_timer)
+    MainWindow._check_license_watch(corriendo)
+    assert not cerrada

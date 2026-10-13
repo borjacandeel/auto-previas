@@ -20,6 +20,7 @@
  */
 
 const DAY = 86400000;
+const WRITE_EVERY_MS = 12 * 3600 * 1000;
 const KEY_RE = /^[A-Z0-9][A-Z0-9-]{6,63}$/;
 const DEVICE_RE = /^[a-f0-9]{64}$/;
 
@@ -107,13 +108,23 @@ export default {
 
     // — Una licencia = un equipo —
     if (!bound || mine || stale) {
-      await env.LICENSES.put(kvKey, JSON.stringify({
-        device,
-        edition,
-        platform: String(body.platform || "").slice(0, 16),
-        activated_at: mine ? bound.activated_at : now,
-        last_seen: now,
-      }));
+      // El plan gratuito de KV permite 1.000 escrituras al día: solo se escribe al ligar/cambiar de equipo
+      // o, como mucho, cada 12 h para refrescar last_seen (las lecturas, 100.000 al día, no importan).
+      const needsWrite = !bound || stale || bound.edition !== edition || now - (bound.last_seen || 0) > WRITE_EVERY_MS;
+      if (needsWrite) {
+        try {
+          await env.LICENSES.put(kvKey, JSON.stringify({
+            device,
+            edition,
+            platform: String(body.platform || "").slice(0, 16),
+            activated_at: mine ? bound.activated_at : now,
+            last_seen: now,
+          }));
+        } catch (_) {
+          // Cuota de KV agotada o fallo puntual: no se bloquea al cliente que ya está en regla
+          if (!mine) return fail("invalid", "Servicio de licencias temporalmente no disponible; inténtalo más tarde");
+        }
+      }
       return json({ success: true, edition });
     }
     return fail("in_use", "Esta licencia ya está activada en otro equipo");

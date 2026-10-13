@@ -3,11 +3,19 @@
 `autoprevias-license.js` es el Cloudflare Worker que verifica las claves con Payhip y ata cada
 clave a **un único equipo**. No contiene credenciales (todo va en *secrets* de Cloudflare).
 
+## Coste: gratis en Cloudflare (plan Free)
+Límites del plan gratuito (comprobados en la documentación de Cloudflare el 2026-10-13):
+Workers 100.000 peticiones/día · 10 ms de CPU por petición · KV 100.000 lecturas/día, **1.000 escrituras/día**, 1 GB.
+Cada comprobación de licencia = 1 petición + 1 lectura de KV; el Worker **solo escribe** al ligar un equipo nuevo o,
+como mucho, cada 12 h por licencia. Con verificación en cada arranque y cada 6 h, el límite real son las ~1.000 escrituras:
+alcanza para varios cientos de licencias activas al día. Si algún día se queda corto, el plan Workers Paid cuesta ~5 USD/mes.
+Si se agotara la cuota, los clientes ya activados siguen funcionando (el Worker no los bloquea) y solo fallarían las activaciones nuevas.
+
 ## Cómo funciona
 | Acción (app) | Qué hace el Worker |
 |---|---|
 | `activate` (al introducir la clave) | Comprueba la clave con Payhip. Si no está ligada a ningún equipo → la liga a este. Si ya es de **otro** equipo → rechaza (`in_use`). |
-| `verify` (cada 7 días, en segundo plano) | Igual, y renueva `last_seen`. Si la clave se activó en otro equipo, este recibe `in_use` y queda bloqueado en el siguiente arranque. |
+| `verify` (en cada arranque y cada 6 h, en segundo plano; la app no vuelve a pedir la clave) | Igual, y renueva `last_seen`. Si la clave se activó en otro equipo, este recibe `in_use` y queda bloqueado en el siguiente arranque. |
 | `deactivate` (⚙ Licencia → Desactivar) | Libera el hueco para poder activarla en otro equipo. |
 | `reset` (solo tú, con `ADMIN_TOKEN`) | Libera una licencia a mano (equipo roto, robo, cliente sin conexión). |
 

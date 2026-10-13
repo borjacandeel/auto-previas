@@ -347,20 +347,51 @@ def run_selftest() -> int:
 
 
 def _start_background_reverify() -> None:
-    """Reverifica la licencia (cada 7 días) en un hilo aparte, sin bloquear el arranque."""
+    """Verifica la licencia con el servidor en cada arranque y luego cada 6 h, en un hilo aparte."""
     try:
         import threading
-        from src.licensing.license import reverify_if_due
+        import time as _time
+        from src.licensing.license import reverify_if_due, REVERIFY_INTERVAL
 
         def _run():
-            try:
-                _log_startup(f"Reverificación de licencia: {reverify_if_due()}")
-            except Exception as ex:      # nunca debe afectar a la app
-                _log_startup(f"Reverificación de licencia falló: {ex}")
+            first = True
+            while True:
+                try:
+                    _log_startup(f"Verificación automática de licencia: {reverify_if_due(force=first)}")
+                except Exception as ex:      # nunca debe afectar a la app
+                    _log_startup(f"Verificación de licencia falló: {ex}")
+                first = False
+                _time.sleep(REVERIFY_INTERVAL)
 
         threading.Thread(target=_run, name="license-reverify", daemon=True).start()
     except Exception as ex:
-        _log_startup(f"No se pudo lanzar la reverificación: {ex}")
+        _log_startup(f"No se pudo lanzar la verificación de licencia: {ex}")
+
+
+def _reverify_expired_blocking(app) -> str:
+    """
+    La última verificación correcta fue hace más de 14 días: se verifica ahora mismo con la clave guardada,
+    sin pedírsela al usuario. Si no hay conexión, ofrece reintentar o salir. Devuelve el estado resultante.
+    """
+    from PySide6.QtWidgets import QMessageBox
+    from src import i18n
+    from src.licensing.license import check_license, reverify_if_due, LicenseStatus
+    while True:
+        outcome = reverify_if_due(force=True)
+        if outcome == "network":
+            box = QMessageBox()
+            box.setIcon(QMessageBox.Warning)
+            box.setWindowTitle("AutoPrevias")
+            box.setText(i18n.tr("AutoPrevias necesita conectarse a Internet para verificar tu licencia "
+                                "(lleva más de 14 días sin hacerlo).\nComprueba tu conexión y reintenta."))
+            retry = box.addButton(i18n.tr("Reintentar"), QMessageBox.AcceptRole)
+            box.addButton(i18n.tr("Salir"), QMessageBox.RejectRole)
+            box.exec()
+            if box.clickedButton() is retry:
+                continue
+            return "quit"
+        break
+    return check_license()[0]
 
 
 def _check_license_on_startup() -> bool:
@@ -385,6 +416,17 @@ def _check_license_on_startup() -> bool:
         from src.config import set_edition
 
         status, edition = check_license()
+
+        if status == LicenseStatus.EXPIRED:
+            # Verificación automática con la clave guardada (solo las licencias de versiones ≤3.1.0, que no
+            # guardaban la clave, tendrán que escribirla una vez más)
+            from PySide6.QtWidgets import QApplication
+            _app0 = QApplication.instance() or QApplication(sys.argv)
+            status = _reverify_expired_blocking(_app0)
+            if status == "quit":
+                return False
+            from src.licensing.license import load_local as _ll
+            edition = (_ll() or {}).get("edition", edition)
 
         if status in (LicenseStatus.VALID, LicenseStatus.GRACE):
             set_edition(edition)

@@ -6,7 +6,8 @@ Flujo:
 2. Si no hay licencia válida, se muestra la pantalla de activación.
 3. La clave se envía al Cloudflare Worker, que la verifica con Payhip.
 4. Si es válida, se guarda localmente y se establece la edición (basic/plus).
-5. Cada 7 días se reverifica en segundo plano (sin bloquear la app).
+5. Se reverifica sola con el servidor en cada arranque y cada 6 h mientras la app está abierta
+   (en segundo plano, sin pedir nunca la clave otra vez: la clave se guarda cifrada en el equipo).
 6. Una licencia = un equipo: el Worker ata la clave al identificador anónimo del equipo
    (src/licensing/device.py). Si ya está activa en otro equipo, no se puede activar en uno nuevo
    hasta que se desactive allí (o pasen 15 días sin que ese equipo la verifique).
@@ -28,8 +29,8 @@ from pathlib import Path
 _W_B64 = b"aHR0cHM6Ly9hdXRvcHJldmlhcy1saWNlbnNlLnJhZGljYWxyZWNvcmRzdmxjLndvcmtlcnMuZGV2"
 
 
-# Tiempo entre verificaciones en línea (7 días en segundos)
-REVERIFY_INTERVAL = 7 * 24 * 3600
+# Tiempo entre verificaciones en línea mientras la app está abierta (6 h en segundos)
+REVERIFY_INTERVAL = 6 * 3600
 
 # Días de gracia si no hay conexión
 GRACE_DAYS = 14
@@ -253,7 +254,9 @@ def activate(license_key: str) -> tuple[bool, str, str]:
 
 def reverify_if_due(force: bool = False) -> str:
     """
-    Reverificación periódica (cada REVERIFY_INTERVAL; reintenta en cada arranque hasta lograrlo).
+    Reverificación automática con el servidor (usa la clave guardada: el usuario no la vuelve a escribir).
+    Sin force solo actúa si pasaron REVERIFY_INTERVAL desde la última correcta; con force=True siempre
+    (arranque). Reintenta mientras no lo logre.
     Pensada para un hilo en segundo plano: no toca la interfaz.
     Devuelve 'skipped' | 'ok' | 'network' | 'revoked' | 'legacy'.
     Una negativa explícita del servidor (clave desactivada/reembolsada o licencia en otro equipo)
@@ -305,3 +308,9 @@ def deactivate_online() -> tuple[bool, str]:
     if res["success"] or res.get("code") in ("not_owner", "invalid"):
         return True, "ok"          # ya estaba libre / ya no es válida: nada que liberar
     return False, res.get("code", "network")
+
+
+def revoked_reason() -> str:
+    """'' si la licencia local sigue vigente; si el servidor la revocó, el motivo ('in_use' | 'invalid')."""
+    local = load_local()
+    return str(local.get("revoked") or "") if local else ""
