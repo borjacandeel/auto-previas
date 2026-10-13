@@ -67,6 +67,10 @@
 
 ---
 
+### Resumen de Trabajo — Sesión 42 (2026-10-13): decisiones, pendientes de lanzamiento y arranque del vídeo «Radical Neón»
+- **Decisiones del usuario:** prueba de 1 equipo OK; licencias de prueba de Payhip: dejarlas; rotación de claves de Payhip y `ADMIN_TOKEN`: ignorados. **Pendiente del día de lanzamiento:** si los productos de Payhip pasan de privados a públicos, comprobar en incógnito el enlace de la tienda; si cambia, actualizar app/PDF/vídeo/docs (PATCH).
+- **Petición:** mejorar el generador de vídeos de la app para que sea tan animado, colorido y llamativo como el vídeo promocional, con la carátula del usuario. Estado actual (`src/engine/video.py`): FFmpeg con overlay estático + 3 visualizadores + barra de progreso, sin sincronía con el ritmo. Decisión: motor nuevo en Python (fotogramas con numpy/PIL → FFmpeg por tubería), sincronizado con kick/drops, estilo **Radical Neón**, formatos **9:16, 1:1 y 16:9**; prototipo con vídeo de muestra para aprobar antes de integrar.
+
 ### Resumen de Trabajo — Sesión 41 (2026-10-13): inventario de la Release v3.2.0 y plan de pruebas en el Mac
 - **Inventario de lo publicado (Release v3.2.0, 2026-10-13 10:51 UTC, run 38384164986):**
   | Archivo | Tamaño | Notas |
