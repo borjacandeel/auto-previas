@@ -45,11 +45,16 @@ Tiempo total: ~10 minutos. Hazlo **en este orden**.
    `PAYHIP_API_KEY`, si aparece, ya no se usa: puedes borrarla.
 
 ## Paso 4 · Pegar el código nuevo (2 min)
-1. Abre este enlace, selecciona todo (⌘A) y copia (⌘C):
-   https://raw.githubusercontent.com/borjacandeel/auto-previas/main/worker/autoprevias-license.js
-   *(o usa el archivo `autoprevias-license.js` que te envié)*
+1. **No copies el código desde el navegador**: si Chrome tiene activada la traducción, traduce el propio código
+   (`if`→`si`, `try`→`intentar`, `catch`→`atrapar`…) y se rompe. Cópialo con Terminal, que no pasa por el navegador:
+   ```bash
+   curl -sL https://raw.githubusercontent.com/borjacandeel/auto-previas/main/worker/autoprevias-license.js | pbcopy && echo "Código copiado"
+   ```
+   *(O abre el archivo `autoprevias-license.js` que te envié con un editor de texto y copia desde ahí.)*
 2. Cloudflare → **autoprevias-license → Edit code** → selecciona **todo** lo que hay (⌘A) → pega (⌘V) → **Deploy**.
-3. Debe quedar en la primera línea un comentario `/** AutoPrevias — Cloudflare Worker de licencias…`.
+3. Antes de pulsar Deploy comprueba: la primera línea es `/**` y el contador de errores de la barra azul inferior marca **0** (no cientos).
+   Si ves palabras como `si`, `intentar` o `atrapar`, el navegador ha traducido el código: desactiva la traducción de Chrome
+   (icono de traducir en la barra de direcciones → *Mostrar original* y *No traducir nunca inglés*) y vuelve a copiar con el comando de arriba.
 
 ## Paso 5 · Probarlo (2 min)
 En Terminal, en la carpeta del proyecto (`cd` a tu copia de `auto-previas` y `git pull`). Pega estas **tres** líneas, una a una
