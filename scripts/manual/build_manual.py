@@ -244,6 +244,9 @@ al comprar en la tienda de Radical Records (<b>{buy}</b>).</p>
 {steps(["Copia la clave del correo de compra.", "Pégala en el campo de la pantalla de activación.",
         "Pulsa <b>Activar licencia</b>. Hace falta conexión a Internet solo en este momento.",
         "Listo: AutoPrevias se abre y ya no volverá a pedirte la clave."])}
+<h3>Cada clave es de su edición</h3>
+<p>La clave de <b>Basic</b> solo activa AutoPrevias Basic y la de <b>Plus</b> solo activa AutoPrevias Plus. Si usas un instalador que no corresponde a tu compra,
+la app te avisa y no se activa nada: descarga el instalador correcto en la tienda de Radical Records.</p>
 <h3>Una licencia = un equipo</h3>
 <p>Tu clave puede estar activa en <b>un solo ordenador a la vez</b>. Si ya la usas en uno, no se podrá activar en otro hasta que la
 desactives allí (<b>⚙ Licencia → Desactivar licencia en este equipo</b>, que la libera al instante) o pasen 15 días sin que ese equipo
@@ -576,6 +579,7 @@ def s_faq(ed: str, plus: bool, n: int) -> str:
 <tr><td>macOS dice que la app «no se puede abrir» o «está dañada»</td><td>Ejecuta en Terminal <code>xattr -cr /Applications/AutoPrevias.app</code> y vuelve a abrirla.</td></tr>
 <tr><td>Windows muestra «Windows protegió su PC»</td><td>Pulsa <b>Más información → Ejecutar de todas formas</b>.</td></tr>
 <tr><td>«Clave no válida» al activar</td><td>Comprueba que has copiado la clave completa, sin espacios, y que es de la edición {cap}. Necesitas Internet. Si persiste, escríbenos.</td></tr>
+<tr><td>«Esta clave es de AutoPrevias Basic/Plus y estás usando…»</td><td>Tu clave corresponde a la otra edición. Descarga e instala la edición que compraste; la clave no se queda ligada a ningún equipo.</td></tr>
 <tr><td>«Esta licencia ya está activada en otro equipo»</td><td>Tu clave solo puede estar en un ordenador. Desactívala en el otro (<b>⚙ Licencia → Desactivar licencia en este equipo</b>) o escribe a soporte si ese equipo ya no está disponible.</td></tr>
 <tr><td>Me dice que necesita conexión para verificar la licencia</td><td>Han pasado más de 14 días sin verificarla: conéctate a Internet y pulsa <b>Reintentar</b>. No hace falta volver a escribir la clave.</td></tr>
 <tr><td>El BPM detectado es el doble o la mitad</td><td>Haz doble clic en la tarjeta <b>BPM</b> y escribe el valor real.</td></tr>

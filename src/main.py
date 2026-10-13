@@ -442,6 +442,13 @@ def _check_license_on_startup() -> bool:
             from src.licensing.license import load_local as _ll
             edition = (_ll() or {}).get("edition", edition)
 
+        if status == LicenseStatus.REVOKED:
+            # Antes de pedir la clave, se confirma con el servidor: si la marca de revocada fue un error
+            # puntual (p. ej. una versión anterior con el servicio caído), se limpia sola y el usuario no escribe nada.
+            from src.licensing.license import reverify_if_due
+            if reverify_if_due(force=True) == "ok":
+                status, edition = check_license()
+
         if status in (LicenseStatus.VALID, LicenseStatus.GRACE):
             set_edition(edition)
             _start_background_reverify()

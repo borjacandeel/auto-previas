@@ -3,6 +3,15 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [3.5.1] - 2026-10-13
+
+### Añadido
+- **Cada clave solo sirve para su edición**: una clave de **Basic** no activa AutoPrevias **Plus**, y una de **Plus** no activa **Basic**. Si te equivocas de instalador, la app te lo dice con claridad y te indica dónde descargar el correcto, y la clave no queda ligada a ningún equipo.
+
+### Corregido
+- **Tu licencia ya no se marca como inválida si el servicio de licencias falla un momento**: antes, una caída puntual de Payhip al comprobar la licencia podía hacer que la app te pidiera la clave de nuevo. Ahora se reintenta sola más tarde y no tienes que escribir nada.
+- **Si una versión anterior había marcado tu licencia como no válida por error, se corrige sola al abrir la app** (se comprueba con el servidor antes de pedirte la clave).
+
 ## [3.5.0] - 2026-10-13
 
 ### Añadido

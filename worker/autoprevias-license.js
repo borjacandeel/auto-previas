@@ -9,11 +9,12 @@
  *   REQUIRE_DEVICE       (variable, opcional) "1" = rechaza las versiones antiguas de la app sin identificador de equipo
  *   STALE_DAYS           (variable, opcional) días sin verificar tras los que otro equipo puede tomar la licencia (15)
  *
- * Petición (POST JSON): { action, license_key, device_id, platform }
+ * Petición (POST JSON): { action, license_key, device_id, platform, app_edition? }
+ *   app_edition ("basic"|"plus"): edición del instalador; si la clave es de otra, responde code "wrong_edition" sin ligarla a ningún equipo
  *   action: "activate" | "verify" | "deactivate" | "reset" (reset requiere cabecera Authorization: Bearer ADMIN_TOKEN)
  * Respuesta (siempre JSON):
  *   { success: true, edition: "basic"|"plus" }
- *   { success: false, code: "invalid"|"in_use"|"not_owner"|"update_required"|"bad_request"|"unauthorized", error }
+ *   { success: false, code: "invalid"|"unavailable"|"wrong_edition"|"in_use"|"not_owner"|"update_required"|"bad_request"|"unauthorized", error }
  *
  * Privacidad: en KV solo se guarda el SHA-256 de la clave, el hash del equipo, la plataforma y fechas.
  * Nunca se guarda ni se devuelve el correo del comprador.
@@ -43,24 +44,32 @@ function safeEqual(a, b) {
   return r === 0;
 }
 
-/** Pregunta a Payhip. Devuelve "plus" | "basic" | null. Plus primero (como antes). */
+/**
+ * Pregunta a Payhip. Devuelve { edition: "plus"|"basic"|null, unavailable: bool }.
+ * `unavailable` = Payhip no dio una respuesta fiable (caída, 5xx, 429, 401/403, red): en ese caso NUNCA se
+ * dice "clave no válida" (la app revocaría una licencia buena), se responde "unavailable" y el cliente reintenta.
+ */
 async function payhipEdition(key, env) {
   // Cada edición admite varias product-secret-key separadas por comas (p. ej. producto antiguo + producto nuevo al relanzar la tienda)
   const list = (v) => String(v || "").split(",").map((x) => x.trim()).filter(Boolean);
   const products = [];
   for (const sec of list(env.PAYHIP_SECRET_PLUS)) products.push(["plus", sec]);
   for (const sec of list(env.PAYHIP_SECRET_BASIC)) products.push(["basic", sec]);
+  let unavailable = products.length === 0;
   for (const [edition, secret] of products) {
     try {
       const r = await fetch("https://payhip.com/api/v2/license/verify?license_key=" + encodeURIComponent(key), {
         headers: { "product-secret-key": secret, "User-Agent": "AutoPrevias-License-Worker/2.0" },
       });
-      if (!r.ok) continue;
+      if (!r.ok) {
+        if (![400, 404, 422].includes(r.status)) unavailable = true;   // respuesta definitiva de "no existe" vs. fallo del servicio
+        continue;
+      }
       const body = await r.json();
-      if (body && !body.error && body.data && body.data.enabled === true) return edition;
-    } catch (_) { /* siguiente producto */ }
+      if (body && !body.error && body.data && body.data.enabled === true) return { edition, unavailable: false };
+    } catch (_) { unavailable = true; /* siguiente producto */ }
   }
-  return null;
+  return { edition: null, unavailable };
 }
 
 export default {
@@ -85,8 +94,17 @@ export default {
     }
 
     // — Comprobación con Payhip (clave real, activa y de qué edición) —
-    const edition = await payhipEdition(key, env);
-    if (!edition) return fail("invalid", "Clave no válida");
+    const { edition, unavailable } = await payhipEdition(key, env);
+    if (!edition) {
+      if (unavailable) return fail("unavailable", "Servicio de licencias temporalmente no disponible; inténtalo más tarde", 503);
+      return fail("invalid", "Clave no válida");
+    }
+
+    // — La clave debe ser de la misma edición que la app instalada (Basic con Basic, Plus con Plus) —
+    const appEdition = String(body.app_edition || "").toLowerCase();
+    if (action !== "deactivate" && (appEdition === "basic" || appEdition === "plus") && appEdition !== edition) {
+      return json({ success: false, code: "wrong_edition", edition, error: "Esta clave es de otra edición" });
+    }
 
     // — Versiones antiguas de la app (sin identificador de equipo) —
     if (!device) {
@@ -125,7 +143,7 @@ export default {
           }));
         } catch (_) {
           // Cuota de KV agotada o fallo puntual: no se bloquea al cliente que ya está en regla
-          if (!mine) return fail("invalid", "Servicio de licencias temporalmente no disponible; inténtalo más tarde");
+          if (!mine) return fail("unavailable", "Servicio de licencias temporalmente no disponible; inténtalo más tarde", 503);
         }
       }
       return json({ success: true, edition });

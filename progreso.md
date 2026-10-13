@@ -78,6 +78,16 @@
 - **Pendientes anotados** (tabla en esta sesión): producción de los 11 vídeos del plan + pruebas del usuario + tareas opcionales.
 
 
+### Resumen de Trabajo — Sesión 53 (2026-10-13): prueba real de licencia + v3.5.1 (edición por clave y robustez)
+- **Prueba real de activación (OK)**: clave Plus comprada por el usuario; el Worker la reconoce (Plus), activa/verifica, rechaza un segundo equipo (`in_use`) y desactiva; el usuario la activó en su Mac (KV: edition plus, platform darwin) y la pantalla «Licencia» muestra «Licencia activa», válida sin conexión 14 días. La clave NO se escribe en ningún archivo.
+- **Hallazgo 1 (corregido)**: si Payhip fallaba (5xx/429/red), el Worker respondía `invalid` y la app marcaba la licencia como revocada (pedía la clave de nuevo). Ahora `payhipEdition` devuelve `{edition, unavailable}`; ante fallo del servicio el Worker responde `unavailable` (HTTP 503) y el cliente lo trata como «sin conexión» (reintenta, no revoca). Solo 400/404/422 de Payhip cuentan como «clave inexistente». También el fallo de cuota de KV devuelve `unavailable`.
+- **Hallazgo 2 (corregido)**: una clave Basic activaba la app Plus (BAKED_EDITION manda sobre la licencia) y la Plus en Basic se aceptaba. Ahora el cliente envía `app_edition` (edición grabada) y el Worker responde `wrong_edition` (sin ligar la clave a ningún equipo) cuando no coincide; el cliente además lo comprueba por su cuenta (libera la clave si el Worker fuera antiguo) y la reverificación revoca si la edición cambia. Mensajes ES/EN diferenciados (clave Basic en Plus / clave Plus en Basic).
+- **Autocuración**: si la licencia quedó marcada `revoked`, al arrancar se reverifica una vez con el servidor antes de pedir la clave (`src/main.py`).
+- **Worker desplegado** por la API de Cloudflare conservando bindings (`keep_bindings`: ADMIN_TOKEN, PAYHIP_*, LICENSES). Probado en vivo: clave Plus con `app_edition=basic` → `wrong_edition`; clave falsa → `invalid`; equipo ocupado → `in_use`.
+- Tests: +6 (`tests/test_license_device.py`): servicio no disponible no revoca, marca de revocada se limpia, edición cruzada en ambos sentidos, reverify con otra edición, Worker contiene las comprobaciones. Suite: 116 passed, 1 skipped; 2 fallos de `tests/test_structure.py` (`test_preview_plan_has_all_drops`, `test_drop_fullness_detects_loaded_drops`) **preexistentes** (fallan igual en el commit anterior; dependen del análisis de audio del entorno).
+- Manuales PDF regenerados (nueva sección «Cada clave es de su edición» + fila en solución de problemas). Versión 3.5.1.
+- Pendiente de cara al lanzamiento: recomendado `REQUIRE_DEVICE=1`; el usuario debe borrar el token de la API de Cloudflare al terminar (caduca 2027-10-13).
+
 ### Resumen de Trabajo — Sesión 52 (2026-10-13): secretos del Worker blindados
 
 - Con el token de API del usuario (solo en el chat) se convirtieron `ADMIN_TOKEN`, `PAYHIP_SECRET_BASIC` y `PAYHIP_SECRET_PLUS` del Worker `autoprevias-license` de **texto plano a `secret_text`** (PATCH de los ajustes del script reenviando los mismos valores; el endpoint de secretos falló porque el nombre ya estaba en uso como variable; sin cambios hasta entonces). Los valores nunca se imprimieron ni se escribieron en archivos.

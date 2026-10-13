@@ -96,8 +96,26 @@ MSG_NETWORK = "No se pudo conectar con el servidor de licencias. Comprueba tu co
 MSG_IN_USE = ("Esta licencia ya está activada en otro equipo. Desactívala allí (⚙ Licencia → Desactivar "
               "licencia en este equipo) o escribe a radicalrecordsvlc@gmail.com.")
 MSG_UPDATE = "Hay una versión nueva de AutoPrevias: actualiza para poder activar tu licencia."
+MSG_KEY_BASIC_IN_PLUS = ("Esta clave es de AutoPrevias Basic y estás usando AutoPrevias Plus. "
+                         "Descarga la edición Basic desde payhip.com/RADICALRECVLC o compra la licencia Plus.")
+MSG_KEY_PLUS_IN_BASIC = ("Esta clave es de AutoPrevias Plus y estás usando AutoPrevias Basic. "
+                         "Descarga la edición Plus desde payhip.com/RADICALRECVLC.")
+MSG_UNAVAILABLE = "El servicio de licencias no está disponible ahora mismo. Inténtalo de nuevo en unos minutos."
 _MESSAGES = {"invalid": MSG_INVALID, "network": MSG_NETWORK, "in_use": MSG_IN_USE,
-             "update_required": MSG_UPDATE, "not_owner": MSG_IN_USE}
+             "update_required": MSG_UPDATE, "not_owner": MSG_IN_USE, "unavailable": MSG_UNAVAILABLE}
+
+
+def _app_edition() -> str:
+    """Edición grabada en el instalador ('basic' | 'plus'), o '' al ejecutar desde el código fuente."""
+    try:
+        from src.config import _get_baked_edition
+        return _get_baked_edition() or ""
+    except Exception:
+        return ""
+
+
+def _wrong_edition_msg(key_edition: str) -> str:
+    return MSG_KEY_PLUS_IN_BASIC if key_edition == "plus" else MSG_KEY_BASIC_IN_PLUS
 
 
 def _request(payload: dict) -> tuple[dict | None, bool]:
@@ -130,18 +148,24 @@ def verify_online(license_key: str, action: str = "activate", device_id: str | N
     Envía la clave y el identificador del equipo al Worker.
     action: 'activate' (primera vez), 'verify' (reverificación periódica) o 'deactivate'.
     Retorna {'success': True, 'edition': ...} o {'success': False, 'code': ..., 'error': ...}
-    con code ∈ network | invalid | in_use | update_required | not_owner.
+    con code ∈ network | unavailable | invalid | in_use | update_required | not_owner.
     El Worker prueba Plus y Basic internamente usando las product-secret-keys.
     """
     from src.licensing.device import get_device_id
     payload = {"action": action, "license_key": license_key.strip().upper(),
                "device_id": device_id or get_device_id(), "platform": sys.platform}
+    app_ed = _app_edition()
+    if app_ed:
+        payload["app_edition"] = app_ed
     data, net_error = _request(payload)
     if net_error or not isinstance(data, dict):
         return {"success": False, "code": "network", "error": MSG_NETWORK}
     if data.get("success"):
         return {"success": True, "edition": data.get("edition", "basic"), "raw": data}
     code = str(data.get("code") or "invalid")
+    if code == "wrong_edition":
+        return {"success": False, "code": code, "edition": data.get("edition", ""),
+                "error": _wrong_edition_msg(str(data.get("edition", "")))}
     return {"success": False, "code": code, "error": _MESSAGES.get(code, MSG_INVALID)}
 
 
@@ -247,6 +271,11 @@ def activate(license_key: str) -> tuple[bool, str, str]:
     result = verify_online(license_key, action="activate")
     if result["success"]:
         edition = result["edition"]
+        app_ed = _app_edition()
+        if app_ed and edition != app_ed:
+            # Worker antiguo (sin comprobación de edición): se libera la clave y se rechaza
+            verify_online(license_key, action="deactivate")
+            return False, "", _wrong_edition_msg(edition)
         save_local(license_key, edition)
         return True, edition, ""
     return False, "", result.get("error", MSG_INVALID)
@@ -277,13 +306,15 @@ def reverify_if_due(force: bool = False) -> str:
     if not key:
         return "legacy"
     res = verify_online(key, action="verify", device_id=dev)
+    if res["success"] and _app_edition() and res["edition"] != _app_edition():
+        res = {"success": False, "code": "wrong_edition"}
     if res["success"]:
         local.update({"verified_at": now, "last_check": now, "edition": res["edition"]})
         local.pop("revoked", None)
         _write_local(local)
         return "ok"
     code = res.get("code")
-    if code in ("in_use", "invalid"):
+    if code in ("in_use", "invalid", "wrong_edition"):
         local["revoked"] = code
         _write_local(local)
         return "revoked"

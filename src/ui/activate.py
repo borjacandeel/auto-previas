@@ -135,6 +135,10 @@ class ActivationDialog(QDialog):
             msg = ("Esta licencia se ha activado en otro equipo.\n"
                    "Solo puede estar activa en un equipo a la vez.")
             color = RED
+        elif self._reason == "wrong_edition":
+            msg = ("Tu clave es de otra edición de AutoPrevias (Basic o Plus).\n"
+                   "Usa la edición que corresponde a tu compra.")
+            color = RED
         elif self._reason:
             msg = "Tu licencia ya no es válida.\nIntroduce una clave válida para continuar."
             color = RED

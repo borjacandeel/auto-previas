@@ -133,6 +133,57 @@ def test_reverify_sin_red_no_revoca_y_reintenta(monkeypatch):
     assert "revoked" not in d and d["last_check"] == antiguo          # se reintentará en el próximo arranque
 
 
+def test_reverify_servicio_no_disponible_no_revoca(monkeypatch):
+    # El Worker responde "unavailable" cuando Payhip falla: la licencia buena nunca se marca como revocada
+    L.save_local(KEY, "plus")
+    _fake_request(monkeypatch, {"success": False, "code": "unavailable"})
+    assert L.reverify_if_due(force=True) == "network"
+    assert "revoked" not in L.load_local() and L.check_license()[0] == L.LicenseStatus.VALID
+    assert L.activate(KEY)[2] == L.MSG_UNAVAILABLE
+
+
+def test_marca_de_revocada_se_limpia_al_verificar_bien(monkeypatch):
+    L.save_local(KEY, "plus")
+    d = L.load_local(); d["revoked"] = "invalid"; L._write_local(d)
+    assert L.check_license()[0] == L.LicenseStatus.REVOKED
+    _fake_request(monkeypatch, {"success": True, "edition": "plus"})
+    assert L.reverify_if_due(force=True) == "ok"
+    assert L.check_license()[0] == L.LicenseStatus.VALID
+
+
+def test_worker_distingue_caida_de_payhip_de_clave_invalida():
+    js = (Path(__file__).resolve().parents[1] / "worker" / "autoprevias-license.js").read_text(encoding="utf-8")
+    assert 'fail("unavailable"' in js and "unavailable" in js.split("async function payhipEdition")[1].split("export default")[0]
+
+
+def test_clave_de_otra_edicion_se_rechaza(monkeypatch):
+    # app Plus + clave Basic y app Basic + clave Plus: nunca se guarda ni se activa
+    for app_ed, key_ed, msg in (("plus", "basic", L.MSG_KEY_BASIC_IN_PLUS), ("basic", "plus", L.MSG_KEY_PLUS_IN_BASIC)):
+        monkeypatch.setattr(L, "_app_edition", lambda e=app_ed: e)
+        L.clear_local()
+        enviados = _fake_request(monkeypatch, {"success": True, "edition": key_ed})   # Worker antiguo: acepta
+        ok, ed, err = L.activate(KEY)
+        assert not ok and err == msg and L.load_local() is None
+        assert enviados[0]["app_edition"] == app_ed and enviados[-1]["action"] == "deactivate"   # libera la clave
+        _fake_request(monkeypatch, {"success": False, "code": "wrong_edition", "edition": key_ed})   # Worker nuevo
+        assert L.activate(KEY)[2] == msg
+    monkeypatch.setattr(L, "_app_edition", lambda: "plus")
+    _fake_request(monkeypatch, {"success": True, "edition": "plus"})
+    assert L.activate(KEY)[:2] == (True, "plus")                      # misma edición: sí
+
+
+def test_reverify_con_otra_edicion_revoca(monkeypatch):
+    L.save_local(KEY, "plus")
+    monkeypatch.setattr(L, "_app_edition", lambda: "plus")
+    _fake_request(monkeypatch, {"success": True, "edition": "basic"})
+    assert L.reverify_if_due(force=True) == "revoked"
+
+
+def test_worker_comprueba_la_edicion_de_la_app():
+    js = (Path(__file__).resolve().parents[1] / "worker" / "autoprevias-license.js").read_text(encoding="utf-8")
+    assert "wrong_edition" in js and "app_edition" in js
+
+
 def test_reverify_con_licencia_antigua_no_puede():
     L._write_local({"key_hash": "x", "edition": "basic", "verified_at": 1, "last_check": 1})
     assert L.reverify_if_due() == "legacy"
