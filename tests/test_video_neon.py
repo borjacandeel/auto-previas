@@ -70,3 +70,41 @@ def test_vista_previa_devuelve_fotogramas_y_audio(tmp_path):
         assert h == 240 and (w < h) == (asp == "9:16")
         assert len(res["frames"]) >= 3 * 10 + 10          # muestra + cierre
         assert Path(res["audio"]).exists()
+
+
+def _rend(aspect="9:16", **kw):
+    return vn._Renderer(_analysis(40), None, "T", "A", 120.0, "1A", aspect, "crimson", "", "PREVIA EXCLUSIVA", 0.25, **kw)
+
+
+@pytest.mark.parametrize("aspect", list(vn.ASPECTS))
+def test_marca_de_agua_basic_abajo_a_la_derecha(aspect):
+    """La edición Basic dibuja una marca pequeña y translúcida solo en la esquina inferior derecha."""
+    sin, con = _rend(aspect), _rend(aspect, watermark=True)
+    a = np.asarray(sin.frame(20, 0.6), np.int16)
+    b = np.asarray(con.frame(20, 0.6), np.int16)
+    diff = np.abs(a - b).sum(axis=2) > 0
+    ys, xs = np.nonzero(diff)
+    H, W = diff.shape
+    assert diff.any()
+    assert xs.min() > W * 0.45 and ys.min() > H * 0.90          # solo abajo a la derecha
+    assert diff.sum() < W * H * 0.02                              # pequeña
+    assert con.wm_layer.getchannel("A").getextrema()[1] < 140     # translúcida
+
+
+def test_final_elegible_en_plus_y_cierre_obligatorio_en_basic():
+    assert _rend(end_mode="fade").end_mode == "fade"
+    assert _rend(end_mode="none").end_mode == "none"
+    assert _rend(end_mode="raro").end_mode == "brand"
+    assert _rend(watermark=True, end_mode="none").end_mode == "brand"     # Basic no puede quitar el cierre
+
+
+def test_final_fundido_a_negro_y_sin_cierre():
+    n = 330   # 11 s a 30 fps
+    an = vn.AudioAnalysis(duration=n / vn.FPS, n_frames=n, bars=np.full((n, 44), 0.5, dtype=np.float32),
+                          kick=np.zeros(n, dtype=np.float32), energy=np.full(n, 0.5, dtype=np.float32), drops=[])
+    mk = lambda m: vn._Renderer(an, None, "T", "A", 120.0, "1A", "1:1", "crimson", "", "PREVIA EXCLUSIVA", 0.25, end_mode=m)
+    fade, none, brand = mk("fade"), mk("none"), mk("brand")
+    t_end = an.duration - 0.05
+    assert np.asarray(fade.frame(n - 2, t_end)).mean() < 8                 # casi negro
+    assert np.asarray(none.frame(n - 2, t_end)).mean() > 25                # sigue la animación
+    assert np.abs(np.asarray(brand.frame(n - 2, t_end), np.int16) - np.asarray(brand.outro, np.int16)).mean() < 6   # cierre de marca

@@ -3,6 +3,16 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [3.5.0] - 2026-10-13
+
+### Añadido
+- **La edición Basic también genera vídeo animado**: con las plantillas Radical Neón (formatos 9:16, 1:1 y 16:9, las cinco paletas, título propio y vista previa), hecho a partir de la previa en MP3. En Basic el vídeo lleva siempre una **marca de agua pequeña y translúcida** abajo a la derecha («Generado por Radical Records · AutoPrevias Basic») y termina con el cierre «Generado por AutoPrevias · Radical Records» con el enlace de compra.
+- **En Plus, el final del vídeo a tu elección**: nuevo selector «Final» con tres opciones: cierre con la firma de AutoPrevias y el enlace, **fundido a negro** o **sin cierre** (corte seco). Tu elección se recuerda y se guarda en los presets de estilo.
+
+### Cambiado
+- La edición **Plus** exporta el vídeo **sin marca de agua**.
+- Los manuales PDF de Basic y Plus explican las diferencias del vídeo entre ediciones.
+
 ## [3.4.0] - 2026-10-13
 
 ### Añadido

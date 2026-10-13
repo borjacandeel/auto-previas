@@ -179,9 +179,9 @@ def indice(plus: bool) -> str:
 
 def s_intro(ed: str, plus: bool) -> str:
     inc = ("Exportación en <b>MP3 320 kbps</b> con metadatos, análisis de BPM y tonalidad, previas de 15/30/60/120 s, "
-           "forma de onda con cortes ajustables, reproductor A/B y actualizaciones automáticas." if not plus else
+           "<b>vídeo animado Radical Neón</b> (con marca de agua), forma de onda con cortes ajustables, reproductor A/B y actualizaciones automáticas." if not plus else
            "Todo lo de Basic y además: exportación <b>WAV 24 bit / FLAC / MP3</b>, editor avanzado de cortes y BPM, efectos de estudio, "
-           "<b>Voice Drop</b>, <b>Modo promo antifugas</b>, firma y carátula, presets propios, historial, lote, carpeta vigilada y vídeo animado Radical Neón.")
+           "<b>Voice Drop</b>, <b>Modo promo antifugas</b>, firma y carátula, presets propios, historial, lote, carpeta vigilada y vídeo animado Radical Neón <b>sin marca de agua</b> y con el final a tu elección.")
     return f"""
 <section><h1>1. Qué es AutoPrevias</h1>
 <p><b>AutoPrevias</b> es la herramienta de <b>Radical Records</b> para crear <b>previas profesionales</b> de tus temas. Arrastras un track, la
@@ -366,7 +366,34 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
                 "<li><b>FLAC</b> — sin pérdidas y más pequeño que el WAV.</li>"
                 "<li><b>Vídeo animado Radical Neón</b> — MP4 con tu carátula, analizador de espectro y destellos al ritmo del bombo, en formato vertical 9:16 (TikTok / Reels), cuadrado 1:1 o horizontal 16:9 (YouTube). Eliges la paleta de color y un texto de banner.</li>")
     else:
-        fmts = "<li><b>MP3 320 kbps</b> — máxima calidad MP3, con metadatos, compatible con cualquier reproductor.</li>"
+        fmts = ("<li><b>MP3 320 kbps</b> — máxima calidad MP3, con metadatos, compatible con cualquier reproductor.</li>"
+                "<li><b>Vídeo animado Radical Neón</b> — MP4 hecho a partir de tu previa en MP3, en 9:16, 1:1 o 16:9. En la edición Basic lleva una marca de agua pequeña y el cierre «Generado por AutoPrevias · Radical Records».</li>")
+    banner_txt = " y un <b>texto de banner</b> (por ejemplo, <i>RADICAL RECORDS · PROMO EXCLUSIVA</i>)" if plus else ""
+    video_section = (
+        "<h3>Vídeo animado Radical Neón</h3>"
+        "<p>Marca <b>🎬 Vídeo animado</b> y se exportará, junto al audio, un MP4 animado al estilo Radical Records: tu <b>carátula</b> con resplandor neón, "
+        "el título, artista, BPM y tonalidad, un <b>analizador de espectro</b> que baila con la música y destellos que golpean con el bombo, con un golpe "
+        "especial cuando entra el drop. Elige el formato —<b>9:16</b> (TikTok / Reels), <b>1:1</b> (Instagram) o <b>16:9</b> (YouTube)—, la <b>paleta de color</b>"
+        + banner_txt + ".</p>"
+        "<p>En el campo <b>Título</b> escribes el nombre que sale en el centro del vídeo; si lo dejas vacío se usa el nombre de la pista. Pulsa "
+        "<b>👁 Vista previa</b> para ver unos segundos del vídeo (con sonido y a baja resolución) con tus ajustes antes de generarlo. Como el vídeo se hace "
+        "a partir de la previa, al marcarlo el <b>MP3 se exporta siempre</b>.</p>"
+    )
+    if plus:
+        video_section += (
+            "<h3>El final del vídeo</h3>"
+            "<p>La edición <b>Plus</b> no lleva marca de agua y te deja elegir cómo termina el vídeo con el selector <b>Final</b>:</p>"
+            "<ul><li><b>Firma AutoPrevias + enlace</b> — cierre con el logo de Radical Records, «Generado por AutoPrevias · Radical Records» y el enlace de compra.</li>"
+            "<li><b>Fundido a negro</b> — la imagen se oscurece suavemente al terminar.</li>"
+            "<li><b>Sin cierre</b> — el vídeo acaba cortado a la vez que el audio.</li></ul>"
+        )
+    else:
+        video_section += (
+            "<h3>Marca de agua (edición Basic)</h3>"
+            "<p>En la edición <b>Basic</b> el vídeo lleva siempre una <b>marca de agua pequeña y translúcida</b> en la esquina inferior derecha "
+            "(«Generado por Radical Records · AutoPrevias Basic») y termina con el cierre «Generado por AutoPrevias · Radical Records» con el enlace de compra. "
+            "No se pueden quitar: la edición <b>Plus</b> elimina la marca de agua y te permite elegir el final del vídeo.</p>"
+        )
     return f"""
 <section><h1>7. Ajustes de exportación</h1>
 {fig(im.get('z_export',''), 'Panel de exportación' + (' de la edición Plus' if plus else ' de la edición Basic'))}
@@ -374,12 +401,9 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
 <p>Por defecto, <code>PREVIA - nombre del track</code>. Escribe el que prefieras; AutoPrevias añade la extensión según el formato.</p>
 <h3>Formatos de salida</h3>
 <ul>{fmts}</ul>
-{'''<h3>Vídeo animado Radical Neón</h3>
-<p>Marca <b>🎬 Vídeo animado</b> y se exportará, junto al audio, un MP4 animado al estilo Radical Records: tu <b>carátula</b> con resplandor neón, el título, artista, BPM y tonalidad, un <b>analizador de espectro</b> que baila con la música y destellos que golpean con el bombo, con un golpe especial cuando entra el drop. Elige el formato —<b>9:16</b> (TikTok / Reels), <b>1:1</b> (Instagram) o <b>16:9</b> (YouTube)—, la <b>paleta de color</b> y un <b>texto de banner</b> (por ejemplo, <i>RADICAL RECORDS · PROMO EXCLUSIVA</i>).</p>
-<p>En el campo <b>Título</b> escribes el nombre que sale en el centro del vídeo; si lo dejas vacío se usa el nombre de la pista. El vídeo termina con el logo de Radical Records, la frase «Generado por AutoPrevias · Radical Records» y el enlace de compra en Payhip.</p>
-<p>Pulsa <b>👁 Vista previa</b> para ver unos segundos del vídeo (con sonido y a baja resolución) con tus ajustes antes de generarlo. Como el vídeo se hace a partir de la previa, al marcarlo el <b>MP3 se exporta siempre</b>.</p>
-''' if plus else ''}
-{'' if plus else tip('La edición Plus añade WAV 24 bit, FLAC, vídeo animado, firma y carátula personalizadas, efectos de estudio y mucho más. Mira el capítulo «Pasar a la edición Plus».')}
+{video_section}
+
+{'' if plus else tip('La edición Plus añade WAV 24 bit, FLAC, vídeo animado sin marca de agua y con el final a tu elección, firma y carátula personalizadas, efectos de estudio y mucho más. Mira el capítulo «Pasar a la edición Plus».')}
 <h3>Carpeta de destino</h3>
 <p>Pulsa <b>Cambiar</b> para elegir dónde se guardan las previas y <b>Abrir</b> para ver esa carpeta en el Finder / Explorador. La carpeta se recuerda para la próxima vez.</p>
 <h3>Seed y «Regenerar con seed»</h3>
@@ -495,7 +519,7 @@ def s_basic_upsell() -> str:
 <section><h1>9. Pasar a la edición Plus</h1>
 <p>Si necesitas más control, la <b>edición Plus</b> de AutoPrevias añade:</p>
 <div class="cols">
-<div class="card"><h4>🎚 Más formatos</h4><p>Exportación <b>WAV 24 bit</b> y <b>FLAC</b>, y <b>vídeo animado</b> (MP4 9:16, 1:1 o 16:9) para TikTok, Reels y YouTube.</p></div>
+<div class="card"><h4>🎚 Más formatos</h4><p>Exportación <b>WAV 24 bit</b> y <b>FLAC</b>, y <b>vídeo animado sin marca de agua</b> (MP4 9:16, 1:1 o 16:9) con el final a tu elección: firma AutoPrevias, fundido a negro o sin cierre.</p></div>
 <div class="card"><h4>✂ Editor avanzado</h4><p>Edita los cortes a mano, controla la variación de BPM y consulta la estructura musical detallada.</p></div>
 <div class="card"><h4>🎛 Efectos de estudio</h4><p>Flanger, Filter Sweep y Master LUFS (−9 LUFS, nivel de club).</p></div>
 <div class="card"><h4>🎙 Voice Drop</h4><p>Superpón tu firma de voz o jingle en el momento exacto.</p></div>

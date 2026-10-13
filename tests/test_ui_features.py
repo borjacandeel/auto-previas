@@ -281,3 +281,38 @@ def test_boton_vista_previa_presente(monkeypatch):
     assert p._btn_vprev.text().endswith("Vista previa")
     p._source_path = ""
     p._open_video_preview()          # sin pista cargada no hace nada ni falla
+
+
+def test_basic_tiene_video_con_marca_y_sin_opciones_plus(monkeypatch):
+    p = _panel(monkeypatch, "basic")
+    assert not p._chk_video.isHidden()                 # Basic ya puede generar vídeo
+    p._chk_video.setChecked(True)
+    assert p._row_video_title_widget.isVisibleTo(p) and p._lbl_vbasic.isVisibleTo(p)
+    assert not p._combo_vend.isVisibleTo(p) and not p._edit_promo.isVisibleTo(p)
+    o = p.get_export_options()
+    assert o["export_video"] and o["export_mp3"] and o["video_end"] == "brand"
+
+
+def test_plus_elige_el_final_del_video(monkeypatch):
+    p = _panel(monkeypatch, "plus")
+    p._chk_video.setChecked(True)
+    assert p._combo_vend.isVisibleTo(p) and not p._lbl_vbasic.isVisibleTo(p)
+    assert p.get_export_options()["video_end"] == "brand"
+    p._set_combo_by_data(p._combo_vend, "fade")
+    assert p.get_export_options()["video_end"] == "fade"
+
+
+def test_export_basic_marca_de_agua_y_plus_no(tmp_path, monkeypatch):
+    import src.engine.export as E
+    import src.config as C
+    import src.engine.video_neon as VN
+    seen = {}
+    monkeypatch.setattr(VN, "render_neon_video", lambda **kw: (seen.update(kw), Path(kw["output_video_path"]).write_bytes(b"x")))
+    for ed, wm, end in (("basic", True, "brand"), ("plus", False, "fade")):
+        seen.clear()
+        monkeypatch.setattr(C, "get_edition", lambda ed=ed: ed)
+        paths = {"wav": tmp_path / f"PREVIA - X{ed}.wav", "video": tmp_path / f"PREVIA - X{ed}.mp4"}
+        E.export_files(np.zeros((2, 4410), dtype="float32"), 44100, paths,
+                       metadata={"video_end": "fade", "video_promo_text": "BANNER"})
+        assert seen["watermark"] is wm and seen["end_mode"] == end
+        assert (seen["promo_text"] == "") == (ed == "basic")           # Basic no pone banner propio

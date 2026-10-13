@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v3.4.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v3.5.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -218,7 +218,8 @@ Cada clave se puede usar en **un solo equipo a la vez**. Si ya está activa en u
 | Modo promo antifugas | ❌ | ✅ |
 | Exportación WAV 24-bit | ❌ | ✅ |
 | Exportación FLAC y AIFF | ❌ | ✅ |
-| Vídeo social MP4 (TikTok / Reels) | ❌ | ✅ |
+| Vídeo animado MP4 (TikTok / Reels / YouTube), con vista previa | ✅ con marca de agua | ✅ sin marca de agua |
+| Final del vídeo a elegir (firma, fundido a negro o sin cierre) | ❌ (cierre con firma fijo) | ✅ |
 | Firma vocal / Voice Drop | ❌ | ✅ |
 | Sección de Firma y Carátula (Branding) | ❌ | ✅ |
 | Efectos de estudio (Flanger, Filter Sweep, Master LUFS) | ❌ | ✅ |
@@ -271,7 +272,10 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v3.4.0] — 2026-10-13 (Vista previa del vídeo)
+#### 🟢 [v3.5.0] — 2026-10-13 (Vídeo también en Basic)
+- **Basic genera vídeo animado** (plantillas Neón, desde el MP3) con una **marca de agua pequeña** «Generado por Radical Records · AutoPrevias Basic» y cierre con firma. **Plus** lo exporta **sin marca de agua** y deja **elegir el final**: firma AutoPrevias, fundido a negro o sin cierre. Detalle en el [CHANGELOG](CHANGELOG.md).
+
+#### [v3.4.0] — 2026-10-13 (Vista previa del vídeo)
 - Botón **«👁 Vista previa»**: ves unos segundos del vídeo con sonido antes de generarlo. Al marcar el vídeo, el **MP3 se exporta siempre** (sin previa no hay vídeo). Detalle en el [CHANGELOG](CHANGELOG.md).
 
 #### [v3.3.1] — 2026-10-13 (Título del vídeo elegible)

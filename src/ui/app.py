@@ -253,6 +253,7 @@ class ExportWorker(QThread):
             metadata["video_palette"]    = self.cfg.get("video_palette", "crimson")
             metadata["video_promo_text"] = self.cfg.get("video_promo_text", "RADICAL RECORDS · PROMO EXCLUSIVA")
             metadata["video_title"]      = self.cfg.get("video_title", "")
+            metadata["video_end"]        = self.cfg.get("video_end", "brand")
             metadata["aspect_ratio"]     = self.cfg.get("aspect_ratio", "9:16")
             if self.cfg.get("mp3_kbps"):
                 metadata["mp3_kbps"] = int(self.cfg["mp3_kbps"])
@@ -1374,6 +1375,8 @@ class BrandingCard(QFrame):
                 c["video_palette"] = parent._combo_video_pal.currentData()
             if hasattr(parent, "_combo_aspect"):
                 c["aspect_ratio"]  = parent._combo_aspect.currentData()
+            if hasattr(parent, "_combo_vend"):
+                c["video_end"]     = parent._combo_vend.currentData()
             if hasattr(parent, "_chk_fx_flanger"):
                 c["fx_flanger"]      = parent._chk_fx_flanger.isChecked()
                 c["fx_filter_sweep"] = parent._chk_fx_filter.isChecked()
@@ -1896,6 +1899,16 @@ class ResultPanel(QWidget):
         self._edit_vtitle.setFixedHeight(24)
         self._edit_vtitle.setStyleSheet(_input_style())
         self._edit_vtitle.setToolTip("Nombre que aparece en el centro del vídeo. Si lo dejas vacío se usa el nombre de la pista (sin «PREVIA - »).")
+        self._combo_vend = QComboBox()
+        self._combo_vend.setFixedHeight(24)
+        self._combo_vend.setStyleSheet(_input_style())
+        self._combo_vend.addItem("✨ Final: firma AutoPrevias + enlace", "brand")
+        self._combo_vend.addItem("🌑 Final: fundido a negro", "fade")
+        self._combo_vend.addItem("✂ Final: sin cierre (corte seco)", "none")
+        self._combo_vend.setToolTip("Cómo termina el vídeo: con el cierre «Generado por AutoPrevias · Radical Records» y el enlace, con un fundido a negro o sin cierre.")
+        self._lbl_vbasic = QLabel("Marca de agua incluida · se quita con Plus")
+        self._lbl_vbasic.setStyleSheet("color:#c084fc; font-size:10px; font-weight:600; background: transparent; border: none;")
+        self._lbl_vbasic.setToolTip("En la edición Basic el vídeo lleva una marca de agua pequeña («Generado por Radical Records · AutoPrevias Basic») y el cierre con firma. La edición Plus no lleva marca de agua y te deja elegir el final.")
         self._btn_vprev = QPushButton("👁 Vista previa")
         self._btn_vprev.setFixedHeight(24)
         self._btn_vprev.setCursor(Qt.PointingHandCursor)
@@ -1904,6 +1917,8 @@ class ResultPanel(QWidget):
         self._btn_vprev.clicked.connect(self._open_video_preview)
         row_vt.addWidget(lbl_vt)
         row_vt.addWidget(self._edit_vtitle, stretch=1)
+        row_vt.addWidget(self._combo_vend)
+        row_vt.addWidget(self._lbl_vbasic)
         row_vt.addWidget(self._btn_vprev)
         self._row_video_title_widget.setVisible(False)
         exp_lay.addWidget(self._row_video_title_widget)
@@ -2279,6 +2294,8 @@ class ResultPanel(QWidget):
                 if self._combo_video_pal.itemData(i) == persisted_cfg["video_palette"]:
                     self._combo_video_pal.setCurrentIndex(i)
                     break
+        if hasattr(self, "_combo_vend") and persisted_cfg.get("video_end"):
+            self._set_combo_by_data(self._combo_vend, persisted_cfg["video_end"])
         if hasattr(self, "_combo_aspect") and persisted_cfg.get("aspect_ratio"):
             for i in range(self._combo_aspect.count()):
                 if self._combo_aspect.itemData(i) == persisted_cfg["aspect_ratio"]:
@@ -2467,6 +2484,7 @@ class ResultPanel(QWidget):
             "video_palette": video_pal,
             "video_promo_text": promo_txt,
             "video_title": vtitle,
+            "video_end": self._combo_vend.currentData() if (hasattr(self, "_combo_vend") and get_edition() == "plus") else "brand",
             "aspect_ratio": aspect,
             "voice_drop_enabled": bool(self._voice_drop_path),
             "voice_drop_path": self._voice_drop_path,
@@ -2523,6 +2541,8 @@ class ResultPanel(QWidget):
             aspect_ratio=opts.get("aspect_ratio", "9:16"), palette_key=opts.get("video_palette", "crimson"),
             promo_text=opts.get("video_promo_text", ""), kicker="EXCLUSIVE PREVIEW" if en else "PREVIA EXCLUSIVA",
             start_sec=start,
+            watermark=(get_edition() != "plus"),
+            end_mode=opts.get("video_end", "brand"),
         )
         dlg = VideoPreviewDialog(params, self)
         dlg.setAttribute(Qt.WA_DeleteOnClose, True)
@@ -2590,7 +2610,7 @@ class ResultPanel(QWidget):
                           "time_sec": self._voice_drop_time_sec},
                 "promo": {"enabled": self._chk_promo.isChecked(), "interval_sec": int(self._spin_promo.value())},
                 "video": {"palette": self._combo_video_pal.currentData(), "aspect": self._combo_aspect.currentData(),
-                          "banner": self._edit_promo.text().strip()},
+                          "banner": self._edit_promo.text().strip(), "end": self._combo_vend.currentData()},
             }
         if signature and hasattr(self, "_branding_card"):
             md = self._branding_card.get_metadata()
@@ -2645,6 +2665,8 @@ class ResultPanel(QWidget):
             self._set_combo_by_data(self._combo_video_pal, vid.get("palette"))
             self._set_combo_by_data(self._combo_aspect, vid.get("aspect"))
             self._edit_promo.setText(vid.get("banner", ""))
+            if plus and vid.get("end"):
+                self._set_combo_by_data(self._combo_vend, vid.get("end"))
         promo = st.get("promo") or {}
         if plus and promo:
             self._spin_promo.setValue(int(promo.get("interval_sec", 20)))
@@ -3794,12 +3816,13 @@ class ResultPanel(QWidget):
         if not plus:
             self._chk_wav.setChecked(False)
 
-        # Vídeo solo en Plus
-        self._chk_video.setVisible(plus)
-        # _row_video_widget ya empieza oculto; si básico, aseguramos que siga así
+        # Vídeo: Basic lo tiene con marca de agua + cierre con firma obligatorios; Plus sin marca y con final a elegir
+        self._chk_video.setVisible(True)
+        self._combo_vend.setVisible(plus)
+        self._lbl_vbasic.setVisible(not plus)
+        self._edit_promo.setVisible(plus)          # el banner propio es de Plus
         if not plus:
-            self._chk_video.setChecked(False)
-            self._row_video_widget.setVisible(False)
+            self._edit_promo.clear()
 
         # Siempre modo Vinyl — _speed_mode ya es "vinyl", sin combo que gestionar.
 

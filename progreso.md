@@ -67,6 +67,16 @@
 
 ---
 
+### Resumen de Trabajo — Sesión 46 (2026-10-13): v3.5.0 — vídeo también en Basic (marca de agua) y final elegible en Plus
+
+- **Petición del usuario**: vídeo en Basic (a partir del MP3 y con las plantillas) con marca de agua pequeña, translúcida, abajo a la derecha («Generado por Radical Records · AutoPrevias Basic») obligatoria; Plus sin marca de agua y con elección del final del vídeo (firma AutoPrevias / fundido a negro…). El mensaje del usuario llegó cortado («…o que se haga oscuro y au»); se implementó una tercera opción, «sin cierre (corte seco)», y se avisó al usuario para que corrija si quería otra cosa.
+- **Motor** (`video_neon.py`): `_Renderer(watermark, end_mode)`; `_watermark_layer()` (texto bold ~2,6 % del lado menor, alfa 42 %, esquina inferior derecha sobre la barra de progreso, EN/ES según idioma); `end_mode`: `brand` (cierre con logo + «Generado por AutoPrevias · Radical Records» + enlace Payhip), `fade` (fundido a negro 1,6 s), `none`. Con marca de agua el cierre `brand` es obligatorio. `render_neon_video` y `render_preview` aceptan ambos parámetros (la vista previa añade el final correspondiente).
+- **Garantía en el motor** (`export.py`): la edición se lee con `get_edition()` (BAKED_EDITION inmutable en los binarios): Basic ⇒ `watermark=True`, `end_mode="brand"` y sin banner propio, aunque el JSON de config diga otra cosa.
+- **UI** (`app.py`): el vídeo ya no se oculta en Basic; selector `_combo_vend` («Final») solo en Plus (persistido en `video_end` y en los presets de estilo) y aviso «Marca de agua incluida · se quita con Plus» en Basic; el banner propio queda solo para Plus; el MP3 sigue bloqueado con el vídeo. i18n EN añadido.
+- **Pruebas**: marca de agua (solo esquina inferior derecha, pequeña y translúcida, 3 formatos), finales `fade`/`none`/`brand`, cierre obligatorio en Basic, UI de Basic y Plus, exportación con/sin marca según edición. Selftest sin cambios.
+- **Docs/PDF**: README (tabla de ediciones), CHANGELOG [3.5.0], manual Basic y Plus (sección de vídeo, marca de agua, final del vídeo, capítulo «Pasar a Plus»), plan de vídeos (#3 y #6). **A actualizar a mano por el usuario**: las descripciones de los productos Basic y Plus en Payhip (Basic ahora incluye vídeo con marca de agua).
+- **Pendientes anotados** (tabla en esta sesión): producción de los 11 vídeos del plan + pruebas del usuario + tareas opcionales.
+
 ### Resumen de Trabajo — Sesión 45 (2026-10-13): v3.4.0 — vista previa del vídeo, MP3 siempre con vídeo y plan de 6 vídeos de marketing
 
 - **MP3 siempre con el vídeo (petición del usuario)**: `ResultPanel._sync_video_mp3()` marca y bloquea la casilla MP3 mientras «Vídeo animado» está marcado (también tras alternar el modo promo); `get_export_options()["export_mp3"]` es verdadero si hay vídeo; `MainWindow._generate` lo fuerza; el motor lo garantiza en `ExportWorker` (`export_mp3 or export_video`) y en el Lote (`batch.py`: opción, bloqueo de la casilla y `output_paths`).

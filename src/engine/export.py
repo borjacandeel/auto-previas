@@ -736,12 +736,25 @@ def export_files(
             palette_key=str(meta.get("video_palette") or "crimson"),
             promo_text=str(meta.get("video_promo_text") or ""),
         )
+        # Edición Basic: marca de agua obligatoria + cierre con firma + sin banner propio.
+        # Edición Plus: sin marca de agua y el cierre lo elige el autor («brand» | «fade» | «none»).
+        try:
+            from src.config import get_edition as _get_ed
+            _basic = _get_ed() != "plus"
+        except Exception:
+            _basic = False
+        _end_mode = str(meta.get("video_end") or "brand")
+        if _basic:
+            common["promo_text"] = ""
+            _end_mode = "brand"
         try:
             from src.engine.video_neon import render_neon_video
             render_neon_video(
                 **common,
                 kicker="EXCLUSIVE PREVIEW" if _lang == "en" else "PREVIA EXCLUSIVA",
                 progress_cb=lambda p, m: _prog(90 + int(p * 0.09), m),
+                watermark=_basic,
+                end_mode=_end_mode,
             )
             generated.append(video_target)
         except Exception as e_neon:

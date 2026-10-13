@@ -259,8 +259,11 @@ def _layout(aspect: str) -> _Layout:
 
 class _Renderer:
     def __init__(self, an: AudioAnalysis, cover_path, title, artist, bpm, key_str, aspect, palette_key, promo_text,
-                 kicker, scale: float):
+                 kicker, scale: float, watermark: bool = False, end_mode: str = "brand"):
         self.an = an
+        self.watermark = bool(watermark)
+        # Edición Basic (marca de agua): el cierre con firma es obligatorio
+        self.end_mode = "brand" if self.watermark or end_mode not in ("brand", "fade", "none") else end_mode
         self.aspect = aspect
         self.L = _layout(aspect)
         self.P, self.S, self.F = NEON_PALETTES.get(palette_key, NEON_PALETTES["crimson"])
@@ -315,6 +318,7 @@ class _Renderer:
         self._stack_texts()
         self.banner = self._banner(self.promo_text) if self.promo_text else None
         self.outro = self._outro()
+        self.wm_layer = self._watermark_layer() if self.watermark else None
         self.spark = {k: _glow_sprite(r, self.F if k == "hot" else self.P) for k, r in (("sm", 7), ("md", 12), ("hot", 18))}
         rng = np.random.default_rng(11)
         self.parts = [(rng.uniform(0, W), rng.uniform(0, H), rng.uniform(40, 150), rng.uniform(0.4, 1.0), rng.uniform(0, 6.28))
@@ -409,6 +413,17 @@ class _Renderer:
         im.paste(t2, (px + 35, py + 18), t2)
         return im
 
+    def _watermark_layer(self) -> Image.Image:
+        """Marca de agua pequeña y translúcida (esquina inferior derecha) de la edición Basic."""
+        L = self.L
+        txt = ("Made with AutoPrevias Basic · Radical Records" if self.lang_en
+               else "Generado por Radical Records · AutoPrevias Basic")
+        size = max(22, int(min(L.W, L.H) * 0.026))
+        lay = _text_layer(txt, size, (255, 255, 255, 255), "bold", tracking=1, upper=False, max_w=int(L.W * 0.5))
+        lay = lay.copy()
+        lay.putalpha(lay.getchannel("A").point(lambda v: int(v * 0.42)))
+        return lay
+
     # — fotograma —
     def frame(self, i: int, t: float) -> Image.Image:
         L, an, P = self.L, self.an, self.P
@@ -485,10 +500,19 @@ class _Renderer:
         # entrada desde negro y cierre con la marca Radical Records
         if t < 0.35:
             base = Image.blend(Image.new("RGB", (W, H), (0, 0, 0)), base, t / 0.35)
-        out_len = 3.2
-        if an.duration > 8 and t > an.duration - out_len:
-            a = _ease_out((t - (an.duration - out_len)) / 0.7)
-            base = Image.blend(base, self.outro, min(1.0, a))
+        if self.wm_layer is not None:
+            wl = self.wm_layer
+            base.paste(wl, (W - wl.width - int(W * 0.025), H - 12 - wl.height - int(min(W, H) * 0.02)), wl)
+        if an.duration > 8:
+            if self.end_mode == "brand":
+                out_len = 3.2
+                if t > an.duration - out_len:
+                    a = _ease_out((t - (an.duration - out_len)) / 0.7)
+                    base = Image.blend(base, self.outro, min(1.0, a))
+            elif self.end_mode == "fade":
+                out_len = 1.6
+                if t > an.duration - out_len:
+                    base = Image.blend(base, Image.new("RGB", (W, H), (0, 0, 0)), min(1.0, (t - (an.duration - out_len)) / out_len))
         return base
 
     def _paste_layer(self, base, layer, x, y, scale=1.0, alpha=1.0):
@@ -560,6 +584,8 @@ def render_neon_video(
     kicker: str = "PREVIA EXCLUSIVA",
     scale: float = 1.0,
     progress_cb: Optional[Callable[[int, str], None]] = None,
+    watermark: bool = False,
+    end_mode: str = "brand",
 ) -> str:
     """Renderiza el vídeo animado Radical Neón. scale<1 = borrador rápido (menos resolución)."""
     def _prog(p, m):
@@ -575,7 +601,8 @@ def render_neon_video(
     _prog(3, "Analizando el ritmo de la previa (bombo, drops, espectro)…")
     an = analyze_audio(audio_path)
     _prog(12, "Preparando el diseño Radical Neón…")
-    r = _Renderer(an, cover_image_path, title, artist, bpm, key_str, aspect_ratio, palette_key, promo_text, kicker, scale)
+    r = _Renderer(an, cover_image_path, title, artist, bpm, key_str, aspect_ratio, palette_key, promo_text, kicker, scale,
+                  watermark=watermark, end_mode=end_mode)
     W, H = r.L.W, r.L.H
     ow, oh = (int(W * scale) // 2 * 2, int(H * scale) // 2 * 2)
 
@@ -630,6 +657,8 @@ def render_preview(
     out_height: int = 540,
     fps: int = 15,
     progress_cb: Optional[Callable[[int, str], None]] = None,
+    watermark: bool = False,
+    end_mode: str = "brand",
 ) -> dict:
     """Vista previa rápida del vídeo: unos segundos de la pista (desde `start_sec`, o desde el 30 % si es <0)
     a baja resolución, seguidos del cierre con firma. Devuelve {"frames": [PIL.Image RGB], "fps": fps, "audio": wav|None}."""
@@ -653,7 +682,8 @@ def render_preview(
                     "-ac", "2", "-ar", "44100", str(clip)], check=True, capture_output=True)
     _prog(20, "Analizando el ritmo…")
     an = analyze_audio(str(clip))
-    r = _Renderer(an, cover_image_path, title, artist, bpm, key_str, aspect_ratio, palette_key, promo_text, kicker, 1.0)
+    r = _Renderer(an, cover_image_path, title, artist, bpm, key_str, aspect_ratio, palette_key, promo_text, kicker, 1.0,
+                  watermark=watermark, end_mode=end_mode)
     W, H = r.L.W, r.L.H
     k = out_height / float(H)
     size = (max(2, int(W * k)) // 2 * 2, out_height)
@@ -667,8 +697,13 @@ def render_preview(
         if j % 6 == 0:
             _prog(25 + 70 * j / n, "Dibujando la vista previa…")
     last = frames[-1]
-    out_img = r.outro.convert("RGB").resize(size, Image.BILINEAR)
-    for j in range(int(1.8 * fps)):          # cierre con firma y enlace
-        frames.append(Image.blend(last, out_img, min(1.0, _ease_out(j / (0.6 * fps)))))
+    if r.end_mode == "brand":
+        out_img = r.outro.convert("RGB").resize(size, Image.BILINEAR)
+        for j in range(int(1.8 * fps)):          # cierre con firma y enlace
+            frames.append(Image.blend(last, out_img, min(1.0, _ease_out(j / (0.6 * fps)))))
+    elif r.end_mode == "fade":
+        black = Image.new("RGB", size, (0, 0, 0))
+        for j in range(int(1.0 * fps)):          # fundido a negro
+            frames.append(Image.blend(last, black, min(1.0, (j + 1) / (1.0 * fps))))
     _prog(100, "Lista")
     return {"frames": frames, "fps": fps, "audio": str(clip)}

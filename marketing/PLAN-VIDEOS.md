@@ -29,13 +29,13 @@ Regla: ningún vídeo menciona GitHub ni sus Releases; la llamada final siempre 
 
 **2 · Previa antifugas (Plus).** Problema: previa suelta que se reutiliza sin ti. Se muestra el Modo promo: tu firma de voz repetida cada pocos segundos, MP3 128 kbps y la nota «PROMO — NO DISTRIBUIR». Cierre: «Tu previa, siempre con tu firma».
 
-**3 · Vídeo animado en 1 clic (Plus).** Antes: portada estática. Después: el vídeo Radical Neón en los 3 formatos (9:16, 1:1, 16:9) con la carátula del usuario, título propio y cierre con enlace. Cambios de paleta al ritmo. Cierre: «Sube tu previa con vídeo en 30 s».
+**3 · Vídeo animado en 1 clic (Basic con marca de agua, Plus sin ella).** Antes: portada estática. Después: el vídeo Radical Neón en los 3 formatos (9:16, 1:1, 16:9) con la carátula del usuario, título propio y cierre con enlace. Cambios de paleta al ritmo. Cierre: «Sube tu previa con vídeo en 30 s».
 
 **4 · La app que escucha tu tema.** Forma de onda que se ilumina por secciones (intro, subida, drop), tarjetas de BPM y tonalidad Camelot, corte automático en el mejor punto. Tono «magia». Cierre: «Ella escucha. Tú produces».
 
 **5 · Lote y carpeta vigilada (Plus).** Carpeta con 20 temas → el contador de previas sube solo; plano del café. Cierre: «Del sello al reel sin tocar el DAW».
 
-**6 · Basic o Plus.** Dos columnas con lo que incluye cada edición (Basic: MP3 320k y previa automática; Plus: WAV 24 bit, FLAC, vídeo, firma, lote, modo promo, presets). Cierre: botón de compra a Payhip.
+**6 · Basic o Plus.** Dos columnas con lo que incluye cada edición (Basic: MP3 320k, previa automática y vídeo animado con marca de agua; Plus: WAV 24 bit, FLAC, vídeo sin marca de agua con final a elegir, firma, lote, modo promo, presets). Cierre: botón de compra a Payhip.
 
 ### Las 5 ideas añadidas
 
