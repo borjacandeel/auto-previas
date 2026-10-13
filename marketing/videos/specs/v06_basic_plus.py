@@ -9,6 +9,6 @@ SPEC = dict(
              voice="edge:es-ES-XimenaNeural", vo="Basic: previa automática en eme pe tres de trescientos veinte, y vídeo animado con marca de agua.", vo_at=0.5),
         dict(type="compare", dur=8.0, panels=[dict(name="PLUS", cls="plus big", top=480, at=0.2, items_at=[0.9, 1.9, 3.1, 4.3, 5.5],
              items=["Todo lo de Basic", "WAV 24 bit y FLAC", "Vídeo sin marca de agua y final a elegir", "Tu firma, Voice Drop y modo promo", "Presets, lote y carpeta vigilada"])],
-             vo="Plus: uave de veinticuatro bits, flac, vídeo sin marca de agua, tu firma, modo promo, presets y lote.", vo_at=0.5),
+             vo="Plus: audio de veinticuatro bits, flac, vídeo sin marca de agua, tu firma, modo promo, ajustes guardados y modo lote.", vo_at=0.5),
         dict(type="cta", dur=7.0, click_at=4.4, line1="Elige la tuya.", line2="Basic o Plus.", voice="edge:es-ES-XimenaNeural", vo="Elige la tuya en Peijip.", vo_at=1.2),
     ])

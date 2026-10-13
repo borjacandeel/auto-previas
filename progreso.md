@@ -78,6 +78,13 @@
 - **Pendientes anotados** (tabla en esta sesión): producción de los 11 vídeos del plan + pruebas del usuario + tareas opcionales.
 
 
+### Resumen de Trabajo — Sesión 47 (2026-10-13): producción de los 11 vídeos de marketing (kit + voces de España)
+
+- **Kit** `marketing/videos/kit/` (build.py, runtime.js, scenes.css, tts.py, make_stills.py, vo_check.py): cada vídeo es un spec en `marketing/videos/specs/<id>.py` con escenas (words, shot, race, cards, compare, tips, gallery, scan, antileak, tempo, folder, cta). `build.py` sintetiza la narración, mide su duración para fijar la de cada escena, genera el proyecto HyperFrames, sintetiza música a 128 BPM y efectos sincronizados (con ducking bajo la voz) y renderiza (≈4 min por vídeo). Imágenes «Radical Neón» de muestra en `marketing/videos/stills/` (hechas con el motor real de la app, 5 paletas, 3 formatos, versión Basic con marca de agua). MP4 y proyectos temporales NO van al repo (`.gitignore`).
+- **Voces**: proveedor por prefijo (`edge:` voces neuronales es-ES, `kokoro:` local, `piper:` local con licencia libre). El usuario eligió **Álvaro (es-ES-AlvaroNeural)** y **Ximena (es-ES-XimenaNeural)**: V2, V5, V7 con Álvaro; V4, V8 con Ximena; V6 mixto. V11 en inglés con Kokoro `am_michael`. Pronunciaciones verificadas con transcripción automática (faster-whisper): «Autoprevias», «Radical Records», «Peijip», «eme pe tres», «be pe eme»; se evitan «WAV» y «presets» en la locución. **Aviso de licencia**: las voces es-ES salen del servicio de lectura de Edge (no oficial); para uso comercial formal hay que usar Azure Speech (mismas voces, capa gratuita) — el kit permite cambiar de proveedor.
+- **Revisión**: 3 agentes revisaron los fotogramas y corrigieron specs; arreglos del kit: sello PROMO y «café» centrados, etiquetas de la forma de onda sin pisarse, cámara limitada al tamaño de la captura. `scripts/manual/capture.py` acepta `CAPTURE_LANG` (capturas en inglés para V11).
+- **Entrega** (11 vídeos, 20–36 s, 1080x1920): 01 La carrera · 02 Antifugas · 03 Vídeo en 1 clic · 04 La app que escucha · 05 20 previas con café · 06 Basic o Plus · 07 Nadie puede mezclar · 08 3 errores · 09 Tu estilo en 1 clic · 10 Cada tema su look (sustituye a «Un tema, 5 looks» porque las 5 carátulas llevan títulos distintos) · 11 AutoPrevias in English.
+
 #### 📋 Tabla de pendientes (2026-10-13)
 
 | # | Pendiente | Tipo | Estado |

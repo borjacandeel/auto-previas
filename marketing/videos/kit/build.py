@@ -239,7 +239,7 @@ def html_folder(sc, i):
     chips = "".join(f'<div class="fchip">Tema {k + 1:02d}.wav</div>' for k in range(n))
     head = f'<div style="position:absolute;left:0;right:0;top:200px">{word(sc["title"], "red", 100)}</div>' if sc.get("title") else ""
     return (head + f'<div class="fcount fcount" style="top:380px">0 / {n}</div>'
-            f'<div class="fgrid" style="top:700px">{chips}</div><div class="stamp big green" style="left:230px;top:1500px">☕ TÓMATE UN CAFÉ</div>')
+            f'<div class="fgrid" style="top:700px">{chips}</div><div style="position:absolute;left:0;right:0;top:1500px;display:flex;justify-content:center"><div class="stamp big green" style="position:relative;font-size:60px">☕ TÓMATE UN CAFÉ</div></div>')
 
 
 def html_cta(sc, i):
