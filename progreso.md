@@ -78,6 +78,12 @@
 - **Pendientes anotados** (tabla en esta sesión): producción de los 11 vídeos del plan + pruebas del usuario + tareas opcionales.
 
 
+### Resumen de Trabajo — Sesión 48 (2026-10-13): preparación del día de lanzamiento
+
+- **Estado**: app v3.5.0 publicada y verificada (Release con 4 instaladores + alias, 2 PDF, SHA256SUMS). 11 vídeos de marketing en `marketing/videos/publicados/` (enlaces en `marketing/PLAN-VIDEOS.md`).
+- **Decisiones del usuario**: pruebas en equipos reales y revisión de vídeos = hechas; fichas de Payhip y voces (licencia) = más adelante; al hacerse públicos los productos de Payhip avisará con los enlaces y habrá que reaccionar rápido; después actualizará el precio final.
+- **Herramienta nueva**: `scripts/set_store_link.py <enlace nuevo> [--apply] [--old ...]` — cambia el enlace de la tienda en app (`activate.py`, `i18n_en.py`, `video_neon.py`), generador de PDF, vídeos (promo y kit), README, CLAUDE y plan (no toca CHANGELOG/progreso). Imprime los pasos posteriores (PATCH, PDF, vídeos, CI). Probado en simulación: 23 ocurrencias en 9 archivos.
+
 ### Resumen de Trabajo — Sesión 47 (2026-10-13): producción de los 11 vídeos de marketing (kit + voces de España)
 
 - **Kit** `marketing/videos/kit/` (build.py, runtime.js, scenes.css, tts.py, make_stills.py, vo_check.py): cada vídeo es un spec en `marketing/videos/specs/<id>.py` con escenas (words, shot, race, cards, compare, tips, gallery, scan, antileak, tempo, folder, cta). `build.py` sintetiza la narración, mide su duración para fijar la de cada escena, genera el proyecto HyperFrames, sintetiza música a 128 BPM y efectos sincronizados (con ducking bajo la voz) y renderiza (≈4 min por vídeo). Imágenes «Radical Neón» de muestra en `marketing/videos/stills/` (hechas con el motor real de la app, 5 paletas, 3 formatos, versión Basic con marca de agua). MP4 y proyectos temporales NO van al repo (`.gitignore`).
