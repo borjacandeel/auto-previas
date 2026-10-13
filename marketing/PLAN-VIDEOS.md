@@ -49,6 +49,22 @@ Regla: ningún vídeo menciona GitHub ni sus Releases; la llamada final siempre 
 
 **11 · AutoPrevias in English.** Versión internacional (15–20 s) del vídeo general con textos en inglés («Tired of cutting your previews by hand? From 5 min to 30 seconds»), interfaz de la app en inglés y la misma llamada a Payhip. Hashtags en inglés (#djlife #musicproducer #previews #trackpreview).
 
+
+## Vídeos terminados (MP4 finales)
+Los archivos están en `marketing/videos/publicados/` (uso interno: nunca enlazar estos enlaces en material público; la compra es solo Payhip).
+
+- [AutoPrevias-01-La-carrera-5min-a-30s](https://github.com/borjacandeel/auto-previas/blob/main/marketing/videos/publicados/AutoPrevias-01-La-carrera-5min-a-30s.mp4)
+- [AutoPrevias-02-Previa-antifugas](https://github.com/borjacandeel/auto-previas/blob/main/marketing/videos/publicados/AutoPrevias-02-Previa-antifugas.mp4)
+- [AutoPrevias-03-Video-animado-en-1-clic](https://github.com/borjacandeel/auto-previas/blob/main/marketing/videos/publicados/AutoPrevias-03-Video-animado-en-1-clic.mp4)
+- [AutoPrevias-04-La-app-que-escucha-tu-tema](https://github.com/borjacandeel/auto-previas/blob/main/marketing/videos/publicados/AutoPrevias-04-La-app-que-escucha-tu-tema.mp4)
+- [AutoPrevias-05-20-previas-mientras-tomas-cafe](https://github.com/borjacandeel/auto-previas/blob/main/marketing/videos/publicados/AutoPrevias-05-20-previas-mientras-tomas-cafe.mp4)
+- [AutoPrevias-06-Basic-o-Plus](https://github.com/borjacandeel/auto-previas/blob/main/marketing/videos/publicados/AutoPrevias-06-Basic-o-Plus.mp4)
+- [AutoPrevias-07-Nadie-puede-mezclar-tu-previa](https://github.com/borjacandeel/auto-previas/blob/main/marketing/videos/publicados/AutoPrevias-07-Nadie-puede-mezclar-tu-previa.mp4)
+- [AutoPrevias-08-3-errores-que-arruinan-una-previa](https://github.com/borjacandeel/auto-previas/blob/main/marketing/videos/publicados/AutoPrevias-08-3-errores-que-arruinan-una-previa.mp4)
+- [AutoPrevias-09-Tu-estilo-en-1-clic](https://github.com/borjacandeel/auto-previas/blob/main/marketing/videos/publicados/AutoPrevias-09-Tu-estilo-en-1-clic.mp4)
+- [AutoPrevias-10-Cada-tema-su-look](https://github.com/borjacandeel/auto-previas/blob/main/marketing/videos/publicados/AutoPrevias-10-Cada-tema-su-look.mp4)
+- [AutoPrevias-11-AutoPrevias-in-English](https://github.com/borjacandeel/auto-previas/blob/main/marketing/videos/publicados/AutoPrevias-11-AutoPrevias-in-English.mp4)
+
 ## Cómo publicarlos
 - **Dónde:** TikTok, Instagram Reels y YouTube Shorts (el mismo archivo); versión 16:9 de los vídeos 0, 1 y 6 para YouTube normal.
 - **Texto fijo en cada publicación:** una frase del gancho + «Enlace en la bio» + `payhip.com/RADICALRECVLC` en el comentario fijado. Hashtags: #dj #produccionmusical #previas #radicalrecords #autoprevias.
