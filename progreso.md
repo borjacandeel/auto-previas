@@ -78,6 +78,12 @@
 - **Pendientes anotados** (tabla en esta sesión): producción de los 11 vídeos del plan + pruebas del usuario + tareas opcionales.
 
 
+### Resumen de Trabajo — Sesión 51 (2026-10-13): acceso a Cloudflare por API comprobado
+
+- El usuario creó un token de API de Cloudflare (permisos Workers Scripts: Edit, Workers KV Storage: Edit, Account Settings: Read; caduca en 2027-10-13) y lo compartió **solo en el chat** (no se guarda en ningún archivo ni en GitHub; hay que revocarlo al terminar). Cuenta `2ff2e21c…` (el identificador de cuenta no es secreto). Verificado: token activo; Worker `autoprevias-license` y KV `autoprevias-licenses` accesibles.
+- **Comparación**: el código desplegado del Worker es idéntico al de `worker/autoprevias-license.js` anterior al soporte de varias claves (132 líneas); el repo tiene esa mejora sin desplegar.
+- **Hallazgo de seguridad**: en el Worker desplegado `ADMIN_TOKEN`, `PAYHIP_SECRET_BASIC` y `PAYHIP_SECRET_PLUS` están guardados como variables de **texto plano** (`plain_text`), no como *Secret* (legibles desde el panel/API con permisos). Propuesta: convertirlas a secretos sin cambiar su valor (a hacer solo con la confirmación del usuario).
+
 ### Resumen de Trabajo — Sesión 50 (2026-10-13): dos enlaces de producto (Basic y Plus) para el lanzamiento
 
 - **Decisión del usuario**: al hacerse público habrá **2 enlaces: Basic y Plus**. `src/links.py` (nuevo) centraliza `STORE_URL`, `BASIC_URL`, `PLUS_URL` (hoy los tres = tienda actual). Los usan: pantalla de activación (enlace de la edición instalada, textos con `{link}` en `i18n_en.py`), cierre del vídeo de la app (enlace de la edición), manuales PDF (compra/activación/soporte de cada edición y «pasar a Plus» → enlace Plus) y el CTA de los vídeos de marketing (tienda; `dual=True` en el vídeo 6 muestra dos botones Basic/Plus cuando los enlaces son distintos).
