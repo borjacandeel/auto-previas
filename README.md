@@ -22,6 +22,7 @@
 ## 📑 Tabla de Contenidos
 1. [📥 Descargas y GitHub Releases](#-descargas-y-github-releases)
    - [Enlaces de Descarga Directa (Última Versión)](#-enlaces-de-descarga-directa-última-versión)
+   - [Manuales de Usuario (PDF)](#-manuales-de-usuario-pdf)
    - [Historial de Releases por Versión en GitHub](#-historial-de-releases-por-versión-en-github)
    - [Comprobación de Integridad Criptográfica (SHA-256)](#-comprobación-de-integridad-criptográfica-sha-256)
 2. [🚀 Guía de Instalación Paso a Paso](#-guía-de-instalación-paso-a-paso)
@@ -50,6 +51,19 @@ Los siguientes enlaces apuntan **siempre y de forma automática a los instalador
 | :--- | :--- | :--- | :--- | :--- |
 | 🍏 **macOS** | **Apple Silicon (M1 / M2 / M3 / M4)** | Imagen de disco `.dmg` (Drag-to-Applications) | [⬇️ **Descargar AutoPrevias macOS arm64**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-macOS-arm64.dmg) | [Ver Release Oficial](https://github.com/borjacandeel/auto-previas/releases/latest) |
 | 🪟 **Windows** | **64-bit (x64) y ARM64 (Snapdragon X / Parallels)** | Instalador Asistido Universal `.exe` (Inno Setup) | [⬇️ **Descargar AutoPrevias Windows Setup**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-Windows-x64-Setup.exe) | [Ver Release Oficial](https://github.com/borjacandeel/auto-previas/releases/latest) |
+
+---
+
+### 📖 Manuales de Usuario (PDF)
+
+Manual profesional de **Radical Records** con capturas de pantalla reales y la explicación paso a paso de todas las funciones. Hay uno por edición y se actualiza **en cada versión** (el PDF indica la versión a la que corresponde):
+
+| Edición | Manual | Contenido |
+| :--- | :--- | :--- |
+| **Basic** | [⬇️ **AutoPrevias-Manual-Basic.pdf**](https://github.com/borjacandeel/auto-previas/raw/main/docs/manual/AutoPrevias-Manual-Basic.pdf) | Instalación, activación, interfaz, primera previa, exportación MP3 320k, actualizaciones, atajos y solución de problemas |
+| **Plus** | [⬇️ **AutoPrevias-Manual-Plus.pdf**](https://github.com/borjacandeel/auto-previas/raw/main/docs/manual/AutoPrevias-Manual-Plus.pdf) | Todo lo anterior + editor de cortes y BPM, efectos, Voice Drop, modo promo, firma y carátula, presets, historial, lote y carpeta vigilada |
+
+Además, cada Release publica ambos PDF junto a los instaladores.
 
 ---
 
@@ -611,6 +625,15 @@ pytest tests/ -v
 # Ejecutar el auto-diagnóstico interno
 python src/main.py --selftest
 ```
+
+### 4 bis. Regenerar los Manuales PDF
+
+```bash
+pip install playwright pillow pypdf   # y un Chromium disponible (CHROMIUM_PATH opcional)
+python scripts/manual/build_manual.py          # captura la app real y genera los dos PDF en docs/manual/
+python scripts/manual/build_manual.py plus --no-capture   # solo una edición, reutilizando capturas
+```
+Se ejecuta en cada cambio de versión; el test `tests/test_manual_pdfs.py` falla si los PDF no son de la versión actual.
 
 ### 5. Compilar los Instaladores Localmente con Nuitka
 - **En macOS:**

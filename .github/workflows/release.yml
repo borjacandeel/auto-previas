@@ -394,6 +394,8 @@ jobs:
           for f in AutoPrevias-Plus-*-macOS-arm64.dmg;    do [ -f "$f" ] && cp "$f" AutoPrevias-Plus-macOS-arm64.dmg;    done
           for f in AutoPrevias-Basic-*-Windows-x64-Setup.exe; do [ -f "$f" ] && cp "$f" AutoPrevias-Basic-Windows-x64-Setup.exe; done
           for f in AutoPrevias-Plus-*-Windows-x64-Setup.exe;  do [ -f "$f" ] && cp "$f" AutoPrevias-Plus-Windows-x64-Setup.exe;  done
+          # Manuales de usuario (PDF) de esta versión, regenerados en cada release
+          cp ../docs/manual/AutoPrevias-Manual-Basic.pdf ../docs/manual/AutoPrevias-Manual-Plus.pdf .
           sha256sum * > SHA256SUMS.txt
           cat SHA256SUMS.txt
           echo "Instaladores disponibles:"

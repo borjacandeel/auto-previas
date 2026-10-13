@@ -51,7 +51,7 @@
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-12 (Sesión 37 — v3.1.0: modo promo, presets, Recientes, Licencia y ajustes, ES/EN)
+**Fecha última actualización:** 2026-10-13 (Sesión 38 — manuales PDF Basic/Plus; v3.1.0 sin cambios)
 **Fase activa:** v3.0.1 PUBLICADA. Verificado en macOS de punta a punta: activación, ventana principal y auto-update 3.0.0→3.0.1. Pendiente: Windows real, edición Basic, rotar claves de Payhip, y limpiar el formato markdown de las novedades en la ventana de actualización (muestra `### ` y `*`; agrupar en 3.0.2). El auto-update solo se podrá probar de extremo a extremo cuando exista una Release posterior a la instalada (p. ej. 3.0.1).
 **Versión Actual:** **v3.1.0** (publicada; pendiente de prueba del usuario en macOS)
 
@@ -66,6 +66,19 @@
 > Al terminar cualquier cambio: actualizar `progreso.md` + commit + push. Sin excepción.
 
 ---
+
+### Resumen de Trabajo — Sesión 38 (2026-10-13): manuales PDF Basic y Plus (Radical Records)
+- **Petición:** 2 manuales de usuario profesionales (uno Basic, otro Plus) con capturas y explicaciones; actualizarlos en cada versión; en los PDF la compra/descarga se indica en Payhip y **nunca** el repo de GitHub.
+- **Herramientas nuevas** (`scripts/manual/`):
+  - `capture.py basic|plus`: abre la app real en offscreen (`QT_SCALE_FACTOR=1.6`, HOME temporal aislado, pista sintética con estructura intro/subida/drop/descanso), fija la edición en la config, genera la previa de verdad (MP3/WAV), y guarda capturas completas, recortes por zona y versiones con marcadores numerados (posiciones tomadas de la geometría real de los widgets). Diálogos (activación, licencia, actualización, Recientes, lote, guardar preset) se muestran vacíos/ficticios: sin claves ni emails.
+  - `build_manual.py [basic|plus] [--no-capture]`: HTML → PDF con Playwright (Chromium ya instalado vía `executable_path`, nunca `playwright install`), carátula aparte unida con pypdf, cabecera/pie con edición y versión, metadatos (`/Keywords: AutoPrevias X.Y.Z; manual; edición`). Lee la versión de `src/__version__.py`.
+- **Salida:** `docs/manual/AutoPrevias-Manual-Basic.pdf` (17 pág.) y `AutoPrevias-Manual-Plus.pdf` (23 pág.). Capturas intermedias en `docs/manual/_work/` (ignoradas por git).
+- **Contenido:** qué es, requisitos, instalación (macOS `xattr -cr` / Windows SmartScreen), activación, recorrido de interfaz con marcadores, primera previa paso a paso, onda/cortes/reproductor, exportación, (Plus: editor de cortes/BPM/estructura, efectos, Voice Drop, modo promo, vídeo 9:16, firma y carátula, presets, lote, carpeta vigilada, Recientes) / (Basic: Recientes y "Pasar a Plus"), actualizaciones, licencia e idioma, atajos, solución de problemas, soporte.
+- **Regla del usuario aplicada:** los PDF indican compra/descarga en Payhip (`payhip.com/RADICALRECVLC`) y no contienen ninguna mención a GitHub/Releases/repositorio (comprobado con `pdftotext | grep`). Regla guardada en CLAUDE.md §2 (4 bis).
+- **Regeneración obligatoria en cada versión:** CLAUDE.md §2 paso 4 bis; test `tests/test_manual_pdfs.py` (falla en CI si el PDF no es de la versión actual); el workflow de Release adjunta ambos PDF (`release.yml`, paso "Consolidar instaladores").
+- **README:** sección "Manuales de Usuario (PDF)" con enlaces y sección de desarrollo "4 bis".
+- **Pruebas:** `pytest tests` (sin `test_structure.py`, que ya falla en local por librosa 1.0 vs CI 0.11): 61 passed, 1 skipped. Revisión visual de todas las páginas de ambos PDF con `pdftoppm`.
+- **Sin cambio de versión** (solo documentación/herramientas): la app sigue en v3.1.0; los PDF llevan v3.1.0. El siguiente release los adjuntará.
 
 ### Resumen de Trabajo — Sesión 37 (2026-10-12): v3.1.0 — 5 funciones nuevas para Plus
 

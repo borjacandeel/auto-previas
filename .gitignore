@@ -47,3 +47,6 @@ worker_license.txt
 
 # Claude session data
 .claude/
+
+# Capturas intermedias de los manuales (se regeneran con scripts/manual/build_manual.py)
+docs/manual/_work/

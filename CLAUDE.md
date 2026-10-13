@@ -36,6 +36,11 @@ Cada vez que se complete un cambio, mejora o corrección solicitada por el usuar
    - Instrucciones de instalación para macOS y Windows (incluyendo pasos para apps sin firma de pago: `xattr -cr` en Mac / advertencias de SmartScreen en Windows).
    - Historial resumido de versiones enlazando a `CHANGELOG.md`.
    - Requisitos del sistema y contacto de soporte (`radicalrecordsvlc@gmail.com`).
+4 bis. **Regenerar los manuales PDF (Basic y Plus)** — obligatorio en CADA cambio de versión:
+   - Ejecutar `python scripts/manual/build_manual.py` (captura la app real en offscreen para cada edición y genera `docs/manual/AutoPrevias-Manual-Basic.pdf` y `docs/manual/AutoPrevias-Manual-Plus.pdf`, firmados "Radical Records", con la versión leída de `src/__version__.py`).
+   - Si el cambio añade o modifica funciones/pantallas, actualizar antes el texto en `scripts/manual/build_manual.py` (y las capturas en `scripts/manual/capture.py` si hace falta) para que el manual explique la novedad.
+   - Revisar visualmente el PDF (`pdftoppm -r 55 -png`) y subir los dos PDF en el mismo commit que la versión. El test `tests/test_manual_pdfs.py` hace fallar el CI si los PDF no son de la versión actual, y el workflow los adjunta a la Release.
+   - **Los PDF NUNCA mencionan el repositorio de GitHub ni sus Releases** (decisión del usuario): la compra y la descarga se indican siempre en Payhip (`payhip.com/RADICALRECVLC`). Tampoco deben contener claves de licencia, emails de compradores ni credenciales (la captura usa HOME aislado y diálogos vacíos).
 5. **Actualizar `progreso.md`** con el detalle técnico exhaustivo.
 6. **Commit, Tag y Push:**
    - Crear un commit con mensaje descriptivo y claro.
@@ -75,4 +80,4 @@ Cada vez que se complete un cambio, mejora o corrección solicitada por el usuar
 - **Lanzar CI con `workflow_dispatch` (`tag_name`)**, no con push de tags (el token cloud no puede). Antes de cada run nuevo, cancelar los activos.
 - **El selftest del binario** (`--selftest`) debe seguir construyendo widgets reales (waveform y activación) para detectar crashes antes de publicar.
 - **Secretos:** nunca en archivos, commits ni logs. El repo es público.
-
+- **Manuales PDF:** se generan con Playwright usando el Chromium ya instalado (`executable_path=/opt/pw-browsers/chromium`; NO ejecutar `playwright install`). Las capturas salen de la app real en offscreen (`QT_SCALE_FACTOR=1.6`, HOME aislado, pista sintética). La carátula se renderiza aparte y se une con `pypdf` para que no lleve cabecera/pie.
