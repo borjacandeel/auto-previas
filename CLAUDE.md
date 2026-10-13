@@ -81,3 +81,13 @@ Cada vez que se complete un cambio, mejora o corrección solicitada por el usuar
 - **El selftest del binario** (`--selftest`) debe seguir construyendo widgets reales (waveform y activación) para detectar crashes antes de publicar.
 - **Secretos:** nunca en archivos, commits ni logs. El repo es público.
 - **Manuales PDF:** se generan con Playwright usando el Chromium ya instalado (`executable_path=/opt/pw-browsers/chromium`; NO ejecutar `playwright install`). Las capturas salen de la app real en offscreen (`QT_SCALE_FACTOR=1.6`, HOME aislado, pista sintética). La carátula se renderiza aparte y se une con `pypdf` para que no lleve cabecera/pie.
+
+---
+
+## 6. Memoria de decisiones del usuario (no olvidar)
+- **Visibilidad del repo = PÚBLICO, ya aplicada y verificada el 2026-10-13** (sin token: API `private:false`, `releases/latest` 200, `releases/latest/download/...` 302, `raw.githubusercontent.com` 200). El código no usa ningún token de GitHub (el actualizador llama a la API anónima). Hacerlo público no requiere tocar nada; hacerlo privado rompería el auto-update y las descargas.
+- **Secretos ya expuestos en el historial público:** las `product-secret-key` de Payhip (Basic/Plus) y una licencia de prueba. La solución real es **rotarlas** (Payhip + secrets del Worker de Cloudflare); reescribir el historial no sirve porque el repo ya es público. Sigue PENDIENTE del usuario.
+- **Compra y descarga para el público: siempre Payhip** (`payhip.com/RADICALRECVLC`). Ni los PDF, ni el vídeo, ni ningún material de marketing deben mencionar el repo de GitHub ni sus Releases.
+- **Cada cambio se sube a GitHub** (commit + push a `main`) y se refleja en `progreso.md`; cada versión nueva regenera los PDF (§2, paso 4 bis).
+- **Vídeo promocional:** `marketing/promo-video/` (HyperFrames; instrucciones en su README). Regenerarlo solo si cambia mucho la interfaz o el mensaje; no es obligatorio en cada versión.
+

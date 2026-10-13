@@ -67,6 +67,12 @@
 
 ---
 
+### Resumen de Trabajo — Sesión 38c (2026-10-13): confirmación de visibilidad pública y memoria de decisiones
+- **Pregunta del usuario:** si cambiara la visibilidad del repo a público, ¿habría que tocar algo?
+- **Comprobado sin token:** el repo **ya es público** (`private:false`, `visibility:"public"`); `api.github.com/repos/borjacandeel/auto-previas/releases/latest` → 200; `github.com/.../releases/latest/download/SHA256SUMS.txt` → 302; `raw.githubusercontent.com/.../README.md` → 200.
+- **Respuesta:** no hay que tocar nada. `grep` en `src/` confirma que la app no usa ningún token/cabecera `Authorization` de GitHub; el actualizador y los enlaces dependen justo de que el repo sea público. Lo único que importa por ser público: rotar las claves de Payhip y la licencia de prueba que quedaron en el historial (pendiente del usuario).
+- **Memoria guardada:** `CLAUDE.md` §6 (visibilidad pública verificada, secretos pendientes de rotar, Payhip como único destino de compra/descarga en materiales públicos, subir cada cambio a GitHub, vídeo promocional).
+
 ### Resumen de Trabajo — Sesión 38b (2026-10-13): vídeo promocional 9:16 con HyperFrames
 - **Petición:** vídeo animado, con un puntero usando la app, motion blur y efectos llamativos, slogan «¿Cansado de hacer tus previas a mano?», estética Radical Records, para vender la app.
 - **Resultado:** `marketing/promo-video/AutoPrevias-Promo-9x16.mp4` (1080×1920, 30 fps, 32 s, 8,8 MB; el render sin recomprimir de 49 MB queda fuera de git en `renders/`). Subido a GitHub.
