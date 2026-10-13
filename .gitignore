@@ -50,3 +50,10 @@ worker_license.txt
 
 # Capturas intermedias de los manuales (se regeneran con scripts/manual/build_manual.py)
 docs/manual/_work/
+
+# Vídeos de marketing: proyectos temporales y salidas (se comparten por archivo, no por git)
+marketing/videos/work/
+marketing/videos/out/
+marketing/videos/kit/vo_cache/
+marketing/videos/kit/__pycache__/
+marketing/videos/specs/__pycache__/

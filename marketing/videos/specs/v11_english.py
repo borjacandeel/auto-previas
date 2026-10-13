@@ -1,0 +1,25 @@
+"""Vídeo 11 · AutoPrevias in English (voz en inglés)."""
+SPEC = dict(
+    voice="am_michael", lang="en-us", speed=1.02, groove_from=3.4,
+    scenes=[
+        dict(type="words", dur=3.4, bars=True, top=400, gap=0.55, vo="Tired of cutting your previews by hand?",
+             lines=[dict(t="TIRED OF", size=200), dict(t="CUTTING YOUR", size=150), dict(t="PREVIEWS", cls="red", size=190, big=True), dict(t="BY HAND?", size=210)]),
+        dict(type="words", dur=3.4, top=520, gap=0.7, vo="Five minutes lost on every single preview.",
+             lines=[dict(t="5 MINUTES", cls="red", size=200, big=True), dict(t="PER PREVIEW", size=170)]),
+        dict(type="words", dur=3.6, top=520, gap=0.6, sub="Your preview in one click.", sub_at=1.6, sub_top=1180, vo="Meet AutoPrevias, from Radical Records. Your preview, in one click.",
+             lines=[dict(t="AUTOPREVIAS", cls="red", size=140, big=True), dict(t="BY RADICAL RECORDS", size=80)]),
+        dict(type="shot", edition="plus_en", dur=8.0, steps=3, logo=5.0,
+             caps=[dict(at=0.2, until=2.6, num="01", title="Drop <em>your track</em>", sub="WAV · MP3 · FLAC · AIFF · M4A", step=0),
+                   dict(at=2.7, until=5.2, num="02", title="Pick <em>the length</em>", sub="15 s · 30 s · 60 s · 2 min", step=1),
+                   dict(at=5.3, until=7.9, num="03", title="One click: <em>generate</em>", sub="Cuts, transitions and tags, automatic", step=2)],
+             imgs=[dict(at=0, name="01_bienvenida"), dict(at=1.4, name="03_cargada"), dict(at=5.4, name="08_generada")],
+             cam=[dict(at=0, d=0, c="welcome.drop", z=1.4), dict(at=1.4, d=0.1, c="loaded.waveform", z=1.3), dict(at=2.7, d=0.8, c="loaded.p30", z=2.0),
+                  dict(at=4.2, d=0.8, c="loaded.generate", z=1.45), dict(at=5.4, d=0.8, c="generated.success", z=1.5)],
+             cur=[dict(at=0.1, set="welcome.drop"), dict(at=1.0, d=0.5, to="welcome.drop"), dict(at=2.9, d=0.8, to="loaded.p30"), dict(at=4.2, d=1.0, to="loaded.generate")],
+             clicks=[dict(at=1.2, to="welcome.drop"), dict(at=3.8, to="loaded.p30"), dict(at=5.3, to="loaded.generate")],
+             hls=[dict(at=3.75, hold=0.5, box="loaded.p30", pad=6), dict(at=5.25, hold=1.0, box="loaded.generate", pad=6)], confetti=5.5,
+             vo="Drop your track. It detects the tempo, the key and the drops. Pick a length, hit generate, and it's done.", vo_at=0.3),
+        dict(type="words", dur=3.6, top=520, at=[0.15, 0.85, 1.1], strike=dict(line=0, at=0.55), vo="From five minutes, to thirty seconds.",
+             lines=[dict(t="FROM 5 MIN", cls="gray", size=170), dict(t="TO 30", cls="red", size=330, big=True), dict(t="SECONDS", cls="", size=190)]),
+        dict(type="cta", dur=7.0, click_at=4.4, line1="Your preview, ready", line2="in seconds.", buy_lbl="GET IT AT", vo="Get AutoPrevias on Payhip. Basic or Plus.", vo_at=1.2),
+    ])

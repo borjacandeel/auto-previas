@@ -83,7 +83,7 @@ cfg["edition"] = EDITION
 cfg["output_dir"] = str(HOME / "Music" / "Previas")
 C.save(cfg)
 from src import i18n
-i18n.set_language("es")
+i18n.set_language(os.environ.get("CAPTURE_LANG", "es"))
 
 import src.ui.app as A
 from src.__version__ import __version__
