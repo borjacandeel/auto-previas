@@ -2,7 +2,7 @@
 SPEC = dict(
     voice="em_alex", lang="es", groove_from=3.2,
     scenes=[
-        dict(type="words", dur=3.2, bars=True, top=470, gap=0.5,
+        dict(type="words", dur=3.2, bars=True, top=640, gap=0.5,
              lines=[dict(t="¿CUÁNTO TARDAS", cls="", size=150), dict(t="TÚ EN UNA", cls="", size=150), dict(t="PREVIA?", cls="red", size=260, big=True)]),
         dict(type="race", dur=11.0, race_end=10.2, done_at=3.8,
              stamps=[1.6, 3.3, 5.0, 6.7], stamps_def=[
@@ -18,7 +18,7 @@ SPEC = dict(
                    dict(at=3.7, until=6.0, num="03", title="<em>Lista</em> para enviar", sub="MP3 · WAV · vídeo animado", step=2)],
              imgs=[dict(at=0, name="03_cargada"), dict(at=3.65, name="08_generada")],
              cam=[dict(at=0, d=0, c="loaded.waveform", z=1.3), dict(at=0.35, d=0.7, c="loaded.p30", z=2.0), dict(at=2.0, d=0.8, c="loaded.generate", z=1.45),
-                  dict(at=3.7, d=0.8, c="generated.success", z=1.5)],
+                  dict(at=3.7, d=0.8, c=[900, 1560], z=1.25)],
              cur=[dict(at=0.05, set="loaded.waveform"), dict(at=0.4, d=0.9, to="loaded.p30"), dict(at=2.0, d=1.0, to="loaded.generate"), dict(at=3.8, d=0.7, to="generated.open")],
              clicks=[dict(at=1.5, to="loaded.p30"), dict(at=3.2, to="loaded.generate")],
              hls=[dict(at=1.47, hold=0.45, box="loaded.p30", pad=6), dict(at=3.17, hold=1.0, box="loaded.generate", pad=6), dict(at=3.9, hold=1.4, box="generated.success", pad=6)],
