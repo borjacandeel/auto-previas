@@ -1,4 +1,4 @@
-# Vídeo promocional de AutoPrevias (9:16 · 32 s · Radical Records)
+# Vídeo promocional de AutoPrevias (9:16 · ~48 s · Radical Records)
 
 Anuncio vertical para TikTok / Reels / Shorts hecho con **HyperFrames** (HTML + GSAP → MP4):
 gancho «¿Cansado de hacer tus previas a mano?», una app manejada por un puntero animado sobre
