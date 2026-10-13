@@ -34,7 +34,11 @@ En KV solo se guarda: SHA-256 de la clave, hash del equipo, plataforma y fechas.
    Comprueba que siguen existiendo `PAYHIP_SECRET_PLUS` y `PAYHIP_SECRET_BASIC` (con las claves **nuevas** si ya las rotaste).
    `PAYHIP_API_KEY` ya no se usa y se puede borrar.
 4. **Edit code** → pega el contenido de `autoprevias-license.js` (sustituye el código anterior) → **Deploy**.
-5. Prueba con una licencia de compra real o de prueba (el Worker nuevo acepta también las versiones antiguas de la app).
+5. Prueba el Worker desplegado con el script incluido (usa una licencia de prueba real y deja la clave libre al terminar):
+   ```bash
+   LICENSE_KEY="tu-clave-de-prueba" ADMIN_TOKEN="tu-token" bash worker/smoke_test.sh
+   ```
+   Debe terminar con `11 correctas, 0 fallidas`. (El Worker nuevo acepta también las versiones antiguas de la app.)
 
 ## Orden de despliegue y migración
 - El Worker nuevo **acepta las versiones antiguas** de la app (sin identificador de equipo): no se rompe nada al desplegarlo antes.
