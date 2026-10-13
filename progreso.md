@@ -67,6 +67,27 @@
 
 ---
 
+### Resumen de Trabajo — Sesión 41 (2026-10-13): inventario de la Release v3.2.0 y plan de pruebas en el Mac
+- **Inventario de lo publicado (Release v3.2.0, 2026-10-13 10:51 UTC, run 38384164986):**
+  | Archivo | Tamaño | Notas |
+  |---|---|---|
+  | `AutoPrevias-Basic-macOS-arm64.dmg` / `AutoPrevias-Plus-macOS-arm64.dmg` | 223,5 MB | alias estables (+ copia versionada `…-3.2.0-macOS-arm64.dmg`) |
+  | `AutoPrevias-Basic-Windows-x64-Setup.exe` / `AutoPrevias-Plus-Windows-x64-Setup.exe` | 145,7 MB | alias estables (+ copia `…-3.2.0-Windows-x64-Setup.exe`) |
+  | `AutoPrevias-Manual-Basic.pdf` / `AutoPrevias-Manual-Plus.pdf` | 1,9 / 2,7 MB | v3.2.0, sin menciones a GitHub, compra en Payhip |
+  | `SHA256SUMS.txt` | 10 líneas | incluye los PDF |
+  En el repo: `docs/manual/*.pdf` (manuales), `marketing/promo-video/AutoPrevias-Promo-9x16.mp4` (vídeo 9:16, 8,8 MB), `worker/` (Worker de licencias + `INSTRUCCIONES_CLOUDFLARE.md` + `smoke_test.sh`). Archivos enviados al usuario en el chat: vídeo, 2 PDF, instrucciones/Worker/smoke_test.
+- **Estado de la infraestructura:** Worker `autoprevias-license` v. nueva desplegada; KV `LICENSES` = `autoprevias-licenses`; secret `ADMIN_TOKEN` (se mantiene, decisión del usuario); `PAYHIP_SECRET_BASIC/PLUS` aún como *Variable* (pendiente de rotar y pasar a *Secret*); límites del plan gratuito de Cloudflare verificados (1.000 escrituras KV/día es el límite relevante).
+- **Plan de pruebas en el Mac (checklist para el usuario):**
+  1. Auto-update 3.1.0 → 3.2.0 (aviso, descarga a Descargas, verificación SHA-256, abre el DMG); `sudo xattr -cr /Applications/AutoPrevias.app`.
+  2. Arranque con log: `/Applications/AutoPrevias.app/Contents/MacOS/AutoPrevias 2>&1 | tee /tmp/autoprevias_debug.log`; buscar «Verificación automática de licencia» (con licencia antigua: `legacy`; con la nueva: `ok`).
+  3. Reactivar para ligar este Mac: ⚙ Licencia → Desactivar y cerrar → reabrir → introducir la clave → activada.
+  4. Segundo equipo simulado en el mismo Mac: `AUTOPREVIAS_DEVICE_ID=segundo-equipo /Applications/AutoPrevias.app/Contents/MacOS/AutoPrevias` → pide clave → debe rechazar con «ya está activada en otro equipo».
+  5. Desactivar libera: tras ⚙ Licencia → Desactivar, la misma clave se activa de nuevo.
+  6. Revocación en sesión: con la app cerrada, `reset` + `activate` con otro `device_id` por curl; al abrir la app, en ≤30 s avisa y se cierra.
+  7. Sin conexión: con Wi-Fi apagado abre normal (gracia 14 días); log `network`.
+  8. Pendientes de 3.1.0: ES/EN, Recientes + Reabrir proyecto, presets, modo promo.
+  9. PDF de la Release (sin GitHub, enlace de compra a Payhip) y, si hay PC/VM, instalador Windows + segundo equipo real.
+
 ### Resumen de Trabajo — Sesión 40 (2026-10-13): v3.2.0 — licencia «1 equipo por clave» PUBLICADA
 - **Worker desplegado en Cloudflare por el usuario** (KV `LICENSES` = `autoprevias-licenses`, secret `ADMIN_TOKEN`, código `worker/autoprevias-license.js`). Incidencias: Chrome tenía la traducción activa y tradujo el código al copiarlo (`si`, `intentar`, `atrapar`, 176 errores) → solución: copiar con `curl … | pbcopy` o desde el chat; instrucciones corregidas. Los `read -rs -p` no funcionan en zsh (Terminal del Mac) → sustituidos por `printf` + `stty -echo` + `read`.
 - **Prueba real en producción** (Mac del usuario, `worker/smoke_test.sh` con licencia de prueba real de Payhip): **11 correctas, 0 fallidas** (clave falsa rechazada, A activa, B rechazado `in_use`, reverificación, desactivar libera, B activa, A queda `in_use`, `reset` con token, `reset` sin token rechazado, modo compatible sin `device_id`).
