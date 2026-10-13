@@ -716,7 +716,9 @@ def export_files(
         _prog(90, "Generando vídeo animado Radical Neón (TikTok / Reels / Shorts)…")
         video_target = str(paths["video"])
         audio_for_vid = str(paths.get("wav") or temp_wav_for_mp3 or paths.get("mp3"))
-        track_title = meta.get("title") or "Previa"
+        # Título del vídeo: el que elija el autor; si no, el título de las etiquetas; si no, el nombre del archivo sin «PREVIA - »
+        track_title = (str(meta.get("video_title") or "").strip() or meta.get("title")
+                       or Path(video_target).stem.replace("PREVIA - ", "").strip() or "Previa")
         try:
             from src.config import load as _load_cfg
             _lang = str(_load_cfg().get("language", "es"))

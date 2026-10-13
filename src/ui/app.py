@@ -252,6 +252,7 @@ class ExportWorker(QThread):
                 metadata["key"] = self.cfg.get("key_str")
             metadata["video_palette"]    = self.cfg.get("video_palette", "crimson")
             metadata["video_promo_text"] = self.cfg.get("video_promo_text", "RADICAL RECORDS · PROMO EXCLUSIVA")
+            metadata["video_title"]      = self.cfg.get("video_title", "")
             metadata["aspect_ratio"]     = self.cfg.get("aspect_ratio", "9:16")
             if self.cfg.get("mp3_kbps"):
                 metadata["mp3_kbps"] = int(self.cfg["mp3_kbps"])
@@ -1882,7 +1883,26 @@ class ResultPanel(QWidget):
         self._row_video_widget.setVisible(False)
         exp_lay.addWidget(self._row_video_widget)
 
+        # Título que se muestra en el vídeo (por defecto, el nombre de la pista)
+        self._row_video_title_widget = QWidget()
+        row_vt = QHBoxLayout(self._row_video_title_widget)
+        row_vt.setContentsMargins(0, 0, 0, 0)
+        row_vt.setSpacing(8)
+        lbl_vt = QLabel("Título")
+        lbl_vt.setFixedWidth(52)
+        lbl_vt.setStyleSheet(lbl_vopt.styleSheet())
+        self._edit_vtitle = QLineEdit()
+        self._edit_vtitle.setPlaceholderText("Título que sale en el vídeo (vacío = nombre de la pista)")
+        self._edit_vtitle.setFixedHeight(24)
+        self._edit_vtitle.setStyleSheet(_input_style())
+        self._edit_vtitle.setToolTip("Nombre que aparece en el centro del vídeo. Si lo dejas vacío se usa el nombre de la pista (sin «PREVIA - »).")
+        row_vt.addWidget(lbl_vt)
+        row_vt.addWidget(self._edit_vtitle, stretch=1)
+        self._row_video_title_widget.setVisible(False)
+        exp_lay.addWidget(self._row_video_title_widget)
+
         self._chk_video.toggled.connect(self._row_video_widget.setVisible)
+        self._chk_video.toggled.connect(self._row_video_title_widget.setVisible)
         self._combo_voice_pos.currentIndexChanged.connect(
             lambda _: self._update_voice_drop_marker()
         )
@@ -2210,6 +2230,8 @@ class ResultPanel(QWidget):
         self._analysis    = analysis
         self._plan        = plan
         self._source_path = file_path
+        if hasattr(self, "_edit_vtitle"):
+            self._edit_vtitle.clear()        # el título del vídeo es por pista
         self._bpm         = bpm
         self._key_res     = key_res
         name = Path(file_path).stem
@@ -2420,6 +2442,7 @@ class ResultPanel(QWidget):
         speed_mode = getattr(self, "_speed_mode", "vinyl")
         video_pal = self._combo_video_pal.currentData() if hasattr(self, "_combo_video_pal") else "crimson"
         promo_txt = self._edit_promo.text().strip() if hasattr(self, "_edit_promo") else ""
+        vtitle = self._edit_vtitle.text().strip() if hasattr(self, "_edit_vtitle") else ""
         aspect = self._combo_aspect.currentData() if hasattr(self, "_combo_aspect") else "9:16"
         voice_pos = self._combo_voice_pos.currentData() if hasattr(self, "_combo_voice_pos") else "predrop"
 
@@ -2434,6 +2457,7 @@ class ResultPanel(QWidget):
             "speed_mode": speed_mode,
             "video_palette": video_pal,
             "video_promo_text": promo_txt,
+            "video_title": vtitle,
             "aspect_ratio": aspect,
             "voice_drop_enabled": bool(self._voice_drop_path),
             "voice_drop_path": self._voice_drop_path,

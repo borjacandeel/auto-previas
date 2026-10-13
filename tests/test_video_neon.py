@@ -43,3 +43,11 @@ def test_render_completo_con_audio_sintetico(tmp_path):
                          progress_cb=lambda p, m: steps.append(p))
     assert out.exists() and out.stat().st_size > 2000
     assert steps and steps[-1] >= 99
+
+
+@pytest.mark.parametrize("aspect", list(vn.ASPECTS))
+def test_cierre_tiene_firma_y_enlace(aspect):
+    """El cierre lleva logo + firma + píldora blanca del enlace (zona muy clara que no existe en el fondo rojo)."""
+    r = vn._Renderer(_analysis(), None, "T", "A", 120.0, "1A", aspect, "crimson", "", "PREVIA EXCLUSIVA", 0.25)
+    assert (np.asarray(r.outro.convert("L")) > 245).sum() > 3000
+    assert vn._Renderer(_analysis(), None, "T", "A", 120.0, "1A", aspect, "crimson", "", "EXCLUSIVE PREVIEW", 0.25).lang_en

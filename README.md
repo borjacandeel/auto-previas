@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v3.3.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v3.3.1-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -271,7 +271,10 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v3.3.0] — 2026-10-13 (Vídeo animado Radical Neón)
+#### 🟢 [v3.3.1] — 2026-10-13 (Título del vídeo elegible)
+- Nuevo campo **«Título»** para elegir el nombre que sale en el vídeo animado; si se deja vacío usa el nombre de la pista (antes salía «Previa»). El vídeo cierra con «Generado por AutoPrevias · Radical Records» y el enlace de compra. Detalle en el [CHANGELOG](CHANGELOG.md).
+
+#### [v3.3.0] — 2026-10-13 (Vídeo animado Radical Neón)
 - **Vídeo animado «Radical Neón»** con tu carátula, analizador de espectro y destellos al ritmo del bombo, en **9:16, 1:1 y 16:9** (nuevo formato YouTube). Manuales PDF actualizados. Detalle en el [CHANGELOG](CHANGELOG.md).
 
 #### [v3.2.0] — 2026-10-13 (Una licencia = un equipo, verificación automática)

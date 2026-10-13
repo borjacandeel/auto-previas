@@ -376,6 +376,7 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
 <ul>{fmts}</ul>
 {'''<h3>Vídeo animado Radical Neón</h3>
 <p>Marca <b>🎬 Vídeo animado</b> y se exportará, junto al audio, un MP4 animado al estilo Radical Records: tu <b>carátula</b> con resplandor neón, el título, artista, BPM y tonalidad, un <b>analizador de espectro</b> que baila con la música y destellos que golpean con el bombo, con un golpe especial cuando entra el drop. Elige el formato —<b>9:16</b> (TikTok / Reels), <b>1:1</b> (Instagram) o <b>16:9</b> (YouTube)—, la <b>paleta de color</b> y un <b>texto de banner</b> (por ejemplo, <i>RADICAL RECORDS · PROMO EXCLUSIVA</i>).</p>
+<p>En el campo <b>Título</b> escribes el nombre que sale en el centro del vídeo; si lo dejas vacío se usa el nombre de la pista. El vídeo termina con el logo de Radical Records, la frase «Generado por AutoPrevias · Radical Records» y el enlace de compra en Payhip.</p>
 ''' if plus else ''}
 {'' if plus else tip('La edición Plus añade WAV 24 bit, FLAC, vídeo animado, firma y carátula personalizadas, efectos de estudio y mucho más. Mira el capítulo «Pasar a la edición Plus».')}
 <h3>Carpeta de destino</h3>

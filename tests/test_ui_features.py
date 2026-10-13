@@ -1,5 +1,6 @@
 """Tests de interfaz de las funciones de la 3.1 (diálogos, presets, modo promo, edición Básica)."""
 import os
+from pathlib import Path
 
 import pytest
 
@@ -207,3 +208,38 @@ def test_edicion_basica_oculta_presets_y_promo(monkeypatch):
     p._chk_promo.setChecked(True)                              # aunque se forzara, en Básica no se aplica
     assert p.get_export_options()["promo_mode"] is False
     p.deleteLater()
+
+
+def test_titulo_del_video_elegible_por_el_autor(monkeypatch):
+    p = _panel(monkeypatch)
+    assert p.get_export_options()["video_title"] == ""            # vacío = nombre de la pista
+    p._edit_vtitle.setText("  Midnight Groove (Radical Edit)  ")
+    assert p.get_export_options()["video_title"] == "Midnight Groove (Radical Edit)"
+    assert not p._row_video_title_widget.isVisibleTo(p)
+    p._chk_video.setChecked(True)
+    assert p._row_video_title_widget.isVisibleTo(p)               # aparece junto a las opciones del vídeo
+
+
+def _export_con_titulo(tmp_path, monkeypatch, meta, nombre="PREVIA - Mi Tema Brutal"):
+    import src.engine.export as E
+    import src.engine.video_neon as VN
+    seen = {}
+
+    def fake_render(**kw):
+        seen.update(kw)
+        Path(kw["output_video_path"]).write_bytes(b"x")
+    monkeypatch.setattr(VN, "render_neon_video", fake_render)
+    paths = {"wav": tmp_path / f"{nombre}.wav", "video": tmp_path / f"{nombre}.mp4"}
+    E.export_files(np.zeros((2, 4410), dtype="float32"), 44100, paths, metadata=meta)
+    return seen
+
+
+def test_titulo_del_video_por_defecto_es_el_nombre_de_la_pista(tmp_path, monkeypatch):
+    """Sin título elegido, el vídeo usa el nombre del archivo sin «PREVIA - » (antes salía «Previa»)."""
+    seen = _export_con_titulo(tmp_path, monkeypatch, {"video_title": ""})
+    assert seen["title"] == "Mi Tema Brutal"
+
+
+def test_titulo_del_video_elegido_manda(tmp_path, monkeypatch):
+    seen = _export_con_titulo(tmp_path, monkeypatch, {"video_title": "Mi Título Propio", "title": "Otro"})
+    assert seen["title"] == "Mi Título Propio"

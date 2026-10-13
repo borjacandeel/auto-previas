@@ -3,6 +3,16 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [3.3.1] - 2026-10-13
+
+### Añadido
+- **Título del vídeo a tu gusto**: al marcar «🎬 Vídeo animado» aparece un campo «Título» para escribir el nombre que sale en el centro del vídeo (por ejemplo, el nombre artístico del tema). Si lo dejas vacío se usa el nombre de la pista.
+
+- **Cierre con firma**: el vídeo animado termina ahora con el logo de Radical Records, la frase «Generado por AutoPrevias · Radical Records» y el enlace de compra (payhip.com/RADICALRECVLC), y el cierre dura un poco más para que dé tiempo a leerlo.
+
+### Corregido
+- En el vídeo animado el título salía como «Previa» en lugar del nombre real de la pista. Ahora sale el nombre del archivo (sin el «PREVIA - » del principio) o el que tú escribas.
+
 ## [3.3.0] - 2026-10-13
 
 ### Añadido
