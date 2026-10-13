@@ -334,7 +334,7 @@
     tl.fromTo($$(".ctatitle span", el), { opacity: 0, y: 120, scale: 1.7 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "back.out(2)", stagger: 0.04 }, C0 + 0.25);
     tl.fromTo($$(".eds span", el), { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(3)", stagger: 0.12 }, C0 + 0.8);
     tl.fromTo($(".ctaline", el), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, C0 + 1.05);
-    tl.fromTo($(".buy", el), { opacity: 0, y: 160, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "expo.out" }, C0 + 1.35);
+    tl.fromTo($$(".buy", el), { opacity: 0, y: 160, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "expo.out", stagger: 0.12 }, C0 + 1.35);
     tl.fromTo($(".ctabanner", el), { opacity: 0 }, { opacity: 1, duration: 0.4 }, C0 + 1.7);
     tl.fromTo($(".ctatag", el), { opacity: 0 }, { opacity: 1, duration: 0.4 }, C0 + 2.0);
     const cur = $(".cur2", el), buy = [540 + 120, 1228 + 30], cc = C0 + sc.click_at;
@@ -345,9 +345,9 @@
     tl.fromTo($(".cur2 .cin", el), { scale: 1.7 }, { scale: 1.3, duration: 0.07, yoyo: true, repeat: 1 }, cc - 0.04);
     tl.set($(".rip2", el), { left: buy[0], top: buy[1] }, cc - 0.1);
     tl.fromTo($(".rip2", el), { scale: 0.3, opacity: 1 }, { scale: 3.2, opacity: 0, duration: 0.55, ease: "power2.out" }, cc);
-    tl.fromTo($(".buy", el), { scale: 1 }, { scale: 0.96, duration: 0.07, yoyo: true, repeat: 1 }, cc - 0.04);
+    tl.fromTo($$(".buy", el)[0], { scale: 1 }, { scale: 0.96, duration: 0.07, yoyo: true, repeat: 1 }, cc - 0.04);
     flash(cc, 0.3, 0.25, true);
-    for (let t = C0 + 2.2; t < t0 + dur - 0.7; t += 0.8) tl.fromTo($(".buy", el), { boxShadow: "0 0 80px rgba(255,31,58,.6)" }, { boxShadow: "0 0 160px rgba(255,31,58,1)", duration: 0.3, yoyo: true, repeat: 1 }, t);
+    for (let t = C0 + 2.2; t < t0 + dur - 0.7; t += 0.8) tl.fromTo($$(".buy", el), { boxShadow: "0 0 80px rgba(255,31,58,.6)" }, { boxShadow: "0 0 160px rgba(255,31,58,1)", duration: 0.3, yoyo: true, repeat: 1 }, t);
     tl.to("#world", { opacity: 0, duration: 0.45, ease: "power2.in" }, t0 + dur - 0.5);
   };
 

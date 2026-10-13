@@ -266,7 +266,7 @@ EN = {
     "XXXX-XXXX-XXXX-XXXX": "XXXX-XXXX-XXXX-XXXX",
     "Activar licencia": "Activate license",
     "Verificando…": "Verifying…",
-    "Introduce tu clave de licencia para activar AutoPrevias.\nPuedes obtenerla en payhip.com/RADICALRECVLC": "Enter your license key to activate AutoPrevias.\nYou can get one at payhip.com/RADICALRECVLC",
+    "Introduce tu clave de licencia para activar AutoPrevias.\nPuedes obtenerla en {link}": "Enter your license key to activate AutoPrevias.\nYou can get one at {link}",
     "Tu período de gracia ha expirado.\nIntroduce tu clave para continuar usando la app.": "Your grace period has expired.\nEnter your key to keep using the app.",
     "Introduce una clave de licencia.": "Enter a license key.",
     "Conectando con el servidor de licencias…": "Connecting to the license server…",
@@ -334,7 +334,7 @@ EN = {
     "✦  PLUS": "✦  PLUS", "PLUS": "PLUS", "BÁSICA": "BASIC",
     "Idioma · Language (ES / EN)": "Idioma · Language (ES / EN)",
     "Español": "Español", "English": "English",
-    "<a href=\"https://payhip.com/RADICALRECVLC\" style=\"color:#ff3e55; text-decoration:none;\">Obtener licencia en payhip.com/RADICALRECVLC</a>": "<a href=\"https://payhip.com/RADICALRECVLC\" style=\"color:#ff3e55; text-decoration:none;\">Get a license at payhip.com/RADICALRECVLC</a>",
+    "Obtener licencia en {link}": "Get a license at {link}",
 
     # ── Licencia y ajustes ────────────────────────────────────────────────────────
     "⚙ Licencia": "⚙ License",

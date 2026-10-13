@@ -78,6 +78,12 @@
 - **Pendientes anotados** (tabla en esta sesión): producción de los 11 vídeos del plan + pruebas del usuario + tareas opcionales.
 
 
+### Resumen de Trabajo — Sesión 50 (2026-10-13): dos enlaces de producto (Basic y Plus) para el lanzamiento
+
+- **Decisión del usuario**: al hacerse público habrá **2 enlaces: Basic y Plus**. `src/links.py` (nuevo) centraliza `STORE_URL`, `BASIC_URL`, `PLUS_URL` (hoy los tres = tienda actual). Los usan: pantalla de activación (enlace de la edición instalada, textos con `{link}` en `i18n_en.py`), cierre del vídeo de la app (enlace de la edición), manuales PDF (compra/activación/soporte de cada edición y «pasar a Plus» → enlace Plus) y el CTA de los vídeos de marketing (tienda; `dual=True` en el vídeo 6 muestra dos botones Basic/Plus cuando los enlaces son distintos).
+- `scripts/launch_public.py --basic URL --plus URL [--store URL] [--apply]` reescribe `src/links.py`, (si cambia la tienda) los textos fijos restantes, sube PATCH, CHANGELOG, README, pytest y PDF. Probado en simulación. Sin cambio visible para el usuario hasta el lanzamiento (no se publica versión por este refactor; entra en el PATCH del lanzamiento). 104 tests OK.
+- **Cloudflare por API (opción B, decisión del usuario)**: el usuario pasará un token de API por el chat para que Claude pueda ver/editar el Worker. Reglas: nunca escribirlo en archivos/commits/logs ni repetirlo; recomendado token con caducidad corta y revocarlo al terminar.
+
 ### Resumen de Trabajo — Sesión 49 (2026-10-13): lanzamiento automatizado
 
 - `scripts/launch_public.py <enlace> [--apply]`: orquesta el cambio del enlace (vía `set_store_link.py`), versión PATCH, entrada del CHANGELOG, badge del README, pytest y regeneración de PDF. Probado en un worktree temporal con `--apply --no-tests --no-pdf` (23 ocurrencias en 11 archivos, 3.5.0→3.5.1).

@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from src import i18n
+from src import i18n, links
 from src.i18n import tr
 
 from PySide6.QtCore import Qt, QThread, Signal
@@ -30,7 +30,20 @@ ACCENT2 = "#ff3e55"
 GREEN   = "#22c55e"
 RED     = "#ef4444"
 
-_STORE_URL = "https://payhip.com/RADICALRECVLC"
+
+
+
+def _buy_url() -> str:
+    """Enlace de compra de la edición instalada (Basic → producto Basic; Plus → producto Plus)."""
+    try:
+        from src.config import get_edition
+        return links.url_for(get_edition())
+    except Exception:
+        return links.STORE_URL
+
+
+def _buy_short() -> str:
+    return links.short(_buy_url())
 
 
 class _ActivateWorker(QThread):
@@ -129,7 +142,7 @@ class ActivationDialog(QDialog):
             msg = "Tu período de gracia ha expirado.\nIntroduce tu clave para continuar usando la app."
             color = RED
         else:
-            msg = "Introduce tu clave de licencia para activar AutoPrevias.\nPuedes obtenerla en payhip.com/RADICALRECVLC"
+            msg = tr("Introduce tu clave de licencia para activar AutoPrevias.\nPuedes obtenerla en {link}", link=_buy_short())
             color = TEXT2
 
         lbl_msg = QLabel(msg)
@@ -178,8 +191,8 @@ class ActivationDialog(QDialog):
 
         # Enlace a la tienda principal de Radical Records en Payhip
         lbl_link = QLabel(
-            f'<a href="{_STORE_URL}" '
-            f'style="color:{ACCENT2}; text-decoration:none;">Obtener licencia en payhip.com/RADICALRECVLC</a>'
+            f'<a href="{_buy_url()}" '
+            f'style="color:{ACCENT2}; text-decoration:none;">' + tr("Obtener licencia en {link}", link=_buy_short()) + '</a>'
         )
         lbl_link.setAlignment(Qt.AlignCenter)
         lbl_link.setOpenExternalLinks(True)

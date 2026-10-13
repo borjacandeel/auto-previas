@@ -17,6 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 from src.__version__ import __version__ as VERSION   # noqa: E402
+from src import links as L   # noqa: E402
 
 MANUAL = ROOT / "docs" / "manual"
 WORK = MANUAL / "_work"
@@ -209,9 +210,10 @@ promotores, sellos, DJs o redes sociales.</p>
 
 def s_install(ed: str) -> str:
     cap = "Plus" if ed == "plus" else "Basic"
+    buy = L.short(L.url_for(ed))
     return f"""
 <section><h1>2. Instalación</h1>
-<p>Tras tu compra en la tienda de Radical Records (<b>payhip.com/RADICALRECVLC</b>) descarga desde Payhip el instalador de tu edición (<b>{cap}</b>):</p>
+<p>Tras tu compra en la tienda de Radical Records (<b>{buy}</b>) descarga desde Payhip el instalador de tu edición (<b>{cap}</b>):</p>
 <table><tr><th>Sistema</th><th>Archivo</th></tr>
 <tr><td>macOS (Apple Silicon)</td><td><code>AutoPrevias-{cap}-macOS-arm64.dmg</code></td></tr>
 <tr><td>Windows (64 bits)</td><td><code>AutoPrevias-{cap}-Windows-x64-Setup.exe</code></td></tr></table>
@@ -233,10 +235,11 @@ ve a <i>Ajustes del Sistema → Privacidad y seguridad</i>, y pulsa <b>«Abrir d
 
 def s_activ(ed: str, im: dict) -> str:
     cap = "Plus" if ed == "plus" else "Basic"
+    buy = L.short(L.url_for(ed))
     return f"""
 <section><h1>3. Activar tu licencia</h1>
 <p>La primera vez que abras AutoPrevias verás la pantalla de activación. Necesitas la <b>clave de licencia {cap}</b> que recibiste por correo
-al comprar en la tienda de Radical Records (<b>payhip.com/RADICALRECVLC</b>).</p>
+al comprar en la tienda de Radical Records (<b>{buy}</b>).</p>
 {fig(im.get('10_activacion',''), 'Pantalla de activación (se muestra vacía; tu clave es personal)', 'tiny')}
 {steps(["Copia la clave del correo de compra.", "Pégala en el campo de la pantalla de activación.",
         "Pulsa <b>Activar licencia</b>. Hace falta conexión a Internet solo en este momento.",
@@ -528,7 +531,7 @@ def s_basic_upsell() -> str:
 <div class="card"><h4>💾 Presets y historial</h4><p>Guarda tus ajustes con nombre y reabre cualquier previa con los mismos parámetros.</p></div>
 <div class="card"><h4>📁 Lote y carpeta vigilada</h4><p>Procesa decenas de tracks seguidos o deja que AutoPrevias trabaje solo.</p></div>
 </div>
-{tip("Para pasar a Plus, compra la licencia Plus en la tienda de Radical Records (payhip.com/RADICALRECVLC), descarga el instalador <b>Plus</b> y actívalo con la nueva clave. Puedes tener Basic y Plus instalados a la vez.", "tip")}
+{tip("Para pasar a Plus, compra la licencia Plus en la tienda de Radical Records ({L.short(L.PLUS_URL)}), descarga el instalador <b>Plus</b> y actívalo con la nueva clave. Puedes tener Basic y Plus instalados a la vez.", "tip")}
 </section>"""
 
 
@@ -579,7 +582,7 @@ def s_faq(ed: str, plus: bool, n: int) -> str:
 <tr><td>La previa no empieza donde quiero</td><td>Arrastra los marcadores verdes/rojos en la forma de onda{' o usa el Editor de Cortes' if plus else ' o elige otro preset de duración'}.</td></tr>
 <tr><td>No oigo nada al reproducir</td><td>Revisa el volumen del reproductor y que no esté silenciado (tecla {kbd('M')}) y el dispositivo de salida de tu sistema.</td></tr>
 <tr><td>No encuentro mis previas</td><td>Pulsa <b>Abrir</b> junto a «Carpeta» para ver la carpeta de destino; puedes cambiarla con <b>Cambiar</b>.</td></tr>
-<tr><td>La actualización automática falla</td><td>Pulsa <b>Reintentar</b> o descarga de nuevo el instalador desde tu compra en Payhip (payhip.com/RADICALRECVLC).</td></tr></table>
+<tr><td>La actualización automática falla</td><td>Pulsa <b>Reintentar</b> o descarga de nuevo el instalador desde tu compra en Payhip ({L.short(L.url_for(ed))}).</td></tr></table>
 </section>"""
 
 

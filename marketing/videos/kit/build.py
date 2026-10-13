@@ -29,6 +29,8 @@ ROOT = HERE.parents[2]
 VID = HERE.parent
 PROMO = ROOT / "marketing" / "promo-video"
 FIT = 1.6
+sys.path.insert(0, str(ROOT))
+from src import links as LK  # noqa: E402
 SR = 44100
 BPM = 128
 BEAT = 60.0 / BPM
@@ -245,10 +247,16 @@ def html_folder(sc, i):
 def html_cta(sc, i):
     letters = "".join(f"<span>{c}</span>" for c in "AUTOPREVIAS")
     cur = '<svg width="40" height="44" viewBox="0 0 40 44"><path d="M4 2 L4 33 L12 26 L18 40 L24 37.5 L18 24 L29 24 Z" fill="#fff" stroke="#05060a" stroke-width="2.6" stroke-linejoin="round"/></svg>'
+    lbl = sc.get("buy_lbl", "CÓMPRALO EN")
+    if sc.get("dual") and LK.BASIC_URL != LK.PLUS_URL:      # dos enlaces de producto distintos: un botón por edición
+        buy = (f'<div class="buy" style="top:1090px;padding:26px 20px;background:linear-gradient(180deg,#3b82f6,#1d4ed8)"><small>BASIC</small>{LK.short(LK.BASIC_URL)}</div>'
+               f'<div class="buy" style="top:1290px;padding:26px 20px;background:linear-gradient(180deg,#a855f7,#6d28d9)"><small>PLUS</small>{LK.short(LK.PLUS_URL)}</div>')
+    else:
+        buy = f'<div class="buy"><small>{lbl}</small>{LK.short(LK.STORE_URL)}</div>'
     return (f'<div class="ctaemb" data-hf-motion-blur=\'{{"samplesPerFrame": 10}}\'><img src="assets/logo_emblem.png" alt="" /></div>'
             f'<div class="ctatitle">{letters}</div><div class="eds"><span class="b">BASIC</span><span class="p">PLUS</span></div>'
             f'<div class="ctaline"><div>{sc["line1"]}</div><div>{sc["line2"]}</div></div>'
-            f'<div class="buy"><small>{sc.get("buy_lbl", "CÓMPRALO EN")}</small>payhip.com/RADICALRECVLC</div>'
+            f'{buy}'
             f'<img class="ctabanner" src="assets/logo_banner.png" alt="" /><div class="ctatag">{sc.get("tag", "macOS · Windows · Radical Records")}</div>'
             f'<div class="rip2"></div><div class="cur2" data-layout-allow-overflow data-hf-motion-blur=\'{{"samplesPerFrame": 12, "shutterAngle": 540}}\'><div class="cin">{cur}</div></div>')
 
