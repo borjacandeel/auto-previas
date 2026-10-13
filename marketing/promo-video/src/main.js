@@ -94,7 +94,7 @@
   }
   tl.from("#lanes .clipbox", { scaleX: 0, transformOrigin: "0% 50%", duration: 0.22, stagger: 0.012, ease: "power3.out" }, 3.85);
   [3.85, 4.85, 5.85, 6.85].forEach((t) => tl.fromTo("#playhead", { x: 0 }, { x: 900, duration: 1.0, ease: "none" }, t));
-  const secs = 10033;
+  const secs = 300;   // 5 min a mano (coherente con «de 5 min a 30 segundos»)
   for (let i = 0; i <= 80; i++) {
     const f = i / 80, p = f * f, v = Math.round(secs * p);
     const hh = String(Math.floor(v / 3600)).padStart(2, "0"), mm = String(Math.floor(v % 3600 / 60)).padStart(2, "0"), ss = String(v % 60).padStart(2, "0");
