@@ -1,4 +1,4 @@
-"""Sintetiza la música y los efectos del vídeo promocional de AutoPrevias (128 BPM, 32 s).
+"""Sintetiza la música y los efectos del vídeo promocional de AutoPrevias (128 BPM, ~48 s).
 
 Salida: assets/promo-music.mp3  (estéreo, 44,1 kHz).  Los tiempos vienen de choreo.json,
 el mismo fichero que usa build_html.py, así que audio e imagen siempre van sincronizados.
@@ -13,9 +13,17 @@ import soundfile as sf
 HERE = Path(__file__).resolve().parent
 C = json.loads((HERE / "choreo.json").read_text())
 SR = 44100
-DUR = C["duration"]
-N = int(DUR * SR)
 BEAT = 60.0 / C["bpm"]
+
+
+def M(t):
+    """Tiempo original -> tiempo final (pausas de lectura en tiempos de compás). Igual que en build_html.py / main.js."""
+    return t + sum(b * BEAT for p, b in C["holds"] if p <= t + 1e-9)
+
+
+DUR = M(C["duration"])
+N = int(DUR * SR)
+TS = {k: M(v) for k, v in C["scenes"].items()}
 rng = np.random.default_rng(42)
 L = np.zeros(N); R = np.zeros(N)
 
@@ -130,7 +138,7 @@ def beats(n0, n1):
 
 
 # ── secciones ────────────────────────────────────────────────────────────
-GROOVE = (7.5, 28.125)           # beat completo (revelación → CTA)
+GROOVE = (TS["reveal"], DUR - 0.9)  # beat completo (revelación → final, con fundido)
 PUMP = np.ones(N)                # sidechain: baja bajo/pad en cada bombo
 for tb in beats(0, int(DUR / BEAT) + 1):
     if GROOVE[0] <= tb < GROOVE[1]:
@@ -139,16 +147,16 @@ for tb in beats(0, int(DUR / BEAT) + 1):
         PUMP[i:i + m] = np.minimum(PUMP[i:i + m], 1 - 0.85 * np.exp(-np.arange(m) / SR * 9))
 
 # gancho (0–3.75): latido grave + riser
-for k, tb in enumerate(beats(0, 8)):
+for k, tb in enumerate(beats(0, int(round(TS["pain"] / BEAT)))):
     put(kick(0.4), tb, 1.0)
-put(riser(3.6, 0.6), 0.0, 0.8)
+put(riser(TS["pain"] - 0.15, 0.6), 0.0, 0.8)
 # dolor (3.75–7.5): reloj + bombo a medio tiempo + tensión
-for k, tb in enumerate(np.arange(3.75, 7.0, BEAT / 2)):
+for k, tb in enumerate(np.arange(TS["pain"], M(7.0), BEAT / 2)):
     put(click(0.55, 1900 if k % 2 == 0 else 1350), tb, 1.0, pan=-0.3 if k % 2 else 0.3)
-for tb in beats(8, 15):
+for tb in beats(int(round(TS["pain"] / BEAT)), int(round((TS["reveal"] - BEAT) / BEAT)) + 1):
     if (round(tb / BEAT) % 2) == 0:
         put(kick(0.7), tb, 1.0)
-put(riser(3.4, 1.0), 3.8, 0.9)
+put(riser(TS["reveal"] - TS["pain"] - 0.35, 1.0), TS["pain"] + 0.05, 0.9)
 # hueco antes del drop (7.2–7.5) = silencio relativo
 # groove completo
 for tb in beats(0, int(DUR / BEAT) + 1):
@@ -182,26 +190,28 @@ for tb in np.arange(GROOVE[0], GROOVE[1], 4 * BEAT):
         L[i:i + m] += ch * 0.9; R[i:i + m] += ch * 1.0
     b += 1
 # redoble de caja antes de la estadística (24.4–26.25)
-for k, tb in enumerate(np.arange(24.375, 26.25, BEAT / 4)):
-    put(clap(0.5 + 0.05 * k), tb, 0.7)
+ROLL0, ROLL1 = M(C["scenes"]["neon"]) - 4 * BEAT, M(C["scenes"]["neon"])
+for k, tb in enumerate(np.arange(ROLL0, ROLL1, BEAT / 4)):
+    put(clap(0.45 + 0.04 * k), tb, 0.7)
 # cola final: acorde largo + brillo
-put(pad([220, 329.63, 440, 523.25], 3.9, 0.9), 28.125, 0.9)
-for k, f in enumerate([880, 1318.5, 1760, 2093]):
+put(pad([220, 329.63, 440, 523.25], DUR - TS["cta"], 0.7), TS["cta"], 0.9)
+for k, f in enumerate([880, 1318.5, 1760, 2093] * 4):
     t = tt(0.9)
-    put(np.sin(2 * np.pi * f * t) * np.exp(-t * 4.5) * 0.18, 28.3 + k * BEAT / 2, 1.0, pan=(-0.4 if k % 2 else 0.4))
+    put(np.sin(2 * np.pi * f * t) * np.exp(-t * 4.5) * 0.18, TS["cta"] + 0.18 + k * BEAT, 1.0, pan=(-0.4 if k % 2 else 0.4))
 
 # efectos de edición
 for t in C["impacts"]:
-    put(impact(0.9 if t not in (0.0,) else 0.6), t, 1.0)
+    put(impact(0.9 if t not in (0.0,) else 0.6), M(t), 1.0)
 for t in C["whooshes"]:
-    put(whoosh(0.85, 0.55), max(0.0, t - 0.45), 1.0)
+    put(whoosh(0.85, 0.55), max(0.0, M(t) - 0.45), 1.0)
 for t in C["slams"]:
-    put(impact(0.35), t, 1.0)
-    put(click(0.9, 220), t, 1.0)
+    put(impact(0.35), M(t), 1.0)
+    put(click(0.9, 220), M(t), 1.0)
 for t in C["clicks"]:
-    put(click(0.9), t, 1.0)
+    put(click(0.9), M(t), 1.0)
 # ding de análisis y de éxito
 for t, f in ((13.125, 1318.5), (18.75, 1568.0), (18.9, 2093.0)):
+    t = M(t)
     d = tt(1.0)
     put(np.sin(2 * np.pi * f * d) * np.exp(-d * 5) * 0.22, t, 1.0)
 

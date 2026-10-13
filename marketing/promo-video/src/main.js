@@ -9,6 +9,16 @@
   const $$ = (s) => Array.from(document.querySelectorAll(s));
   const tl = gsap.timeline({ paused: true });
   const T = CH.scenes;
+  // Pausas de lectura: todo lo que ocurre a partir de cada instante «p» se retrasa b tiempos de compás.
+  // Las posiciones del guion están en tiempo ORIGINAL; el envoltorio las convierte a tiempo final con M().
+  function M(t) { let a = t; for (const h of CH.holds) if (h[0] <= t + 1e-9) a += h[1] * BEAT; return a; }
+  const TOTAL = M(CH.duration);
+  const RAW = { to: tl.to.bind(tl), set: tl.set.bind(tl), fromTo: tl.fromTo.bind(tl) };   // sin mapear (tiempo final)
+  ["to", "from", "fromTo", "set"].forEach((m) => {
+    const f = tl[m].bind(tl);
+    tl[m] = function () { const a = Array.prototype.slice.call(arguments); const i = a.length - 1; if (typeof a[i] === "number") a[i] = M(a[i]); return f.apply(null, a); };
+  });
+  const rawFromTo = (t, a, b, pos) => RAW.fromTo(t, a, (!(a && a.opacity === 0) && b.immediateRender === undefined) ? Object.assign({ immediateRender: false }, b) : b, pos);
   // fromTo: GSAP renderiza el estado "from" de inmediato; solo conviene cuando parte de opacity 0 (oculta el elemento hasta su entrada).
   const _fromTo = tl.fromTo.bind(tl);
   tl.fromTo = function (t, a, b, pos) {
@@ -42,10 +52,10 @@
     tl.set("#tear", { opacity: 0 }, t + 0.1);
   }
   // grano de película animado (pasos fijos)
-  for (let i = 0; i < 12 * 32; i++) tl.set("#grain", { x: -((i * 37) % 128), y: -((i * 53) % 128) }, i / 12);
+  for (let i = 0; i < Math.ceil(12 * TOTAL); i++) RAW.set("#grain", { x: -((i * 37) % 128), y: -((i * 53) % 128) }, i / 12);
 
   // pulso en cada tiempo durante el groove
-  for (let tb = T.reveal; tb < T.cta; tb += BEAT) tl.fromTo("#pulse", { opacity: 0.3 }, { opacity: 0, duration: 0.32, ease: "power2.out" }, tb);
+  for (let tb = M(T.reveal); tb < M(CH.duration) - 0.6; tb += BEAT) rawFromTo("#pulse", { opacity: 0.3 }, { opacity: 0, duration: 0.32, ease: "power2.out" }, tb);
 
   // ═══ 1 · GANCHO ════════════════════════════════════════════════════════
   const bars = document.getElementById("hook-bars");
@@ -54,8 +64,8 @@
   const barEls = Array.from(bars.children);
   tl.set(barEls, { scaleY: 0.04 }, 0);
   tl.to(barEls, { scaleY: (i) => H[i], duration: 0.55, ease: "power3.out", stagger: { each: 0.008, from: "center" } }, 0.05);
-  for (let k = 1; k < 8; k++) {
-    tl.to(barEls, { scaleY: (i) => H[i] * (0.45 + 0.55 * ((i * 7 + k * 13) % 10) / 10), duration: 0.14, ease: "power2.out" }, k * BEAT);
+  for (let k = 1; k * BEAT < M(3.5); k++) {
+    RAW.to(barEls, { scaleY: (i) => H[i] * (0.45 + 0.55 * ((i * 7 + k * 13) % 10) / 10), duration: 0.14, ease: "power2.out" }, k * BEAT);
   }
   const embers = document.getElementById("embers");
   for (let i = 0; i < 34; i++) {
@@ -156,7 +166,7 @@
     capsEl.appendChild(d);
     tl.set(d, { opacity: 0 }, A0);
     tl.fromTo(d, { x: -110, opacity: 0 }, { x: 0, opacity: 1, duration: 0.3, ease: "expo.out" }, c.a);
-    tl.to(d, { x: 70, opacity: 0, duration: 0.16, ease: "power2.in" }, c.b - 0.16);
+    RAW.to(d, { x: 70, opacity: 0, duration: 0.16, ease: "power2.in" }, M(c.b) - 0.16);
     if (i <= 4) tl.to(pills[c.p], { backgroundColor: "#ff1f3a", duration: 0.2 }, c.a);
   });
   tl.to("#logo-mini", { opacity: 0.9, duration: 0.3 }, 22.6);
@@ -288,6 +298,22 @@
   curSet(F[3], 1100, 800); curMove(F[3] + 0.1, 0.4, 1683, 1355);
   click(CH.clicks[12], 1683, 1355); hl([1571, 1328, 224, 54], CH.clicks[12] - 0.03, 0.4);
 
+  // ═══ 4b · VÍDEO NEÓN ═══════════════════════════════════════════════════
+  const N0 = T.neon;
+  flash(N0, 0.8, 0.3, true); shake(N0, 18, 0.3);
+  tl.fromTo("#neon-kick .t", { opacity: 0, scale: 2.2, y: -60 }, { opacity: 1, scale: 1, y: 0, duration: 0.22, ease: "expo.out" }, N0);
+  tl.fromTo("#nc916", { opacity: 0, y: 380, scale: 0.8, rotation: 4 }, { opacity: 1, y: 0, scale: 1, rotation: 0, duration: 0.4, ease: "expo.out" }, N0 + 0.15);
+  tl.fromTo("#nc11", { opacity: 0, x: -420, rotation: -10 }, { opacity: 1, x: 0, rotation: -4, duration: 0.4, ease: "expo.out" }, N0 + 0.38);
+  tl.fromTo("#nc169", { opacity: 0, x: 420, rotation: 10 }, { opacity: 1, x: 0, rotation: 4, duration: 0.4, ease: "expo.out" }, N0 + 0.6);
+  flash(N0 + 0.15, 0.3, 0.25); flash(N0 + 0.6, 0.25, 0.25, true);
+  tl.fromTo("#neon-title .word", { opacity: 0, scale: 2.4, y: 40 }, { opacity: 1, scale: 1, y: 0, duration: 0.24, ease: "expo.out" }, N0 + 0.85);
+  shake(N0 + 0.85, 16, 0.25);
+  tl.fromTo("#neon-sub", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, N0 + 1.05);
+  // las tarjetas «flotan» durante las pausas
+  [["#nc916", -14, 0], ["#nc11", 12, 0.2], ["#nc169", -10, 0.4]].forEach((c) =>
+    RAW.to(c[0], { y: c[1], duration: 0.9, yoyo: true, repeat: 5, ease: "sine.inOut" }, M(N0 + 0.9) + c[2]));
+  tl.to(["#neon-kick .t", "#nc916", "#nc11", "#nc169", "#neon-title .word", "#neon-sub"], { opacity: 0, y: -80, duration: 0.2, ease: "power2.in" }, T.stat - 0.2);
+
   // ═══ 5 · ESTADÍSTICA ═══════════════════════════════════════════════════
   flash(T.stat, 0.9, 0.35); shake(T.stat, 16, 0.3);
   tl.set(["#stat1 .word", "#stat2 .word", "#stat-sub", "#strike"], { opacity: 0 }, T.stat);
@@ -322,7 +348,8 @@
   tl.fromTo("#buy", { scale: 1 }, { scale: 0.96, duration: 0.07, yoyo: true, repeat: 1 }, cc - 0.04);
   flash(cc, 0.3, 0.25, true);
   [C0 + 2.4, C0 + 3.0].forEach((t) => tl.fromTo("#buy", { boxShadow: "0 0 80px rgba(255,31,58,.6)" }, { boxShadow: "0 0 160px rgba(255,31,58,1)", duration: 0.25, yoyo: true, repeat: 1 }, t));
-  tl.to("#world", { opacity: 0, duration: 0.45, ease: "power2.in" }, 31.55);
+  for (let g = 0; g < 3; g++) rawFromTo("#buy", { boxShadow: "0 0 80px rgba(255,31,58,.6)" }, { boxShadow: "0 0 160px rgba(255,31,58,1)", duration: 0.3, yoyo: true, repeat: 1 }, M(32.9) + 0.1 + g * 0.65);
+  tl.to("#world", { opacity: 0, duration: 0.5, ease: "power2.in" }, T.cta + 3.4);
 
   window.__timelines = window.__timelines || {};
   window.__timelines["main"] = tl;

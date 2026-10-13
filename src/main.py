@@ -203,6 +203,16 @@ def run_selftest() -> int:
         _dlg.deleteLater()
         print("  ✓ Widgets de forma de onda y activación construidos sin crash")
 
+        # Vídeo animado Radical Neón: debe renderizar fotogramas reales en el binario compilado
+        from src.engine import video_neon as _vn
+        import numpy as _np
+        _an = _vn.AudioAnalysis(duration=1.0, n_frames=30, bars=_np.full((30, 44), 0.5, dtype=_np.float32),
+                                kick=_np.zeros(30, dtype=_np.float32), energy=_np.full(30, 0.5, dtype=_np.float32), drops=[])
+        for _asp in _vn.ASPECTS:
+            _r = _vn._Renderer(_an, None, "TEST", "Radical Records", 128.0, "8A · Am", _asp, "crimson", "", "PREVIA EXCLUSIVA", 0.25)
+            assert _r.frame(3, 0.1).size
+        print("  ✓ Generador de vídeo Radical Neón construye fotogramas en los 3 formatos")
+
         # Licencia «un equipo por clave»: el identificador de equipo debe poder calcularse en el binario compilado
         from src.licensing.device import get_device_id as _gdi
         from src.licensing import license as _lic

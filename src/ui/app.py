@@ -250,7 +250,7 @@ class ExportWorker(QThread):
                 metadata["bpm"] = self.beat_grid.bpm
             if self.cfg.get("key_str"):
                 metadata["key"] = self.cfg.get("key_str")
-            metadata["video_palette"]    = self.cfg.get("video_palette", "radical")
+            metadata["video_palette"]    = self.cfg.get("video_palette", "crimson")
             metadata["video_promo_text"] = self.cfg.get("video_promo_text", "RADICAL RECORDS · PROMO EXCLUSIVA")
             metadata["aspect_ratio"]     = self.cfg.get("aspect_ratio", "9:16")
             if self.cfg.get("mp3_kbps"):
@@ -1702,7 +1702,7 @@ class ResultPanel(QWidget):
         self._chk_flac = QCheckBox("FLAC")
         self._chk_flac.setStyleSheet(chk_style)
         self._chk_flac.setChecked(False)
-        self._chk_video = QCheckBox("🎬 Vídeo 9:16 (TikTok/Reels)")
+        self._chk_video = QCheckBox("🎬 Vídeo animado (TikTok/Reels/YouTube)")
         self._chk_video.setStyleSheet(f"""
             QCheckBox {{
                 color: #c084fc;
@@ -1860,7 +1860,7 @@ class ResultPanel(QWidget):
         self._combo_video_pal.addItem("🔥 Rojo Carmesí Studio", "crimson")
         self._combo_video_pal.addItem("🟡 Ámbar Gold & Solar", "amber")
         self._combo_video_pal.addItem("🟣 Cyber Violet", "cyber")
-        self._combo_video_pal.setToolTip("Paleta de color neón del analizador FFT y osciloscopio en el vídeo")
+        self._combo_video_pal.setToolTip("Paleta de color neón del vídeo animado Radical Neón (carátula, barras, destellos)")
 
         self._edit_promo = QLineEdit()
         self._edit_promo.setPlaceholderText("Banner: RADICAL RECORDS · PROMO EXCLUSIVA")
@@ -1873,6 +1873,7 @@ class ResultPanel(QWidget):
         self._combo_aspect.setStyleSheet(_input_style())
         self._combo_aspect.addItem("📱 9:16 (TikTok/Reels/Shorts)", "9:16")
         self._combo_aspect.addItem("⏹️ 1:1 (Post Cuadrado)", "1:1")
+        self._combo_aspect.addItem("🖥️ 16:9 (YouTube / Horizontal)", "16:9")
 
         row_video.addWidget(lbl_vopt)
         row_video.addWidget(self._combo_video_pal)
@@ -2417,7 +2418,7 @@ class ResultPanel(QWidget):
 
     def get_export_options(self) -> dict:
         speed_mode = getattr(self, "_speed_mode", "vinyl")
-        video_pal = self._combo_video_pal.currentData() if hasattr(self, "_combo_video_pal") else "radical"
+        video_pal = self._combo_video_pal.currentData() if hasattr(self, "_combo_video_pal") else "crimson"
         promo_txt = self._edit_promo.text().strip() if hasattr(self, "_edit_promo") else ""
         aspect = self._combo_aspect.currentData() if hasattr(self, "_combo_aspect") else "9:16"
         voice_pos = self._combo_voice_pos.currentData() if hasattr(self, "_combo_voice_pos") else "predrop"

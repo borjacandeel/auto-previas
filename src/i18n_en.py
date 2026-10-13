@@ -83,7 +83,7 @@ EN = {
     "PREVIA - NombreOriginal": "PREVIEW - OriginalName",
     "WAV 24b": "WAV 24b",
     "FLAC": "FLAC",
-    "🎬 Vídeo 9:16 (TikTok/Reels)": "🎬 Video 9:16 (TikTok/Reels)",
+    "🎬 Vídeo animado (TikTok/Reels/YouTube)": "🎬 Animated video (TikTok/Reels/YouTube)",
     "Efectos": "Effects",
     "🎛️ Flanger": "🎛️ Flanger",
     "Aplica un efecto Flanger analógico estéreo con modulación LFO": "Applies an analog stereo Flanger effect with LFO modulation",

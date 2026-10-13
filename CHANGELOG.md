@@ -3,6 +3,18 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [3.3.0] - 2026-10-13
+
+### Añadido
+- **Vídeo animado «Radical Neón»**: el vídeo para redes sociales se ha rediseñado por completo. Ahora es una pieza animada con el estilo Radical Records: tu **carátula** con resplandor neón, título, artista, BPM y tonalidad, un **analizador de espectro** que baila con la música, destellos que golpean con el bombo, un golpe especial cuando entra el drop y tu texto de banner. Se exporta en los tres formatos: **9:16** (TikTok / Reels), **1:1** (Instagram) y **16:9** (YouTube).
+- Nuevo formato **16:9 (YouTube / horizontal)** en el selector de formato del vídeo.
+
+### Cambiado
+- La casilla del vídeo pasa a llamarse «🎬 Vídeo animado (TikTok/Reels/YouTube)».
+- La paleta por defecto del vídeo es ahora Rojo Carmesí (puedes cambiarla cuando quieras). Las cinco paletas (Cian y Magenta, Verde Rave, Carmesí, Ámbar y Cyber Violet) funcionan con el nuevo vídeo.
+- Si por cualquier motivo no se pudiera crear el vídeo animado, la app genera el vídeo clásico en su lugar para que la exportación nunca falle.
+- Los manuales PDF (Basic y Plus) explican el nuevo vídeo y están actualizados a esta versión.
+
 ## [3.2.0] - 2026-10-13
 
 ### Añadido

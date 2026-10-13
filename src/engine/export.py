@@ -713,27 +713,44 @@ def export_files(
                 generated.append(aiff_target)
 
     if "video" in paths:
-        _prog(99, "Generando vídeo de previa (TikTok / Reels / Shorts)…")
+        _prog(90, "Generando vídeo animado Radical Neón (TikTok / Reels / Shorts)…")
+        video_target = str(paths["video"])
+        audio_for_vid = str(paths.get("wav") or temp_wav_for_mp3 or paths.get("mp3"))
+        track_title = meta.get("title") or "Previa"
         try:
-            from src.engine.video import render_social_video
-            video_target = str(paths["video"])
-            audio_for_vid = str(paths.get("wav") or temp_wav_for_mp3 or paths.get("mp3"))
-            track_title = meta.get("title") or "Previa"
-            render_social_video(
-                audio_path=audio_for_vid,
-                cover_image_path=cover_image_path,
-                output_video_path=video_target,
-                title=track_title,
-                artist=artist,
-                bpm=float(bpm_val or 128.0),
-                key_str=str(meta.get("key") or "8A · Am"),
-                aspect_ratio=str(meta.get("aspect_ratio") or "9:16"),
-                palette_key=str(meta.get("video_palette") or "radical"),
-                promo_text=str(meta.get("video_promo_text") or ""),
+            from src.config import load as _load_cfg
+            _lang = str(_load_cfg().get("language", "es"))
+        except Exception:
+            _lang = "es"
+        common = dict(
+            audio_path=audio_for_vid,
+            cover_image_path=cover_image_path,
+            output_video_path=video_target,
+            title=track_title,
+            artist=artist,
+            bpm=float(bpm_val or 128.0),
+            key_str=str(meta.get("key") or "8A · Am"),
+            aspect_ratio=str(meta.get("aspect_ratio") or "9:16"),
+            palette_key=str(meta.get("video_palette") or "crimson"),
+            promo_text=str(meta.get("video_promo_text") or ""),
+        )
+        try:
+            from src.engine.video_neon import render_neon_video
+            render_neon_video(
+                **common,
+                kicker="EXCLUSIVE PREVIEW" if _lang == "en" else "PREVIA EXCLUSIVA",
+                progress_cb=lambda p, m: _prog(90 + int(p * 0.09), m),
             )
             generated.append(video_target)
-        except Exception as e:
-            _prog(99, f"⚠ Vídeo social no generado: {e}")
+        except Exception as e_neon:
+            # Si el motor animado falla (p. ej. falta una fuente o memoria), se usa el vídeo clásico
+            try:
+                from src.engine.video import render_social_video
+                _prog(99, "Vídeo animado no disponible; generando el vídeo clásico…")
+                render_social_video(**common)
+                generated.append(video_target)
+            except Exception as e:
+                _prog(99, f"⚠ Vídeo social no generado: {e_neon} / {e}")
 
     # Si se creó un WAV temporal y no había WAV de salida de usuario, lo registramos para el reproductor interno
     if temp_wav_for_mp3 and Path(temp_wav_for_mp3).exists():

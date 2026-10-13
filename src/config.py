@@ -33,7 +33,7 @@ _DEFAULTS = {
     # Aceleración DJ v2.0: Vinilo analógico (+pitch armónico) vs Keylock digital
     "speed_mode": "vinyl",     # "vinyl" o "keylock"
     # Vídeo viral v2.0
-    "video_palette": "radical",  # "radical", "rave", "crimson", "amber", "cyber"
+    "video_palette": "crimson",  # "radical", "rave", "crimson", "amber", "cyber"
     "video_promo_text": "RADICAL RECORDS · PROMO EXCLUSIVA",
     # Firma de voz / Voice drop v2.0
     "voice_drop_enabled": False,

@@ -96,6 +96,18 @@ html, body { width: 1080px; height: 1920px; overflow: hidden; background: #05060
 #conf { position: absolute; left: 40px; top: 520px; width: 1000px; height: 1060px; pointer-events: none; overflow: hidden; border-radius: 28px; }
 .cf { position: absolute; width: 18px; height: 30px; border-radius: 3px; opacity: 0; }
 
+
+/* ── vídeo neón ────────────────────────────────────────────────── */
+#neon-kick { position: absolute; left: 0; right: 0; top: 150px; font-size: 96px; color: var(--red); }
+#neon-stage { position: absolute; left: 0; right: 0; top: 300px; height: 1000px; }
+.ncard { position: absolute; display: block; border-radius: 26px; border: 4px solid rgba(255,31,58,.9); box-shadow: 0 0 70px rgba(255,31,58,.5), 0 30px 80px rgba(0,0,0,.7); opacity: 0; }
+#nc916 { left: 285px; top: 0; width: 560px; height: 996px; }
+#nc11 { left: 20px; top: 470px; width: 480px; height: 480px; }
+#nc169 { left: 560px; top: 560px; width: 500px; height: 281px; }
+#neon-title { position: absolute; left: 0; right: 0; top: 1370px; }
+#neon-title .word { font-size: 118px; letter-spacing: -2px; }
+#neon-sub { position: absolute; left: 60px; right: 60px; top: 1580px; text-align: center; font-size: 46px; font-weight: 700; color: #c9ccd8; line-height: 1.35; opacity: 0; }
+
 /* ── estadística ───────────────────────────────────────────────── */
 #stat1 { position: absolute; left: 0; right: 0; top: 470px; }
 #stat1 .word { font-size: 150px; color: #8a8fa3; }
@@ -135,7 +147,7 @@ html, body { width: 1080px; height: 1920px; overflow: hidden; background: #05060
 </style>
 </head>
 <body>
-<div id="root" data-composition-id="main" data-start="0" data-duration="32" data-width="1080" data-height="1920" data-fps="30">
+<div id="root" data-composition-id="main" data-start="0" data-duration="/*DUR*/" data-width="1080" data-height="1920" data-fps="30">
 
   <div id="bg"></div>
   <div id="gridlines"></div>
@@ -143,7 +155,7 @@ html, body { width: 1080px; height: 1920px; overflow: hidden; background: #05060
   <div id="world">
 
     <!-- 1 · GANCHO -->
-    <div class="scene clip" id="s-hook" data-start="0" data-duration="3.75">
+    <div class="scene clip" id="s-hook" data-start="/*S:hook*/" data-duration="/*D:hook*/">
       <div id="hook-bars"></div>
       <div id="embers"></div>
       <div id="hook-words">
@@ -155,7 +167,7 @@ html, body { width: 1080px; height: 1920px; overflow: hidden; background: #05060
     </div>
 
     <!-- 2 · DOLOR -->
-    <div class="scene clip" id="s-pain" data-start="3.75" data-duration="3.75">
+    <div class="scene clip" id="s-pain" data-start="/*S:pain*/" data-duration="/*D:pain*/">
       <div id="pain-all" class="abs" style="inset:0">
         <div id="timer-wrap"><div id="timer-lbl">TIEMPO PERDIDO</div><div id="timer">00:00:00</div></div>
         <div id="daw">
@@ -173,7 +185,7 @@ html, body { width: 1080px; height: 1920px; overflow: hidden; background: #05060
     </div>
 
     <!-- 3 · REVELACIÓN -->
-    <div class="scene clip" id="s-reveal" data-start="7.5" data-duration="1.875">
+    <div class="scene clip" id="s-reveal" data-start="/*S:reveal*/" data-duration="/*D:reveal*/">
       <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
       <div id="emblem" data-hf-motion-blur='{"samplesPerFrame": 10}'><img src="assets/logo_emblem.png" alt="" /></div>
       <div id="title-auto"><span>A</span><span>U</span><span>T</span><span>O</span><span>P</span><span>R</span><span>E</span><span>V</span><span>I</span><span>A</span><span>S</span></div>
@@ -182,7 +194,7 @@ html, body { width: 1080px; height: 1920px; overflow: hidden; background: #05060
     </div>
 
     <!-- 4 · APP (demo + funciones) -->
-    <div class="scene clip" id="s-app" data-start="9.375" data-duration="16.875">
+    <div class="scene clip" id="s-app" data-start="/*S:demo*/" data-duration="/*D:demo*/">
       <div id="caps"></div>
       <div id="vp">
         <div id="cam">
@@ -213,8 +225,20 @@ html, body { width: 1080px; height: 1920px; overflow: hidden; background: #05060
       <img id="logo-mini" src="assets/logo_banner.png" alt="" style="opacity:0" />
     </div>
 
+    <!-- 4b · VÍDEO NEÓN -->
+    <div class="scene clip" id="s-neon" data-start="/*S:neon*/" data-duration="/*D:neon*/">
+      <div id="neon-kick" class="word" data-hf-motion-blur='{"samplesPerFrame": 8}'><span class="t">¿Y el vídeo?</span></div>
+      <div id="neon-stage">
+        <img id="nc169" class="ncard" src="assets/neon_169.jpg" alt="" />
+        <img id="nc11" class="ncard" src="assets/neon_11.jpg" alt="" />
+        <img id="nc916" class="ncard" src="assets/neon_916.jpg" alt="" />
+      </div>
+      <div id="neon-title"><div class="word" data-hf-motion-blur='{"samplesPerFrame": 8}'>Vídeo <span class="red">animado</span></div></div>
+      <div id="neon-sub">Con TU carátula · 9:16 · 1:1 · 16:9<br>listo para TikTok, Reels y YouTube</div>
+    </div>
+
     <!-- 5 · ESTADÍSTICA -->
-    <div class="scene clip" id="s-stat" data-start="26.25" data-duration="1.875">
+    <div class="scene clip" id="s-stat" data-start="/*S:stat*/" data-duration="/*D:stat*/">
       <div id="stat1"><div class="word" data-hf-motion-blur='{"samplesPerFrame": 8}'>de 3 horas</div></div>
       <div id="strike"></div>
       <div id="stat2">
@@ -225,7 +249,7 @@ html, body { width: 1080px; height: 1920px; overflow: hidden; background: #05060
     </div>
 
     <!-- 6 · CTA -->
-    <div class="scene clip" id="s-cta" data-start="28.125" data-duration="3.875">
+    <div class="scene clip" id="s-cta" data-start="/*S:cta*/" data-duration="/*D:cta*/">
       <div id="cta-emblem" data-hf-motion-blur='{"samplesPerFrame": 10}'><img src="assets/logo_emblem.png" alt="" /></div>
       <div id="cta-title"><span>A</span><span>U</span><span>T</span><span>O</span><span>P</span><span>R</span><span>E</span><span>V</span><span>I</span><span>A</span><span>S</span></div>
       <div id="eds"><span class="b">BASIC</span><span class="p">PLUS</span></div>
@@ -249,7 +273,7 @@ html, body { width: 1080px; height: 1920px; overflow: hidden; background: #05060
   <div id="vig"></div>
   <div id="grain"></div>
 
-  <audio id="music" src="assets/promo-music.mp3" data-start="0" data-duration="32" data-volume="1"></audio>
+  <audio id="music" src="assets/promo-music.mp3" data-start="0" data-duration="/*DUR*/" data-volume="1"></audio>
 </div>
 
 <script>

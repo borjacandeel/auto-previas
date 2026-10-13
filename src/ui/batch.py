@@ -332,7 +332,7 @@ class BatchDialog(QDialog):
         self._chk_flac.setStyleSheet("color: white; font-size: 11px; border: none; background: transparent;")
         opt_lay.addWidget(self._chk_flac)
 
-        self._chk_video = QCheckBox("🎬 Vídeo 9:16 (TikTok/Reels)")
+        self._chk_video = QCheckBox("🎬 Vídeo animado (TikTok/Reels/YouTube)")
         self._chk_video.setChecked(False)
         self._chk_video.setStyleSheet("color: #a855f7; font-size: 11px; font-weight: 700; border: none; background: transparent;")
         opt_lay.addWidget(self._chk_video)

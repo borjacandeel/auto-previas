@@ -58,3 +58,9 @@ desarrolladas por terceros. A continuación se detallan las licencias correspond
 - Sitio web: https://sourceforge.net/projects/soxr/
 - Licencia: GNU Lesser General Public License (LGPL) versión 2.1.
 - Uso: Remuestreo de audio de alta calidad.
+
+10. Inter (tipografía)
+----------------------
+- Sitio web: https://rsms.me/inter/
+- Licencia: SIL Open Font License 1.1 (texto en assets/fonts/Inter-LICENSE-OFL.txt).
+- Uso: Textos del vídeo animado Radical Neón.
