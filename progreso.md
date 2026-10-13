@@ -78,6 +78,12 @@
 - **Pendientes anotados** (tabla en esta sesión): producción de los 11 vídeos del plan + pruebas del usuario + tareas opcionales.
 
 
+### Resumen de Trabajo — Sesión 49 (2026-10-13): lanzamiento automatizado
+
+- `scripts/launch_public.py <enlace> [--apply]`: orquesta el cambio del enlace (vía `set_store_link.py`), versión PATCH, entrada del CHANGELOG, badge del README, pytest y regeneración de PDF. Probado en un worktree temporal con `--apply --no-tests --no-pdf` (23 ocurrencias en 11 archivos, 3.5.0→3.5.1).
+- `worker/LANZAMIENTO.md`: qué tocar en Payhip/Cloudflare según el caso (A: mismos productos → nada en Cloudflare; B: productos nuevos → nuevas product-secret-key, el Worker admite varias separadas por comas — soporte añadido en `autoprevias-license.js` y comprobado con `node --check`; el Worker desplegado NO tiene aún este cambio y solo hay que redesplegarlo si se da el caso B) y ajustes recomendados (`REQUIRE_DEVICE=1`).
+- **Privacidad**: eliminado el correo personal de comprador de `handoff_local.md` y `progreso.md` (seguía en el historial de git, que es público).
+
 ### Resumen de Trabajo — Sesión 48 (2026-10-13): preparación del día de lanzamiento
 
 - **Estado**: app v3.5.0 publicada y verificada (Release con 4 instaladores + alias, 2 PDF, SHA256SUMS). 11 vídeos de marketing en `marketing/videos/publicados/` (enlaces en `marketing/PLAN-VIDEOS.md`).
@@ -430,7 +436,7 @@ Primera sesión en la nube (claude.ai/code). El usuario migró desde agente loca
 
 | # | Acción | Detalle |
 |---|--------|---------|
-| 1 | **Verificación del Worker** | `curl -X POST` al Worker → `{"success":true,"edition":"plus","email":"djborjacandel@gmail.com"}` con clave `[CLAVE-DE-PRUEBA-REDACTADA]`. Worker correcto. |
+| 1 | **Verificación del Worker** | `curl -X POST` al Worker → `{"success":true,"edition":"plus","email":"[correo-del-comprador-redactado]"}` con clave `[CLAVE-DE-PRUEBA-REDACTADA]`. Worker correcto. |
 | 2 | **Diagnóstico del fallo** | La app instalada era v2.9.1 (código viejo con `product_id`). El Worker nuevo ya no acepta ese campo. El código de `license.py` ya estaba corregido en el repo (sesión 35), pero faltaba compilar. |
 | 3 | **Bump v2.9.3** | `src/__version__.py`, `CHANGELOG.md`, `README.md`, `progreso.md` actualizados. |
 | 4 | **Fix `workflow_dispatch`** | El workflow solo usaba `inputs.tag_name` si el ref era "main". Corregido: ahora usa el input siempre que se proporcione. |

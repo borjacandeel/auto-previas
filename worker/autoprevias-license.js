@@ -2,7 +2,7 @@
  * AutoPrevias — Cloudflare Worker de licencias (una licencia = un equipo).
  *
  * Bindings / variables (Cloudflare → Worker → Settings):
- *   PAYHIP_SECRET_PLUS   (secret)   product-secret-key del producto Plus
+ *   PAYHIP_SECRET_PLUS   (secret)   product-secret-key del producto Plus (varias separadas por comas si hay productos antiguos y nuevos)
  *   PAYHIP_SECRET_BASIC  (secret)   product-secret-key del producto Basic
  *   ADMIN_TOKEN          (secret)   token largo y aleatorio para liberar una licencia a mano (action "reset")
  *   LICENSES             (KV namespace) clave → equipo  [ver worker/README.md]
@@ -45,9 +45,12 @@ function safeEqual(a, b) {
 
 /** Pregunta a Payhip. Devuelve "plus" | "basic" | null. Plus primero (como antes). */
 async function payhipEdition(key, env) {
-  const products = [["plus", env.PAYHIP_SECRET_PLUS], ["basic", env.PAYHIP_SECRET_BASIC]];
+  // Cada edición admite varias product-secret-key separadas por comas (p. ej. producto antiguo + producto nuevo al relanzar la tienda)
+  const list = (v) => String(v || "").split(",").map((x) => x.trim()).filter(Boolean);
+  const products = [];
+  for (const sec of list(env.PAYHIP_SECRET_PLUS)) products.push(["plus", sec]);
+  for (const sec of list(env.PAYHIP_SECRET_BASIC)) products.push(["basic", sec]);
   for (const [edition, secret] of products) {
-    if (!secret) continue;
     try {
       const r = await fetch("https://payhip.com/api/v2/license/verify?license_key=" + encodeURIComponent(key), {
         headers: { "product-secret-key": secret, "User-Agent": "AutoPrevias-License-Worker/2.0" },

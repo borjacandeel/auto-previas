@@ -91,7 +91,7 @@ curl -X POST "https://payhip.com/api/v2/license/verify" \
 curl -G "https://payhip.com/api/v2/license/verify" \
   -d "license_key=<clave_plus>" \
   -H "product-secret-key: <prod_secret_plus>"
-# Resultado: {"data":{"enabled":true,"product_link":"mTjEL","license_key":"...","buyer_email":"djborjacandel@gmail.com","uses":0,...},"error":false}
+# Resultado: {"data":{"enabled":true,"product_link":"mTjEL","license_key":"...","buyer_email":"[correo-del-comprador-redactado]","uses":0,...},"error":false}
 # Conclusión: La clave del usuario es válida de tipo PLUS
 ```
 
@@ -149,7 +149,7 @@ Todas las variantes fallaron porque Payhip simplemente no acepta el API Key de c
 - Cuando el usuario actualice Cloudflare → bump a **v2.9.3** + CI → instaladores funcionales
 
 ### Producto comprado por el usuario en Payhip
-- Cuenta: `djborjacandel@gmail.com`
+- Cuenta: `[correo-del-comprador-redactado]`
 - Producto: **AutoPrevias Plus** (`mTjEL`)
 - La clave es válida y devuelve `enabled: true` cuando se verifica correctamente
 
