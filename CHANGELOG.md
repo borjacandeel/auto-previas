@@ -3,6 +3,19 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [Sin publicar] — Licencia: una clave, un equipo
+
+### Añadido
+- **Una licencia = un equipo.** Si tu licencia ya está activa en un ordenador, no se puede activar en otro hasta que la desactives allí (⚙ Licencia → «Desactivar licencia en este equipo») o pasen 15 días sin que ese equipo se conecte. Así tu clave no se puede compartir.
+- Mensajes claros en español e inglés cuando la licencia está en uso en otro equipo, cuando no hay conexión o cuando la clave ya no es válida.
+
+### Cambiado
+- «Desactivar licencia» ahora **libera la clave en el servidor** para poder usarla en tu otro equipo (si no hay conexión, te lo avisa y te deja reintentar).
+- Tu clave se guarda en el equipo cifrada y ligada a él: copiar el archivo de licencia a otro ordenador no sirve.
+
+### Corregido
+- La licencia se reverificaba solo «en teoría»: tras 14 días la app volvía a pedir la clave. Ahora se reverifica de verdad cada 7 días en segundo plano, sin bloquear el arranque.
+
 ## [3.1.0] - 2026-10-12
 
 ### Añadido

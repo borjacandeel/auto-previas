@@ -21,7 +21,7 @@ SUPPORT_EMAIL = "radicalrecordsvlc@gmail.com"
 def describe_license(local: dict | None, now: float | None = None, grace_days: int = 14) -> dict:
     """Resumen de la licencia local para mostrar (función pura, testeable).
 
-    Devuelve: state ('active'|'grace_expired'|'none'), license_id, verified, valid_until, days_left.
+    Devuelve: state ('active'|'grace_expired'|'revoked'|'none'), license_id, verified, valid_until, days_left.
     """
     import time as _time
 
@@ -32,8 +32,11 @@ def describe_license(local: dict | None, now: float | None = None, grace_days: i
     until = verified_at + grace_days * 86400
     days_left = int((until - now) // 86400)
     fmt = lambda ts: _dt.datetime.fromtimestamp(ts).strftime("%Y-%m-%d") if ts else "—"
+    state = "active" if now <= until else "grace_expired"
+    if local.get("revoked"):
+        state = "revoked"
     return {
-        "state": "active" if now <= until else "grace_expired",
+        "state": state,
         "license_id": str(local.get("key_hash", ""))[:8].upper(),
         "verified": fmt(verified_at),
         "valid_until": fmt(until),
@@ -161,6 +164,12 @@ class LicenseDialog(QDialog):
             self._lbl_detail.setText(tr(
                 "ID de licencia: {lid}\nÚltima verificación: {ver}\nVálida sin conexión hasta: {until} ({days} días)",
                 lid=info["license_id"], ver=info["verified"], until=info["valid_until"], days=info["days_left"]))
+        elif info["state"] == "revoked":
+            self._lbl_state.setText(tr("⚠️ Esta licencia ya no es válida en este equipo"))
+            self._lbl_state.setStyleSheet(f"font-size: 13px; font-weight: 700; color: {RED};")
+            self._lbl_detail.setText(tr(
+                "ID de licencia: {lid}\nSe activó en otro equipo o fue desactivada.\nReinicia AutoPrevias para activarla de nuevo.",
+                lid=info["license_id"]))
         elif info["state"] == "grace_expired":
             self._lbl_state.setText(tr("⚠️ Hay que volver a verificar la licencia"))
             self._lbl_state.setStyleSheet(f"font-size: 13px; font-weight: 700; color: {WARN};")
@@ -203,16 +212,44 @@ class LicenseDialog(QDialog):
             self._lbl_update.setText(tr("✅ Estás al día ({v}).", v=self._version))
 
     # ── Desactivar licencia ───────────────────────────────────────────────────
+    def _release_on_server(self) -> bool:
+        """Libera la licencia en el servidor. False = el usuario cancela."""
+        from PySide6.QtWidgets import QApplication
+        from src.licensing.license import deactivate_online
+        while True:
+            QApplication.setOverrideCursor(Qt.WaitCursor)
+            try:
+                ok, _code = deactivate_online()
+            finally:
+                QApplication.restoreOverrideCursor()
+            if ok:
+                return True
+            box = QMessageBox(self)
+            box.setIcon(QMessageBox.Warning)
+            box.setWindowTitle(tr("Desactivar licencia"))
+            box.setText(tr("No se pudo contactar con el servidor para liberar la licencia.\n"
+                           "Si la desactivas solo aquí, no podrás activarla en otro equipo hasta que "
+                           "pasen 15 días o escribas a {mail}.", mail=SUPPORT_EMAIL))
+            retry = box.addButton(tr("Reintentar"), QMessageBox.AcceptRole)
+            local = box.addButton(tr("Desactivar solo aquí"), QMessageBox.DestructiveRole)
+            box.addButton(tr("Cancelar"), QMessageBox.RejectRole)
+            box.exec()
+            if box.clickedButton() is retry:
+                continue
+            return box.clickedButton() is local
+
     def _remove_license(self):
         box = QMessageBox(self)
         box.setIcon(QMessageBox.Warning)
         box.setWindowTitle(tr("Desactivar licencia"))
-        box.setText(tr("Se borrará la licencia de este equipo y AutoPrevias se cerrará. "
+        box.setText(tr("Se liberará la licencia para que puedas usarla en otro equipo y AutoPrevias se cerrará. "
                        "Podrás volver a activarla con tu clave cuando quieras."))
         yes = box.addButton(tr("Desactivar y cerrar"), QMessageBox.AcceptRole)
         box.addButton(tr("Cancelar"), QMessageBox.RejectRole)
         box.exec()
         if box.clickedButton() is yes:
+            if not self._release_on_server():
+                return
             from src.licensing.license import clear_local
             clear_local()
             self.license_removed.emit()

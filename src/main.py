@@ -203,6 +203,15 @@ def run_selftest() -> int:
         _dlg.deleteLater()
         print("  ✓ Widgets de forma de onda y activación construidos sin crash")
 
+        # Licencia «un equipo por clave»: el identificador de equipo debe poder calcularse en el binario compilado
+        from src.licensing.device import get_device_id as _gdi
+        from src.licensing import license as _lic
+        _did = _gdi()
+        assert len(_did) == 64 and _did == _gdi()
+        assert _lic._decode_key(_lic._encode_key("TEST-KEY-1234", _did), _did) == "TEST-KEY-1234"
+        _act.ActivationDialog(reason="in_use").deleteLater()
+        print("  ✓ Identificador de equipo y cifrado local de clave operativos")
+
         # Funciones 3.1: idioma, presets, historial, licencia y modo promo (panel de resultados real)
         from src import i18n as _i18n, presets as _pre
         from src.engine.effects import promo_tag_times
@@ -337,6 +346,23 @@ def run_selftest() -> int:
         return 1
 
 
+def _start_background_reverify() -> None:
+    """Reverifica la licencia (cada 7 días) en un hilo aparte, sin bloquear el arranque."""
+    try:
+        import threading
+        from src.licensing.license import reverify_if_due
+
+        def _run():
+            try:
+                _log_startup(f"Reverificación de licencia: {reverify_if_due()}")
+            except Exception as ex:      # nunca debe afectar a la app
+                _log_startup(f"Reverificación de licencia falló: {ex}")
+
+        threading.Thread(target=_run, name="license-reverify", daemon=True).start()
+    except Exception as ex:
+        _log_startup(f"No se pudo lanzar la reverificación: {ex}")
+
+
 def _check_license_on_startup() -> bool:
     """
     Comprueba la licencia al arrancar. Muestra la pantalla de activación
@@ -360,13 +386,9 @@ def _check_license_on_startup() -> bool:
 
         status, edition = check_license()
 
-        if status == LicenseStatus.VALID:
+        if status in (LicenseStatus.VALID, LicenseStatus.GRACE):
             set_edition(edition)
-            return True
-
-        if status == LicenseStatus.GRACE:
-            # Dentro del período de gracia — dejar pasar con aviso
-            set_edition(edition)
+            _start_background_reverify()
             return True
 
         # Sin licencia o expirada — mostrar pantalla de activación
@@ -375,7 +397,11 @@ def _check_license_on_startup() -> bool:
 
         from src.ui.activate import ActivationDialog
         expired = (status == LicenseStatus.EXPIRED)
-        dlg = ActivationDialog(expired=expired)
+        reason = ""
+        if status == LicenseStatus.REVOKED:
+            from src.licensing.license import load_local
+            reason = str((load_local() or {}).get("revoked") or "invalid")
+        dlg = ActivationDialog(expired=expired, reason=reason)
 
         activated_edition = []
 

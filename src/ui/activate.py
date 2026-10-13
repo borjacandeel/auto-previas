@@ -51,8 +51,9 @@ class ActivationDialog(QDialog):
 
     activated = Signal(str)   # edition activada ('basic' o 'plus')
 
-    def __init__(self, parent=None, expired: bool = False):
+    def __init__(self, parent=None, expired: bool = False, reason: str = ""):
         super().__init__(parent)
+        self._reason = reason
         self.setWindowTitle("AutoPrevias — Activación")
         self.setModal(True)
         self.setFixedSize(480, 420)
@@ -117,7 +118,14 @@ class ActivationDialog(QDialog):
         root.addWidget(lbl_title)
         root.addSpacing(6)
 
-        if self._expired:
+        if self._reason == "in_use":
+            msg = ("Esta licencia se ha activado en otro equipo.\n"
+                   "Solo puede estar activa en un equipo a la vez.")
+            color = RED
+        elif self._reason:
+            msg = "Tu licencia ya no es válida.\nIntroduce una clave válida para continuar."
+            color = RED
+        elif self._expired:
             msg = "Tu período de gracia ha expirado.\nIntroduce tu clave para continuar usando la app."
             color = RED
         else:
