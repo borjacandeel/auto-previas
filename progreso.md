@@ -74,6 +74,7 @@
 - **Pruebas**: `tests/test_video_neon.py` (render_preview en 9:16 y 16:9), `tests/test_ui_features.py` (bloqueo del MP3, diálogo de vista previa, botón sin pista). Selftest: comprueba que `video_preview` está empaquetado.
 - **Plan de marketing**: `marketing/PLAN-VIDEOS.md` — 6 vídeos nuevos + el general, calendario de 3 semanas (2 por semana), ganchos, guiones, publicación y medición; orden de producción 1, 3, 2, 4, 5, 6. Pendiente de producir (a petición del usuario).
 - Versión 3.4.0, CHANGELOG, README, manual y PDF regenerados.
+- **Plan de marketing ampliado** (petición del usuario): 5 vídeos más (7 anti-retoque de BPM, 8 «3 errores», 9 presets/estilo, 10 «un tema, 5 looks», 11 versión en inglés) en `marketing/PLAN-VIDEOS.md`; total 11 vídeos en ~6 semanas.
 
 ### Resumen de Trabajo — Sesión 44 (2026-10-13): v3.3.1 — título del vídeo elegible
 
