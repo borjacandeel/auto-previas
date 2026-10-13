@@ -51,9 +51,9 @@
 ---
 
 ## Estado actual
-**Fecha última actualización:** 2026-10-13 (Sesión 38 — manuales PDF Basic/Plus; v3.1.0 sin cambios)
+**Fecha última actualización:** 2026-10-13 (Sesión 40 — v3.2.0: licencia 1 equipo por clave)
 **Fase activa:** v3.0.1 PUBLICADA. Verificado en macOS de punta a punta: activación, ventana principal y auto-update 3.0.0→3.0.1. Pendiente: Windows real, edición Basic, rotar claves de Payhip, y limpiar el formato markdown de las novedades en la ventana de actualización (muestra `### ` y `*`; agrupar en 3.0.2). El auto-update solo se podrá probar de extremo a extremo cuando exista una Release posterior a la instalada (p. ej. 3.0.1).
-**Versión Actual:** **v3.1.0** (publicada; pendiente de prueba del usuario en macOS)
+**Versión Actual:** **v3.2.0** (licencia 1 equipo por clave; CI en curso/publicada, ver sesión 40)
 
 ### Credenciales de desarrollo — NO se guardan en el repo (público)
 > Las claves secretas de Payhip (`PAYHIP_SECRET_BASIC/PLUS`) viven solo como *secrets* del Worker de Cloudflare. Las versiones antiguas aparecieron en el historial público de git: **deben rotarse** (ver sesión 36g).
@@ -66,6 +66,13 @@
 > Al terminar cualquier cambio: actualizar `progreso.md` + commit + push. Sin excepción.
 
 ---
+
+### Resumen de Trabajo — Sesión 40 (2026-10-13): v3.2.0 — licencia «1 equipo por clave» PUBLICADA
+- **Worker desplegado en Cloudflare por el usuario** (KV `LICENSES` = `autoprevias-licenses`, secret `ADMIN_TOKEN`, código `worker/autoprevias-license.js`). Incidencias: Chrome tenía la traducción activa y tradujo el código al copiarlo (`si`, `intentar`, `atrapar`, 176 errores) → solución: copiar con `curl … | pbcopy` o desde el chat; instrucciones corregidas. Los `read -rs -p` no funcionan en zsh (Terminal del Mac) → sustituidos por `printf` + `stty -echo` + `read`.
+- **Prueba real en producción** (Mac del usuario, `worker/smoke_test.sh` con licencia de prueba real de Payhip): **11 correctas, 0 fallidas** (clave falsa rechazada, A activa, B rechazado `in_use`, reverificación, desactivar libera, B activa, A queda `in_use`, `reset` con token, `reset` sin token rechazado, modo compatible sin `device_id`).
+- **Versión 3.2.0:** `src/__version__.py`, CHANGELOG (`[3.2.0] - 2026-10-13`), README (badge, sección «Una licencia = un equipo», tabla de funcionamiento, historial), PDF Basic y Plus regenerados (capítulo de activación con la regla de un equipo, verificación automática, FAQ). Los PDF no mencionan GitHub.
+- **Pruebas locales:** 83 passed, 1 skipped (+ `test_structure.py` que falla en local por librosa 1.0 y pasa en CI); selftest OK.
+- **Pendiente del usuario:** rotar las `product-secret-key` de Payhip y recrearlas como **Secret** en Cloudflare (hoy son tipo *Variable* en claro y se vieron en una captura); cambiar el `ADMIN_TOKEN` (se pegó en el chat); revocar/regenerar la licencia de prueba usada; más adelante `REQUIRE_DEVICE=1` en el Worker cuando casi todos tengan ≥3.2.0. Probar en el Mac: actualización automática 3.1.0→3.2.0 (las licencias guardadas por ≤3.1.0 no tienen clave local: pedirán reactivar una vez al cumplir 14 días).
 
 ### Resumen de Trabajo — Sesión 39 (2026-10-13): licencia «1 equipo por clave» (PREPARADA, sin publicar)
 - **Petición:** si una licencia ya está activa en un producto/equipo, que no se pueda activar en otro. Dejarlo todo listo para la siguiente actualización.

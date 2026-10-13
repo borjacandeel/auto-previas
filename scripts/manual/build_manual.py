@@ -241,11 +241,15 @@ al comprar en la tienda de Radical Records (<b>payhip.com/RADICALRECVLC</b>).</p
 {steps(["Copia la clave del correo de compra.", "Pégala en el campo de la pantalla de activación.",
         "Pulsa <b>Activar licencia</b>. Hace falta conexión a Internet solo en este momento.",
         "Listo: AutoPrevias se abre y ya no volverá a pedirte la clave."])}
+<h3>Una licencia = un equipo</h3>
+<p>Tu clave puede estar activa en <b>un solo ordenador a la vez</b>. Si ya la usas en uno, no se podrá activar en otro hasta que la
+desactives allí (<b>⚙ Licencia → Desactivar licencia en este equipo</b>, que la libera al instante) o pasen 15 días sin que ese equipo
+se conecte. Si un ordenador se avería, escríbenos y la liberamos. El equipo se identifica con un código anónimo: no se envía ningún dato personal.</p>
 <h3>Cómo funciona después</h3>
 <table><tr><th>Situación</th><th>Qué ocurre</th></tr>
-<tr><td>Con Internet</td><td>La licencia se reverifica sola cada 7 días, en segundo plano, sin molestarte.</td></tr>
+<tr><td>Con Internet</td><td>AutoPrevias se verifica sola con el servidor cada vez que la abres y cada 6 horas, en segundo plano. <b>No vuelve a pedirte la clave.</b></td></tr>
 <tr><td>Sin Internet</td><td>Puedes seguir trabajando con normalidad hasta <b>14 días</b> desde la última verificación (periodo de gracia).</td></tr>
-<tr><td>Gracia agotada</td><td>Reaparece la pantalla de activación: conecta a Internet y pulsa de nuevo <b>Activar licencia</b>.</td></tr></table>
+<tr><td>Más de 14 días sin conexión</td><td>Al abrir, la app se verifica sola. Si sigues sin Internet te pide conectarte (<i>Reintentar</i> / <i>Salir</i>); no necesitas escribir la clave otra vez.</td></tr></table>
 {tip(f"Cada instalador lleva su edición incluida: el instalador {cap} solo acepta claves {cap}. Tu clave es personal: no la compartas ni la publiques; si crees que alguien la ha visto, escribe a " + SUPPORT + ".", "warn")}
 </section>"""
 
@@ -516,7 +520,7 @@ def s_updates(ed: str, plus: bool, im: dict, n: int) -> str:
 <ul>
 <li>Muestra la <b>versión</b>, la <b>edición</b> y el <b>estado de la licencia</b>: fecha de última verificación y hasta cuándo es válida sin conexión.</li>
 <li><b>Buscar actualizaciones</b> lanza la comprobación al momento.</li>
-<li><b>Desactivar licencia en este equipo</b> libera la clave para poder usarla en otro ordenador.</li>
+<li><b>Desactivar licencia en este equipo</b> libera la clave en el servidor para poder usarla en otro ordenador (necesita conexión).</li>
 <li><b>Idioma</b>: Español (por defecto) o English. También puedes alternarlo con el botón <b>ES / EN</b> de la cabecera; todo se traduce al instante.</li>
 </ul>
 </section>"""
@@ -543,7 +547,8 @@ def s_faq(ed: str, plus: bool, n: int) -> str:
 <tr><td>macOS dice que la app «no se puede abrir» o «está dañada»</td><td>Ejecuta en Terminal <code>xattr -cr /Applications/AutoPrevias.app</code> y vuelve a abrirla.</td></tr>
 <tr><td>Windows muestra «Windows protegió su PC»</td><td>Pulsa <b>Más información → Ejecutar de todas formas</b>.</td></tr>
 <tr><td>«Clave no válida» al activar</td><td>Comprueba que has copiado la clave completa, sin espacios, y que es de la edición {cap}. Necesitas Internet. Si persiste, escríbenos.</td></tr>
-<tr><td>Vuelve a pedirme la clave</td><td>Han pasado más de 14 días sin verificar la licencia: conéctate a Internet y actívala de nuevo.</td></tr>
+<tr><td>«Esta licencia ya está activada en otro equipo»</td><td>Tu clave solo puede estar en un ordenador. Desactívala en el otro (<b>⚙ Licencia → Desactivar licencia en este equipo</b>) o escribe a soporte si ese equipo ya no está disponible.</td></tr>
+<tr><td>Me dice que necesita conexión para verificar la licencia</td><td>Han pasado más de 14 días sin verificarla: conéctate a Internet y pulsa <b>Reintentar</b>. No hace falta volver a escribir la clave.</td></tr>
 <tr><td>El BPM detectado es el doble o la mitad</td><td>Haz doble clic en la tarjeta <b>BPM</b> y escribe el valor real.</td></tr>
 <tr><td>La previa no empieza donde quiero</td><td>Arrastra los marcadores verdes/rojos en la forma de onda{' o usa el Editor de Cortes' if plus else ' o elige otro preset de duración'}.</td></tr>
 <tr><td>No oigo nada al reproducir</td><td>Revisa el volumen del reproductor y que no esté silenciado (tecla {kbd('M')}) y el dispositivo de salida de tu sistema.</td></tr>

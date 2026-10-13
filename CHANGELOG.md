@@ -3,7 +3,7 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
-## [Sin publicar] — Licencia: una clave, un equipo
+## [3.2.0] - 2026-10-13
 
 ### Añadido
 - **Una licencia = un equipo.** Si tu licencia ya está activa en un ordenador, no se puede activar en otro hasta que la desactives allí (⚙ Licencia → «Desactivar licencia en este equipo») o pasen 15 días sin que ese equipo se conecte. Así tu clave no se puede compartir.

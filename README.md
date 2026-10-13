@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v3.1.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v3.2.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -189,15 +189,20 @@ AutoPrevias se distribuye en dos ediciones (**Basic** y **Plus**), protegidas po
 2. Recibirás tu **clave única** al instante por correo electrónico.
 3. Al abrir AutoPrevias por primera vez, aparecerá la **pantalla de activación**.
 4. Introduce la clave y pulsa **Activar licencia** — la app se conecta a los servidores de verificación de forma segura y desbloquea la edición correspondiente en segundos.
-5. A partir de ese momento la app arranca directamente sin pedir la clave de nuevo.
+5. A partir de ese momento la app arranca directamente y se verifica sola, sin pedir la clave de nuevo.
+
+### Una licencia = un equipo
+
+Cada clave se puede usar en **un solo equipo a la vez**. Si ya está activa en un ordenador, no se puede activar en otro hasta que la desactives allí (**⚙ Licencia → Desactivar licencia en este equipo**, que la libera en el servidor) o pasen 15 días sin que ese equipo se conecte (se libera sola). Si un equipo se avería, escribe a `radicalrecordsvlc@gmail.com` y la liberamos al momento. El equipo se identifica con un código anónimo (un hash): no se envía ningún dato personal.
 
 ### Funcionamiento tras la activación
 
 | Situación | Comportamiento |
 | :--- | :--- |
-| **Con conexión a Internet** | La licencia se reverifica silenciosamente cada **7 días** en segundo plano, sin interrumpir el trabajo. |
-| **Sin conexión a Internet** | La app sigue funcionando con normalidad hasta **14 días** desde la última verificación exitosa (período de gracia). |
-| **Gracia expirada** | La pantalla de activación vuelve a aparecer para introducir la clave o renovar la licencia. |
+| **Con conexión a Internet** | La app se verifica **sola** con el servidor en cada arranque y cada 6 horas, en segundo plano. **Nunca vuelve a pedirte la clave.** |
+| **Sin conexión a Internet** | La app sigue funcionando con normalidad hasta **14 días** desde la última verificación correcta (período de gracia). |
+| **Gracia expirada** | Al abrir, AutoPrevias se verifica sola; si no hay conexión te pide conectarte (Reintentar / Salir), no la clave. |
+| **Licencia revocada o en otro equipo** | Te avisa y se cierra (sin cortar una exportación en curso). |
 
 ### Diferencias entre ediciones
 
@@ -265,6 +270,11 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 ### 📈 Registro Oficial de Versiones y Parches
 
 ---
+
+#### 🟢 [v3.2.0] — 2026-10-13 (Una licencia = un equipo, verificación automática)
+- **Una licencia = un equipo**: si tu clave ya está activa en un ordenador no se puede activar en otro hasta que la desactives allí (la desactivación ahora libera la clave en el servidor) o pasen 15 días sin conexión de ese equipo.
+- **Verificación automática**: la app se comprueba sola con el servidor en cada arranque y cada 6 horas; ya no vuelve a pedir la clave tras 14 días (era un fallo: la reverificación no existía).
+- Clave guardada cifrada y ligada al equipo; mensajes claros en español e inglés. Detalle en el [CHANGELOG](CHANGELOG.md).
 
 #### 🟢 [v3.1.0] — 2026-10-12 (Modo promo antifugas, presets, Recientes, Licencia y ajustes, inglés)
 - **Modo promo antifugas**, **presets de firma y de estilo**, **panel de Recientes con «Reabrir proyecto»**, pantalla **«⚙ Licencia»** e **interfaz en inglés** (siempre arranca en castellano). Novedades de actualización con formato limpio.
