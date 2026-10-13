@@ -58,10 +58,10 @@ Tiempo total: ~10 minutos. Hazlo **en este orden**.
 
 ## Paso 5 · Probarlo (2 min)
 En Terminal, en la carpeta del proyecto (`cd` a tu copia de `auto-previas` y `git pull`). Pega estas **tres** líneas, una a una
-(las dos primeras te piden el valor sin mostrarlo ni guardarlo en el historial):
+(las dos primeras te piden el valor sin mostrarlo ni guardarlo en el historial; funcionan en zsh, el Terminal por defecto del Mac, y en bash):
 ```bash
-read -rs -p "Pega tu ADMIN_TOKEN: " ADMIN_TOKEN; echo; export ADMIN_TOKEN
-read -rs -p "Pega una clave de licencia de PRUEBA real de Payhip: " LICENSE_KEY; echo; export LICENSE_KEY
+printf "Pega tu ADMIN_TOKEN: "; stty -echo; read ADMIN_TOKEN; stty echo; echo; export ADMIN_TOKEN
+printf "Pega una clave de licencia de PRUEBA de Payhip: "; stty -echo; read LICENSE_KEY; stty echo; echo; export LICENSE_KEY
 bash worker/smoke_test.sh
 ```
 **Resultado esperado:** `Resultado: 11 correctas, 0 fallidas`.
@@ -86,7 +86,7 @@ Cuando el Paso 5 dé `11 correctas, 0 fallidas`, dímelo y publico la versión *
 
 ## Soporte: liberar la licencia de un cliente (cambio de ordenador, PC roto…)
 ```bash
-read -rs -p "ADMIN_TOKEN: " ADMIN_TOKEN; echo
+printf "ADMIN_TOKEN: "; stty -echo; read ADMIN_TOKEN; stty echo; echo
 curl -s -X POST https://autoprevias-license.radicalrecordsvlc.workers.dev \
   -H "Content-Type: application/json" -H "Authorization: Bearer $ADMIN_TOKEN" \
   -d '{"action":"reset","license_key":"CLAVE-DEL-CLIENTE"}'; echo
