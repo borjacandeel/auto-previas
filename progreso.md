@@ -67,6 +67,15 @@
 
 ---
 
+### Resumen de Trabajo — Sesión 38b (2026-10-13): vídeo promocional 9:16 con HyperFrames
+- **Petición:** vídeo animado, con un puntero usando la app, motion blur y efectos llamativos, slogan «¿Cansado de hacer tus previas a mano?», estética Radical Records, para vender la app.
+- **Resultado:** `marketing/promo-video/AutoPrevias-Promo-9x16.mp4` (1080×1920, 30 fps, 32 s, 8,8 MB; el render sin recomprimir de 49 MB queda fuera de git en `renders/`). Subido a GitHub.
+- **Guion (128 BPM, sincronizado con la música):** gancho tipográfico con glitch (0–3,75 s) → «tiempo perdido» con DAW caótico y cronómetro 02:47:13 (3,75–7,5) → colapso, silencio y golpe de revelación con el emblema RR y «AUTOPREVIAS» (7,5–9,4) → demo real con cursor: arrastrar track, análisis, presets 15/30/60/120 s, generar, previa lista con confeti y reproductor A/B (9,4–22,5) → cortes rápidos de funciones Plus: editor de cortes, anti-retoque de BPM, modo promo antifugas, lote (22,5–26,25) → «De 3 horas a 30 segundos» → CTA con botón **payhip.com/RADICALRECVLC** (sin mención al repo de GitHub), Basic/Plus y banner Radical Records.
+- **Técnica:** HyperFrames 0.8.151 (HTML + GSAP, un timeline en pausa). Motion blur con el componente oficial `motion-blur` (obturador por superposición de copias) en cursor, textos y emblemas; en cambios de plano, blur CSS + tear/glitch + flash. Capturas reales de la app generadas por `scripts/manual/capture.py` (ahora también guarda los rectángulos de los botones en `meta.json` para que el cursor apunte exacto). Música y efectos sintetizados con numpy/scipy (`build_audio.py`: bombo, bajo con sidechain, hats, claps, risers, impactos, whooshes, clics UI, dings) con los tiempos de `choreo.json`, que usa también la animación.
+- **Trampa aprendida:** en GSAP `fromTo` renderiza el estado «from» al crear el timeline; si el elemento no parte de `opacity: 0` hay que usar `immediateRender:false` (el vídeo mostraba flash blanco, blur y confeti desde el segundo 0). Está resuelto con un wrapper de `tl.fromTo` en `src/main.js`.
+- **Verificación:** `hyperframes check` (0 errores de lint/runtime/layout), snapshots de 40+ instantes revisados visualmente, render completo (4 min 5 s, captura software), comprobación de fotogramas del MP4 final.
+- **Regenerar:** ver `marketing/promo-video/README.md`.
+
 ### Resumen de Trabajo — Sesión 38 (2026-10-13): manuales PDF Basic y Plus (Radical Records)
 - **Petición:** 2 manuales de usuario profesionales (uno Basic, otro Plus) con capturas y explicaciones; actualizarlos en cada versión; en los PDF la compra/descarga se indica en Payhip y **nunca** el repo de GitHub.
 - **Herramientas nuevas** (`scripts/manual/`):

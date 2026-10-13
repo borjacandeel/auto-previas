@@ -156,6 +156,14 @@ def dpr_of(img: QImage) -> float:
     return img.width() / W
 
 
+meta_rects: dict = {}
+
+
+def rec(stage: str, **widgets):
+    """Guarda el rectángulo lógico (px de ventana) de widgets clave: lo usa el vídeo promocional."""
+    meta_rects[stage] = {k: list(rect_of(v, w).getRect()) for k, v in widgets.items()}
+
+
 meta = {"edition": EDITION, "version": __version__, "track": TRACK_NAME, "window": [W, H]}
 
 # ── 1. Pantalla de bienvenida ──────────────────────────────────────────────
@@ -169,6 +177,7 @@ if EDITION == "plus":
 else:
     items += [(rect_of(w._btn_recents, w), 2), (rect_of(w._btn_license, w), 3), (rect_of(w._btn_lang, w), 4)]
 items.append((rect_of(w._edition_badge, w), len(items) + 1))
+rec("welcome", open_btn=w._drop_zone._btn_open, drop=w._drop_zone, recents=w._btn_recents, license=w._btn_license)
 annotate(img, items, d, "01_bienvenida_anot")
 meta["welcome_items"] = [n for _, n in items]
 
@@ -204,6 +213,9 @@ if EDITION == "plus":
              (rect_of(R._btn_p120, w), 4), (rect_of(R._preset_bar, w), 5), (rect_of(R._chk_advanced, w), 6),
              (rect_of(R._edit_name, w), 7), (rect_of(R._chk_fx_flanger, w), 8), (rect_of(R._btn_voice_drop, w), 9),
              (rect_of(R._chk_promo, w), 10), (rect_of(R._branding_card, w), 11), (rect_of(R._btn_generate, w), 12)]
+rec("loaded", waveform=R._waveform, player=R._player, bpm=R._card_bpm, key=R._card_key, drops=R._card_drops, pv=R._card_pv,
+    p15=R._btn_p15, p30=R._btn_p30, p60=R._btn_p60, p120=R._btn_p120, name=R._edit_name, generate=R._btn_generate,
+    folder=R._btn_folder, stats_row=R._card_file)
 annotate(img, items, d, "03_cargada_anot")
 meta["loaded_items"] = [n for _, n in items]
 
@@ -230,6 +242,10 @@ if EDITION == "plus":
         R._tabs.setCurrentIndex(idx); pump(30, 0.02)
         im = grab(w); save(im, nm)
         tabs_r = rect_of(R._tabs, w)
+        if idx == 0:
+            rec("cuts", tabs=R._tabs, add_cut=R._btn_add_cut, tbl=R._tbl_cuts, adv=R._chk_advanced, waveform=R._waveform)
+        if idx == 1:
+            rec("bpm", tabs=R._tabs, auto=R._btn_mode_auto, manual=R._btn_mode_manual, plot=R._tempo_plot_frame, adv=R._chk_advanced)
         save(crop(im, tabs_r, dpr_of(im), 4), "z_" + nm)
         if idx == 0:
             annotate_crop(im, tabs_r, [(rect_of(R._btn_add_cut, w), 1), (rect_of(R._tbl_cuts, w), 2),
@@ -244,6 +260,8 @@ if EDITION == "plus":
     R._chk_promo.setChecked(True); pump(30, 0.02)
     im = grab(w); d = dpr_of(im)
     save(im, "07_promo")
+    rec("promo", export=R._edit_name.parentWidget(), promo=R._chk_promo, voice=R._btn_voice_drop, master=R._chk_fx_master,
+        spin=R._spin_promo, name=R._edit_name, generate=R._btn_generate, preset_bar=R._preset_bar)
     export_r = rect_of(R._edit_name.parentWidget(), w)
     save(crop(im, export_r, d, 4), "z_export_promo")
     annotate(crop(im, export_r, d, 4), [], d, "z_export_promo_anot")
@@ -271,6 +289,8 @@ for _l in R._card_export_success.findChildren(QLabel):
 w._progress_label.setText("✅ Guardado en: ~/Música/Previas · PREVIA - Midnight Groove (Original Mix).mp3")
 im = grab(w); d = dpr_of(im)
 save(im, "08_generada")
+rec("generated", success=R._card_export_success, open=R._btn_succ_open, new=R._btn_succ_new, player=R._player,
+    generate=R._btn_generate, waveform=R._waveform, folder=R._btn_folder)
 if R._card_export_success.isVisible():
     sr = rect_of(R._card_export_success, w)
     save(crop(im, sr, d, 6), "z_exito")
@@ -320,6 +340,7 @@ if EDITION == "plus":
     dlg_shot(BatchDialog(initial_files=[str(track)]), "14_lote")
     dlg_shot(SavePresetDialog(["Radical Main", "Set de Verano"], "Radical Main"), "15_guardar_preset")
 
+meta["rects"] = meta_rects
 (OUT / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
 print("OK", EDITION, "→", OUT)
 os._exit(0)

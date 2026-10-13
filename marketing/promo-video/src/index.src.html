@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+@font-face { font-family: "Inter"; font-weight: 500; src: url("assets/fonts/Inter-Medium.otf"); }
+@font-face { font-family: "Inter"; font-weight: 700; src: url("assets/fonts/Inter-Bold.otf"); }
+@font-face { font-family: "Inter"; font-weight: 800; src: url("assets/fonts/Inter-ExtraBold.otf"); }
+@font-face { font-family: "Inter"; font-weight: 900; src: url("assets/fonts/Inter-Black.otf"); }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: #05060a; font-family: "Inter", sans-serif; color: #fff; }
+:root { --red: #ff1f3a; --red2: #b1001a; --ink: #05060a; --panel: #0d0f16; --line: #232733; }
+#root { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--ink); }
+.scene { position: absolute; inset: 0; overflow: hidden; }
+.abs { position: absolute; }
+.center { display: flex; align-items: center; justify-content: center; }
+.col { display: flex; flex-direction: column; align-items: center; }
+
+/* ── fondo permanente ───────────────────────────────────────────── */
+#bg { position: absolute; inset: 0; background:
+  radial-gradient(900px 700px at 80% 6%, rgba(255,31,58,.30), rgba(5,6,10,0) 70%),
+  radial-gradient(900px 800px at 0% 100%, rgba(120,0,20,.38), rgba(5,6,10,0) 70%), #05060a; }
+#gridlines { position: absolute; inset: 0; opacity: .5; background-image:
+  linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+  background-size: 90px 90px; }
+#world { position: absolute; inset: 0; }
+
+/* ── tipografía de impacto ─────────────────────────────────────── */
+.word { position: relative; display: block; font-weight: 900; line-height: .92; letter-spacing: -3px; text-transform: uppercase;
+  white-space: nowrap; text-align: center; font-style: italic; }
+.word .t { position: relative; display: block; }
+.word .g { position: absolute; left: 0; right: 0; top: 0; display: block; opacity: 0; mix-blend-mode: screen; }
+.word .g.r { color: #ff0033; } .word .g.c { color: #00e5ff; }
+.red { color: var(--red); }
+.outline { color: transparent; -webkit-text-stroke: 3px var(--red); }
+
+/* ── fase gancho ───────────────────────────────────────────────── */
+#hook-bars { position: absolute; left: 30px; right: 30px; top: 560px; height: 800px; display: flex; align-items: center; gap: 6px; }
+#hook-bars i { display: block; flex: 1; height: 760px; background: linear-gradient(#ff1f3a, #7a0012); border-radius: 6px; opacity: .22; }
+#hook-words { position: absolute; left: 0; right: 0; top: 330px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.ember { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: #ff4a5e; box-shadow: 0 0 14px #ff1f3a; }
+
+/* ── fase dolor ────────────────────────────────────────────────── */
+#timer-wrap { position: absolute; left: 0; right: 0; top: 210px; text-align: center; }
+#timer-lbl { font-size: 44px; font-weight: 800; letter-spacing: 12px; color: var(--red); }
+#timer { font-size: 190px; font-weight: 900; letter-spacing: -4px; font-variant-numeric: tabular-nums; line-height: 1.05; }
+#daw { position: absolute; left: 60px; top: 610px; width: 960px; height: 660px; background: var(--panel); border: 2px solid var(--line); border-radius: 20px; overflow: hidden; }
+#daw .bar { height: 58px; background: #12141d; border-bottom: 2px solid var(--line); display: flex; align-items: center; gap: 10px; padding: 0 22px; font-size: 24px; font-weight: 700; color: #8a8fa3; }
+#daw .bar b { width: 16px; height: 16px; border-radius: 50%; background: #3a3f52; display: block; }
+.lane { position: relative; height: 96px; border-bottom: 1px solid #1a1d28; }
+.clipbox { position: absolute; top: 10px; height: 76px; border-radius: 10px; opacity: .9; }
+#playhead { position: absolute; top: 58px; bottom: 0; width: 4px; background: #fff; box-shadow: 0 0 20px #fff; left: 20px; }
+.stamp { position: relative; display: block; padding: 18px 34px; border-radius: 14px; background: var(--red); color: #fff; font-size: 66px; font-weight: 900;
+  letter-spacing: -1px; text-transform: uppercase; white-space: nowrap; font-style: italic; }
+#stamps { position: absolute; left: 0; right: 0; top: 1330px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+
+/* ── revelación ────────────────────────────────────────────────── */
+#emblem { position: absolute; left: 260px; top: 460px; width: 560px; height: 463px; }
+#emblem img { width: 100%; height: 100%; display: block; filter: drop-shadow(0 0 40px rgba(255,31,58,.7)); }
+.ring { position: absolute; left: 340px; top: 540px; width: 400px; height: 400px; border-radius: 50%; border: 6px solid var(--red); box-shadow: 0 0 40px var(--red); }
+#title-auto { position: absolute; left: 0; right: 0; top: 1010px; display: flex; justify-content: center; font-size: 134px; font-weight: 900; font-style: italic; letter-spacing: -4px; }
+#title-auto span { display: block; }
+#banner-rr { position: absolute; left: 270px; top: 1250px; width: 540px; }
+#tagline { position: absolute; left: 0; right: 0; top: 1390px; display: flex; justify-content: center; }
+#tagline span { display: block; background: var(--red); padding: 14px 38px; border-radius: 12px; font-size: 52px; font-weight: 900; font-style: italic; letter-spacing: 2px; }
+
+/* ── app: captions + visor ─────────────────────────────────────── */
+#caps { position: absolute; left: 60px; right: 60px; top: 120px; height: 380px; }
+.cap { position: absolute; left: 0; right: 0; top: 0; }
+.cap .num { font-size: 130px; font-weight: 900; font-style: italic; line-height: 1; color: #05060a; -webkit-text-stroke: 3px var(--red); letter-spacing: -4px; }
+.cap .ttl { margin-top: 4px; font-size: 72px; font-weight: 900; font-style: italic; letter-spacing: -2px; text-transform: uppercase; line-height: 1; }
+.cap .sub { margin-top: 14px; font-size: 38px; font-weight: 500; color: #b3b8c8; }
+.cap .ttl em { font-style: italic; color: var(--red); }
+#vp { position: absolute; left: 40px; top: 520px; width: 1000px; height: 1060px; border-radius: 28px; overflow: hidden; background: #07080c;
+  border: 3px solid rgba(255,31,58,.85); box-shadow: 0 0 80px rgba(255,31,58,.35), 0 30px 90px rgba(0,0,0,.7); }
+#cam { position: absolute; left: 0; top: 0; width: 2240px; height: 2100px; transform-origin: 0 0; }
+#cam img.shot { position: absolute; left: 0; top: 0; width: 2240px; display: block; opacity: 0; }
+#dim { position: absolute; left: 0; top: 0; width: 2240px; height: 2100px; background: rgba(0,0,0,.65); opacity: 0; }
+#dlg { position: absolute; left: 416px; top: 480px; width: 1408px; border-radius: 18px; border: 3px solid var(--red); opacity: 0; display: block; box-shadow: 0 0 80px rgba(255,31,58,.5); }
+#prog { position: absolute; left: 815px; top: 862px; width: 607px; height: 14px; border-radius: 7px; background: #1a1c25; opacity: 0; }
+#prog i { display: block; width: 0; height: 100%; border-radius: 7px; background: linear-gradient(90deg, #ff1f3a, #ff9a2f); }
+.hl { position: absolute; border: 5px solid #ffd21f; border-radius: 12px; box-shadow: 0 0 40px rgba(255,210,31,.9), inset 0 0 20px rgba(255,210,31,.4); opacity: 0; }
+.ripple { position: absolute; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; border: 6px solid #fff; opacity: 0; }
+#chip { position: absolute; left: 0; top: 0; padding: 22px 40px; font-size: 44px; font-weight: 800; background: #fff; color: #000; border-radius: 16px; white-space: nowrap;
+  box-shadow: 0 10px 40px rgba(0,0,0,.6); opacity: 0; }
+#cursor { position: absolute; left: 0; top: 0; width: 40px; height: 40px; opacity: 0; }
+#cursor-in { position: absolute; left: 0; top: 0; width: 40px; height: 40px; transform-origin: 4px 2px; }
+#cursor svg, #cursor2 svg { position: absolute; left: -4px; top: -2px; filter: drop-shadow(0 4px 8px rgba(0,0,0,.6)); }
+#shim { position: absolute; width: 260px; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.75), rgba(255,255,255,0)); opacity: 0; }
+#stepper { position: absolute; left: 60px; right: 60px; top: 1650px; display: flex; gap: 14px; }
+#stepper i { flex: 1; display: block; height: 16px; border-radius: 8px; background: #20232f; }
+#stepper-lbl { position: absolute; left: 60px; top: 1690px; font-size: 34px; font-weight: 800; letter-spacing: 6px; color: #8a8fa3; }
+#logo-mini { position: absolute; right: 60px; top: 1690px; width: 220px; opacity: .9; }
+#conf { position: absolute; left: 40px; top: 520px; width: 1000px; height: 1060px; pointer-events: none; overflow: hidden; border-radius: 28px; }
+.cf { position: absolute; width: 18px; height: 30px; border-radius: 3px; opacity: 0; }
+
+/* ── estadística ───────────────────────────────────────────────── */
+#stat1 { position: absolute; left: 0; right: 0; top: 470px; }
+#stat1 .word { font-size: 150px; color: #8a8fa3; }
+#strike { position: absolute; left: 90px; top: 580px; height: 22px; width: 900px; background: var(--red); transform-origin: 0 50%; box-shadow: 0 0 30px var(--red); }
+#stat2 { position: absolute; left: 0; right: 0; top: 760px; display: flex; flex-direction: column; align-items: center; }
+#stat2 .big { font-size: 400px; line-height: .85; }
+#stat2 .seg { font-size: 176px; margin-top: 10px; }
+#stat-sub { position: absolute; left: 60px; right: 60px; top: 1480px; text-align: center; font-size: 46px; font-weight: 700; color: #c9ccd8; line-height: 1.3; }
+
+/* ── CTA ───────────────────────────────────────────────────────── */
+#cta-emblem { position: absolute; left: 340px; top: 250px; width: 400px; height: 331px; }
+#cta-emblem img { width: 100%; height: 100%; display: block; filter: drop-shadow(0 0 40px rgba(255,31,58,.7)); }
+#cta-title { position: absolute; left: 0; right: 0; top: 640px; display: flex; justify-content: center; font-size: 134px; font-weight: 900; font-style: italic; letter-spacing: -4px; }
+#cta-title span { display: block; }
+#eds { position: absolute; left: 0; right: 0; top: 830px; display: flex; justify-content: center; gap: 24px; }
+#eds span { display: block; padding: 14px 44px; border-radius: 999px; font-size: 46px; font-weight: 900; letter-spacing: 6px; }
+#eds .b { background: linear-gradient(90deg, #1d4ed8, #3b82f6); } #eds .p { background: linear-gradient(90deg, #7c3aed, #a855f7); }
+#cta-line { position: absolute; left: 60px; right: 60px; top: 1010px; text-align: center; font-size: 52px; font-weight: 800; line-height: 1.2; }
+#buy { position: absolute; left: 90px; top: 1160px; width: 900px; padding: 34px 20px; border-radius: 26px; background: linear-gradient(180deg, #ff2d48, #b1001a);
+  text-align: center; font-size: 56px; font-weight: 900; letter-spacing: -1px; box-shadow: 0 0 80px rgba(255,31,58,.6); }
+#buy small { display: block; font-size: 30px; font-weight: 700; letter-spacing: 6px; opacity: .85; margin-bottom: 6px; }
+#cta-banner { position: absolute; left: 270px; top: 1500px; width: 540px; }
+#cta-tag { position: absolute; left: 0; right: 0; top: 1660px; text-align: center; font-size: 40px; font-weight: 700; color: #b3b8c8; letter-spacing: 3px; }
+#cursor2 { position: absolute; left: 0; top: 0; width: 40px; height: 40px; opacity: 0; }
+#cursor2-in { position: absolute; left: 0; top: 0; width: 40px; height: 40px; transform-origin: 4px 2px; }
+#ripple2 { position: absolute; width: 100px; height: 100px; margin: -50px 0 0 -50px; border-radius: 50%; border: 8px solid #fff; opacity: 0; }
+
+/* ── capas globales ────────────────────────────────────────────── */
+#pulse { position: absolute; inset: 0; opacity: 0; box-shadow: inset 0 0 260px 40px rgba(255,31,58,.75); pointer-events: none; }
+#flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+#flashred { position: absolute; inset: 0; background: var(--red); opacity: 0; pointer-events: none; }
+#tear { position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+#tear i { position: absolute; left: 0; right: 0; display: block; background: rgba(255,255,255,.9); mix-blend-mode: difference; }
+#scan { position: absolute; inset: 0; pointer-events: none; opacity: .5; background: repeating-linear-gradient(0deg, rgba(0,0,0,.28) 0, rgba(0,0,0,.28) 2px, rgba(0,0,0,0) 3px, rgba(0,0,0,0) 6px); }
+#vig { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(0,0,0,.72) 100%); }
+#grain { position: absolute; left: -128px; top: -128px; width: 1336px; height: 2176px; pointer-events: none; opacity: .09; background: url("assets/grain.png"); mix-blend-mode: overlay; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="32" data-width="1080" data-height="1920" data-fps="30">
+
+  <div id="bg"></div>
+  <div id="gridlines"></div>
+
+  <div id="world">
+
+    <!-- 1 · GANCHO -->
+    <div class="scene clip" id="s-hook" data-start="0" data-duration="3.75">
+      <div id="hook-bars"></div>
+      <div id="embers"></div>
+      <div id="hook-words">
+        <div class="word w1" data-hf-motion-blur='{"samplesPerFrame": 8}' style="font-size:166px"><span class="t">¿Cansado</span><span class="g r" data-layout-allow-overlap>¿Cansado</span><span class="g c" data-layout-allow-overlap>¿Cansado</span></div>
+        <div class="word w2" data-hf-motion-blur='{"samplesPerFrame": 8}' style="font-size:166px"><span class="t">de hacer</span><span class="g r" data-layout-allow-overlap>de hacer</span><span class="g c" data-layout-allow-overlap>de hacer</span></div>
+        <div class="word w3 red" data-hf-motion-blur='{"samplesPerFrame": 8}' style="font-size:150px"><span class="t">tus previas</span><span class="g r" data-layout-allow-overlap>tus previas</span><span class="g c" data-layout-allow-overlap>tus previas</span></div>
+        <div class="word w4" data-hf-motion-blur='{"samplesPerFrame": 8}' style="font-size:206px; margin-top:20px"><span class="t">a mano?</span><span class="g r" data-layout-allow-overlap>a mano?</span><span class="g c" data-layout-allow-overlap>a mano?</span></div>
+      </div>
+    </div>
+
+    <!-- 2 · DOLOR -->
+    <div class="scene clip" id="s-pain" data-start="3.75" data-duration="3.75">
+      <div id="pain-all" class="abs" style="inset:0">
+        <div id="timer-wrap"><div id="timer-lbl">TIEMPO PERDIDO</div><div id="timer">00:00:00</div></div>
+        <div id="daw">
+          <div class="bar"><b></b><b></b><b></b><span style="margin-left:14px">Proyecto_FINAL_v7_REAL.als</span></div>
+          <div id="lanes"></div>
+          <div id="playhead"></div>
+        </div>
+        <div id="stamps">
+          <div class="stamp" data-hf-motion-blur='{"samplesPerFrame": 8}'>✂ Cortar</div>
+          <div class="stamp" data-hf-motion-blur='{"samplesPerFrame": 8}'>♪ Cuadrar el BPM</div>
+          <div class="stamp" data-hf-motion-blur='{"samplesPerFrame": 8}'>⏱ Exportar</div>
+          <div class="stamp" data-hf-motion-blur='{"samplesPerFrame": 8}' style="background:#fff;color:#05060a">↻ Y repetir…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 · REVELACIÓN -->
+    <div class="scene clip" id="s-reveal" data-start="7.5" data-duration="1.875">
+      <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
+      <div id="emblem" data-hf-motion-blur='{"samplesPerFrame": 10}'><img src="assets/logo_emblem.png" alt="" /></div>
+      <div id="title-auto"><span>A</span><span>U</span><span>T</span><span>O</span><span>P</span><span>R</span><span>E</span><span>V</span><span>I</span><span>A</span><span>S</span></div>
+      <img id="banner-rr" src="assets/logo_banner.png" alt="" />
+      <div id="tagline"><span data-hf-motion-blur='{"samplesPerFrame": 8}'>TU PREVIA EN UN CLIC</span></div>
+    </div>
+
+    <!-- 4 · APP (demo + funciones) -->
+    <div class="scene clip" id="s-app" data-start="9.375" data-duration="16.875">
+      <div id="caps"></div>
+      <div id="vp">
+        <div id="cam">
+          <img class="shot" id="i01" src="assets/01_bienvenida.jpg" alt="" />
+          <img class="shot" id="i02" src="assets/02_analisis.jpg" alt="" />
+          <img class="shot" id="i03" src="assets/03_cargada.jpg" alt="" />
+          <img class="shot" id="i08" src="assets/08_generada.jpg" alt="" />
+          <img class="shot" id="i04" src="assets/04_editor_cortes.jpg" alt="" />
+          <img class="shot" id="i05" src="assets/05_editor_bpm.jpg" alt="" />
+          <img class="shot" id="i07" src="assets/07_promo.jpg" alt="" />
+          <div id="dim"></div>
+          <img id="dlg" src="assets/14_lote.jpg" alt="" />
+          <div id="prog"><i></i></div>
+          <div id="hls"></div>
+          <div id="shim"></div>
+          <div id="chip">🎵 Midnight Groove (Original Mix).wav</div>
+          <div id="ripples"></div>
+          <div id="cursor" data-layout-allow-overflow data-hf-motion-blur='{"samplesPerFrame": 12, "shutterAngle": 540}'>
+            <div id="cursor-in">
+              <svg width="40" height="44" viewBox="0 0 40 44"><path d="M4 2 L4 33 L12 26 L18 40 L24 37.5 L18 24 L29 24 Z" fill="#fff" stroke="#05060a" stroke-width="2.6" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="conf"></div>
+      <div id="stepper"><i></i><i></i><i></i><i></i><i></i></div>
+      <div id="stepper-lbl" data-layout-allow-occlusion>AUTOPREVIAS</div>
+      <img id="logo-mini" src="assets/logo_banner.png" alt="" style="opacity:0" />
+    </div>
+
+    <!-- 5 · ESTADÍSTICA -->
+    <div class="scene clip" id="s-stat" data-start="26.25" data-duration="1.875">
+      <div id="stat1"><div class="word" data-hf-motion-blur='{"samplesPerFrame": 8}'>de 3 horas</div></div>
+      <div id="strike"></div>
+      <div id="stat2">
+        <div class="word big red" data-hf-motion-blur='{"samplesPerFrame": 10}'>a 30</div>
+        <div class="word seg" data-hf-motion-blur='{"samplesPerFrame": 8}'>segundos</div>
+      </div>
+      <div id="stat-sub">Detecta BPM, clave y drops, corta y exporta tu previa. Solo.</div>
+    </div>
+
+    <!-- 6 · CTA -->
+    <div class="scene clip" id="s-cta" data-start="28.125" data-duration="3.875">
+      <div id="cta-emblem" data-hf-motion-blur='{"samplesPerFrame": 10}'><img src="assets/logo_emblem.png" alt="" /></div>
+      <div id="cta-title"><span>A</span><span>U</span><span>T</span><span>O</span><span>P</span><span>R</span><span>E</span><span>V</span><span>I</span><span>A</span><span>S</span></div>
+      <div id="eds"><span class="b">BASIC</span><span class="p">PLUS</span></div>
+      <div id="cta-line"><div>Tu previa profesional,</div><div>lista en segundos.</div></div>
+      <div id="buy"><small>CÓMPRALO EN</small>payhip.com/RADICALRECVLC</div>
+      <img id="cta-banner" src="assets/logo_banner.png" alt="" />
+      <div id="cta-tag">macOS · Windows · Radical Records</div>
+      <div id="ripple2"></div>
+      <div id="cursor2" data-layout-allow-overflow data-hf-motion-blur='{"samplesPerFrame": 12, "shutterAngle": 540}'>
+        <div id="cursor2-in"><svg width="40" height="44" viewBox="0 0 40 44"><path d="M4 2 L4 33 L12 26 L18 40 L24 37.5 L18 24 L29 24 Z" fill="#fff" stroke="#05060a" stroke-width="2.6" stroke-linejoin="round"/></svg></div>
+      </div>
+    </div>
+
+  </div><!-- /world -->
+
+  <div id="pulse"></div>
+  <div id="tear"></div>
+  <div id="flashred"></div>
+  <div id="flash"></div>
+  <div id="scan"></div>
+  <div id="vig"></div>
+  <div id="grain"></div>
+
+  <audio id="music" src="assets/promo-music.mp3" data-start="0" data-duration="32" data-volume="1"></audio>
+</div>
+
+<script>
+/*CHOREO*/
+/*RECTS*/
+</script>
+<script>
+/*MAIN*/
+</script>
+<!--MOTION_BLUR_SCRIPT-->
+</body>
+</html>

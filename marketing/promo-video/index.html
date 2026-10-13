@@ -1,0 +1,1489 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+@font-face { font-family: "Inter"; font-weight: 500; src: url("assets/fonts/Inter-Medium.otf"); }
+@font-face { font-family: "Inter"; font-weight: 700; src: url("assets/fonts/Inter-Bold.otf"); }
+@font-face { font-family: "Inter"; font-weight: 800; src: url("assets/fonts/Inter-ExtraBold.otf"); }
+@font-face { font-family: "Inter"; font-weight: 900; src: url("assets/fonts/Inter-Black.otf"); }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: #05060a; font-family: "Inter", sans-serif; color: #fff; }
+:root { --red: #ff1f3a; --red2: #b1001a; --ink: #05060a; --panel: #0d0f16; --line: #232733; }
+#root { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--ink); }
+.scene { position: absolute; inset: 0; overflow: hidden; }
+.abs { position: absolute; }
+.center { display: flex; align-items: center; justify-content: center; }
+.col { display: flex; flex-direction: column; align-items: center; }
+
+/* ── fondo permanente ───────────────────────────────────────────── */
+#bg { position: absolute; inset: 0; background:
+  radial-gradient(900px 700px at 80% 6%, rgba(255,31,58,.30), rgba(5,6,10,0) 70%),
+  radial-gradient(900px 800px at 0% 100%, rgba(120,0,20,.38), rgba(5,6,10,0) 70%), #05060a; }
+#gridlines { position: absolute; inset: 0; opacity: .5; background-image:
+  linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+  background-size: 90px 90px; }
+#world { position: absolute; inset: 0; }
+
+/* ── tipografía de impacto ─────────────────────────────────────── */
+.word { position: relative; display: block; font-weight: 900; line-height: .92; letter-spacing: -3px; text-transform: uppercase;
+  white-space: nowrap; text-align: center; font-style: italic; }
+.word .t { position: relative; display: block; }
+.word .g { position: absolute; left: 0; right: 0; top: 0; display: block; opacity: 0; mix-blend-mode: screen; }
+.word .g.r { color: #ff0033; } .word .g.c { color: #00e5ff; }
+.red { color: var(--red); }
+.outline { color: transparent; -webkit-text-stroke: 3px var(--red); }
+
+/* ── fase gancho ───────────────────────────────────────────────── */
+#hook-bars { position: absolute; left: 30px; right: 30px; top: 560px; height: 800px; display: flex; align-items: center; gap: 6px; }
+#hook-bars i { display: block; flex: 1; height: 760px; background: linear-gradient(#ff1f3a, #7a0012); border-radius: 6px; opacity: .22; }
+#hook-words { position: absolute; left: 0; right: 0; top: 330px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.ember { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: #ff4a5e; box-shadow: 0 0 14px #ff1f3a; }
+
+/* ── fase dolor ────────────────────────────────────────────────── */
+#timer-wrap { position: absolute; left: 0; right: 0; top: 210px; text-align: center; }
+#timer-lbl { font-size: 44px; font-weight: 800; letter-spacing: 12px; color: var(--red); }
+#timer { font-size: 190px; font-weight: 900; letter-spacing: -4px; font-variant-numeric: tabular-nums; line-height: 1.05; }
+#daw { position: absolute; left: 60px; top: 610px; width: 960px; height: 660px; background: var(--panel); border: 2px solid var(--line); border-radius: 20px; overflow: hidden; }
+#daw .bar { height: 58px; background: #12141d; border-bottom: 2px solid var(--line); display: flex; align-items: center; gap: 10px; padding: 0 22px; font-size: 24px; font-weight: 700; color: #8a8fa3; }
+#daw .bar b { width: 16px; height: 16px; border-radius: 50%; background: #3a3f52; display: block; }
+.lane { position: relative; height: 96px; border-bottom: 1px solid #1a1d28; }
+.clipbox { position: absolute; top: 10px; height: 76px; border-radius: 10px; opacity: .9; }
+#playhead { position: absolute; top: 58px; bottom: 0; width: 4px; background: #fff; box-shadow: 0 0 20px #fff; left: 20px; }
+.stamp { position: relative; display: block; padding: 18px 34px; border-radius: 14px; background: var(--red); color: #fff; font-size: 66px; font-weight: 900;
+  letter-spacing: -1px; text-transform: uppercase; white-space: nowrap; font-style: italic; }
+#stamps { position: absolute; left: 0; right: 0; top: 1330px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+
+/* ── revelación ────────────────────────────────────────────────── */
+#emblem { position: absolute; left: 260px; top: 460px; width: 560px; height: 463px; }
+#emblem img { width: 100%; height: 100%; display: block; filter: drop-shadow(0 0 40px rgba(255,31,58,.7)); }
+.ring { position: absolute; left: 340px; top: 540px; width: 400px; height: 400px; border-radius: 50%; border: 6px solid var(--red); box-shadow: 0 0 40px var(--red); }
+#title-auto { position: absolute; left: 0; right: 0; top: 1010px; display: flex; justify-content: center; font-size: 134px; font-weight: 900; font-style: italic; letter-spacing: -4px; }
+#title-auto span { display: block; }
+#banner-rr { position: absolute; left: 270px; top: 1250px; width: 540px; }
+#tagline { position: absolute; left: 0; right: 0; top: 1390px; display: flex; justify-content: center; }
+#tagline span { display: block; background: var(--red); padding: 14px 38px; border-radius: 12px; font-size: 52px; font-weight: 900; font-style: italic; letter-spacing: 2px; }
+
+/* ── app: captions + visor ─────────────────────────────────────── */
+#caps { position: absolute; left: 60px; right: 60px; top: 120px; height: 380px; }
+.cap { position: absolute; left: 0; right: 0; top: 0; }
+.cap .num { font-size: 130px; font-weight: 900; font-style: italic; line-height: 1; color: #05060a; -webkit-text-stroke: 3px var(--red); letter-spacing: -4px; }
+.cap .ttl { margin-top: 4px; font-size: 72px; font-weight: 900; font-style: italic; letter-spacing: -2px; text-transform: uppercase; line-height: 1; }
+.cap .sub { margin-top: 14px; font-size: 38px; font-weight: 500; color: #b3b8c8; }
+.cap .ttl em { font-style: italic; color: var(--red); }
+#vp { position: absolute; left: 40px; top: 520px; width: 1000px; height: 1060px; border-radius: 28px; overflow: hidden; background: #07080c;
+  border: 3px solid rgba(255,31,58,.85); box-shadow: 0 0 80px rgba(255,31,58,.35), 0 30px 90px rgba(0,0,0,.7); }
+#cam { position: absolute; left: 0; top: 0; width: 2240px; height: 2100px; transform-origin: 0 0; }
+#cam img.shot { position: absolute; left: 0; top: 0; width: 2240px; display: block; opacity: 0; }
+#dim { position: absolute; left: 0; top: 0; width: 2240px; height: 2100px; background: rgba(0,0,0,.65); opacity: 0; }
+#dlg { position: absolute; left: 416px; top: 480px; width: 1408px; border-radius: 18px; border: 3px solid var(--red); opacity: 0; display: block; box-shadow: 0 0 80px rgba(255,31,58,.5); }
+#prog { position: absolute; left: 815px; top: 862px; width: 607px; height: 14px; border-radius: 7px; background: #1a1c25; opacity: 0; }
+#prog i { display: block; width: 0; height: 100%; border-radius: 7px; background: linear-gradient(90deg, #ff1f3a, #ff9a2f); }
+.hl { position: absolute; border: 5px solid #ffd21f; border-radius: 12px; box-shadow: 0 0 40px rgba(255,210,31,.9), inset 0 0 20px rgba(255,210,31,.4); opacity: 0; }
+.ripple { position: absolute; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; border: 6px solid #fff; opacity: 0; }
+#chip { position: absolute; left: 0; top: 0; padding: 22px 40px; font-size: 44px; font-weight: 800; background: #fff; color: #000; border-radius: 16px; white-space: nowrap;
+  box-shadow: 0 10px 40px rgba(0,0,0,.6); opacity: 0; }
+#cursor { position: absolute; left: 0; top: 0; width: 40px; height: 40px; opacity: 0; }
+#cursor-in { position: absolute; left: 0; top: 0; width: 40px; height: 40px; transform-origin: 4px 2px; }
+#cursor svg, #cursor2 svg { position: absolute; left: -4px; top: -2px; filter: drop-shadow(0 4px 8px rgba(0,0,0,.6)); }
+#shim { position: absolute; width: 260px; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.75), rgba(255,255,255,0)); opacity: 0; }
+#stepper { position: absolute; left: 60px; right: 60px; top: 1650px; display: flex; gap: 14px; }
+#stepper i { flex: 1; display: block; height: 16px; border-radius: 8px; background: #20232f; }
+#stepper-lbl { position: absolute; left: 60px; top: 1690px; font-size: 34px; font-weight: 800; letter-spacing: 6px; color: #8a8fa3; }
+#logo-mini { position: absolute; right: 60px; top: 1690px; width: 220px; opacity: .9; }
+#conf { position: absolute; left: 40px; top: 520px; width: 1000px; height: 1060px; pointer-events: none; overflow: hidden; border-radius: 28px; }
+.cf { position: absolute; width: 18px; height: 30px; border-radius: 3px; opacity: 0; }
+
+/* ── estadística ───────────────────────────────────────────────── */
+#stat1 { position: absolute; left: 0; right: 0; top: 470px; }
+#stat1 .word { font-size: 150px; color: #8a8fa3; }
+#strike { position: absolute; left: 90px; top: 580px; height: 22px; width: 900px; background: var(--red); transform-origin: 0 50%; box-shadow: 0 0 30px var(--red); }
+#stat2 { position: absolute; left: 0; right: 0; top: 760px; display: flex; flex-direction: column; align-items: center; }
+#stat2 .big { font-size: 400px; line-height: .85; }
+#stat2 .seg { font-size: 176px; margin-top: 10px; }
+#stat-sub { position: absolute; left: 60px; right: 60px; top: 1480px; text-align: center; font-size: 46px; font-weight: 700; color: #c9ccd8; line-height: 1.3; }
+
+/* ── CTA ───────────────────────────────────────────────────────── */
+#cta-emblem { position: absolute; left: 340px; top: 250px; width: 400px; height: 331px; }
+#cta-emblem img { width: 100%; height: 100%; display: block; filter: drop-shadow(0 0 40px rgba(255,31,58,.7)); }
+#cta-title { position: absolute; left: 0; right: 0; top: 640px; display: flex; justify-content: center; font-size: 134px; font-weight: 900; font-style: italic; letter-spacing: -4px; }
+#cta-title span { display: block; }
+#eds { position: absolute; left: 0; right: 0; top: 830px; display: flex; justify-content: center; gap: 24px; }
+#eds span { display: block; padding: 14px 44px; border-radius: 999px; font-size: 46px; font-weight: 900; letter-spacing: 6px; }
+#eds .b { background: linear-gradient(90deg, #1d4ed8, #3b82f6); } #eds .p { background: linear-gradient(90deg, #7c3aed, #a855f7); }
+#cta-line { position: absolute; left: 60px; right: 60px; top: 1010px; text-align: center; font-size: 52px; font-weight: 800; line-height: 1.2; }
+#buy { position: absolute; left: 90px; top: 1160px; width: 900px; padding: 34px 20px; border-radius: 26px; background: linear-gradient(180deg, #ff2d48, #b1001a);
+  text-align: center; font-size: 56px; font-weight: 900; letter-spacing: -1px; box-shadow: 0 0 80px rgba(255,31,58,.6); }
+#buy small { display: block; font-size: 30px; font-weight: 700; letter-spacing: 6px; opacity: .85; margin-bottom: 6px; }
+#cta-banner { position: absolute; left: 270px; top: 1500px; width: 540px; }
+#cta-tag { position: absolute; left: 0; right: 0; top: 1660px; text-align: center; font-size: 40px; font-weight: 700; color: #b3b8c8; letter-spacing: 3px; }
+#cursor2 { position: absolute; left: 0; top: 0; width: 40px; height: 40px; opacity: 0; }
+#cursor2-in { position: absolute; left: 0; top: 0; width: 40px; height: 40px; transform-origin: 4px 2px; }
+#ripple2 { position: absolute; width: 100px; height: 100px; margin: -50px 0 0 -50px; border-radius: 50%; border: 8px solid #fff; opacity: 0; }
+
+/* ── capas globales ────────────────────────────────────────────── */
+#pulse { position: absolute; inset: 0; opacity: 0; box-shadow: inset 0 0 260px 40px rgba(255,31,58,.75); pointer-events: none; }
+#flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+#flashred { position: absolute; inset: 0; background: var(--red); opacity: 0; pointer-events: none; }
+#tear { position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+#tear i { position: absolute; left: 0; right: 0; display: block; background: rgba(255,255,255,.9); mix-blend-mode: difference; }
+#scan { position: absolute; inset: 0; pointer-events: none; opacity: .5; background: repeating-linear-gradient(0deg, rgba(0,0,0,.28) 0, rgba(0,0,0,.28) 2px, rgba(0,0,0,0) 3px, rgba(0,0,0,0) 6px); }
+#vig { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(0,0,0,.72) 100%); }
+#grain { position: absolute; left: -128px; top: -128px; width: 1336px; height: 2176px; pointer-events: none; opacity: .09; background: url("assets/grain.png"); mix-blend-mode: overlay; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="32" data-width="1080" data-height="1920" data-fps="30">
+
+  <div id="bg"></div>
+  <div id="gridlines"></div>
+
+  <div id="world">
+
+    <!-- 1 · GANCHO -->
+    <div class="scene clip" id="s-hook" data-start="0" data-duration="3.75">
+      <div id="hook-bars"></div>
+      <div id="embers"></div>
+      <div id="hook-words">
+        <div class="word w1" data-hf-motion-blur='{"samplesPerFrame": 8}' style="font-size:166px"><span class="t">¿Cansado</span><span class="g r" data-layout-allow-overlap>¿Cansado</span><span class="g c" data-layout-allow-overlap>¿Cansado</span></div>
+        <div class="word w2" data-hf-motion-blur='{"samplesPerFrame": 8}' style="font-size:166px"><span class="t">de hacer</span><span class="g r" data-layout-allow-overlap>de hacer</span><span class="g c" data-layout-allow-overlap>de hacer</span></div>
+        <div class="word w3 red" data-hf-motion-blur='{"samplesPerFrame": 8}' style="font-size:150px"><span class="t">tus previas</span><span class="g r" data-layout-allow-overlap>tus previas</span><span class="g c" data-layout-allow-overlap>tus previas</span></div>
+        <div class="word w4" data-hf-motion-blur='{"samplesPerFrame": 8}' style="font-size:206px; margin-top:20px"><span class="t">a mano?</span><span class="g r" data-layout-allow-overlap>a mano?</span><span class="g c" data-layout-allow-overlap>a mano?</span></div>
+      </div>
+    </div>
+
+    <!-- 2 · DOLOR -->
+    <div class="scene clip" id="s-pain" data-start="3.75" data-duration="3.75">
+      <div id="pain-all" class="abs" style="inset:0">
+        <div id="timer-wrap"><div id="timer-lbl">TIEMPO PERDIDO</div><div id="timer">00:00:00</div></div>
+        <div id="daw">
+          <div class="bar"><b></b><b></b><b></b><span style="margin-left:14px">Proyecto_FINAL_v7_REAL.als</span></div>
+          <div id="lanes"></div>
+          <div id="playhead"></div>
+        </div>
+        <div id="stamps">
+          <div class="stamp" data-hf-motion-blur='{"samplesPerFrame": 8}'>✂ Cortar</div>
+          <div class="stamp" data-hf-motion-blur='{"samplesPerFrame": 8}'>♪ Cuadrar el BPM</div>
+          <div class="stamp" data-hf-motion-blur='{"samplesPerFrame": 8}'>⏱ Exportar</div>
+          <div class="stamp" data-hf-motion-blur='{"samplesPerFrame": 8}' style="background:#fff;color:#05060a">↻ Y repetir…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 · REVELACIÓN -->
+    <div class="scene clip" id="s-reveal" data-start="7.5" data-duration="1.875">
+      <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
+      <div id="emblem" data-hf-motion-blur='{"samplesPerFrame": 10}'><img src="assets/logo_emblem.png" alt="" /></div>
+      <div id="title-auto"><span>A</span><span>U</span><span>T</span><span>O</span><span>P</span><span>R</span><span>E</span><span>V</span><span>I</span><span>A</span><span>S</span></div>
+      <img id="banner-rr" src="assets/logo_banner.png" alt="" />
+      <div id="tagline"><span data-hf-motion-blur='{"samplesPerFrame": 8}'>TU PREVIA EN UN CLIC</span></div>
+    </div>
+
+    <!-- 4 · APP (demo + funciones) -->
+    <div class="scene clip" id="s-app" data-start="9.375" data-duration="16.875">
+      <div id="caps"></div>
+      <div id="vp">
+        <div id="cam">
+          <img class="shot" id="i01" src="assets/01_bienvenida.jpg" alt="" />
+          <img class="shot" id="i02" src="assets/02_analisis.jpg" alt="" />
+          <img class="shot" id="i03" src="assets/03_cargada.jpg" alt="" />
+          <img class="shot" id="i08" src="assets/08_generada.jpg" alt="" />
+          <img class="shot" id="i04" src="assets/04_editor_cortes.jpg" alt="" />
+          <img class="shot" id="i05" src="assets/05_editor_bpm.jpg" alt="" />
+          <img class="shot" id="i07" src="assets/07_promo.jpg" alt="" />
+          <div id="dim"></div>
+          <img id="dlg" src="assets/14_lote.jpg" alt="" />
+          <div id="prog"><i></i></div>
+          <div id="hls"></div>
+          <div id="shim"></div>
+          <div id="chip">🎵 Midnight Groove (Original Mix).wav</div>
+          <div id="ripples"></div>
+          <div id="cursor" data-layout-allow-overflow data-hf-motion-blur='{"samplesPerFrame": 12, "shutterAngle": 540}'>
+            <div id="cursor-in">
+              <svg width="40" height="44" viewBox="0 0 40 44"><path d="M4 2 L4 33 L12 26 L18 40 L24 37.5 L18 24 L29 24 Z" fill="#fff" stroke="#05060a" stroke-width="2.6" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="conf"></div>
+      <div id="stepper"><i></i><i></i><i></i><i></i><i></i></div>
+      <div id="stepper-lbl" data-layout-allow-occlusion>AUTOPREVIAS</div>
+      <img id="logo-mini" src="assets/logo_banner.png" alt="" style="opacity:0" />
+    </div>
+
+    <!-- 5 · ESTADÍSTICA -->
+    <div class="scene clip" id="s-stat" data-start="26.25" data-duration="1.875">
+      <div id="stat1"><div class="word" data-hf-motion-blur='{"samplesPerFrame": 8}'>de 3 horas</div></div>
+      <div id="strike"></div>
+      <div id="stat2">
+        <div class="word big red" data-hf-motion-blur='{"samplesPerFrame": 10}'>a 30</div>
+        <div class="word seg" data-hf-motion-blur='{"samplesPerFrame": 8}'>segundos</div>
+      </div>
+      <div id="stat-sub">Detecta BPM, clave y drops, corta y exporta tu previa. Solo.</div>
+    </div>
+
+    <!-- 6 · CTA -->
+    <div class="scene clip" id="s-cta" data-start="28.125" data-duration="3.875">
+      <div id="cta-emblem" data-hf-motion-blur='{"samplesPerFrame": 10}'><img src="assets/logo_emblem.png" alt="" /></div>
+      <div id="cta-title"><span>A</span><span>U</span><span>T</span><span>O</span><span>P</span><span>R</span><span>E</span><span>V</span><span>I</span><span>A</span><span>S</span></div>
+      <div id="eds"><span class="b">BASIC</span><span class="p">PLUS</span></div>
+      <div id="cta-line"><div>Tu previa profesional,</div><div>lista en segundos.</div></div>
+      <div id="buy"><small>CÓMPRALO EN</small>payhip.com/RADICALRECVLC</div>
+      <img id="cta-banner" src="assets/logo_banner.png" alt="" />
+      <div id="cta-tag">macOS · Windows · Radical Records</div>
+      <div id="ripple2"></div>
+      <div id="cursor2" data-layout-allow-overflow data-hf-motion-blur='{"samplesPerFrame": 12, "shutterAngle": 540}'>
+        <div id="cursor2-in"><svg width="40" height="44" viewBox="0 0 40 44"><path d="M4 2 L4 33 L12 26 L18 40 L24 37.5 L18 24 L29 24 Z" fill="#fff" stroke="#05060a" stroke-width="2.6" stroke-linejoin="round"/></svg></div>
+      </div>
+    </div>
+
+  </div><!-- /world -->
+
+  <div id="pulse"></div>
+  <div id="tear"></div>
+  <div id="flashred"></div>
+  <div id="flash"></div>
+  <div id="scan"></div>
+  <div id="vig"></div>
+  <div id="grain"></div>
+
+  <audio id="music" src="assets/promo-music.mp3" data-start="0" data-duration="32" data-volume="1"></audio>
+</div>
+
+<script>
+window.CHOREO = {
+  "bpm": 128,
+  "duration": 32,
+  "scenes": {"hook": 0, "pain": 3.75, "reveal": 7.5, "demo": 9.375, "features": 22.5, "stat": 26.25, "cta": 28.125},
+  "slams": [0.12, 0.94, 1.5, 2.25],
+  "clicks": [11.25, 13.125, 14.53, 15.0, 15.47, 15.94, 17.34, 18.75, 20.625, 22.97, 23.9, 24.84, 25.78, 30.94],
+  "whooshes": [3.45, 7.0, 9.1, 11.6, 13.2, 17.9, 22.4, 23.4, 24.33, 25.27, 26.1, 28.0],
+  "impacts": [0.0, 3.75, 7.5, 18.75, 26.25, 28.125]
+}
+;
+window.RECTS = {
+ "welcome": {
+  "open_btn": [
+   589,
+   486,
+   220,
+   46
+  ],
+  "drop": [
+   18,
+   92,
+   1364,
+   670
+  ],
+  "recents": [
+   457,
+   31,
+   93,
+   22
+  ],
+  "license": [
+   796,
+   31,
+   84,
+   22
+  ]
+ },
+ "loaded": {
+  "waveform": [
+   25,
+   128,
+   1350,
+   230
+  ],
+  "player": [
+   29,
+   408,
+   1342,
+   80
+  ],
+  "bpm": [
+   246,
+   504,
+   223,
+   80
+  ],
+  "key": [
+   475,
+   504,
+   222,
+   80
+  ],
+  "drops": [
+   931,
+   504,
+   223,
+   80
+  ],
+  "pv": [
+   1160,
+   504,
+   222,
+   80
+  ],
+  "p15": [
+   100,
+   622,
+   105,
+   24
+  ],
+  "p30": [
+   213,
+   622,
+   106,
+   24
+  ],
+  "p60": [
+   327,
+   622,
+   121,
+   24
+  ],
+  "p120": [
+   456,
+   622,
+   170,
+   24
+  ],
+  "name": [
+   89,
+   782,
+   869,
+   28
+  ],
+  "generate": [
+   18,
+   1076,
+   1364,
+   46
+  ],
+  "folder": [
+   1195,
+   842,
+   84,
+   24
+  ],
+  "stats_row": [
+   18,
+   504,
+   222,
+   80
+  ]
+ },
+ "cuts": {
+  "tabs": [
+   18,
+   606,
+   1359,
+   418
+  ],
+  "add_cut": [
+   1262,
+   668,
+   106,
+   24
+  ],
+  "tbl": [
+   27,
+   697,
+   1341,
+   320
+  ],
+  "adv": [
+   1178,
+   558,
+   186,
+   28
+  ],
+  "waveform": [
+   25,
+   99,
+   1345,
+   230
+  ]
+ },
+ "bpm": {
+  "tabs": [
+   18,
+   606,
+   1359,
+   418
+  ],
+  "auto": [
+   70,
+   668,
+   106,
+   24
+  ],
+  "manual": [
+   181,
+   668,
+   147,
+   24
+  ],
+  "plot": [
+   27,
+   697,
+   1341,
+   80
+  ],
+  "adv": [
+   1178,
+   558,
+   186,
+   28
+  ]
+ },
+ "promo": {
+  "export": [
+   18,
+   883,
+   1364,
+   110
+  ],
+  "promo": [
+   783,
+   932,
+   102,
+   16
+  ],
+  "voice": [
+   399,
+   929,
+   114,
+   22
+  ],
+  "master": [
+   284,
+   932,
+   103,
+   16
+  ],
+  "spin": [
+   891,
+   929,
+   64,
+   22
+  ],
+  "name": [
+   89,
+   890,
+   872,
+   28
+  ],
+  "generate": [
+   18,
+   1196,
+   1364,
+   46
+  ],
+  "preset_bar": [
+   783,
+   648,
+   486,
+   99
+  ]
+ },
+ "generated": {
+  "success": [
+   18,
+   1112,
+   1364,
+   130
+  ],
+  "open": [
+   33,
+   1203,
+   115,
+   28
+  ],
+  "new": [
+   154,
+   1203,
+   153,
+   28
+  ],
+  "player": [
+   29,
+   408,
+   1342,
+   80
+  ],
+  "generate": [
+   18,
+   1056,
+   1364,
+   46
+  ],
+  "waveform": [
+   25,
+   128,
+   1350,
+   230
+  ],
+  "folder": [
+   1195,
+   822,
+   84,
+   24
+  ]
+ }
+};
+</script>
+<script>
+(function () {
+  const CH = window.CHOREO, RC = window.RECTS;
+  const BEAT = 60 / CH.bpm;
+  const S0 = 1000 / 2240;           // escala de la captura (2240 px) al visor (1000 px)
+  const FIT = 1.6;                  // factor lógico → píxel de imagen de las capturas
+  function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const rnd = mulberry32(2026);
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => Array.from(document.querySelectorAll(s));
+  const tl = gsap.timeline({ paused: true });
+  const T = CH.scenes;
+  // fromTo: GSAP renderiza el estado "from" de inmediato; solo conviene cuando parte de opacity 0 (oculta el elemento hasta su entrada).
+  const _fromTo = tl.fromTo.bind(tl);
+  tl.fromTo = function (t, a, b, pos) {
+    if (!(a && a.opacity === 0) && b.immediateRender === undefined) b = Object.assign({ immediateRender: false }, b);
+    return _fromTo(t, a, b, pos);
+  };
+
+  // ── utilidades de efecto ────────────────────────────────────────────────
+  function flash(t, a, d, red) { const el = red ? "#flashred" : "#flash"; tl.fromTo(el, { opacity: a }, { opacity: 0, duration: d || 0.25, ease: "power2.out" }, t); }
+  function shake(t, amp, dur) {
+    const n = 7, step = dur / n;
+    for (let i = 0; i < n; i++) {
+      const k = 1 - i / n;
+      tl.to("#world", { x: (rnd() * 2 - 1) * amp * k, y: (rnd() * 2 - 1) * amp * k, duration: step, ease: "none" }, t + i * step);
+    }
+    tl.to("#world", { x: 0, y: 0, duration: step, ease: "none" }, t + dur);
+  }
+  function glitch(el, t, len) {
+    const g = el.querySelectorAll(".g"); const l = len || 0.14;
+    g.forEach((n, i) => {
+      tl.set(n, { opacity: 0.85, x: (i ? 1 : -1) * (12 + rnd() * 10) }, t);
+      tl.set(n, { opacity: 0.85, x: (i ? -1 : 1) * (8 + rnd() * 8) }, t + l * 0.5);
+      tl.set(n, { opacity: 0, x: 0 }, t + l);
+    });
+  }
+  const tearEl = $("#tear");
+  for (let i = 0; i < 6; i++) { const b = document.createElement("i"); b.style.top = (80 + i * 300 + rnd() * 120) + "px"; b.style.height = (14 + rnd() * 40) + "px"; tearEl.appendChild(b); }
+  function tear(t) {
+    tl.set("#tear", { opacity: 1 }, t);
+    $$("#tear i").forEach((b, i) => { tl.set(b, { x: (rnd() * 2 - 1) * 120 }, t); tl.set(b, { x: (rnd() * 2 - 1) * 120 }, t + 0.05); });
+    tl.set("#tear", { opacity: 0 }, t + 0.1);
+  }
+  // grano de película animado (pasos fijos)
+  for (let i = 0; i < 12 * 32; i++) tl.set("#grain", { x: -((i * 37) % 128), y: -((i * 53) % 128) }, i / 12);
+
+  // pulso en cada tiempo durante el groove
+  for (let tb = T.reveal; tb < T.cta; tb += BEAT) tl.fromTo("#pulse", { opacity: 0.3 }, { opacity: 0, duration: 0.32, ease: "power2.out" }, tb);
+
+  // ═══ 1 · GANCHO ════════════════════════════════════════════════════════
+  const bars = document.getElementById("hook-bars");
+  const H = [];
+  for (let i = 0; i < 40; i++) { const b = document.createElement("i"); bars.appendChild(b); H.push(0.25 + rnd() * 0.75); }
+  const barEls = Array.from(bars.children);
+  tl.set(barEls, { scaleY: 0.04 }, 0);
+  tl.to(barEls, { scaleY: (i) => H[i], duration: 0.55, ease: "power3.out", stagger: { each: 0.008, from: "center" } }, 0.05);
+  for (let k = 1; k < 8; k++) {
+    tl.to(barEls, { scaleY: (i) => H[i] * (0.45 + 0.55 * ((i * 7 + k * 13) % 10) / 10), duration: 0.14, ease: "power2.out" }, k * BEAT);
+  }
+  const embers = document.getElementById("embers");
+  for (let i = 0; i < 34; i++) {
+    const e = document.createElement("i"); e.className = "ember"; e.style.left = (30 + rnd() * 1020) + "px"; e.style.top = (1250 + rnd() * 600) + "px"; embers.appendChild(e);
+    tl.fromTo(e, { y: 0, opacity: 0 }, { y: -(700 + rnd() * 700), opacity: 0.9, duration: 1.6 + rnd() * 1.6, ease: "power1.out" }, rnd() * 1.4);
+  }
+  const W = $$("#hook-words .word");
+  tl.set(W, { opacity: 0 }, 0);
+  CH.slams.forEach((t, i) => {
+    const big = i === 3;
+    tl.fromTo(W[i], { opacity: 0, scale: big ? 3.4 : 2.5, y: big ? -120 : -70, rotation: big ? 7 : -5 }, { opacity: 1, scale: 1, y: 0, rotation: 0, duration: 0.24, ease: "expo.out" }, t);
+    flash(t, big ? 0.7 : 0.35, big ? 0.35 : 0.2, !big);
+    shake(t, big ? 26 : 14, big ? 0.4 : 0.26);
+    glitch(W[i], t + 0.26, 0.16);
+  });
+  for (let g = 0; g < 4; g++) glitch(W[3], 2.95 + g * 0.17, 0.09);   // "A MANO?" parpadea
+  tl.to("#hook-words", { x: -40, opacity: 0, duration: 0.18, ease: "power2.in" }, 3.5);
+  tear(3.5); tear(3.62); flash(3.72, 0.8, 0.25);
+
+  // ═══ 2 · DOLOR ═════════════════════════════════════════════════════════
+  const lanes = document.getElementById("lanes"); const cols = ["#ff1f3a", "#7c3aed", "#2563eb", "#16a34a", "#d97706", "#db2777"];
+  for (let l = 0; l < 6; l++) {
+    const lane = document.createElement("div"); lane.className = "lane"; let x = 14 + rnd() * 40;
+    while (x < 900) { const w = 70 + rnd() * 190; const c = document.createElement("div"); c.className = "clipbox"; c.style.left = x + "px"; c.style.width = w + "px"; c.style.background = cols[(l + Math.floor(rnd() * 3)) % 6]; lane.appendChild(c); x += w + 8 + rnd() * 30; }
+    lanes.appendChild(lane);
+  }
+  tl.from("#lanes .clipbox", { scaleX: 0, transformOrigin: "0% 50%", duration: 0.22, stagger: 0.012, ease: "power3.out" }, 3.85);
+  [3.85, 4.85, 5.85, 6.85].forEach((t) => tl.fromTo("#playhead", { x: 0 }, { x: 900, duration: 1.0, ease: "none" }, t));
+  const secs = 10033;
+  for (let i = 0; i <= 80; i++) {
+    const f = i / 80, p = f * f, v = Math.round(secs * p);
+    const hh = String(Math.floor(v / 3600)).padStart(2, "0"), mm = String(Math.floor(v % 3600 / 60)).padStart(2, "0"), ss = String(v % 60).padStart(2, "0");
+    tl.set("#timer", { textContent: hh + ":" + mm + ":" + ss }, 3.85 + f * 3.3);
+  }
+  const ST = $$(".stamp");
+  tl.set(ST, { opacity: 0 }, 3.75);
+  [3.95, 4.69, 5.63, 6.56].forEach((t, i) => {
+    tl.fromTo(ST[i], { opacity: 0, x: i % 2 ? 1300 : -1300, rotation: i % 2 ? 8 : -8, scale: 1.3 }, { opacity: 1, x: 0, rotation: i % 2 ? 2 : -2, scale: 1, duration: 0.2, ease: "expo.out" }, t);
+    flash(t, 0.22, 0.18, true); shake(t, 10, 0.2);
+  });
+  tl.to("#pain-all", { scale: 0.04, rotation: 14, opacity: 0, duration: 0.36, ease: "power4.in" }, 7.0);
+  flash(7.34, 0.95, 0.22);
+
+  // ═══ 3 · REVELACIÓN ════════════════════════════════════════════════════
+  flash(T.reveal, 1, 0.4); shake(T.reveal, 28, 0.45);
+  tl.fromTo("#emblem", { opacity: 0, scale: 4, rotation: -10 }, { opacity: 1, scale: 1, rotation: 0, duration: 0.5, ease: "expo.out" }, T.reveal);
+  $$(".ring").forEach((r, i) => tl.fromTo(r, { scale: 0.3, opacity: 0.95 }, { scale: 3.4, opacity: 0, duration: 0.95, ease: "power2.out" }, T.reveal + i * 0.13));
+  tl.fromTo("#title-auto span", { opacity: 0, y: 140, scale: 1.7 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "back.out(2)", stagger: 0.045 }, 8.0);
+  glitch($("#title-auto"), 8.55, 0.1);
+  tl.fromTo("#banner-rr", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 8.35);
+  tl.fromTo("#tagline span", { opacity: 0, scale: 1.9 }, { opacity: 1, scale: 1, duration: 0.2, ease: "expo.out" }, 8.55);
+  flash(8.55, 0.3, 0.2, true);
+  tl.to(["#emblem", "#title-auto", "#banner-rr", "#tagline"], { y: -1300, duration: 0.28, ease: "power3.in", stagger: 0.025 }, 9.08);
+
+  // ═══ 4 · APP ═══════════════════════════════════════════════════════════
+  const A0 = T.demo;
+  const imgs = ["i01", "i02", "i03", "i08", "i04", "i05", "i07"];
+  tl.set(imgs.map((i) => "#" + i), { opacity: 0 }, A0);
+  tl.set("#i01", { opacity: 1 }, A0);
+  const CK = [];           // claves de cámara (para escalar cursor y ondas)
+  function cam(t, d, tx, ty, z, ease) {
+    const S = S0 * z; CK.push({ t, d, z });
+    const props = { x: 500 - tx * S, y: 530 - ty * S, scale: S };
+    if (d <= 0) tl.set("#cam", props, t); else tl.to("#cam", Object.assign({ duration: d, ease: ease || "power3.inOut" }, props), t);
+    const cs = 2.0 / S;
+    if (d <= 0) tl.set("#cursor-in", { scale: cs }, t); else tl.to("#cursor-in", { scale: cs, duration: d, ease: ease || "power3.inOut" }, t);
+  }
+  function zoomAt(t) { let z = 1; for (const k of CK) { if (t >= k.t + k.d) z = k.z; else if (t >= k.t) { z = k.z; } } return z; }
+  function show(id, t, hide) {
+    if (hide) tl.to("#" + hide, { opacity: 0, duration: 0.1 }, t);
+    tl.to("#" + id, { opacity: 1, duration: 0.1 }, t);
+  }
+  function gcut(t) {
+    flash(t, 0.55, 0.2); tear(t);
+    tl.fromTo("#vp", { x: -22 }, { x: 0, duration: 0.3, ease: "elastic.out(1,0.4)" }, t);
+    tl.fromTo("#cam", { filter: "blur(12px)" }, { filter: "blur(0px)", duration: 0.28, ease: "power2.out" }, t);
+  }
+  tl.fromTo("#vp", { y: 520, opacity: 0, scale: 0.9 }, { y: 0, opacity: 1, scale: 1, duration: 0.55, ease: "expo.out" }, A0);
+  tl.fromTo("#stepper", { opacity: 0 }, { opacity: 1, duration: 0.3 }, A0 + 0.2);
+  tl.fromTo("#stepper-lbl", { opacity: 0 }, { opacity: 1, duration: 0.3 }, A0 + 0.2);
+
+  // pies / captions
+  const capData = [
+    { a: 9.45, b: 11.3, n: "01", t: "Arrastra <em>tu track</em>", s: "WAV · MP3 · FLAC · AIFF · M4A", p: 0 },
+    { a: 11.35, b: 13.15, n: "02", t: "Análisis <em>automático</em>", s: "BPM · tonalidad · drops · estructura", p: 1 },
+    { a: 13.2, b: 16.25, n: "03", t: "Elige <em>la duración</em>", s: "15 s · 30 s · 60 s · 2 min", p: 2 },
+    { a: 16.3, b: 18.7, n: "04", t: "Un clic: <em>generar</em>", s: "Cortes, transiciones y metadatos solos", p: 3 },
+    { a: 18.8, b: 22.45, n: "05", t: "<em>Lista</em> para enviar", s: "MP3 320k · WAV 24 bit · Vídeo 9:16", p: 4 },
+    { a: 22.5, b: 23.4, n: "+", t: "Editor <em>de cortes</em>", s: "Ajusta cada fragmento al segundo", p: 4 },
+    { a: 23.4, b: 24.33, n: "+", t: "Anti-retoque <em>de BPM</em>", s: "Variación de tempo: nadie mezcla tu previa", p: 4 },
+    { a: 24.33, b: 25.27, n: "+", t: "Modo promo <em>antifugas</em>", s: "Tu firma de voz repetida · MP3 128k", p: 4 },
+    { a: 25.27, b: 26.2, n: "+", t: "Lote <em>y carpeta vigilada</em>", s: "Decenas de tracks, un clic", p: 4 },
+  ];
+  const capsEl = document.getElementById("caps"); const pills = $$("#stepper i");
+  capData.forEach((c, i) => {
+    const d = document.createElement("div"); d.className = "cap"; d.id = "cap" + i;
+    d.innerHTML = '<div class="num">' + c.n + '</div><div class="ttl">' + c.t + '</div><div class="sub">' + c.s + "</div>";
+    capsEl.appendChild(d);
+    tl.set(d, { opacity: 0 }, A0);
+    tl.fromTo(d, { x: -110, opacity: 0 }, { x: 0, opacity: 1, duration: 0.3, ease: "expo.out" }, c.a);
+    tl.to(d, { x: 70, opacity: 0, duration: 0.16, ease: "power2.in" }, c.b - 0.16);
+    if (i <= 4) tl.to(pills[c.p], { backgroundColor: "#ff1f3a", duration: 0.2 }, c.a);
+  });
+  tl.to("#logo-mini", { opacity: 0.9, duration: 0.3 }, 22.6);
+
+  // cursor, ondas y resaltes
+  function ctr(stage, key) { const r = RC[stage][key]; return [(r[0] + r[2] / 2) * FIT, (r[1] + r[3] / 2) * FIT]; }
+  function box(stage, key, pad) { const r = RC[stage][key]; const p = pad || 8; return [r[0] * FIT - p, r[1] * FIT - p, r[2] * FIT + 2 * p, r[3] * FIT + 2 * p]; }
+  const rippleHost = document.getElementById("ripples"), hlHost = document.getElementById("hls");
+  let nr = 0;
+  function click(t, x, y) {
+    const r = document.createElement("div"); r.className = "ripple"; r.style.left = x + "px"; r.style.top = y + "px"; rippleHost.appendChild(r);
+    const S = S0 * zoomAt(t);
+    tl.fromTo(r, { scale: 0.3 / S * 0.6, opacity: 1 }, { scale: 2.6 / S, opacity: 0, duration: 0.5, ease: "power2.out" }, t);
+    tl.fromTo("#cursor-in", { scale: 2.0 / S }, { scale: 1.6 / S, duration: 0.07, yoyo: true, repeat: 1, ease: "power1.inOut" }, t - 0.04);
+    nr++;
+  }
+  function hl(b, t, hold) {
+    const h = document.createElement("div"); h.className = "hl"; h.style.left = b[0] + "px"; h.style.top = b[1] + "px"; h.style.width = b[2] + "px"; h.style.height = b[3] + "px"; hlHost.appendChild(h);
+    tl.fromTo(h, { opacity: 0, scale: 1.18 }, { opacity: 1, scale: 1, duration: 0.14, ease: "power3.out" }, t);
+    tl.to(h, { opacity: 0, duration: 0.22 }, t + (hold || 0.3));
+  }
+  function curMove(t, d, x, y) {
+    tl.to("#cursor", { x: x, duration: d, ease: "power2.inOut" }, t);
+    tl.to("#cursor", { y: y, duration: d, ease: "power1.inOut" }, t);
+  }
+  function curSet(t, x, y) { tl.set("#cursor", { x: x, y: y, opacity: 1 }, t); }
+
+  // — paso 1: arrastrar archivo —
+  cam(A0, 0, 1120, 656, 1.25);
+  cam(9.8, 1.35, 1120, 660, 1.75);
+  tl.set("#chip", { opacity: 0, scale: 2.0, transformOrigin: "0% 0%" }, A0);
+  const dz = ctr("welcome", "drop");
+  curSet(9.55, 1760, 200);
+  tl.fromTo("#chip", { x: 1730, y: 190, opacity: 0 }, { x: 1730, y: 190, opacity: 1, duration: 0.2 }, 9.55);
+  curMove(9.75, 1.4, dz[0], dz[1] + 40);
+  tl.to("#chip", { x: dz[0] - 60, duration: 1.4, ease: "power2.inOut" }, 9.75);
+  tl.to("#chip", { y: dz[1] - 10, duration: 1.4, ease: "power1.inOut" }, 9.75);
+  click(CH.clicks[0], dz[0], dz[1] + 40);
+  hl(box("welcome", "drop", 6), CH.clicks[0] - 0.05, 0.4);
+  tl.to("#chip", { scale: 0.2, opacity: 0, duration: 0.18, ease: "power2.in" }, CH.clicks[0] - 0.02);
+  flash(CH.clicks[0], 0.25, 0.2, true);
+
+  // — paso 2: análisis —
+  show("i02", 11.3, "i01");
+  cam(11.3, 0.4, 1120, 690, 1.6);
+  curMove(11.4, 1.6, 1550, 1000);
+  const pr = RC.welcome.open_btn;   // la barra de progreso de la pantalla de análisis (coords de captura)
+  tl.set("#prog", { opacity: 1 }, 11.35);
+  tl.fromTo("#prog i", { width: 0 }, { width: 607, duration: 1.7, ease: "power1.inOut" }, 11.4);
+  tl.set("#prog", { opacity: 0 }, 13.15);
+  flash(13.125, 0.35, 0.25);
+
+  // — paso 3: pista cargada y presets —
+  const LD = "loaded";
+  gcut(13.2);
+  show("i03", 13.2, "i02");
+  cam(13.2, 0, 1120, 800, 1.3);
+  cam(13.45, 0.9, 1120, 800, 1.5);
+  curSet(13.25, 1500, 760);
+  curMove(13.4, 0.5, 900, 430);
+  curMove(13.95, 0.35, 1750, 430);
+  hl(box(LD, "waveform", 4), 13.5, 0.7);
+  hl(box(LD, "bpm", 6), 13.7, 0.5);
+  cam(14.05, 0.45, 620, 960, 2.0);
+  const pk = ["p15", "p30", "p60", "p120"];
+  pk.forEach((k, i) => {
+    const t = CH.clicks[2 + i], c = ctr(LD, k);
+    curMove(i === 0 ? 14.35 : CH.clicks[1 + i] + 0.04, i === 0 ? 0.2 : 0.38, c[0], c[1]);
+    click(t, c[0], c[1]); hl(box(LD, k, 6), t - 0.03, 0.4);
+  });
+  // — paso 4: generar —
+  const gen = ctr(LD, "generate"), gb = box(LD, "generate", 6);
+  cam(16.25, 0.85, 1120, 1100, 1.45);
+  curMove(16.1, 1.15, gen[0], gen[1]);
+  click(CH.clicks[6], gen[0], gen[1]);
+  hl(gb, CH.clicks[6] - 0.03, 1.3);
+  tl.set("#shim", { left: gb[0], top: gb[1] + 6, height: gb[3] - 12 }, 17.3);
+  tl.fromTo("#shim", { x: 0, opacity: 1 }, { x: gb[2] - 250, opacity: 1, duration: 0.55, ease: "power1.inOut" }, 17.4);
+  tl.fromTo("#shim", { x: 0, opacity: 1 }, { x: gb[2] - 250, opacity: 1, duration: 0.55, ease: "power1.inOut" }, 17.98);
+  tl.set("#shim", { opacity: 0 }, 18.6);
+
+  // — paso 5: previa generada —
+  const GN = "generated", T5 = CH.clicks[7];
+  gcut(T5); flash(T5, 0.5, 0.35, true);
+  show("i08", T5, "i03");
+  cam(T5, 0, 1120, 1040, 1.0);
+  cam(T5 + 0.35, 0.85, 1120, 1290, 1.5);
+  curSet(T5, 1120, 1750);
+  hl(box(GN, "success", 6), T5 + 0.25, 1.1);
+  const op = ctr(GN, "open"), pl = [1217, 758];
+  curMove(T5 + 0.5, 0.7, op[0], op[1]);
+  cam(20.25, 0.75, 1160, 800, 1.45);
+  curMove(20.1, 0.5, pl[0], pl[1]);
+  click(CH.clicks[8], pl[0], pl[1]); hl(box(GN, "player", 4), CH.clicks[8] - 0.02, 1.4);
+  // confeti
+  const conf = document.getElementById("conf");
+  for (let i = 0; i < 46; i++) {
+    const c = document.createElement("i"); c.className = "cf"; c.style.left = "500px"; c.style.top = "820px"; c.style.background = ["#ff1f3a", "#ffffff", "#ffd21f", "#a855f7"][i % 4]; conf.appendChild(c);
+    const ang = -Math.PI / 2 + (rnd() * 2 - 1) * 1.1, sp = 320 + rnd() * 560;
+    tl.set(c, { opacity: 0 }, T5);
+    tl.fromTo(c, { x: 0, y: 0, opacity: 1, rotation: 0 }, { x: Math.cos(ang) * sp, y: Math.sin(ang) * sp, rotation: 360 * (rnd() * 2 - 1) * 2, duration: 0.55, ease: "power2.out" }, T5 + 0.02);
+    tl.to(c, { y: "+=700", opacity: 0, duration: 0.9, ease: "power2.in" }, T5 + 0.57);
+  }
+
+  // — funciones Plus (cortes rápidos) —
+  const F = [22.5, 23.4, 24.33, 25.27];
+  // editor de cortes
+  gcut(F[0]); show("i04", F[0], "i08"); cam(F[0], 0, 1400, 1200, 1.3);
+  const addc = ctr("cuts", "add_cut");
+  curSet(F[0], 1400, 1250); curMove(F[0] + 0.1, 0.35, addc[0], addc[1]);
+  click(CH.clicks[9], addc[0], addc[1]); hl(box("cuts", "add_cut", 6), CH.clicks[9] - 0.03, 0.4);
+  hl(box("cuts", "tbl", 6), F[0] + 0.55, 0.3);
+  // BPM
+  gcut(F[1]); show("i05", F[1], "i04"); cam(F[1], 0, 1000, 1150, 1.45);
+  const man = ctr("bpm", "manual");
+  curSet(F[1], 900, 1250); curMove(F[1] + 0.1, 0.34, man[0], man[1]);
+  click(CH.clicks[10], man[0], man[1]); hl(box("bpm", "manual", 6), CH.clicks[10] - 0.03, 0.4);
+  hl(box("bpm", "plot", 6), F[1] + 0.6, 0.3);
+  // modo promo
+  gcut(F[2]); show("i07", F[2], "i05"); cam(F[2], 0, 1120, 1290, 1.5);
+  const pc = ctr("promo", "promo");
+  curSet(F[2], 700, 1650); curMove(F[2] + 0.1, 0.38, pc[0], pc[1]);
+  click(CH.clicks[11], pc[0], pc[1]); hl(box("promo", "promo", 8), CH.clicks[11] - 0.03, 0.45);
+  hl(box("promo", "voice", 6), F[2] + 0.55, 0.3);
+  // lote
+  gcut(F[3]); show("i03", F[3], "i07");
+  tl.set("#dim", { opacity: 0 }, F[3]); tl.to("#dim", { opacity: 1, duration: 0.12 }, F[3]); tl.to("#dlg", { opacity: 1, duration: 0.12 }, F[3]);
+  cam(F[3], 0, 1300, 1000, 1.2);
+  curSet(F[3], 1100, 800); curMove(F[3] + 0.1, 0.4, 1683, 1355);
+  click(CH.clicks[12], 1683, 1355); hl([1571, 1328, 224, 54], CH.clicks[12] - 0.03, 0.4);
+
+  // ═══ 5 · ESTADÍSTICA ═══════════════════════════════════════════════════
+  flash(T.stat, 0.9, 0.35); shake(T.stat, 16, 0.3);
+  tl.set(["#stat1 .word", "#stat2 .word", "#stat-sub", "#strike"], { opacity: 0 }, T.stat);
+  tl.fromTo("#stat1 .word", { opacity: 0, scale: 1.8 }, { opacity: 1, scale: 1, duration: 0.22, ease: "expo.out" }, T.stat);
+  tl.fromTo("#strike", { opacity: 1, scaleX: 0 }, { opacity: 1, scaleX: 1, duration: 0.25, ease: "power4.out" }, T.stat + 0.4);
+  tl.to(["#stat1 .word", "#strike"], { y: -60, opacity: 0.35, duration: 0.3, ease: "power2.in" }, T.stat + 0.75);
+  tl.fromTo("#stat2 .big", { opacity: 0, scale: 3.5, rotation: -6 }, { opacity: 1, scale: 1, rotation: 0, duration: 0.26, ease: "expo.out" }, T.stat + 0.75);
+  flash(T.stat + 0.75, 0.55, 0.3, true); shake(T.stat + 0.75, 30, 0.4);
+  tl.fromTo("#stat2 .seg", { opacity: 0, scale: 2.2 }, { opacity: 1, scale: 1, duration: 0.22, ease: "expo.out" }, T.stat + 0.95);
+  tl.fromTo("#stat-sub", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, T.stat + 1.15);
+  tl.to(["#stat1 .word", "#strike", "#stat2 .big", "#stat2 .seg", "#stat-sub"], { opacity: 0, y: -80, duration: 0.2, ease: "power2.in" }, T.cta - 0.2);
+
+  // ═══ 6 · CTA ═══════════════════════════════════════════════════════════
+  const C0 = T.cta;
+  flash(C0, 0.9, 0.4, true); shake(C0, 22, 0.4);
+  tl.fromTo("#cta-emblem", { opacity: 0, scale: 2.6, rotation: -8 }, { opacity: 1, scale: 1, rotation: 0, duration: 0.5, ease: "expo.out" }, C0);
+  tl.fromTo("#cta-title span", { opacity: 0, y: 120, scale: 1.7 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "back.out(2)", stagger: 0.04 }, C0 + 0.25);
+  tl.fromTo("#eds span", { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(3)", stagger: 0.12 }, C0 + 0.8);
+  tl.fromTo("#cta-line", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, C0 + 1.05);
+  tl.fromTo("#buy", { opacity: 0, y: 160, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "expo.out" }, C0 + 1.35);
+  tl.fromTo("#cta-banner", { opacity: 0 }, { opacity: 1, duration: 0.4 }, C0 + 1.7);
+  tl.fromTo("#cta-tag", { opacity: 0 }, { opacity: 1, duration: 0.4 }, C0 + 2.0);
+  const buy = [540, 1228];
+  tl.set("#cursor2-in", { scale: 1.7 }, C0);
+  tl.set("#cursor2", { x: 880, y: 1760, opacity: 1 }, C0 + 1.7);
+  tl.to("#cursor2", { x: buy[0] + 120, duration: 1.0, ease: "power2.inOut" }, C0 + 1.9);
+  tl.to("#cursor2", { y: buy[1] + 30, duration: 1.0, ease: "power1.inOut" }, C0 + 1.9);
+  const cc = CH.clicks[13];
+  tl.fromTo("#cursor2-in", { scale: 1.7 }, { scale: 1.3, duration: 0.07, yoyo: true, repeat: 1 }, cc - 0.04);
+  tl.set("#ripple2", { left: buy[0] + 120, top: buy[1] + 30 }, cc - 0.1);
+  tl.fromTo("#ripple2", { scale: 0.3, opacity: 1 }, { scale: 3.2, opacity: 0, duration: 0.55, ease: "power2.out" }, cc);
+  tl.fromTo("#buy", { scale: 1 }, { scale: 0.96, duration: 0.07, yoyo: true, repeat: 1 }, cc - 0.04);
+  flash(cc, 0.3, 0.25, true);
+  [C0 + 2.4, C0 + 3.0].forEach((t) => tl.fromTo("#buy", { boxShadow: "0 0 80px rgba(255,31,58,.6)" }, { boxShadow: "0 0 160px rgba(255,31,58,1)", duration: 0.25, yoyo: true, repeat: 1 }, t));
+  tl.to("#world", { opacity: 0, duration: 0.45, ease: "power2.in" }, 31.55);
+
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+})();
+
+</script>
+<script>
+  (function () {
+    /* SHUTTER_SNIPPET_START */
+    if (!window._hfMbUid) window._hfMbUid = 0;
+    if (!window._hfMbAttached) window._hfMbAttached = new WeakSet();
+    if (!window._hfMbSkipped) window._hfMbSkipped = new WeakSet();
+    if (!window._hfMbProxies) window._hfMbProxies = new WeakSet();
+    if (!window._hfMbTimeline) window._hfMbTimeline = new WeakMap();
+    if (!window._hfMbWarned) window._hfMbWarned = new WeakSet();
+
+    // The declarative form. A copy of a target must not carry it, or the copy is swept
+    // as a target of its own; the group's own marker is `data-hf-motion-blur-group`.
+    var SWEEP_ATTR = "data-hf-motion-blur";
+    // About eight seconds. Long enough for an asynchronously mounted sub-composition, short
+    // enough that a page with a genuine mistake in it reports before anyone stops watching.
+    var POLL_MS = 32;
+    var POLL_TICKS = 250;
+    var SWEEP_SELECTOR = "[" + SWEEP_ATTR + "]";
+    var OPTION_KEYS = ["shutterAngle", "shutterPhase", "samplesPerFrame", "fps", "sharp"];
+
+    // A copy is a deep clone, so the attribute rides along on the root AND on every marked
+    // descendant. Any one left behind is swept as a target of its own, which clones again.
+    var COPY_STRIP = [SWEEP_ATTR, "data-composition-id", "data-fps"];
+
+    // sharp 0 hides a moving target through this marker rather than its own visibility,
+    // which the author's timeline (autoAlpha) may be writing too.
+    var HIDE_ATTR = "data-hf-motion-blur-hiding";
+
+    function installHideRule() {
+      if (document.getElementById("hf-mb-hide")) return;
+      var rule = document.createElement("style");
+      rule.id = "hf-mb-hide";
+      rule.textContent = "[" + HIDE_ATTR + "]{visibility:hidden!important}";
+      (document.head || document.documentElement).appendChild(rule);
+    }
+
+    function stripAttrs(el) {
+      for (var a = 0; a < COPY_STRIP.length; a++) el.removeAttribute(COPY_STRIP[a]);
+    }
+
+    function stripCopyAttrs(root) {
+      stripAttrs(root);
+      var inner = root.querySelectorAll("[" + COPY_STRIP.join("],[") + "]");
+      for (var i = 0; i < inner.length; i++) stripAttrs(inner[i]);
+    }
+
+    // Shutter length is measured in frames, so the snippet must know the composition
+    // frame rate: explicit option, else the target's OWN root, else the first root in
+    // the document, else 30. The target's root is what makes two compositions on one
+    // page read their own data-fps instead of sharing the first one written.
+    function resolveFps(optionFps, target) {
+      var explicit = Number(optionFps);
+      if (explicit > 0) return explicit;
+
+      var scoped = target ? target.closest("[data-composition-id][data-fps]") : null;
+      var root = scoped || document.querySelector("[data-composition-id][data-fps]");
+      var rootFps = root ? Number(root.getAttribute("data-fps")) : 0;
+      if (rootFps > 0) return rootFps;
+
+      return 30;
+    }
+
+    function numOption(value, fallback) {
+      return value !== undefined ? Number(value) : fallback;
+    }
+
+    // A resolved `transform` is either "none", a 2D matrix(a,b,c,d,e,f) or a 3D
+    // matrix3d of 16. Splitting the numbers into the linear part and the
+    // translation is what lets the deadband below use a pixel tolerance on the
+    // one and an angle/ratio tolerance on the other.
+    function parseTransform(value) {
+      if (!value || value === "none") return { linear: [1, 0, 0, 1], translate: [0, 0, 0] };
+      var nums = value
+        .slice(value.indexOf("(") + 1, -1)
+        .split(",")
+        .map(parseFloat);
+      if (nums.length === 16) {
+        return {
+          linear: [
+            nums[0],
+            nums[1],
+            nums[2],
+            nums[4],
+            nums[5],
+            nums[6],
+            nums[8],
+            nums[9],
+            nums[10],
+            nums[3],
+            nums[7],
+            nums[11],
+            nums[15],
+          ],
+          translate: [nums[12], nums[13], nums[14]],
+        };
+      }
+      return {
+        linear: [nums[0], nums[1], nums[2], nums[3]],
+        translate: [nums[4], nums[5], 0],
+      };
+    }
+
+    // Deadband: half a pixel of travel, a thousandth of a unit of linear change,
+    // about 0.06 degrees or 0.1% of scale. Below it the average is the source.
+    // The 2D and 3D forms have different arities, so a change of form counts as
+    // movement rather than being compared component by component.
+    function differs(a, b) {
+      if (a.linear.length !== b.linear.length) return true;
+      for (var i = 0; i < a.linear.length; i++) {
+        if (Math.abs(a.linear[i] - b.linear[i]) > 0.001) return true;
+      }
+      for (var j = 0; j < 3; j++) {
+        if (Math.abs(a.translate[j] - b.translate[j]) > 0.5) return true;
+      }
+      return false;
+    }
+
+    window.attachMotionBlur = function (selector, tl, opts) {
+      opts = opts || {};
+      var shutterAngle = numOption(opts.shutterAngle, 720);
+      var shutterPhase = numOption(opts.shutterPhase, -360);
+      var requestedSamples = numOption(opts.samplesPerFrame, 16);
+      var sharp = opts.sharp !== 0;
+      if (!sharp) installHideRule();
+      var samples = Number.isFinite(requestedSamples)
+        ? Math.max(2, Math.min(64, Math.round(requestedSamples)))
+        : 16;
+      var items = Array.isArray(selector) ? selector : [selector];
+      var targets = items.reduce(function (acc, s) {
+        if (typeof s === "string") {
+          document.querySelectorAll(s).forEach(function (el) {
+            acc.push(el);
+          });
+        } else if (s instanceof Element) {
+          acc.push(s);
+        }
+        return acc;
+      }, []);
+
+      // `samples` counts sub-intervals of the shutter window, so there is one copy at
+      // every interval boundary — both ends of the window included — and each carries
+      // 1/samples of the source. That is what the reference export shows: the outermost
+      // copy sits exactly one frame away from the frame time, not half a step short.
+      var copies = samples + 1;
+      var alpha = String(1 / samples);
+
+      // A copy loses the `#id` rules that styled the original, so it carries its resolved style inline
+      // (enumerated: Chrome returns "" for a computed cssText). Visibility is not frozen: the root
+      // follows the group each frame, so a target hidden at attach still smears.
+      function resolvedStyles(source, out, parentVisibility) {
+        var cs = getComputedStyle(source);
+        var text = "";
+        for (var i = 0; i < cs.length; i++) {
+          var value = cs.getPropertyValue(cs[i]);
+          var inherited = parentVisibility === undefined || value === parentVisibility;
+          if (cs[i] === "visibility" && inherited) continue;
+          text += cs[i] + ":" + value + ";";
+        }
+        // A copy is a still of one instant. Left live, an inherited transition or
+        // keyframe animation would carry it somewhere the timeline never sampled.
+        out.push(text + "transition:none;animation:none;");
+        for (var c = 0; c < source.children.length; c++) {
+          resolvedStyles(source.children[c], out, cs.getPropertyValue("visibility"));
+        }
+        return out;
+      }
+
+      function paintResolvedStyles(copy, styles, cursor) {
+        copy.style.cssText = styles[cursor.i++];
+        for (var c = 0; c < copy.children.length; c++) {
+          paintResolvedStyles(copy.children[c], styles, cursor);
+        }
+      }
+
+      // Perspective applies to a parent's children only, and a copy is a grandchild.
+      // Sharing the parent's 3D context would need preserve-3d on the group, which
+      // mix-blend-mode flattens, so each copy carries the perspective itself. See the
+      // header for what that does to the vanishing point.
+      function parentPerspective(el) {
+        var value = el.parentNode ? getComputedStyle(el.parentNode).perspective : "none";
+        return value && value !== "none" ? "perspective(" + value + ") " : "";
+      }
+
+      function attachOne(el) {
+        var group = document.createElement("div");
+        group.setAttribute("data-hf-motion-blur-group", "hf-mb-" + window._hfMbUid++);
+        group.style.cssText =
+          "position:absolute;left:0;top:0;width:0;height:0;isolation:isolate;pointer-events:none;display:none;";
+
+        var clones = [];
+        for (var k = 0; k < copies; k++) {
+          var clone = el.cloneNode(true);
+          clone.removeAttribute("id");
+          stripCopyAttrs(clone);
+          clones.push(clone);
+          group.appendChild(clone);
+        }
+        var s = {
+          el: el,
+          group: group,
+          clones: clones,
+          samples: [],
+          perspective: "",
+          watch: null,
+        };
+
+        // Resolved styles and the parent's perspective are px once read, so a
+        // container-relative element needs them again when its box changes. Per frame
+        // that would walk the whole subtree once per copy; on resize it costs nothing
+        // on a fixed-size render and keeps a live preview honest.
+        function snapshot() {
+          // Read a target hidden right now (an autoAlpha entrance) as shown, so a descendant
+          // hidden by its own rule still differs from it; the inline value goes back exactly.
+          var hidden = getComputedStyle(el).visibility !== "visible";
+          var inline = el.style.getPropertyValue("visibility");
+          var priority = el.style.getPropertyPriority("visibility");
+          if (hidden) el.style.setProperty("visibility", "visible", "important");
+          var styles;
+          try {
+            styles = resolvedStyles(el, []);
+          } finally {
+            if (hidden) el.style.setProperty("visibility", inline, priority);
+          }
+          s.perspective = parentPerspective(el);
+          for (var c = 0; c < clones.length; c++) {
+            paintResolvedStyles(clones[c], styles, { i: 0 });
+            clones[c].style.position = "absolute";
+            clones[c].style.margin = "0";
+            clones[c].style.opacity = alpha;
+            clones[c].style.mixBlendMode = "plus-lighter";
+          }
+        }
+
+        // Snapshot BEFORE the group enters the page, so a throw in the style walk leaves
+        // nothing behind: the record the rollback needs does not exist until it returns.
+        snapshot();
+        el.parentNode.insertBefore(group, el);
+        if (typeof ResizeObserver === "function") {
+          s.watch = new ResizeObserver(snapshot);
+          s.watch.observe(el);
+        }
+        return s;
+      }
+
+      var state = [];
+      // Every element this call marked. A throw inside `attachOne` never returns its
+      // record, so `state` alone cannot give the marks back.
+      var claimed = [];
+      try {
+        for (var q = 0; q < targets.length; q++) {
+          var candidate = targets[q];
+          // One group per element, whether a second call names it or one call names it
+          // twice: a second set of copies over the first would double the ink. Marked
+          // BEFORE the copies go in: inserting them runs custom-element reactions
+          // synchronously, and one that registers a timeline re-enters the write trap.
+          if (window._hfMbAttached.has(candidate)) continue;
+          window._hfMbAttached.add(candidate);
+          window._hfMbTimeline.set(candidate, tl);
+          claimed.push(candidate);
+          state.push(attachOne(candidate));
+        }
+      } catch (e) {
+        unmark(claimed);
+        discard(state);
+        throw e;
+      }
+      // Nothing to blur means nothing to seek: a tracker here would run the whole sample
+      // loop every frame over an empty set.
+      if (state.length === 0) return;
+
+      // One seek loop drives the whole call, so the window is ONE length, and it belongs
+      // to the composition of an element this call actually attached.
+      var fps = resolveFps(opts.fps, state[0].el);
+      for (var d = 1; d < state.length; d++) {
+        if (resolveFps(opts.fps, state[d].el) === fps) continue;
+        var line = "one call cannot blur compositions at different frame rates; using ";
+        console.warn("[motion-blur] " + line + fps, state[d].el);
+        break;
+      }
+
+      function readTransform(el) {
+        var cs = getComputedStyle(el);
+        return {
+          css: cs.transform,
+          origin: cs.transformOrigin,
+          opacity: cs.opacity,
+          visibility: cs.visibility,
+          parsed: parseTransform(cs.transform),
+        };
+      }
+
+      var scheduled = false;
+
+      function applyShutter() {
+        var shutterTime = shutterAngle / 360 / fps;
+        if (!(shutterTime > 0)) {
+          state.forEach(function (s) {
+            s.group.style.display = "none";
+          });
+          return;
+        }
+
+        var t0 = tl.time();
+        var duration = tl.duration();
+        var windowStart = t0 + shutterPhase / 360 / fps;
+
+        // Sample the real trajectory: seek to each sub-frame time with events
+        // suppressed (so no tween callbacks, including this tracker's, fire),
+        // read the resolved transform, then restore the frame time.
+        try {
+          for (var k = 0; k < copies; k++) {
+            var tk = windowStart + (k / samples) * shutterTime;
+            tl.time(Math.min(duration, Math.max(0, tk)), true);
+            state.forEach(function (s) {
+              s.samples[k] = readTransform(s.el);
+            });
+          }
+        } finally {
+          tl.time(t0, true);
+        }
+
+        state.forEach(function (s) {
+          // Read the element as the timeline left it: the marker is this snippet's own.
+          if (!sharp) s.el.removeAttribute(HIDE_ATTR);
+          var current = readTransform(s.el);
+          var moved = false;
+          for (var i = 0; i < copies; i++) {
+            if (differs(s.samples[i].parsed, current.parsed)) {
+              moved = true;
+              break;
+            }
+          }
+          if (!moved) {
+            s.group.style.display = "none";
+            return;
+          }
+
+          // The copies are absolutely positioned inside the group, and the group sits at
+          // the origin of the element's own containing block, so the element's offset box
+          // places them. Re-read every frame: a beat is free to move the box itself.
+          var left = s.el.offsetLeft + "px";
+          var top = s.el.offsetTop + "px";
+          var width = s.el.offsetWidth + "px";
+          var height = s.el.offsetHeight + "px";
+          for (var j = 0; j < copies; j++) {
+            var clone = s.clones[j];
+            clone.style.left = left;
+            clone.style.top = top;
+            clone.style.width = width;
+            clone.style.height = height;
+            clone.style.transformOrigin = s.samples[j].origin;
+            clone.style.transform =
+              s.perspective + (s.samples[j].css === "none" ? "" : s.samples[j].css);
+          }
+          // The copies are the element's own ink, so they carry its opacity and visibility:
+          // a beat that moves and fades at once would otherwise leave a full-strength
+          // smear behind a vanishing element. It rides the group, not the copies, whose
+          // own opacity is the 1/N shutter weight.
+          s.group.style.opacity = current.opacity;
+          // Set only where the element differs from its parent: an explicit value would
+          // outlive an ancestor that hides later, like a clip that has ended.
+          var shared = getComputedStyle(s.el.parentNode).visibility;
+          s.group.style.visibility = current.visibility === shared ? "" : current.visibility;
+          s.group.style.display = "";
+          if (!sharp) s.el.setAttribute(HIDE_ATTR, "");
+        });
+      }
+
+      // tl.eventCallback("onUpdate") is unavailable under the HyperFrames runtime proxy, so a
+      // tracker tween's onUpdate fires on every seek. Sampling is deferred to a microtask:
+      // seeking GSAP from inside its own render reads stale tween state, while the microtask
+      // runs after the seek returns and before the frame is captured or painted.
+      var _proxy = { t: 0 };
+      try {
+        tl.to(
+          _proxy,
+          {
+            t: 1,
+            duration: Math.max(tl.duration(), 0.1),
+            ease: "none",
+            onUpdate: function () {
+              if (scheduled) return;
+              scheduled = true;
+              Promise.resolve().then(function () {
+                scheduled = false;
+                applyShutter();
+              });
+            },
+          },
+          0,
+        );
+      } catch (e) {
+        unmark(claimed);
+        discard(state);
+        throw e;
+      }
+    };
+
+    // An empty attribute means defaults; anything else is a JSON options object. A value that
+    // is not an options object is skipped loudly rather than read as defaults, because a typo
+    // in it would otherwise render as a silently unblurred element.
+    function sweepOptions(el) {
+      var text = (el.getAttribute(SWEEP_ATTR) || "").trim();
+      if (text === "") return {};
+      var parsed = null;
+      try {
+        parsed = JSON.parse(text);
+      } catch (e) {
+        return refuse(el, "is not JSON: " + text);
+      }
+      // `null`, a number and a string all parse. None of them is a set of options.
+      if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+        return refuse(el, "is not a JSON object: " + text);
+      }
+      var bad = unknownKey(parsed);
+      if (bad !== null) return refuse(el, "names no such option: " + bad);
+      var wrong = nonNumber(parsed);
+      if (wrong !== null) return refuse(el, "needs a number for " + wrong);
+      if (parsed.sharp !== undefined && parsed.sharp !== 0 && parsed.sharp !== 1) {
+        return refuse(el, "needs 0 or 1 for sharp");
+      }
+      return parsed;
+    }
+
+    // A misspelled key is the likeliest typo in a JSON object, and reading it as
+    // defaults is the silent no-op this attribute exists to remove.
+    function unknownKey(parsed) {
+      for (var key in parsed) {
+        if (OPTION_KEYS.indexOf(key) < 0) return key;
+      }
+      return null;
+    }
+
+    // A key with a value the shutter cannot use is the same silent no-op as a key it does
+    // not know: a non-numeric angle hides the smear, a non-numeric phase parks every copy
+    // at the timeline's start. JSON gives real numbers, so anything else is a typo.
+    function nonNumber(parsed) {
+      for (var i = 0; i < OPTION_KEYS.length; i++) {
+        var held = parsed[OPTION_KEYS[i]];
+        if (held === undefined) continue;
+        if (typeof held !== "number" || !Number.isFinite(held)) return OPTION_KEYS[i];
+      }
+      return null;
+    }
+
+    // A throw partway through an attach leaves an element blurred by nothing, so the copies
+    // go too, along with the observer that would otherwise keep walking a detached subtree
+    // on every resize of an element nothing blurs.
+    // The mark is what a second trigger reads, so it is the first thing to give back.
+    function unmark(els) {
+      for (var i = 0; i < els.length; i++) {
+        window._hfMbAttached.delete(els[i]);
+        window._hfMbTimeline.delete(els[i]);
+      }
+    }
+
+    function discard(state) {
+      for (var i = 0; i < state.length; i++) {
+        var s = state[i];
+        if (s.watch !== null) s.watch.disconnect();
+        if (s.group.parentNode !== null) s.group.parentNode.removeChild(s.group);
+      }
+    }
+
+    function refuse(el, why) {
+      window._hfMbSkipped.add(el);
+      console.warn("[motion-blur] " + SWEEP_ATTR + " " + why, el);
+      return null;
+    }
+
+    // An element belongs to the nearest composition above it, so a sub-composition's
+    // targets follow that sub-composition's own timeline.
+    function compositionOf(el) {
+      var host = el.closest("[data-composition-id]");
+      return host ? host.getAttribute("data-composition-id") : null;
+    }
+
+    // Anything else registered on the container is somebody else's bookkeeping: a
+    // timeline is the thing this snippet can seek and extend.
+    function isTimeline(value) {
+      return !!value && typeof value.time === "function" && typeof value.to === "function";
+    }
+
+    // Attached, or skipped as unparseable. Both are terminal, so a later trigger must not
+    // report or attach the element twice.
+    function handled(el) {
+      return window._hfMbAttached.has(el) || window._hfMbSkipped.has(el);
+    }
+
+    // The timeline registered for an element's own composition, or null. Read from the
+    // registry rather than taken from whoever wrote it, so every trigger agrees.
+    function timelineFor(el) {
+      var id = compositionOf(el);
+      if (id === null) return null;
+      var registry = window.__timelines;
+      var found = registry ? registry[id] : null;
+      return isTimeline(found) ? found : null;
+    }
+
+    // A marked element whose parent is not an Element has no target above it: the parent
+    // of a root is the Document, which has no `closest`.
+    function nestedInTarget(el) {
+      var parent = el.parentNode;
+      if (parent === null || typeof parent.closest !== "function") return false;
+      return parent.closest(SWEEP_SELECTOR) !== null;
+    }
+
+    // One owner of attaching one element. Answers whether the element still needs a trigger.
+    function claim(el) {
+      var tl = timelineFor(el);
+      if (handled(el)) {
+        var owner = window._hfMbTimeline.get(el);
+        // Re-registering a key with a DIFFERENT timeline leaves the copies driven by the one
+        // nobody seeks, which renders sharp and says nothing. Report it rather than guess.
+        var changed = tl !== null && owner !== undefined && owner !== tl;
+        if (changed && !window._hfMbWarned.has(el)) {
+          window._hfMbWarned.add(el);
+          console.warn(
+            "[motion-blur] a second timeline registered for this element; the copies still follow the first",
+            el,
+          );
+        }
+        return true;
+      }
+      // Its group would be inserted into the live outer element, so the outer target's
+      // style replay would walk a subtree its cursor no longer matches.
+      if (nestedInTarget(el)) {
+        refuse(el, "cannot blur a target inside another target; blur one of them");
+        return true;
+      }
+      var opts = sweepOptions(el);
+      if (opts === null) return true;
+      if (tl === null) return false;
+      window.attachMotionBlur(el, tl, opts);
+      return true;
+    }
+
+    // Returns the elements still waiting for their composition to register a timeline.
+    // The trap below runs this INSIDE the author's registration statement, so one bad
+    // target must not abort the rest of their composition script.
+    function sweep() {
+      var pending = [];
+      document.querySelectorAll(SWEEP_SELECTOR).forEach(function (el) {
+        try {
+          if (!claim(el)) pending.push(el);
+        } catch (e) {
+          window._hfMbSkipped.add(el);
+          console.warn("[motion-blur] could not blur this element: " + e, el);
+        }
+      });
+      return pending;
+    }
+
+    // Registering a timeline is the moment the author has finished building it, so trapping
+    // the write attaches before the renderer captures a frame. A microtask would be too
+    // early: it runs before the next `<script>` tag.
+    function registrationProxy(container) {
+      var proxy = new Proxy(container, {
+        set: function (target, key, value) {
+          target[key] = value;
+          if (typeof key === "string") sweep();
+          return true;
+        },
+      });
+      window._hfMbProxies.add(proxy);
+      return proxy;
+    }
+
+    function hookRegistration() {
+      var held = window.__timelines;
+      Object.defineProperty(window, "__timelines", {
+        configurable: true,
+        enumerable: true,
+        get: function () {
+          return held;
+        },
+        set: function (value) {
+          var container = !!value && typeof value === "object";
+          var fresh = container && !window._hfMbProxies.has(value);
+          held = fresh ? registrationProxy(value) : value;
+          if (fresh) sweep();
+        },
+      });
+      // A container assigned before this snippet ran is replayed through the setter, so a
+      // timeline already registered on it is swept too.
+      if (held !== undefined) window.__timelines = held;
+    }
+
+    // The trap above cannot see every registration: the runtime owns the registry object,
+    // wraps it per sub-composition, and mounts nested compositions asynchronously. So the
+    // registry is also POLLED, which needs no cooperation from whoever writes it.
+    function poll(ticks) {
+      var pending = sweep();
+      // The WHOLE budget, every time. Stopping the first tick nothing is pending kills the
+      // poll one tick into an ordinary page, which is before a late composition arrives.
+      if (ticks > 0) {
+        setTimeout(function () {
+          poll(ticks - 1);
+        }, POLL_MS);
+        return;
+      }
+      if (pending.length === 0) return;
+      var count = pending.length + " element(s) carry " + SWEEP_ATTR;
+      console.warn(
+        "[motion-blur] " + count + ", and no composition registered a timeline for them",
+        pending,
+      );
+    }
+
+    if (!window._hfMbHooked) {
+      window._hfMbHooked = true;
+      hookRegistration();
+      poll(POLL_TICKS);
+    }
+    /* SHUTTER_SNIPPET_END */
+  })();
+</script>
+</body>
+</html>
