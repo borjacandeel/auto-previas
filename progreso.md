@@ -78,6 +78,19 @@
 - **Pendientes anotados** (tabla en esta sesión): producción de los 11 vídeos del plan + pruebas del usuario + tareas opcionales.
 
 
+### Resumen de Trabajo — Sesión 56 (2026-10-14): v3.7.0 — panel de vídeo más fácil (las 8 propuestas)
+- **3.6.0 publicada** (run 63, CI verde). Verificación de la Release pendiente de que el usuario avise.
+- **Tarjeta «② Vídeo animado»** (`_VideoCard` en `src/ui/app.py`, atributo `_row_video_title_widget` conservado): formato con 3 botones (`_aspect_btns`, controlan el `_combo_aspect` interno, que sigue siendo el modelo para persistencia/presets), color, **Look** (`_combo_look`), «⚙ Personalizar…» (`_btn_vcustom`), banner, título, final y vista previa en un solo bloque.
+- **Looks** en el motor (`LOOKS`, `LOOK_DEFS`, `apply_look`, `detect_look` en `video_neon.py`): neon, bars, circle, title, photo; conservan imágenes y ajuste de encaje; si no hay imagen se pide (`_bg_image_from_user`). El selector refleja «Personalizado» cuando la combinación no coincide.
+- **Arrastrar imagen** sobre la tarjeta (`imageDropped`): valida el formato (una imagen de otro formato válido cambia el vídeo a ese formato; si no es 9:16/1:1/16:9 avisa con ejemplos); en Basic avisa de que es de Plus.
+- **Vista previa en vivo** en `VideoCustomDialog(sample=…)`: `_PreviewWorker` (QThread) dibuja un fotograma de ejemplo con los ajustes actuales (debounce 350 ms), conmutador 9:16/1:1/16:9; se espera al hilo al cerrar.
+- **Basic**: fila de look y banner ocultas; botón candado `_btn_vlock` (abre la página de compra de Plus); se mantiene «Marca de agua incluida».
+- **Opciones avanzadas plegables (Plus)** `_btn_adv`, `_adv_fx_widget`, `_set_adv_open()`: contienen efectos, voz, modo promo y la tarjeta de firma; plegadas por defecto, se abren solas al activar flanger/filter/promo/voz o si había firma guardada; el estado se recuerda (`adv_panel_open`) y el título de la sección lista lo activo. `scripts/manual/capture.py` las despliega para el manual.
+- **Resumen antes de generar** (`_lbl_summary`, actualizado cada 500 ms): formatos, vídeo (formato, look, final), duración de la previa, efectos activos y carpeta. Cadenas traducibles al inglés.
+- Tests (171 passed, 1 skipped; sin `test_structure`): tarjeta/botones/looks, arrastrar imagen, Basic bloqueado, avanzadas, resumen, vista previa en vivo, looks del motor; los tests de interfaz usan ahora una configuración aislada (fixture `_config_aislada`), antes escribían en la real. Selftest ampliado.
+- Fallo propio corregido: una imagen válida de otro formato abría el aviso (y colgaba el test); ahora solo avisa si no es ninguno de los tres formatos.
+- Manuales PDF y CHANGELOG/README al día (3.7.0).
+
 ### Resumen de Trabajo — Sesión 55 (2026-10-14): v3.6.0 (aún sin publicar) — aviso de formato de imagen, textos a elegir y «solo la foto»
 - **CI de la primera 3.6.0 falló** (run 62, nunca llegó a publicar: no existe el tag `v3.6.0`): `test_render_completo_modo_imagen` necesita FFmpeg y los runners no lo tienen en la fase de tests. Corregido omitiéndolo si no hay ffmpeg (igual que el test de render que ya existía). Se mantiene la versión 3.6.0 porque no llegó a publicarse.
 - **Aviso de formato**: `match_aspect()`, `describe_ratio()`, `image_size()`, `image_format_problems()` en el motor. En `src/ui/video_custom.py`: cada selector de imagen muestra «✓ correcto / ⚠ no es 9:16…» y avisa de baja resolución (<720 px); al elegir una imagen de otra proporción sale un aviso («Cambiar la imagen» / «Ver ejemplos de formatos» / «Usarla igualmente») con `FormatExamplesDialog` (los tres formatos dibujados a escala, medida ideal y uso). Botón «📐 Ver formatos válidos». Antes de generar (`_generate`) se vuelve a comprobar con el formato elegido (si cambió) salvo que el ajuste sea «entera con fondo desenfocado».

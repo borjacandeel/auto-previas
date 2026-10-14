@@ -225,6 +225,8 @@ def run_selftest() -> int:
             print("  ✓ Vídeo con imagen propia, onda y final con imagen construyen fotogramas")
         from src.ui import video_custom as _vc
         _vc.VideoCustomDialog({"style": "image"}).deleteLater()
+        _lk = _vn.apply_look(None, "circle")
+        assert _vn.detect_look(_lk) == "circle" and _vn.match_aspect(1080, 1920) == "9:16"
         print("  ✓ Ventana de ajustes del vídeo construida")
 
         from src.ui import video_preview as _vp

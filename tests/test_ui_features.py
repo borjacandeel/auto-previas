@@ -146,6 +146,14 @@ def test_dialogo_guardar_preset_valida_nombre_y_opciones():
 
 
 # ── Panel de resultados: modo promo, estado y edición Básica ─────────────────────
+@pytest.fixture(autouse=True)
+def _config_aislada(tmp_path, monkeypatch):
+    """Los tests de interfaz guardan ajustes (vídeo, opciones avanzadas…): nunca sobre la configuración real."""
+    import src.config as C
+    monkeypatch.setattr(C, "get_config_path", lambda: tmp_path / "cfg_test.json")
+    yield
+
+
 def _panel(monkeypatch, edition="plus"):
     import src.ui.app as A
     monkeypatch.setattr(A, "get_edition", lambda: edition)
@@ -421,3 +429,121 @@ def test_exportar_avisa_si_la_imagen_no_tiene_el_formato(monkeypatch, tmp_path):
     mal = tmp_path / "mal.png"; Image.new("RGB", (1600, 1200)).save(mal)
     c = {"style": "image", "bg": {"default": str(mal)}}
     assert image_format_problems(c, "16:9") == [("fondo", str(mal), "4:3")]
+
+
+def _img_file(tmp_path, name, size):
+    f = tmp_path / name
+    Image.new("RGB", size, (30, 90, 200)).save(f)
+    return str(f)
+
+
+def test_tarjeta_de_video_formato_con_botones_y_looks(monkeypatch, tmp_path):
+    p = _panel(monkeypatch, "plus")
+    p._chk_video.setChecked(True)
+    assert p._row_video_title_widget.isVisibleTo(p) and p._row_look_widget.isVisibleTo(p) and not p._btn_vlock.isVisibleTo(p)
+    # los botones de formato controlan el selector interno (y al revés)
+    assert p._aspect_btns["9:16"].isChecked()
+    p._aspect_btns["16:9"].click()
+    assert p._combo_aspect.currentData() == "16:9" and p.get_export_options()["aspect_ratio"] == "16:9"
+    p._set_combo_by_data(p._combo_aspect, "1:1")
+    assert p._aspect_btns["1:1"].isChecked() and not p._aspect_btns["16:9"].isChecked()
+    # look: sin imagen pide una; con imagen se aplica y el selector lo refleja
+    img = _img_file(tmp_path, "sq.png", (1000, 1000))
+    monkeypatch.setattr(p, "_bg_image_from_user", lambda path="": img)
+    p._combo_look.setCurrentIndex(p._combo_look.findData("circle"))
+    p._on_look_chosen(0)
+    o = p.get_export_options()["video_custom"]
+    assert o["style"] == "image" and o["wave_style"] == "circle" and o["bg"]["1:1"] == img
+    assert p._combo_look.currentData() == "circle"
+    p._combo_look.setCurrentIndex(p._combo_look.findData("neon")); p._on_look_chosen(0)
+    assert p.get_export_options()["video_custom"]["style"] == "neon" and p._combo_look.currentData() == "neon"
+    # cancelar la elección de imagen deja el look como estaba
+    p._video_custom = vn_norm(None)
+    monkeypatch.setattr(p, "_bg_image_from_user", lambda path="": "")
+    p._combo_look.setCurrentIndex(p._combo_look.findData("photo")); p._on_look_chosen(0)
+    assert p._combo_look.currentData() == "neon" and p._video_custom["style"] == "neon"
+
+
+def vn_norm(c):
+    from src.engine.video_neon import normalize_custom
+    return normalize_custom(c)
+
+
+def test_arrastrar_una_imagen_a_la_tarjeta(monkeypatch, tmp_path):
+    p = _panel(monkeypatch, "plus")
+    ok = _img_file(tmp_path, "h.png", (1920, 1080))
+    p._on_video_image_dropped(ok)
+    c = p.get_export_options()["video_custom"]
+    assert p._chk_video.isChecked() and c["style"] == "image" and c["bg"] == {"16:9": ok}
+    assert p._combo_aspect.currentData() == "16:9" and p._combo_look.currentData() == "bars"       # cambia al formato de la imagen
+    # imagen con otra proporción: avisa y, si el usuario la quiere cambiar, no se guarda
+    mal = _img_file(tmp_path, "m.png", (1600, 1200))
+    import src.ui.video_custom as VC
+    monkeypatch.setattr(VC, "ask_format_mismatch", lambda *a, **k: "change")
+    p._video_custom = vn_norm(None)
+    monkeypatch.setattr("PySide6.QtWidgets.QFileDialog.getOpenFileName", staticmethod(lambda *a, **k: ("", "")))
+    p._on_video_image_dropped(mal)
+    assert p._video_custom["style"] == "neon"
+    monkeypatch.setattr(VC, "ask_format_mismatch", lambda *a, **k: "continue")
+    p._on_video_image_dropped(mal)
+    assert p._video_custom["bg"] == {"default": mal} and p._video_custom["style"] == "image"
+
+
+def test_basic_ve_las_opciones_plus_bloqueadas_y_no_arrastra(monkeypatch, tmp_path):
+    p = _panel(monkeypatch, "basic")
+    p._chk_video.setChecked(True)
+    assert p._btn_vlock.isVisibleTo(p) and not p._row_look_widget.isVisibleTo(p) and not p._lbl_vdrop.isVisibleTo(p)
+    assert not p._btn_adv.isVisibleTo(p)
+    shown = []
+    import PySide6.QtWidgets as QW
+    monkeypatch.setattr(QW.QMessageBox, "information", staticmethod(lambda *a, **k: shown.append(a)))
+    p._on_video_image_dropped(_img_file(tmp_path, "x.png", (1080, 1920)))
+    assert shown and p._video_custom["style"] == "neon"
+
+
+def test_opciones_avanzadas_plegadas_y_se_abren_solas(monkeypatch):
+    p = _panel(monkeypatch, "plus")
+    assert not p._adv_fx_widget.isVisibleTo(p) and not p._branding_card.isVisibleTo(p)
+    assert p._btn_adv.isVisibleTo(p) and "Opciones avanzadas" in p._btn_adv.text() and "▸" in p._btn_adv.text()
+    p._btn_adv.click()
+    assert p._adv_fx_widget.isVisibleTo(p) and p._branding_card.isVisibleTo(p) and "▾" in p._btn_adv.text()
+    p._btn_adv.click()
+    assert not p._adv_fx_widget.isVisibleTo(p)
+    p._chk_fx_flanger.setChecked(True)                        # activar un efecto abre la sección
+    assert p._adv_fx_widget.isVisibleTo(p) and "Flanger" in p._btn_adv.text()
+
+
+def test_resumen_de_lo_que_se_va_a_crear(monkeypatch, tmp_path):
+    p = _panel(monkeypatch, "plus")
+    p._chk_wav.setChecked(True); p._chk_mp3.setChecked(True); p._chk_flac.setChecked(False)
+    p._update_summary()
+    t = p._lbl_summary.text()
+    assert "WAV 24b" in t and "MP3 320k" in t and "vídeo" not in t and "📁" in t
+    p._chk_video.setChecked(True); p._set_combo_by_data(p._combo_aspect, "1:1")
+    p._video_custom = vn_norm({"style": "image", "bg": {"default": _img_file(tmp_path, "a.png", (500, 500))}, "wave_style": "circle", "wave_pos": "center"})
+    p._sync_look_combo()
+    p._chk_fx_master.setChecked(True)
+    p._update_summary()
+    t = p._lbl_summary.text()
+    assert "🎬 vídeo 1:1 (tu imagen + círculo" in t and "Master LUFS" in t
+    pb = _panel(monkeypatch, "basic")
+    pb._chk_video.setChecked(True); pb._update_summary()
+    assert "marca de agua" in pb._lbl_summary.text() and "WAV" not in pb._lbl_summary.text()
+
+
+def test_dialogo_con_vista_previa_en_vivo(monkeypatch, tmp_path):
+    import time
+    import src.ui.video_custom as VC
+    img = _img_file(tmp_path, "a.png", (1080, 1920))
+    d = VC.VideoCustomDialog({"style": "image", "bg": {"default": img}}, sample={"title": "Mi tema", "aspect": "9:16"})
+    d.show()
+    t0 = time.time()
+    while time.time() - t0 < 20:
+        QApplication.processEvents(); time.sleep(0.05)
+        pm = d._prev_lbl.pixmap()
+        if pm is not None and not pm.isNull():
+            break
+    assert d._prev_lbl.pixmap() is not None and not d._prev_lbl.pixmap().isNull()
+    d._set_prev_aspect("16:9")                                # cambiar el formato de la muestra también redibuja
+    assert d._prev_btns["16:9"].isChecked() and not d._prev_btns["9:16"].isChecked()
+    _cerrar(d)

@@ -139,6 +139,49 @@ def image_format_problems(custom: dict, aspect: str) -> list:
     return out
 
 
+# «Looks» de un clic (Plus): combinaciones listas de fondo, onda y textos. Conservan las imágenes elegidas por el usuario.
+LOOKS = ("neon", "bars", "circle", "title", "photo")
+LOOK_DEFS = {
+    "neon":   {"style": "neon"},
+    "bars":   {"style": "image", "only_photo": False, "wave": True, "wave_style": "bars", "wave_pos": "bottom",
+               "title": True, "artist": True, "chips": True, "kicker": True, "texts_pos": "top"},
+    "circle": {"style": "image", "only_photo": False, "wave": True, "wave_style": "circle", "wave_pos": "center",
+               "title": True, "artist": True, "chips": True, "kicker": True, "texts_pos": "top"},
+    "title":  {"style": "image", "only_photo": False, "wave": False,
+               "title": True, "artist": True, "chips": False, "kicker": False, "texts_pos": "bottom"},
+    "photo":  {"style": "image", "only_photo": True},
+}
+
+
+def apply_look(custom: Optional[dict], look: str) -> dict:
+    """Aplica un look a los ajustes actuales sin perder las imágenes (fondo por formato, final) ni el ajuste de encaje."""
+    if look not in LOOK_DEFS:
+        return normalize_custom(custom)
+    base = normalize_custom(custom)
+    base["texts"] = True                 # el look decide qué textos se ven (si venía de «solo la foto» se recuperan)
+    base["wave"] = True if look != "photo" else base["wave"]
+    base.update(LOOK_DEFS[look])
+    if look not in ("photo",):
+        base["only_photo"] = False
+    return normalize_custom(base)
+
+
+def detect_look(custom: Optional[dict]) -> str:
+    """Look que coincide con los ajustes actuales, o «custom» si es una combinación propia."""
+    c = normalize_custom(custom)
+    for look in LOOKS:
+        d = normalize_custom({**CUSTOM_DEFAULTS, **LOOK_DEFS[look]}) if look != "neon" else None
+        if look == "neon":
+            if c["style"] == "neon":
+                return "neon"
+            continue
+        if all(c[k] == d[k] for k in LOOK_DEFS[look] if k != "style") and c["style"] == "image":
+            if look == "photo" and not c["only_photo"]:
+                continue
+            return look
+    return "custom"
+
+
 def resolve_bg(custom: dict, aspect: str) -> Optional[str]:
     """Imagen de fondo para un formato: la específica del formato o, si no hay, la general. None si no existe."""
     bg = custom.get("bg") or {}

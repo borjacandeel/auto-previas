@@ -34,12 +34,12 @@ from PySide6.QtGui import (
     QLinearGradient, QPainter, QBrush, QPen, QPainterPath, QPixmap, QImage,
 )
 from PySide6.QtWidgets import (
-    QApplication, QCheckBox, QFileDialog, QGraphicsOpacityEffect,
+    QButtonGroup, QApplication, QCheckBox, QFileDialog, QGraphicsOpacityEffect,
     QHBoxLayout, QLabel, QLineEdit, QTextEdit, QMainWindow, QProgressBar,
     QPushButton, QStackedWidget, QTableWidget, QSpinBox, QDoubleSpinBox,
     QComboBox, QTableWidgetItem, QVBoxLayout, QWidget, QHeaderView,
     QFrame, QTabWidget, QAbstractItemView, QSizePolicy,
-    QScrollArea, QGraphicsDropShadowEffect, QMenu, QSplashScreen,
+    QScrollArea, QGraphicsDropShadowEffect, QMenu, QSplashScreen, QMessageBox,
 )
 
 _ROOT = Path(__file__).parent.parent.parent
@@ -56,7 +56,7 @@ from src.analysis.structure import analyze_structure, SectionType
 from src.analysis.segments import build_preview_plan
 from src.engine.export import build_preview_audio, export_files, output_paths
 from src.engine.variations import compute_preview_tempo_curve
-from src.engine.video_neon import normalize_custom
+from src.engine.video_neon import apply_look, detect_look, match_aspect, normalize_custom
 from src import i18n
 from src.i18n import tr
 
@@ -1392,6 +1392,48 @@ class BrandingCard(QFrame):
 # ── Panel de resultados ───────────────────────────────────────────────────────
 
 
+class _VideoCard(QFrame):
+    """Tarjeta «Vídeo animado»: acepta imágenes arrastradas para usarlas como fondo (Plus)."""
+    imageDropped = Signal(str)
+    _EXT = (".png", ".jpg", ".jpeg", ".webp", ".bmp")
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setObjectName("vcard")
+        self.setAcceptDrops(True)
+        self._set_hover(False)
+
+    def _set_hover(self, on: bool):
+        border = "#a855f7" if on else "#4c1d95"
+        bg = "#2a1a4a" if on else "#15121f"
+        self.setStyleSheet(f"QFrame#vcard {{ background: {bg}; border: 1px solid {border}; border-radius: 9px; }}")
+
+    def _image_in(self, md) -> str:
+        for u in md.urls():
+            p = u.toLocalFile()
+            if p and p.lower().endswith(self._EXT):
+                return p
+        return ""
+
+    def dragEnterEvent(self, e):
+        if self._image_in(e.mimeData()):
+            self._set_hover(True)
+            e.acceptProposedAction()
+        else:
+            e.ignore()
+
+    def dragLeaveEvent(self, e):
+        self._set_hover(False)
+        e.accept()
+
+    def dropEvent(self, e):
+        self._set_hover(False)
+        p = self._image_in(e.mimeData())
+        if p:
+            e.acceptProposedAction()
+            self.imageDropped.emit(p)
+
+
 class ResultPanel(QWidget):
     regen_requested       = Signal(int)   # con seed
     folder_requested      = Signal()
@@ -1666,6 +1708,10 @@ class ResultPanel(QWidget):
         exp_lay.setContentsMargins(12, 6, 12, 6)
         exp_lay.setSpacing(5)
 
+        self._lbl_step1 = QLabel("① Nombre y formatos")
+        self._lbl_step1.setStyleSheet("color:#8c93a4; font-size:9.5px; font-weight:800; letter-spacing:0.8px; background:transparent; border:none;")
+        exp_lay.addWidget(self._lbl_step1)
+
         # Fila nombre + formato
         row_name = QHBoxLayout()
         row_name.setSpacing(6)
@@ -1844,22 +1890,54 @@ class ResultPanel(QWidget):
         row_fx.addWidget(self._row_promo_widget)
 
         row_fx.addStretch()
-        exp_lay.addLayout(row_fx)
+        row_fx.setContentsMargins(0, 0, 0, 0)
+        self._adv_fx_widget = QWidget()
+        self._adv_fx_widget.setStyleSheet("background: transparent;")
+        self._adv_fx_widget.setLayout(row_fx)
 
         self._chk_promo.toggled.connect(self._on_promo_toggled)
         self._spin_promo.valueChanged.connect(lambda _v: self._update_promo_hint())
 
-        # Fila Opciones de Vídeo Viral v2.0 (Apartado 2: 3 y 4)
-        self._row_video_widget = QWidget()
-        row_video = QHBoxLayout(self._row_video_widget)
-        row_video.setContentsMargins(0, 0, 0, 0)
-        row_video.setSpacing(8)
-        lbl_vopt = QLabel("Vídeo 2.0")
-        lbl_vopt.setFixedWidth(52)
-        lbl_vopt.setStyleSheet(
-            f"color: #c084fc; font-size: 9.5px; font-weight: 700;"
-            "letter-spacing: 0.8px; background: transparent; border: none;"
-        )
+        # ── Tarjeta «Vídeo animado» (formato, look, color, título, final y vista previa en un solo sitio) ──
+        self._row_video_title_widget = _VideoCard()
+        self._row_video_widget = self._row_video_title_widget          # alias (compatibilidad)
+        vlay = QVBoxLayout(self._row_video_title_widget)
+        vlay.setContentsMargins(10, 6, 10, 6)
+        vlay.setSpacing(5)
+        _lblv = ("color: #c084fc; font-size: 9.5px; font-weight: 700; letter-spacing: 0.8px;"
+                 "background: transparent; border: none;")
+
+        # fila 1: título de la tarjeta + formato (3 botones) + color
+        r1 = QHBoxLayout(); r1.setSpacing(6)
+        lbl_vopt = QLabel("② 🎬 VÍDEO ANIMADO")
+        lbl_vopt.setStyleSheet(_lblv)
+        r1.addWidget(lbl_vopt)
+        r1.addSpacing(8)
+        self._combo_aspect = QComboBox(self)           # modelo del formato (los botones lo controlan)
+        self._combo_aspect.addItem("📱 9:16 (TikTok/Reels/Shorts)", "9:16")
+        self._combo_aspect.addItem("⏹️ 1:1 (Post Cuadrado)", "1:1")
+        self._combo_aspect.addItem("🖥️ 16:9 (YouTube / Horizontal)", "16:9")
+        self._combo_aspect.setVisible(False)
+        self._aspect_btns = {}
+        _fmt_style = (f"QPushButton {{ background:{BG3}; color:{TEXT_MID}; border:1px solid {BORDER}; border-radius:5px; padding:0 9px; font-size:10.5px; font-weight:700; }}"
+                      "QPushButton:hover { border-color:#a855f7; }"
+                      "QPushButton:checked { background:#7c3aed; color:#ffffff; border-color:#a855f7; }")
+        self._aspect_group = QButtonGroup(self)
+        for asp, txt, tip in (("9:16", "📱 9:16 Vertical", "Vertical: TikTok, Instagram Reels y YouTube Shorts"),
+                              ("1:1", "⏹ 1:1 Cuadrado", "Cuadrado: publicaciones de Instagram y Facebook"),
+                              ("16:9", "🖥 16:9 Horizontal", "Horizontal: YouTube y pantallas")):
+            b_ = QPushButton(txt)
+            b_.setCheckable(True)
+            b_.setFixedHeight(24)
+            b_.setCursor(Qt.PointingHandCursor)
+            b_.setStyleSheet(_fmt_style)
+            b_.setToolTip(tip)
+            self._aspect_group.addButton(b_)
+            self._aspect_btns[asp] = b_
+            b_.clicked.connect(lambda _c=False, a=asp: self._set_combo_by_data(self._combo_aspect, a))
+            r1.addWidget(b_)
+        self._aspect_btns["9:16"].setChecked(True)
+        self._combo_aspect.currentIndexChanged.connect(self._sync_aspect_buttons)
         self._combo_video_pal = QComboBox()
         self._combo_video_pal.setFixedHeight(24)
         self._combo_video_pal.setStyleSheet(_input_style())
@@ -1869,35 +1947,47 @@ class ResultPanel(QWidget):
         self._combo_video_pal.addItem("🟡 Ámbar Gold & Solar", "amber")
         self._combo_video_pal.addItem("🟣 Cyber Violet", "cyber")
         self._combo_video_pal.setToolTip("Paleta de color neón del vídeo animado Radical Neón (carátula, barras, destellos)")
+        r1.addSpacing(6)
+        r1.addWidget(self._combo_video_pal, stretch=1)
+        vlay.addLayout(r1)
 
+        # fila 2 (Plus): look de un clic + personalizar + banner
+        self._row_look_widget = QWidget()
+        self._row_look_widget.setStyleSheet("background: transparent;")
+        r2 = QHBoxLayout(self._row_look_widget); r2.setContentsMargins(0, 0, 0, 0); r2.setSpacing(6)
+        lbl_look = QLabel("Look")
+        lbl_look.setFixedWidth(52); lbl_look.setStyleSheet(_lblv)
+        self._combo_look = QComboBox()
+        self._combo_look.setFixedHeight(24)
+        self._combo_look.setStyleSheet(_input_style())
+        self._combo_look.setToolTip("Elige un aspecto listo con un clic. Con «Foto…» se usa tu imagen de fondo (o arrástrala sobre esta tarjeta). «Personalizar…» abre todos los ajustes.")
+        for key, txt in (("neon", "🎬 Neón clásico (carátula que late)"), ("bars", "🖼 Foto + barras abajo"),
+                         ("circle", "🖼 Foto + círculo en el centro"), ("title", "🖼 Foto y título (sin onda)"),
+                         ("photo", "🖼 Solo la foto")):
+            self._combo_look.addItem(txt, key)
+        self._video_custom = normalize_custom(None)
+        self._btn_vcustom = QPushButton("⚙ Personalizar…")
+        self._btn_vcustom.setFixedHeight(24)
+        self._btn_vcustom.setCursor(Qt.PointingHandCursor)
+        self._btn_vcustom.setStyleSheet(_btn("#1f2937", "#e5e7eb", "#374151", radius=5, fs=10.5))
+        self._btn_vcustom.setToolTip("Plus: tu imagen de fondo (una por formato), la onda de sonido (barras, línea o círculo), los textos, su posición y un final con tu imagen, con vista previa en vivo.")
+        self._btn_vcustom.clicked.connect(self._open_video_custom)
         self._edit_promo = QLineEdit()
         self._edit_promo.setPlaceholderText("Banner: RADICAL RECORDS · PROMO EXCLUSIVA")
         self._edit_promo.setFixedHeight(24)
         self._edit_promo.setStyleSheet(_input_style())
         self._edit_promo.setToolTip("Texto del banner promocional visible en el vídeo")
+        r2.addWidget(lbl_look)
+        r2.addWidget(self._combo_look, stretch=1)
+        r2.addWidget(self._btn_vcustom)
+        r2.addWidget(self._edit_promo, stretch=1)
+        vlay.addWidget(self._row_look_widget)
+        self._combo_look.activated.connect(self._on_look_chosen)
 
-        self._combo_aspect = QComboBox()
-        self._combo_aspect.setFixedHeight(24)
-        self._combo_aspect.setStyleSheet(_input_style())
-        self._combo_aspect.addItem("📱 9:16 (TikTok/Reels/Shorts)", "9:16")
-        self._combo_aspect.addItem("⏹️ 1:1 (Post Cuadrado)", "1:1")
-        self._combo_aspect.addItem("🖥️ 16:9 (YouTube / Horizontal)", "16:9")
-
-        row_video.addWidget(lbl_vopt)
-        row_video.addWidget(self._combo_video_pal)
-        row_video.addWidget(self._edit_promo, stretch=1)
-        row_video.addWidget(self._combo_aspect)
-        self._row_video_widget.setVisible(False)
-        exp_lay.addWidget(self._row_video_widget)
-
-        # Título que se muestra en el vídeo (por defecto, el nombre de la pista)
-        self._row_video_title_widget = QWidget()
-        row_vt = QHBoxLayout(self._row_video_title_widget)
-        row_vt.setContentsMargins(0, 0, 0, 0)
-        row_vt.setSpacing(8)
+        # fila 3: título + final + vista previa
+        r3 = QHBoxLayout(); r3.setSpacing(6)
         lbl_vt = QLabel("Título")
-        lbl_vt.setFixedWidth(52)
-        lbl_vt.setStyleSheet(lbl_vopt.styleSheet())
+        lbl_vt.setFixedWidth(52); lbl_vt.setStyleSheet(_lblv)
         self._edit_vtitle = QLineEdit()
         self._edit_vtitle.setPlaceholderText("Título que sale en el vídeo (vacío = nombre de la pista)")
         self._edit_vtitle.setFixedHeight(24)
@@ -1911,33 +2001,55 @@ class ResultPanel(QWidget):
         self._combo_vend.addItem("✂ Final: sin cierre (corte seco)", "none")
         self._combo_vend.addItem("🖼 Final: mi imagen", "image")
         self._combo_vend.setToolTip("Cómo termina el vídeo: con el cierre «Generado por AutoPrevias · Radical Records» y el enlace, con un fundido a negro, con tu propia imagen o sin cierre (Plus). En Basic puedes elegir entre la firma o el fundido a negro.")
-        self._video_custom = normalize_custom(None)
-        self._btn_vcustom = QPushButton("🖼 Estilo del vídeo…")
-        self._btn_vcustom.setFixedHeight(24)
-        self._btn_vcustom.setCursor(Qt.PointingHandCursor)
-        self._btn_vcustom.setStyleSheet(_btn("#1f2937", "#e5e7eb", "#374151", radius=5, fs=10.5))
-        self._btn_vcustom.setToolTip("Plus: elige la plantilla Neón o tu propia imagen (una por formato), la onda de sonido (barras, línea o círculo), su posición, los textos y un final con tu imagen.")
-        self._btn_vcustom.clicked.connect(self._open_video_custom)
         self._combo_vend.currentIndexChanged.connect(self._on_vend_changed)
-        self._lbl_vbasic = QLabel("Marca de agua incluida · se quita con Plus")
-        self._lbl_vbasic.setStyleSheet("color:#c084fc; font-size:10px; font-weight:600; background: transparent; border: none;")
-        self._lbl_vbasic.setToolTip("En la edición Basic el vídeo lleva una marca de agua pequeña («Generado por Radical Records · AutoPrevias Basic») y termina con la firma de AutoPrevias o con un fundido a negro, como prefieras. La edición Plus no lleva marca de agua y te deja elegirlo todo: fondo, onda de sonido, textos y final.")
         self._btn_vprev = QPushButton("👁 Vista previa")
         self._btn_vprev.setFixedHeight(24)
         self._btn_vprev.setCursor(Qt.PointingHandCursor)
         self._btn_vprev.setStyleSheet(_btn("#7c3aed", "#ffffff", "#8b5cf6", radius=5, fs=10.5))
         self._btn_vprev.setToolTip("Mira unos segundos del vídeo (a baja resolución y con sonido) antes de generarlo, con tu título, paleta, formato y banner.")
         self._btn_vprev.clicked.connect(self._open_video_preview)
-        row_vt.addWidget(lbl_vt)
-        row_vt.addWidget(self._edit_vtitle, stretch=1)
-        row_vt.addWidget(self._combo_vend)
-        row_vt.addWidget(self._btn_vcustom)
-        row_vt.addWidget(self._lbl_vbasic)
-        row_vt.addWidget(self._btn_vprev)
+        r3.addWidget(lbl_vt)
+        r3.addWidget(self._edit_vtitle, stretch=1)
+        r3.addWidget(self._combo_vend)
+        r3.addWidget(self._btn_vprev)
+        vlay.addLayout(r3)
+
+        # fila 4: ayuda (Plus: arrastrar imagen) o candado (Basic)
+        self._lbl_vdrop = QLabel("💡 Arrastra una imagen sobre esta tarjeta para usarla de fondo del vídeo")
+        self._lbl_vdrop.setStyleSheet("color:#9a8fc4; font-size:10px; background: transparent; border: none;")
+        self._lbl_vbasic = QLabel("Marca de agua incluida · se quita con Plus")
+        self._lbl_vbasic.setStyleSheet("color:#c084fc; font-size:10px; font-weight:600; background: transparent; border: none;")
+        self._lbl_vbasic.setToolTip("En la edición Basic el vídeo lleva una marca de agua pequeña («Generado por Radical Records · AutoPrevias Basic») y termina con la firma de AutoPrevias o con un fundido a negro, como prefieras. La edición Plus no lleva marca de agua y te deja elegirlo todo: fondo, onda de sonido, textos y final.")
+        self._btn_vlock = QPushButton("🔒 Tu imagen de fondo, onda de sonido y final a medida: solo en Plus")
+        self._btn_vlock.setFixedHeight(22)
+        self._btn_vlock.setCursor(Qt.PointingHandCursor)
+        self._btn_vlock.setStyleSheet("QPushButton { background: transparent; color:#c084fc; border: 1px dashed #6d28d9; border-radius:5px; padding:0 8px; font-size:10px; font-weight:600; }"
+                                      "QPushButton:hover { background:#2a1a4a; }")
+        self._btn_vlock.setToolTip("La edición Plus añade vídeo sin marca de agua, con tu propia imagen, onda de sonido a elegir y final a medida. Pulsa para ver cómo conseguirla.")
+        self._btn_vlock.clicked.connect(self._open_plus_page)
+        r4 = QHBoxLayout(); r4.setSpacing(8)
+        r4.addWidget(self._lbl_vdrop, stretch=1)
+        r4.addWidget(self._lbl_vbasic)
+        r4.addWidget(self._btn_vlock)
+        vlay.addLayout(r4)
+
         self._row_video_title_widget.setVisible(False)
         exp_lay.addWidget(self._row_video_title_widget)
+        self._row_video_title_widget.imageDropped.connect(self._on_video_image_dropped)
 
-        self._chk_video.toggled.connect(self._row_video_widget.setVisible)
+        # ③ Opciones avanzadas (efectos, voz, modo promo y firma): plegadas por defecto
+        self._adv_open = False
+        self._btn_adv = QPushButton()
+        self._btn_adv.setCursor(Qt.PointingHandCursor)
+        self._btn_adv.setFixedHeight(24)
+        self._btn_adv.setStyleSheet(f"QPushButton {{ background: transparent; color:{TEXT_MID}; border:none; text-align:left; font-size:10.5px; font-weight:700; padding:0 2px; }}"
+                                    f"QPushButton:hover {{ color:{TEXT}; }}")
+        self._btn_adv.setToolTip("Efectos de estudio, Voice Drop, Modo promo antifugas y firma/carátula personalizadas")
+        self._btn_adv.clicked.connect(lambda: self._set_adv_open(not self._adv_open))
+        exp_lay.addWidget(self._btn_adv)
+        exp_lay.addWidget(self._adv_fx_widget)
+        for _chk in (self._chk_fx_flanger, self._chk_fx_filter, self._chk_promo):
+            _chk.toggled.connect(lambda on: on and self._set_adv_open(True))
         self._chk_video.toggled.connect(self._row_video_title_widget.setVisible)
         self._chk_video.toggled.connect(lambda _on: self._sync_video_mp3())
         self._combo_voice_pos.currentIndexChanged.connect(
@@ -1982,6 +2094,18 @@ class ResultPanel(QWidget):
         # ── 5.1 FIRMA & CARÁTULA PERSONALIZADA ─────────────────────────────
         self._branding_card = BrandingCard(load_cfg(), parent=self)
         root.addWidget(self._branding_card)
+
+        # ── 5.2 RESUMEN de lo que se va a crear ───────────────────────────
+        self._lbl_summary = QLabel("")
+        self._lbl_summary.setWordWrap(True)
+        self._lbl_summary.setStyleSheet(f"color:{TEXT_MID}; font-size:10.5px; padding:4px 8px; background:{BG2}; border:1px solid {BORDER}; border-radius:7px;")
+        self._lbl_summary.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self._lbl_summary.setMaximumHeight(46)
+        root.addWidget(self._lbl_summary)
+        self._summary_timer = QTimer(self)
+        self._summary_timer.setInterval(500)
+        self._summary_timer.timeout.connect(self._update_summary)
+        self._summary_timer.start()
 
         # ── 6. SEED + CONTROLES ───────────────────────────────────────────
         seed_row = QHBoxLayout()
@@ -2309,8 +2433,13 @@ class ResultPanel(QWidget):
                     self._combo_video_pal.setCurrentIndex(i)
                     break
         if hasattr(self, "_video_custom") and persisted_cfg.get("video_custom"):
-            from src.engine.video_neon import normalize_custom
             self._video_custom = normalize_custom(persisted_cfg["video_custom"])
+        if hasattr(self, "_combo_look"):
+            self._sync_look_combo()
+        if persisted_cfg.get("adv_panel_open") or persisted_cfg.get("save_signature_default") \
+                or persisted_cfg.get("fx_flanger") or persisted_cfg.get("fx_filter_sweep"):
+            self._adv_open = True
+        self._apply_adv_visibility()
         if hasattr(self, "_combo_vend") and persisted_cfg.get("video_end"):
             self._set_combo_by_data(self._combo_vend, persisted_cfg["video_end"])
         if hasattr(self, "_combo_aspect") and persisted_cfg.get("aspect_ratio"):
@@ -2430,6 +2559,8 @@ class ResultPanel(QWidget):
 
     def _set_voice_drop_path(self, file: str):
         self._voice_drop_path = file
+        if file:
+            self._set_adv_open(True)
         # Leer duración del archivo para mostrar región en la waveform
         dur = 0.0
         try:
@@ -2561,22 +2692,198 @@ class ResultPanel(QWidget):
         if self._combo_vend.currentData() == "image" and not self._video_custom.get("end_image"):
             self._open_video_custom()
 
+    def _video_sample(self) -> dict:
+        """Datos de la pista actual para la vista previa del diálogo de ajustes."""
+        from src.config import load as _lc
+        md = self.get_branding_metadata() or {}
+        opts = self.get_export_options()
+        title = (opts.get("video_title") or md.get("title") or self.get_export_name()).replace("PREVIA - ", "").strip()
+        return {
+            "cover": self.get_branding_cover_path() or getattr(self, "_session_cover", "") or None,
+            "title": title or "Previa", "artist": md.get("artist") or "Radical Records",
+            "bpm": float(self._bpm or 128.0), "key": str(getattr(self, "_key_str", "") or "8A · Am"),
+            "aspect": opts.get("aspect_ratio", "9:16"), "palette": opts.get("video_palette", "crimson"),
+            "banner": opts.get("video_promo_text", ""),
+        }
+
+    def _save_video_custom(self):
+        from src.config import load as _lc, save as _sc
+        try:
+            cfg = _lc()
+            cfg["video_custom"] = self._video_custom
+            _sc(cfg)
+        except Exception:
+            pass
+
     def _open_video_custom(self):
         if get_edition() != "plus":
             return
         from src.ui.video_custom import VideoCustomDialog
-        from src.config import load as _lc, save as _sc
-        dlg = VideoCustomDialog(self._video_custom, self)
+        dlg = VideoCustomDialog(self._video_custom, self, sample=self._video_sample())
         if dlg.exec():
             self._video_custom = dlg.result_custom()
-            try:
-                cfg = _lc()
-                cfg["video_custom"] = self._video_custom
-                _sc(cfg)
-            except Exception:
-                pass
+            self._save_video_custom()
+        self._sync_look_combo()
         if self._combo_vend.currentData() == "image" and not self._video_custom.get("end_image"):
             self._set_combo_by_data(self._combo_vend, "brand")      # sin imagen de final, vuelve a la firma
+
+    # — formato, looks, imágenes arrastradas —
+    def _sync_aspect_buttons(self, *_):
+        cur = self._combo_aspect.currentData()
+        for asp, b in self._aspect_btns.items():
+            b.setChecked(asp == cur)
+
+    def _sync_look_combo(self):
+        """Muestra en el selector el look que coincide con los ajustes (o «Personalizado»)."""
+        look = detect_look(self._video_custom)
+        cb = self._combo_look
+        idx = cb.findData("custom")
+        if look == "custom" and idx < 0:
+            cb.addItem(tr("⚙ Personalizado"), "custom")
+        elif look != "custom" and idx >= 0:
+            cb.removeItem(idx)
+        self._set_combo_by_data(cb, look)
+
+    def _bg_image_from_user(self, path: str = "") -> str:
+        """Pide (si no se da) y valida una imagen de fondo: avisa si no tiene el formato del vídeo. '' = cancelado."""
+        from src.engine.video_neon import describe_ratio, image_size
+        from src.ui.video_custom import ask_format_mismatch
+        aspect = ""
+        while True:
+            if not path:
+                path, _ = QFileDialog.getOpenFileName(self, tr("Elegir imagen"), "", tr("Imágenes (*.png *.jpg *.jpeg *.webp *.bmp)"))
+                if not path:
+                    return ""
+            sz = image_size(path)
+            if sz is None:
+                QMessageBox.warning(self, tr("Elegir imagen"), tr("No se ha podido abrir esa imagen. Prueba con un PNG o JPG."))
+                path = ""
+                continue
+            if match_aspect(*sz) is None:          # un formato válido distinto del actual no avisa: se cambia al de la imagen
+                if ask_format_mismatch(self, [("fondo", path, describe_ratio(*sz))], aspect) == "change":
+                    path = ""
+                    continue
+            return path
+
+    def _use_background_image(self, path: str):
+        """Usa `path` como fondo: si encaja en un formato, para ese formato (y cambia a él); si no, para todos."""
+        from src.engine.video_neon import image_size
+        sz = image_size(path)
+        m = match_aspect(*sz) if sz else None
+        was_neon = self._video_custom.get("style") != "image"
+        bg = dict(self._video_custom.get("bg") or {})
+        bg[m or "default"] = path
+        c = normalize_custom({**self._video_custom, "bg": bg, "style": "image"})
+        if was_neon:
+            c = apply_look(c, "bars")           # primer uso de una imagen: foto + barras abajo
+        self._video_custom = c
+        if m:
+            self._set_combo_by_data(self._combo_aspect, m)
+        self._save_video_custom()
+        self._sync_look_combo()
+
+    def _on_look_chosen(self, _idx: int):
+        key = self._combo_look.currentData()
+        if key == "custom":
+            self._open_video_custom()
+            return
+        if key != "neon" and not self._video_custom.get("bg"):
+            path = self._bg_image_from_user()
+            if not path:
+                self._sync_look_combo()
+                return
+            self._use_background_image(path)
+        self._video_custom = apply_look(self._video_custom, key)
+        self._save_video_custom()
+        self._sync_look_combo()
+
+    def _on_video_image_dropped(self, path: str):
+        if get_edition() != "plus":
+            QMessageBox.information(self, tr("Tu imagen de fondo"),
+                                    tr("Usar tu propia imagen como fondo del vídeo es una función de la edición Plus."))
+            return
+        ok = self._bg_image_from_user(path)
+        if ok:
+            self._chk_video.setChecked(True)
+            self._use_background_image(ok)
+
+    def _open_plus_page(self):
+        try:
+            from PySide6.QtCore import QUrl
+            from PySide6.QtGui import QDesktopServices
+            from src import links as _links
+            QDesktopServices.openUrl(QUrl(_links.url_for("plus")))
+        except Exception:
+            pass
+
+    # — opciones avanzadas plegables —
+    def _set_adv_open(self, open_: bool):
+        self._adv_open = bool(open_)
+        self._apply_adv_visibility()
+        try:
+            from src.config import load as _lc, save as _sc
+            cfg = _lc(); cfg["adv_panel_open"] = self._adv_open; _sc(cfg)
+        except Exception:
+            pass
+
+    def _adv_active_names(self) -> list:
+        names = []
+        for chk, nm in ((self._chk_fx_flanger, "Flanger"), (self._chk_fx_filter, "Filter Sweep"),
+                        (self._chk_fx_master, "Master LUFS"), (self._chk_promo, "Modo promo")):
+            if chk.isChecked():
+                names.append(nm)
+        if self._voice_drop_path:
+            names.append("Voice Drop")
+        return names
+
+    def _apply_adv_visibility(self):
+        plus = get_edition() == "plus"
+        show = plus and self._adv_open
+        self._adv_fx_widget.setVisible(show)
+        if hasattr(self, "_branding_card"):
+            self._branding_card.setVisible(show)
+        self._btn_adv.setVisible(plus)
+        act = self._adv_active_names()
+        suffix = ("  ·  " + ", ".join(act)) if act else ""
+        arrow = "▾" if self._adv_open else "▸"
+        self._btn_adv.setText(f"③ {arrow} " + tr("Opciones avanzadas: efectos, voz, modo promo y firma") + suffix)
+
+    # — resumen antes de generar —
+    def _update_summary(self):
+        if not hasattr(self, "_lbl_summary"):
+            return
+        plus = get_edition() == "plus"
+        parts = []
+        if plus and self._chk_wav.isChecked():
+            parts.append("WAV 24b")
+        if self._chk_mp3.isChecked() or self._chk_video.isChecked():
+            parts.append("MP3 128k" if self._chk_promo.isChecked() else "MP3 320k")
+        if plus and self._chk_flac.isChecked():
+            parts.append("FLAC")
+        if self._chk_video.isChecked():
+            asp = self._combo_aspect.currentData() or "9:16"
+            if plus:
+                look = detect_look(self._video_custom)
+                how = {"neon": tr("plantilla Neón"), "bars": tr("tu imagen + barras"), "circle": tr("tu imagen + círculo"),
+                       "title": tr("tu imagen + título"), "photo": tr("solo tu imagen"), "custom": tr("a medida")}[look]
+                end = {"brand": tr("firma"), "fade": tr("negro"), "none": tr("sin cierre"), "image": tr("tu imagen")}.get(
+                    self._combo_vend.currentData(), tr("firma"))
+                parts.append(f"🎬 {tr('vídeo')} {asp} ({how}, {tr('final')}: {end})")
+            else:
+                end = tr("firma") if self._combo_vend.currentData() == "brand" else tr("negro")
+                parts.append(f"🎬 {tr('vídeo')} {asp} ({tr('con marca de agua')}, {tr('final')}: {end})")
+        line1 = tr("Se creará: ") + (" · ".join(parts) if parts else tr("nada: marca algún formato"))
+        pv = self._card_pv._val_lbl.text() if hasattr(self._card_pv, "_val_lbl") else ""
+        bits = []
+        if pv and pv != "—":
+            bits.append(tr("⏱ Previa de {t}", t=pv))
+        adv = self._adv_active_names()
+        if adv:
+            bits.append("🎚 " + ", ".join(adv))
+        bits.append("📁 " + (self._lbl_folder_path.text() or "—"))
+        txt = line1 + "\n" + "  ·  ".join(bits)
+        if txt != self._lbl_summary.text():
+            self._lbl_summary.setText(txt)
 
     def _open_video_preview(self):
         """Vista previa rápida del vídeo con los ajustes actuales (título, paleta, formato, banner, carátula)."""
@@ -2733,8 +3040,8 @@ class ResultPanel(QWidget):
             if plus and vid.get("end"):
                 self._set_combo_by_data(self._combo_vend, vid.get("end"))
             if plus and vid.get("custom"):
-                from src.engine.video_neon import normalize_custom
                 self._video_custom = normalize_custom(vid.get("custom"))
+                self._sync_look_combo()
         promo = st.get("promo") or {}
         if plus and promo:
             self._spin_promo.setValue(int(promo.get("interval_sec", 20)))
@@ -3888,8 +4195,10 @@ class ResultPanel(QWidget):
         self._chk_video.setVisible(True)
         self._refresh_vend_items(plus)
         self._combo_vend.setVisible(True)          # Basic: firma o fundido a negro · Plus: todas las opciones
-        self._btn_vcustom.setVisible(plus)
+        self._row_look_widget.setVisible(plus)     # looks, «Personalizar…» y banner propio: solo Plus
+        self._lbl_vdrop.setVisible(plus)
         self._lbl_vbasic.setVisible(not plus)
+        self._btn_vlock.setVisible(not plus)
         self._edit_promo.setVisible(plus)          # el banner propio es de Plus
         if not plus:
             self._edit_promo.clear()
@@ -3914,9 +4223,8 @@ class ResultPanel(QWidget):
             self._chk_fx_filter.setChecked(False)
             self._chk_fx_master.setChecked(False)
 
-        # BrandingCard (firma + carátula) — solo Plus
-        if hasattr(self, "_branding_card"):
-            self._branding_card.setVisible(plus)
+        # BrandingCard (firma + carátula) y efectos — solo Plus, dentro de «Opciones avanzadas» (plegadas por defecto)
+        self._apply_adv_visibility()
 
         # Presets y modo promo antifugas — solo Plus
         self._preset_bar.setVisible(plus)
@@ -3929,6 +4237,7 @@ class ResultPanel(QWidget):
             from PySide6.QtWidgets import QLabel
             self._badge_basic = QLabel("  BÁSICA  ·  Actualiza a PLUS para más formatos y controles  ")
             self._badge_basic.setAlignment(Qt.AlignCenter)
+            self._badge_basic.setMaximumHeight(30)
             self._badge_basic.setStyleSheet(f"""
                 background: {ACCENT}1a;
                 color: {ACCENT};

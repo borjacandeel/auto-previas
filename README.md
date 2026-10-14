@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v3.6.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v3.7.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -272,7 +272,10 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v3.6.0] — 2026-10-14 (Vídeo con tu propia imagen)
+#### 🟢 [v3.7.0] — 2026-10-14 (Panel de vídeo más fácil)
+- Tarjeta única de vídeo con **botones de formato**, **looks de un clic**, **arrastrar una imagen** como fondo, **vista previa en vivo** al personalizar, **resumen antes de generar** y **opciones avanzadas plegables**. **Basic** ve las opciones de Plus bloqueadas. Detalle en el [CHANGELOG](CHANGELOG.md).
+
+#### [v3.6.0] — 2026-10-14 (Vídeo con tu propia imagen)
 - **Plus:** fondo con tu foto (una por formato), onda de sonido en barras, línea o círculo con posición a elegir, final con tu imagen, aviso si la imagen no tiene el formato del vídeo y opción de «solo la foto». **Basic:** elige el final entre la firma o un fundido a negro. Detalle en el [CHANGELOG](CHANGELOG.md).
 
 #### [v3.5.1] — 2026-10-13 (Licencias por edición y más robustas)

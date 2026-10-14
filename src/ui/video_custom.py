@@ -7,8 +7,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import QRectF, Qt
-from PySide6.QtGui import QColor, QFont, QLinearGradient, QPainter, QPen, QPixmap
+from PySide6.QtCore import QRectF, QSize, QThread, QTimer, Qt, Signal
+from PySide6.QtGui import QColor, QFont, QImage, QLinearGradient, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDialog, QFileDialog, QFormLayout, QFrame, QGridLayout, QHBoxLayout, QLabel,
     QLineEdit, QMessageBox, QPushButton, QVBoxLayout, QWidget,
@@ -134,6 +134,7 @@ class _ImagePicker(QWidget):
         self._clear.setFixedWidth(32)
         self._clear.setToolTip(tr("Quitar la imagen"))
         self._clear.clicked.connect(lambda: self.set_path(""))
+        self.changed = None                 # callback opcional (la ventana lo usa para refrescar la vista previa)
         lay.addWidget(self._btn)
         lay.addWidget(self._lbl, stretch=1)
         lay.addWidget(self._clear)
@@ -169,6 +170,8 @@ class _ImagePicker(QWidget):
         self._lbl.setText(Path(self._path).name if self._path else tr("(ninguna)"))
         self._clear.setVisible(bool(self._path))
         self._refresh_status()
+        if callable(self.changed):
+            self.changed()
 
     def _refresh_status(self):
         if not self._path:
@@ -224,19 +227,56 @@ def _title(text: str) -> QLabel:
     return lb
 
 
+class _PreviewWorker(QThread):
+    """Dibuja un fotograma de ejemplo con los ajustes actuales (en segundo plano para no congelar la ventana)."""
+    done = Signal(int, object)
+
+    def __init__(self, token: int, custom: dict, sample: dict, aspect: str, parent=None):
+        super().__init__(parent)
+        self._token, self._custom, self._sample, self._aspect = token, custom, sample, aspect
+
+    def run(self):
+        try:
+            import numpy as np
+            from src.engine import video_neon as vn
+            n = 90
+            rng = np.random.default_rng(3)
+            shape = np.clip(np.linspace(1.0, 0.12, 44) ** 1.4 + rng.normal(0, 0.07, 44), 0.05, 1).astype(np.float32)
+            bars = np.tile(shape, (n, 1))
+            kick = np.zeros(n, np.float32); kick[34:40] = 0.55
+            an = vn.AudioAnalysis(duration=3.0, n_frames=n, bars=bars, kick=kick, energy=np.full(n, 0.6, np.float32), drops=[])
+            sm = self._sample
+            r = vn._Renderer(an, sm.get("cover") or None, sm.get("title") or "Título de la pista", sm.get("artist") or "Radical Records",
+                             float(sm.get("bpm") or 128.0), str(sm.get("key") or "8A · Am"), self._aspect,
+                             sm.get("palette") or "crimson", sm.get("banner") or "", "PREVIA EXCLUSIVA", 1.0, custom=self._custom)
+            im = r.frame(36, 1.2).convert("RGB")
+            im.thumbnail((420, 420))
+            qi = QImage(im.tobytes(), im.width, im.height, 3 * im.width, QImage.Format_RGB888).copy()
+            self.done.emit(self._token, qi)
+        except Exception as ex:                      # pragma: no cover - la vista previa nunca debe romper la ventana
+            self.done.emit(self._token, str(ex))
+
+
 class VideoCustomDialog(QDialog):
     """Ventana «Ajustes del vídeo» (Plus)."""
 
-    def __init__(self, current: dict | None = None, parent=None):
+    def __init__(self, current: dict | None = None, parent=None, sample: dict | None = None):
         super().__init__(parent)
         self.setWindowTitle(tr("Ajustes del vídeo"))
         self.setStyleSheet(DIALOG_QSS)
-        self.setMinimumWidth(580)
+        self.setMinimumWidth(580 if not sample else 860)
         c = normalize_custom(current)
         self._result: dict | None = None
+        self._sample = sample
+        self._token = 0
+        self._worker: _PreviewWorker | None = None
+        self._pending = False
+        self._prev_aspect = (sample or {}).get("aspect") if (sample or {}).get("aspect") in ASPECTS else "9:16"
 
-        root = QVBoxLayout(self)
+        outer = QHBoxLayout(self)
+        root = QVBoxLayout()
         root.setSpacing(10)
+        outer.addLayout(root, 1)
 
         # — estilo —
         head = QHBoxLayout()
@@ -331,9 +371,101 @@ class VideoCustomDialog(QDialog):
         root.addLayout(row)
 
         for sig in (self._style.currentIndexChanged, self._wave.toggled, self._only.toggled,
-                    self._chk_title.toggled, self._chk_artist.toggled, self._chk_chips.toggled, self._chk_kicker.toggled):
+                    self._chk_title.toggled, self._chk_artist.toggled, self._chk_chips.toggled, self._chk_kicker.toggled,
+                    self._wave_style.currentIndexChanged, self._wave_pos.currentIndexChanged, self._wave_col.currentIndexChanged,
+                    self._texts_pos.currentIndexChanged, self._fit.currentIndexChanged):
             sig.connect(self._sync)
+        if sample is not None:
+            self._build_preview_panel(outer)
+        for pk in list(self._bg.values()) + [self._end_img]:
+            pk.changed = self._sync              # al cambiar una imagen se actualiza la vista previa
         self._sync()
+
+    # — vista previa en vivo —
+    def _build_preview_panel(self, outer: QHBoxLayout):
+        col = QVBoxLayout()
+        col.setSpacing(6)
+        cap = QLabel(tr("Vista previa"))
+        cap.setStyleSheet("font-size:13px; font-weight:800; color:#ff3e55;")
+        col.addWidget(cap)
+        self._prev_lbl = QLabel(tr("Preparando…"))
+        self._prev_lbl.setAlignment(Qt.AlignCenter)
+        self._prev_lbl.setFixedSize(300, 340)
+        self._prev_lbl.setWordWrap(True)
+        self._prev_lbl.setStyleSheet("background:#05060a; color:#8c93a4; border:1px solid #232733; border-radius:10px; font-size:11px;")
+        col.addWidget(self._prev_lbl)
+        row = QHBoxLayout()
+        self._prev_btns = {}
+        for asp in ASPECTS:
+            b = QPushButton(asp)
+            b.setCheckable(True)
+            b.setChecked(asp == self._prev_aspect)
+            b.clicked.connect(lambda _c=False, a=asp: self._set_prev_aspect(a))
+            row.addWidget(b)
+            self._prev_btns[asp] = b
+        col.addLayout(row)
+        note = QLabel(tr("Así se verá el vídeo con tus ajustes (el fotograma es de ejemplo: en el vídeo real se mueve al ritmo de tu tema)."))
+        note.setWordWrap(True)
+        note.setFixedWidth(300)
+        note.setStyleSheet(f"color:{TEXT2}; font-size:10.5px;")
+        col.addWidget(note)
+        col.addStretch()
+        outer.addLayout(col)
+        self._debounce = QTimer(self)
+        self._debounce.setSingleShot(True)
+        self._debounce.setInterval(350)
+        self._debounce.timeout.connect(self._start_preview)
+
+    def _set_prev_aspect(self, asp: str):
+        self._prev_aspect = asp
+        for a, b in self._prev_btns.items():
+            b.setChecked(a == asp)
+        self._schedule_preview()
+
+    def _schedule_preview(self):
+        if self._sample is not None and hasattr(self, "_debounce"):
+            self._debounce.start()
+
+    def _start_preview(self):
+        if self._worker is not None and self._worker.isRunning():
+            self._pending = True
+            return
+        c = self._collect()
+        if c["style"] == "image" and not any(w.path() for w in self._bg.values()):
+            self._prev_lbl.setPixmap(QPixmap())
+            self._prev_lbl.setText(tr("Elige una imagen de fondo para ver la vista previa."))
+            return
+        self._token += 1
+        self._worker = _PreviewWorker(self._token, c, self._sample or {}, self._prev_aspect, self)
+        self._worker.done.connect(self._on_preview)
+        self._worker.start()
+
+    def _on_preview(self, token: int, result):
+        if isinstance(result, QImage):
+            self._prev_lbl.setText("")
+            self._prev_lbl.setPixmap(QPixmap.fromImage(result).scaled(self._prev_lbl.size() - QSize(8, 8),
+                                                                      Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        else:
+            self._prev_lbl.setText(tr("No se pudo dibujar la vista previa."))
+        if self._pending:
+            self._pending = False
+            self._start_preview()
+
+    def _stop_preview(self):
+        if hasattr(self, "_debounce"):
+            self._debounce.stop()
+        w = self._worker
+        if w is not None:
+            try:
+                w.done.disconnect()
+            except Exception:
+                pass
+            w.wait(5000)
+        self._pending = False
+
+    def done(self, r):
+        self._stop_preview()
+        super().done(r)
 
     def _any_text(self) -> bool:
         return any(c.isChecked() for c in (self._chk_title, self._chk_artist, self._chk_chips, self._chk_kicker))
@@ -350,13 +482,18 @@ class VideoCustomDialog(QDialog):
         for x in (self._chk_title, self._chk_artist, self._chk_chips, self._chk_kicker):
             x.setEnabled(full)
         self._texts_pos.setEnabled(full and self._any_text())
+        self._schedule_preview()
 
     def _accept(self):
         if self._style.currentData() == "image" and not any(w.path() for w in self._bg.values()):
             QMessageBox.information(self, tr("Ajustes del vídeo"),
                                     tr("Elige al menos una imagen de fondo, o vuelve a la plantilla Neón."))
             return
-        self._result = normalize_custom({
+        self._result = self._collect()
+        self.accept()
+
+    def _collect(self) -> dict:
+        return normalize_custom({
             "style": self._style.currentData(),
             "bg": {k: w.path() for k, w in self._bg.items()},
             "fit": self._fit.currentData(),
@@ -373,7 +510,6 @@ class VideoCustomDialog(QDialog):
             "end_image": self._end_img.path(),
             "end_text": self._end_txt.text(),
         })
-        self.accept()
 
     def result_custom(self) -> dict:
         return self._result or normalize_custom(None)

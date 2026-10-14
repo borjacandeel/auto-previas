@@ -3,6 +3,20 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [3.7.0] - 2026-10-14
+
+### Añadido
+- **Plus: «Looks» de un clic.** Un selector con aspectos listos para el vídeo: *Neón clásico*, *Foto + barras abajo*, *Foto + círculo en el centro*, *Foto y título* y *Solo la foto*. Los looks de foto usan tu imagen (si no has elegido ninguna, te la pide) y conservan las que ya tenías.
+- **Plus: arrastra una imagen sobre la tarjeta del vídeo** y se usa de fondo al instante. Si la imagen tiene otro formato válido (9:16, 1:1 o 16:9), el vídeo cambia solo a ese formato; si no es ninguno, te avisa y te muestra ejemplos.
+- **Plus: vista previa en vivo** en la ventana «Personalizar…»: ves cómo queda el vídeo mientras cambias fondo, onda, textos y posiciones, y puedes alternar entre los tres formatos.
+- **Resumen antes de generar**: justo encima del botón, una línea dice qué se va a crear (formatos, vídeo, duración de la previa, efectos activos y carpeta).
+- **Basic: se ven las opciones de Plus**, bloqueadas con un candado («Tu imagen de fondo, onda de sonido y final a medida: solo en Plus»), para que sepas qué ganas al pasar a Plus; al pulsarlo se abre la página de compra.
+
+### Cambiado
+- **Panel de exportación más claro y ordenado en pasos:** ① Nombre y formatos, ② Vídeo animado, ③ Opciones avanzadas.
+- **Todo el vídeo en una sola tarjeta:** el formato se elige con **tres botones** (9:16 Vertical, 1:1 Cuadrado, 16:9 Horizontal) en lugar de un desplegable, y junto a él están el color, el título, el final y la vista previa.
+- **Opciones avanzadas plegables (Plus):** efectos de estudio, Voice Drop, Modo promo y la firma/carátula están agrupados y plegados para que el panel quede limpio. Se abren solos en cuanto activas algo de ellas (por ejemplo, un efecto o tu voz) y recuerdan si los dejaste abiertos; la línea de la sección te avisa de qué hay activo aunque esté plegada.
+
 ## [3.6.0] - 2026-10-14
 
 ### Añadido

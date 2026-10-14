@@ -256,3 +256,22 @@ def test_solo_la_foto_no_dibuja_nada_encima(tmp_path):
     ref = vn._Renderer(_analysis(), None, "Título", "Artista", 128.0, "8A", "1:1", "crimson", "BANNER", "X", 1.0,
                        custom={"style": "image", "bg": {"default": str(g)}})
     assert np.abs(prog.astype(int) - np.asarray(ref.frame(15, 1.0))[-12:].astype(int)).sum() > 0
+
+
+# ───────────── looks de un clic ─────────────
+
+def test_looks_se_aplican_y_se_detectan_conservando_las_imagenes():
+    base = vn.normalize_custom({"bg": {"default": "a.jpg", "9:16": "b.jpg"}, "end_image": "e.jpg", "fit": "blur"})
+    for look in vn.LOOKS:
+        c = vn.apply_look(base, look)
+        assert vn.detect_look(c) == look
+        assert c["bg"] == base["bg"] and c["end_image"] == "e.jpg" and c["fit"] == "blur"
+    assert vn.apply_look(base, "neon")["style"] == "neon"
+    assert vn.apply_look(base, "circle")["wave_style"] == "circle" and vn.apply_look(base, "circle")["wave_pos"] == "center"
+    assert vn.apply_look(base, "photo")["only_photo"] and not vn.apply_look(base, "photo")["wave"]
+    assert vn.apply_look(base, "title")["wave"] is False and vn.apply_look(base, "title")["chips"] is False
+    assert vn.detect_look(vn.normalize_custom({"style": "image", "wave_style": "line"})) == "custom"
+    # de «solo la foto» a otro look se recuperan los textos
+    back = vn.apply_look(vn.apply_look(base, "photo"), "bars")
+    assert back["title"] and back["artist"] and back["wave"] and not back["only_photo"]
+    assert vn.apply_look(base, "raro") == vn.normalize_custom(base)

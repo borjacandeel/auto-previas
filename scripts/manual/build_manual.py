@@ -381,6 +381,8 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
         "el título, artista, BPM y tonalidad, un <b>analizador de espectro</b> que baila con la música y destellos que golpean con el bombo, con un golpe "
         "especial cuando entra el drop. Elige el formato —<b>9:16</b> (TikTok / Reels), <b>1:1</b> (Instagram) o <b>16:9</b> (YouTube)—, la <b>paleta de color</b>"
         + banner_txt + ".</p>"
+        "<p>Todo el vídeo está en una sola tarjeta, <b>② Vídeo animado</b>, que aparece al marcar la casilla: elige el <b>formato</b> con los tres botones "
+        "(<b>9:16 Vertical</b>, <b>1:1 Cuadrado</b> o <b>16:9 Horizontal</b>) y el <b>color</b>; después el <b>título</b>, el <b>final</b> y la <b>vista previa</b>.</p>"
         "<p>En el campo <b>Título</b> escribes el nombre que sale en el centro del vídeo; si lo dejas vacío se usa el nombre de la pista. Pulsa "
         "<b>👁 Vista previa</b> para ver unos segundos del vídeo (con sonido y a baja resolución) con tus ajustes antes de generarlo. Como el vídeo se hace "
         "a partir de la previa, al marcarlo el <b>MP3 se exporta siempre</b>.</p>"
@@ -394,7 +396,10 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
             "<li><b>Sin cierre</b> — el vídeo acaba cortado a la vez que el audio.</li>"
             "<li><b>Mi imagen</b> — el vídeo termina con la imagen que elijas (tu logo, el cartel del sello…) y un texto opcional debajo.</li></ul>"
             "<h3>Estilo del vídeo: tu propia imagen</h3>"
-            "<p>Pulsa <b>🖼 Estilo del vídeo…</b> para personalizarlo todo. Es una función exclusiva de Plus:</p>"
+            "<p>Con el selector <b>Look</b> eliges un aspecto listo con un clic: <b>Neón clásico</b>, <b>Foto + barras abajo</b>, <b>Foto + círculo en el centro</b>, "
+            "<b>Foto y título</b> o <b>Solo la foto</b>. Con los looks de foto, AutoPrevias te pide tu imagen, o puedes <b>arrastrar una imagen sobre la tarjeta</b> del vídeo "
+            "y se usa de fondo al instante (si la imagen es de otro formato válido, cambia solo a ese formato).</p>"
+            "<p>Pulsa <b>⚙ Personalizar…</b> para ajustarlo todo, con una <b>vista previa en vivo</b> que cambia al tocar cada opción y que puedes ver en los tres formatos. Es una función exclusiva de Plus:</p>"
             "<ul><li><b>Fondo:</b> la plantilla Neón de siempre o <b>Mi imagen</b>, tu foto de fondo con un zoom lento. Puedes poner <b>una imagen distinta para cada formato</b> "
             "(9:16, 1:1 y 16:9) o una sola para todos, y elegir si se <b>recorta</b> para rellenar la pantalla o se muestra <b>entera sobre un fondo desenfocado</b>.</li>"
             "<li><b>Onda de sonido:</b> mostrarla o no; en <b>barras</b>, <b>línea</b> o <b>círculo</b>; abajo, en el centro o arriba; con los colores de la paleta Neón o en blanco.</li>"
@@ -420,6 +425,9 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
 <h3>Formatos de salida</h3>
 <ul>{fmts}</ul>
 {video_section}
+<h3>Lo que verás en el panel</h3>
+<p>El panel de exportación está ordenado en pasos: <b>① Nombre y formatos</b>, <b>② Vídeo animado</b>{' y <b>③ Opciones avanzadas</b> (efectos, Voice Drop, Modo promo y firma/carátula), que viene plegada para que el panel quede limpio y se abre sola en cuanto activas algo de ella' if plus else ''}.
+Justo encima del botón <b>Generar previa</b>, una línea de resumen te dice qué se va a crear (formatos, vídeo, duración de la previa y carpeta de destino) para que no haya sorpresas.</p>
 
 {'' if plus else tip('La edición Plus añade WAV 24 bit, FLAC, vídeo animado sin marca de agua, con tu propia imagen y el final a tu elección, firma y carátula personalizadas, efectos de estudio y mucho más. Mira el capítulo «Pasar a la edición Plus».')}
 <h3>Carpeta de destino</h3>

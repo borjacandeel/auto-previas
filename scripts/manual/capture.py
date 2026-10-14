@@ -200,6 +200,7 @@ while time.time() - t0 < 180:
         break
 pump(60, 0.02)
 R = w._results
+R._set_adv_open(True)      # el manual muestra también las opciones avanzadas (efectos, voz, modo promo y firma)
 R._waveform.parentWidget().setMaximumHeight(300)
 R._waveform.setMaximumHeight(230)   # onda compacta, como en una ventana normal
 pump(20)
