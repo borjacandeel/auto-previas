@@ -64,6 +64,7 @@ Los archivos están en `marketing/videos/publicados/` (uso interno: nunca enlaza
 - [AutoPrevias-09-Tu-estilo-en-1-clic](https://github.com/borjacandeel/auto-previas/blob/main/marketing/videos/publicados/AutoPrevias-09-Tu-estilo-en-1-clic.mp4)
 - [AutoPrevias-10-Cada-tema-su-look](https://github.com/borjacandeel/auto-previas/blob/main/marketing/videos/publicados/AutoPrevias-10-Cada-tema-su-look.mp4)
 - [AutoPrevias-11-AutoPrevias-in-English](https://github.com/borjacandeel/auto-previas/blob/main/marketing/videos/publicados/AutoPrevias-11-AutoPrevias-in-English.mp4)
+- [AutoPrevias-Tutorial-Videos-Plus](https://github.com/borjacandeel/auto-previas/blob/main/marketing/videos/publicados/AutoPrevias-Tutorial-Videos-Plus.mp4) — **tutorial 16:9 (7 min 34 s)**: cómo generar vídeos con la última versión, todos los apartados y con ejemplos, para el público de Plus (voces Álvaro y Ximena).
 
 ## Cómo publicarlos
 - **Dónde:** TikTok, Instagram Reels y YouTube Shorts (el mismo archivo); versión 16:9 de los vídeos 0, 1 y 6 para YouTube normal.
