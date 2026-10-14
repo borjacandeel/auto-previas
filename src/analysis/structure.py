@@ -168,7 +168,8 @@ def _harmonic_percussive_ratio(y: np.ndarray, sr: int, hop: int = HOP_LENGTH) ->
     Valor alto = contenido melódico/armónico (sintes, leads, acordes) → indica DROP.
     Valor bajo = contenido percusivo dominante (bombos, claps, hihats) → indica DESCANSO.
     """
-    y_harm, _y_perc = librosa.effects.hpss(y)
+    from src.analysis import fastdsp
+    y_harm, _y_perc = fastdsp.hpss_cached(y, which="harm")          # comparte STFT y filtros con el análisis del BPM (resultado idéntico)
     fl = min(2048, max(64, len(y)))
     hp = min(hop, max(1, fl // 4))
     rms_h = librosa.feature.rms(y=y_harm, frame_length=fl, hop_length=hp)[0]
@@ -287,16 +288,24 @@ def analyze_structure(y: np.ndarray, sr: int, beat_grid: BeatGrid) -> StructureA
         return StructureAnalysis(sections=[sec], duration=total_duration, bpm=beat_grid.bpm)
 
     # 1. Envolventes espectrales
-    rms_env      = _rms_envelope(y, hop=HOP_LENGTH)
-    kick_env     = _kick_bass_envelope(y, sr, hop=HOP_LENGTH)
-    melody_env   = _melody_envelope(y, sr, hop=HOP_LENGTH)
-    pitos_env    = _pitos_leads_envelope(y, sr, hop=HOP_LENGTH)
-    novelty_env  = _spectral_novelty(y, sr, hop=HOP_LENGTH)
-    centroid_env = _spectral_centroid_norm(y, sr, hop=HOP_LENGTH)
-    y_kw         = _k_weight(y, sr)
-    flatness_env  = _spectral_flatness_envelope(y, sr, hop=HOP_LENGTH)
-    harmonic_env  = _harmonic_percussive_ratio(y, sr, hop=HOP_LENGTH)
-    bandwidth_env = _spectral_bandwidth_norm(y, sr, hop=HOP_LENGTH)
+    # (independientes entre sí: se calculan a la vez; el resultado es idéntico al secuencial)
+    from src.analysis import fastdsp
+    try:
+        (harmonic_env, rms_env, kick_env, melody_env, pitos_env, novelty_env, centroid_env,
+         y_kw, flatness_env, bandwidth_env) = fastdsp.pmap([
+            lambda: _harmonic_percussive_ratio(y, sr, hop=HOP_LENGTH),      # el más lento, primero
+            lambda: _rms_envelope(y, hop=HOP_LENGTH),
+            lambda: _kick_bass_envelope(y, sr, hop=HOP_LENGTH),
+            lambda: _melody_envelope(y, sr, hop=HOP_LENGTH),
+            lambda: _pitos_leads_envelope(y, sr, hop=HOP_LENGTH),
+            lambda: _spectral_novelty(y, sr, hop=HOP_LENGTH),
+            lambda: _spectral_centroid_norm(y, sr, hop=HOP_LENGTH),
+            lambda: _k_weight(y, sr),
+            lambda: _spectral_flatness_envelope(y, sr, hop=HOP_LENGTH),
+            lambda: _spectral_bandwidth_norm(y, sr, hop=HOP_LENGTH),
+        ])
+    finally:
+        fastdsp.clear_hpss_cache()                                          # libera la STFT compartida (decenas de MB)
 
     # 2. Agrupación por compases de 4 beats (4/4 estándar de música electrónica)
     beats_per_bar = 4

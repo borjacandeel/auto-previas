@@ -547,3 +547,34 @@ def test_dialogo_con_vista_previa_en_vivo(monkeypatch, tmp_path):
     d._set_prev_aspect("16:9")                                # cambiar el formato de la muestra también redibuja
     assert d._prev_btns["16:9"].isChecked() and not d._prev_btns["9:16"].isChecked()
     _cerrar(d)
+
+
+def test_ajuste_de_rendimiento_en_la_ventana_de_licencia(monkeypatch):
+    import src.perf as perf
+    from src.ui.about import LicenseDialog
+    monkeypatch.setattr(perf, "_MODE", None)
+    d = LicenseDialog("9.9.9", "plus")
+    assert [d._combo_perf.itemData(i) for i in range(d._combo_perf.count())] == ["auto", "low", "high"]
+    assert d._combo_perf.currentData() == "auto" and "núcleos" in d._lbl_perf.text()
+    d._combo_perf.setCurrentIndex(d._combo_perf.findData("low"))
+    assert perf.get_mode() == "low"
+    perf._MODE = None
+    assert perf.get_mode() == "low"                                   # se guarda en la configuración
+    perf._MODE = None
+    _cerrar(d)
+
+
+def test_el_pulso_del_cursor_de_la_onda_solo_corre_cuando_se_mueve():
+    from src.ui import waveform as WF
+    if not WF.HAS_PYQTGRAPH:
+        pytest.skip("sin pyqtgraph")
+    w = WF.WaveformWidget()
+    w.show()
+    assert not w._glow_timer.isActive()                                # en reposo no repinta
+    w._duration = 100.0
+    w.set_playhead(10.0)
+    assert w._glow_timer.isActive()                                    # al moverse el cursor, sí
+    w._glow_last_move -= 5.0                                           # sin movimiento durante un rato
+    w._tick_playhead_glow()
+    assert not w._glow_timer.isActive()
+    _cerrar(w)

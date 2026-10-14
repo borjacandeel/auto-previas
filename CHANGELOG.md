@@ -3,6 +3,16 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [3.8.0] - 2026-10-14
+
+### Añadido
+- **Ajuste «Rendimiento»** en «⚙ Licencia»: **Automático** (recomendado: se adapta a tu equipo y deja un núcleo libre para que la app siga fluida), **Ahorro de recursos** (usa pocos recursos: portátil con batería, equipo antiguo u otros programas abiertos) o **Máximo rendimiento** (usa todos los núcleos). Debajo se ve cuántos núcleos y cuánta memoria detecta la app en tu equipo.
+
+### Cambiado
+- **El análisis de tu canción es mucho más rápido** (en las pruebas, de unos 45 s a unos 20 s en una pista de 2:30 con un equipo de 4 núcleos; con más núcleos, más). Los resultados son exactamente los mismos: BPM, tonalidad, secciones y previa idénticos. La app calcula a la vez cosas que son independientes y deja de repetir un cálculo que antes hacía dos veces.
+- **El vídeo animado se genera más rápido** (en las pruebas, unas 2,4 veces con 3 núcleos; más con más núcleos). El vídeo resultante es idéntico fotograma a fotograma.
+- **La app consume menos y va más fluida en reposo:** el brillo animado de la etiqueta de edición y el pulso del cursor de la forma de onda ya no repintan la pantalla sin parar cuando no hacen falta (el brillo hace un barrido cada pocos segundos y el pulso solo corre mientras reproduces o buscas).
+
 ## [3.7.0] - 2026-10-14
 
 ### Añadido

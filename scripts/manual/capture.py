@@ -236,6 +236,24 @@ save(crop(img, stats_rect, d, 4), "z_stats")
 if EDITION == "plus":
     save(crop(img, rect_of(R._branding_card, w), d, 4), "z_firma")
 
+# ── 3b. Tarjeta del vídeo (para el manual): formato, look, título, final y vista previa ──
+from PIL import Image as _PImg, ImageDraw as _PDraw
+w.resize(W, 1500); pump(30)
+R._chk_video.setChecked(True); pump(40, 0.02)
+_im = grab(w); save(crop(_im, rect_of(R._row_video_title_widget, w), dpr_of(_im), 4), "z_video")
+if EDITION == "plus":
+    _bg = _PImg.new("RGB", (1920, 1080)); _d = _PDraw.Draw(_bg)
+    for _x in range(0, 1920, 8):
+        _d.rectangle((_x, 0, _x + 8, 1080), fill=(int(20 + 120 * _x / 1920), 20, int(90 + 140 * (1 - _x / 1920))))
+    _d.ellipse((560, 120, 1360, 960), outline=(255, 255, 255), width=10)
+    _bgp = HOME / "foto_16x9.png"; _bg.save(_bgp)
+    R._on_video_image_dropped(str(_bgp)); pump(40, 0.02)             # arrastrar una imagen: look «Foto + barras abajo»
+    _im = grab(w); save(crop(_im, rect_of(R._row_video_title_widget, w), dpr_of(_im), 4), "z_video_imagen")
+    _vc = R._video_custom
+    R._video_custom = type(_vc)(_vc, style="neon"); R._sync_look_combo()
+R._set_combo_by_data(R._combo_aspect, "9:16")
+R._chk_video.setChecked(False); pump(30); w.resize(W, H); pump(20)
+
 # ── 4. Editor avanzado (Plus) ─────────────────────────────────────────────
 w.resize(W, 1300 if EDITION == "plus" else H); pump(20)   # ventana alta: se ve el panel completo sin scroll
 if EDITION == "plus":

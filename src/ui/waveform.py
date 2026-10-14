@@ -283,7 +283,7 @@ class WaveformWidget(QWidget):
         self._glow_timer = QTimer(self)
         self._glow_timer.setInterval(45)
         self._glow_timer.timeout.connect(self._tick_playhead_glow)
-        self._glow_timer.start()
+        self._glow_last_move = 0.0        # el pulso del cursor solo corre mientras se mueve (reproducción / búsqueda), no en reposo
 
         # Clic para seek instantáneo
         self._plot.scene().sigMouseClicked.connect(self._on_click)
@@ -400,6 +400,10 @@ class WaveformWidget(QWidget):
     def _tick_playhead_glow(self):
         if not HAS_PYQTGRAPH:
             return
+        import time as _t
+        if _t.monotonic() - self._glow_last_move > 1.2 or not self.isVisible():
+            self._glow_timer.stop()          # sin movimiento del cursor no se repinta la onda a 22 fps para nada
+            return
         self._playhead_glow_alpha += self._playhead_glow_dir * 6
         if self._playhead_glow_alpha >= 160:
             self._playhead_glow_alpha = 160
@@ -417,6 +421,10 @@ class WaveformWidget(QWidget):
         if not HAS_PYQTGRAPH or self._duration <= 0:
             return
         t = max(0.0, min(float(time_sec), self._duration))
+        import time as _t
+        self._glow_last_move = _t.monotonic()
+        if not self._glow_timer.isActive():
+            self._glow_timer.start()
         self._playhead_line.setValue(t)
         self._playhead_glow.setValue(t)
         self._update_current_section_badge(t)

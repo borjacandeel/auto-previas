@@ -101,6 +101,29 @@ class LicenseDialog(QDialog):
         lang_row.addWidget(self._combo_lang)
         root.addLayout(lang_row)
 
+        # Rendimiento: cuántos recursos del equipo usa AutoPrevias al analizar y generar vídeo
+        from src import perf
+        perf_row = QHBoxLayout()
+        perf_lbl = QLabel("Rendimiento")
+        perf_lbl.setStyleSheet("font-size: 13px; font-weight: 700;")
+        self._combo_perf = QComboBox()
+        for code, txt in (("auto", "Automático (recomendado)"), ("low", "Ahorro de recursos"), ("high", "Máximo rendimiento")):
+            self._combo_perf.addItem(tr(txt), code)
+        self._combo_perf.setCurrentIndex(max(0, self._combo_perf.findData(perf.get_mode())))
+        self._combo_perf.setToolTip(tr("Automático se adapta a tu equipo y deja libre un núcleo para que la app siga fluida. "
+                                       "Ahorro usa pocos recursos (portátil con batería, equipo antiguo u otros programas abiertos). "
+                                       "Máximo usa todos los núcleos para terminar antes."))
+        self._combo_perf.currentIndexChanged.connect(self._on_perf)
+        perf_row.addWidget(perf_lbl)
+        perf_row.addStretch()
+        perf_row.addWidget(self._combo_perf)
+        root.addLayout(perf_row)
+        self._lbl_perf = QLabel("")
+        self._lbl_perf.setStyleSheet(f"font-size: 11px; color: {TEXT2};")
+        self._lbl_perf.setWordWrap(True)
+        root.addWidget(self._lbl_perf)
+        self._refresh_perf_hint()
+
         root.addWidget(self._separator())
 
         self._lbl_update = QLabel("")
@@ -132,7 +155,7 @@ class LicenseDialog(QDialog):
         root.addLayout(close_row)
 
         i18n.mark_dynamic(self._lbl_version, self._lbl_state, self._lbl_detail,
-                          self._lbl_support, self._lbl_update)
+                          self._lbl_support, self._lbl_update, self._lbl_perf)
         self._refresh()
         i18n.translate_tree(self)
 
@@ -181,6 +204,16 @@ class LicenseDialog(QDialog):
             self._lbl_state.setStyleSheet(f"font-size: 13px; font-weight: 700; color: {RED};")
             self._lbl_detail.setText("")
             self._btn_remove.setEnabled(False)
+
+    def _refresh_perf_hint(self):
+        from src import perf
+        self._lbl_perf.setText(tr("Tu equipo: {c} núcleos · {r} GB de RAM → hasta {a} hilos al analizar y {v} al generar vídeo.",
+                                  c=perf.cpu_cores(), r=round(perf.total_ram_gb()), a=perf.threads("analysis"), v=perf.threads("render")))
+
+    def _on_perf(self):
+        from src import perf
+        perf.set_mode(self._combo_perf.currentData())
+        self._refresh_perf_hint()
 
     def _on_language(self):
         code = self._combo_lang.currentData()

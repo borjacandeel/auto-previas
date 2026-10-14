@@ -78,6 +78,19 @@
 - **Pendientes anotados** (tabla en esta sesión): producción de los 11 vídeos del plan + pruebas del usuario + tareas opcionales.
 
 
+### Resumen de Trabajo — Sesión 57 (2026-10-14): v3.8.0 — rendimiento (análisis y vídeo más rápidos, ajuste de recursos, menos consumo en reposo)
+- **3.7.0 publicada** (run 65, CI verde; verificación de la Release pendiente de que el usuario avise).
+- **Medición previa** (pista sintética de 150 s, 4 núcleos): `detect_beat_grid` 28,9 s + `analyze_structure` 21,3 s ≈ 50 s. Hallazgo: **HPSS se calculaba dos veces** (BPM con margin=3 y estructura con margin=1) y sus filtros de mediana eran secuenciales; los 3 canales de onset, las 10 envolventes de estructura y la tonalidad eran independientes pero se ejecutaban en serie.
+- **`src/analysis/fastdsp.py`**: `pmap()` (cálculos independientes a la vez, orden conservado), `parallel_median_filter()` (troceado por filas/columnas independientes → idéntico), `hpss_cached()` (comparte STFT, magnitud/fase y medianas entre llamadas; solo calcula máscara+ISTFT del componente pedido con `which`; caché con huella de la señal y `clear_hpss_cache()` al final de `analyze_structure`). **Idéntico bit a bit a `librosa.effects.hpss`** (tests con margin 1 y 3).
+- **Integración**: `_onset_channels` (3 canales en paralelo, perc primero), `analyze_structure` (10 envolventes en paralelo), `AnalysisWorker` (BPM y tonalidad a la vez).
+- **Resultado medido**: 44,6 s → ~20 s en total, con **resultados idénticos** al código anterior (BPM, beats, tonalidad, secciones y plan de previa comparados con pickle). Sigue habiendo variación por el entorno compartido.
+- **Vídeo**: `_iter_frames()` dibuja fotogramas en un pool de hilos con ventana acotada (3×hilos) y los entrega en orden; vídeo y vista previa. **Fotogramas idénticos** (hash MD5) en modo neón y modo imagen; ~2,4× con 3 hilos. FFmpeg: `-threads` solo en modo Ahorro.
+- **`src/perf.py`**: política de hilos según núcleos y RAM (auto = núcleos−1 con tope 8, y menos con poca RAM; low ≈ 2; high = todos hasta 12), variable `AUTOPREVIAS_THREADS`, modo guardado en `performance`; **selector «Rendimiento»** en «⚙ Licencia» (Automático/Ahorro/Máximo) con la lectura del equipo.
+- **Menos consumo en reposo**: `_glow_timer` de la onda (45 ms, repintaba siempre) ahora solo corre mientras el cursor se mueve y se para tras 1,2 s; el brillo del badge (60 ms con `setStyleSheet` constante) hace un barrido de ~1,8 s y descansa ~7 s con el timer parado.
+- **Tests**: `tests/test_perf.py` (12) + 2 de interfaz; suite 266 passed, 1 skipped (sin `test_structure`). Autotest del binario comprueba HPSS compartido == librosa y la política de hilos.
+- **Manuales** ampliados con todo lo nuevo (3.5.1→3.8.0): capturas reales de la tarjeta de vídeo en Basic (candado) y Plus (y del look tras arrastrar una imagen), formato de imagen, rendimiento, requisitos (núcleos; verificación automática y 14 días sin conexión) y solución de problemas.
+- Pendiente (no hecho a propósito por riesgo): carga diferida de librosa/scipy para acortar el arranque (~3 s en frío en este entorno); la STFT del audio se sigue calculando varias veces en onset/estructura (se podría compartir con más trabajo).
+
 ### Resumen de Trabajo — Sesión 56 (2026-10-14): v3.7.0 — panel de vídeo más fácil (las 8 propuestas)
 - **3.6.0 publicada** (run 63, CI verde). Verificación de la Release pendiente de que el usuario avise.
 - **Tarjeta «② Vídeo animado»** (`_VideoCard` en `src/ui/app.py`, atributo `_row_video_title_widget` conservado): formato con 3 botones (`_aspect_btns`, controlan el `_combo_aspect` interno, que sigue siendo el modelo para persistencia/presets), color, **Look** (`_combo_look`), «⚙ Personalizar…» (`_btn_vcustom`), banner, título, final y vista previa en un solo bloque.

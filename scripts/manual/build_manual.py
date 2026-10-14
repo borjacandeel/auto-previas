@@ -203,8 +203,9 @@ promotores, sellos, DJs o redes sociales.</p>
 <table><tr><th>Sistema</th><th>Requisito</th></tr>
 <tr><td>macOS</td><td>Mac con chip Apple Silicon (M1, M2, M3, M4) — macOS 12 o superior</td></tr>
 <tr><td>Windows</td><td>Windows 10 u 11 de 64 bits</td></tr>
+<tr><td>Procesador</td><td>Cuantos más núcleos, más rápido analiza y genera vídeo (4 o más recomendados). El ajuste <b>⚙ Licencia → Rendimiento</b> controla cuántos usa.</td></tr>
 <tr><td>Memoria y espacio</td><td>8 GB de RAM recomendados · 600 MB de espacio libre</td></tr>
-<tr><td>Internet</td><td>Solo para activar la licencia, verificarla cada 7 días y buscar actualizaciones</td></tr></table>
+<tr><td>Internet</td><td>Solo para activar la licencia, la verificación automática (al abrir la app y cada pocas horas; puedes trabajar hasta 14 días sin conexión) y buscar actualizaciones</td></tr></table>
 </section>"""
 
 
@@ -383,6 +384,7 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
         + banner_txt + ".</p>"
         "<p>Todo el vídeo está en una sola tarjeta, <b>② Vídeo animado</b>, que aparece al marcar la casilla: elige el <b>formato</b> con los tres botones "
         "(<b>9:16 Vertical</b>, <b>1:1 Cuadrado</b> o <b>16:9 Horizontal</b>) y el <b>color</b>; después el <b>título</b>, el <b>final</b> y la <b>vista previa</b>.</p>"
+        + fig(im.get('z_video', ''), 'Tarjeta «Vídeo animado»' + (' (edición Plus)' if plus else ' (edición Basic, con las opciones de Plus bloqueadas)')) +
         "<p>En el campo <b>Título</b> escribes el nombre que sale en el centro del vídeo; si lo dejas vacío se usa el nombre de la pista. Pulsa "
         "<b>👁 Vista previa</b> para ver unos segundos del vídeo (con sonido y a baja resolución) con tus ajustes antes de generarlo. Como el vídeo se hace "
         "a partir de la previa, al marcarlo el <b>MP3 se exporta siempre</b>.</p>"
@@ -407,6 +409,7 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
             "<li><b>Formato de la imagen:</b> los vídeos son <b>9:16, 1:1 o 16:9</b>. Si eliges una imagen con otra proporción, AutoPrevias te avisa de que el formato no es correcto y te muestra ejemplos de los tres formatos (botón <b>📐 Ver formatos válidos</b>); puedes cambiarla o usarla igualmente. Junto a cada imagen ves si el formato es correcto y si la resolución es baja.</li>"
             "<li><b>Final con tu imagen:</b> elige la imagen y un texto opcional; después selecciona «Final: mi imagen» en el selector de final.</li></ul>"
             "<p>La <b>👁 Vista previa</b> muestra el resultado con tus ajustes. Los ajustes se recuerdan y se guardan también en tus presets de estilo.</p>"
+            + fig(im.get('z_video_imagen', ''), 'Tras arrastrar una imagen: el vídeo cambia a su formato (aquí 16:9) y aplica el look «Foto + barras abajo»')
             + fig(im.get('16_estilo_video', ''), 'Ventana «Estilo del vídeo» (solo Plus)', 'tiny')
         )
     else:
@@ -416,6 +419,7 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
             "(«Generado por Radical Records · AutoPrevias Basic»), que no se puede quitar. Con el selector <b>Final</b> eliges cómo termina: "
             "con el cierre «Generado por AutoPrevias · Radical Records» y el enlace de compra, o con un <b>fundido a negro</b>. "
             "La edición <b>Plus</b> elimina la marca de agua y te deja personalizar el vídeo con tu propia imagen, la onda de sonido y el final.</p>"
+            "<p>En la tarjeta del vídeo verás esas opciones de Plus <b>bloqueadas con un candado</b> (🔒) para que sepas qué ganas al pasar a Plus; al pulsarlo se abre la página de compra.</p>"
         )
     return f"""
 <section><h1>7. Ajustes de exportación</h1>
@@ -572,6 +576,7 @@ def s_updates(ed: str, plus: bool, im: dict, n: int) -> str:
 <ul>
 <li>Muestra la <b>versión</b>, la <b>edición</b> y el <b>estado de la licencia</b>: fecha de última verificación y hasta cuándo es válida sin conexión.</li>
 <li><b>Buscar actualizaciones</b> lanza la comprobación al momento.</li>
+<li><b>Rendimiento</b> elige cuántos recursos del equipo usa AutoPrevias al analizar y generar vídeo: <b>Automático</b> (recomendado; se adapta a tu equipo y deja un núcleo libre para que la app siga fluida), <b>Ahorro de recursos</b> (portátil con batería, equipo antiguo u otros programas abiertos) o <b>Máximo rendimiento</b> (todos los núcleos, para terminar antes). Debajo ves cuántos núcleos y cuánta memoria detecta la app.</li>
 <li><b>Desactivar licencia en este equipo</b> libera la clave en el servidor para poder usarla en otro ordenador (necesita conexión).</li>
 <li><b>Idioma</b>: Español (por defecto) o English. También puedes alternarlo con el botón <b>ES / EN</b> de la cabecera; todo se traduce al instante.</li>
 </ul>
@@ -600,6 +605,8 @@ def s_faq(ed: str, plus: bool, n: int) -> str:
 <tr><td>Windows muestra «Windows protegió su PC»</td><td>Pulsa <b>Más información → Ejecutar de todas formas</b>.</td></tr>
 <tr><td>«Clave no válida» al activar</td><td>Comprueba que has copiado la clave completa, sin espacios, y que es de la edición {cap}. Necesitas Internet. Si persiste, escríbenos.</td></tr>
 <tr><td>«Esta clave es de AutoPrevias Basic/Plus y estás usando…»</td><td>Tu clave corresponde a la otra edición. Descarga e instala la edición que compraste; la clave no se queda ligada a ningún equipo.</td></tr>
+<tr><td>El análisis o el vídeo tardan mucho, o el equipo va justo</td><td>Abre <b>⚙ Licencia → Rendimiento</b>. <b>Automático</b> se adapta a tu equipo; <b>Máximo rendimiento</b> usa todos los núcleos para terminar antes; <b>Ahorro de recursos</b> usa pocos si trabajas con otros programas o con batería. Cierra otros programas pesados mientras generas el vídeo.</td></tr>
+{"<tr><td>«El formato de la imagen no es correcto»</td><td>Los vídeos son 9:16, 1:1 o 16:9. Cambia la imagen por una con esa proporción (pulsa <b>📐 Ver formatos válidos</b> para ver ejemplos) o elige «Imagen entera con fondo desenfocado».</td></tr>" if plus else ""}
 <tr><td>«Esta licencia ya está activada en otro equipo»</td><td>Tu clave solo puede estar en un ordenador. Desactívala en el otro (<b>⚙ Licencia → Desactivar licencia en este equipo</b>) o escribe a soporte si ese equipo ya no está disponible.</td></tr>
 <tr><td>Me dice que necesita conexión para verificar la licencia</td><td>Han pasado más de 14 días sin verificarla: conéctate a Internet y pulsa <b>Reintentar</b>. No hace falta volver a escribir la clave.</td></tr>
 <tr><td>El BPM detectado es el doble o la mitad</td><td>Haz doble clic en la tarjeta <b>BPM</b> y escribe el valor real.</td></tr>

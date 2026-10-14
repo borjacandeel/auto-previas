@@ -22,6 +22,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
 from src.config import get_assets_dir, get_cache_dir, get_ffmpeg_path
 from src import links as _links
+from src import perf as _perf
 
 FPS = 30
 ASPECTS = {"9:16": (1080, 1920), "1:1": (1080, 1080), "16:9": (1920, 1080)}
@@ -963,6 +964,33 @@ class _Renderer:
         base.paste(layer, (x0, y0), layer)
 
 
+def _iter_frames(r, n_frames: int, step: int = 1, workers: Optional[int] = None):
+    """Rinde los fotogramas 0, step, 2·step… en orden. Se dibujan varios a la vez (hilos: Pillow/NumPy sueltan el GIL),
+    con un margen acotado para no gastar memoria; el resultado es idéntico al dibujado secuencial."""
+    idx = list(range(0, n_frames, step))
+    n = _perf.threads("render") if workers is None else int(workers)
+    if n <= 1 or len(idx) < 4:
+        for i in idx:
+            yield i, r.frame(i, i / FPS)
+        return
+    from collections import deque
+    from concurrent.futures import ThreadPoolExecutor
+    window = n * 3
+    with ThreadPoolExecutor(max_workers=n) as ex:
+        pending, nxt = deque(), 0
+        try:
+            for k, i in enumerate(idx):
+                while nxt < len(idx) and len(pending) < window:
+                    j = idx[nxt]
+                    pending.append((j, ex.submit(r.frame, j, j / FPS)))
+                    nxt += 1
+                j, fut = pending.popleft()
+                yield j, fut.result()
+        finally:
+            for _, f in pending:
+                f.cancel()
+
+
 # ───────────────────────────── API pública ─────────────────────────────
 
 def render_neon_video(
@@ -1008,13 +1036,14 @@ def render_neon_video(
            "-i", str(audio_path)]
     if (ow, oh) != (W, H):
         cmd += ["-vf", f"scale={ow}:{oh}:flags=lanczos"]
-    cmd += ["-c:v", "libx264", "-preset", "veryfast", "-crf", "22", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "320k",
-            "-movflags", "+faststart", "-shortest", str(out)]
+    cmd += ["-c:v", "libx264", "-preset", "veryfast", "-crf", "22", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "320k"]
+    if _perf.ffmpeg_threads() > 0:                 # solo en modo ahorro (o forzado): limita los hilos del codificador
+        cmd += ["-threads", str(_perf.ffmpeg_threads())]
+    cmd += ["-movflags", "+faststart", "-shortest", str(out)]
     err_file = tempfile.TemporaryFile()
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=err_file)
     try:
-        for i in range(an.n_frames):
-            fr = r.frame(i, i / FPS)
+        for i, fr in _iter_frames(r, an.n_frames):
             proc.stdin.write(fr.tobytes())
             if i % 15 == 0:
                 _prog(15 + 83 * i / an.n_frames, f"Dibujando fotogramas ({i}/{an.n_frames})…")
@@ -1087,9 +1116,7 @@ def render_preview(
     step = max(1, round(FPS / fps))
     n = max(1, int(an.duration * fps))
     frames = []
-    for j in range(n):
-        i = j * step
-        im = r.frame(i, i / FPS)
+    for j, (i, im) in enumerate(_iter_frames(r, n * step, step)):
         frames.append(im.convert("RGB").resize(size, Image.BILINEAR))
         if j % 6 == 0:
             _prog(25 + 70 * j / n, "Dibujando la vista previa…")

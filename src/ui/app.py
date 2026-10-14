@@ -184,14 +184,13 @@ class AnalysisWorker(QThread):
             if self.isInterruptionRequested():
                 return
             dur = float(len(y)) / float(sr)
-            self.progress.emit(25, "Detectando BPM y beat grid…")
-            grid = detect_beat_grid(y, sr)
+            self.progress.emit(25, "Detectando BPM, beat grid y tonalidad…")
+            # BPM y tonalidad son independientes: se calculan a la vez (mismo resultado, menos espera)
+            from src.analysis.fastdsp import pmap
+            grid, key_res = pmap([lambda: detect_beat_grid(y, sr), lambda: detect_musical_key(y, sr)])
             if self.isInterruptionRequested():
                 return
-            self.progress.emit(45, "Detectando Tonalidad Armónica y Camelot…")
-            key_res = detect_musical_key(y, sr)
-            if self.isInterruptionRequested():
-                return
+            self.progress.emit(45, "Tonalidad Armónica y Camelot detectada")
             self.progress.emit(68, "Analizando estructura musical…")
             analysis = analyze_structure(y, sr, grid)
             if self.isInterruptionRequested():
@@ -4470,10 +4469,25 @@ class MainWindow(QMainWindow):
             """)
 
     def _tick_badge_shimmer(self):
-        self._badge_shimmer_phase = (self._badge_shimmer_phase + 3) % 140
-        # Shimmer visible entre 0 y 100, fuera del rango reposa
-        pos = self._badge_shimmer_phase if self._badge_shimmer_phase <= 100 else 100
-        self._apply_badge_style(pos)
+        # Un barrido de brillo (~1,8 s) y después reposo (~7 s) con el temporizador parado: antes cambiaba una hoja de estilo
+        # cada 60 ms para siempre, lo que mantenía la CPU despierta y relayout constante de la cabecera.
+        self._badge_shimmer_phase += 3
+        if self._badge_shimmer_phase >= 100 or not self.isVisible():
+            self._badge_shimmer_phase = 0
+            self._apply_badge_style(100)
+            self._badge_shimmer_timer.stop()
+            QTimer.singleShot(7000, self._restart_badge_shimmer)
+            return
+        self._apply_badge_style(self._badge_shimmer_phase)
+
+    def _restart_badge_shimmer(self):
+        try:
+            if self.isVisible() and not self.isMinimized():
+                self._badge_shimmer_timer.start(60)
+            else:
+                QTimer.singleShot(7000, self._restart_badge_shimmer)
+        except RuntimeError:                  # la ventana ya se cerró
+            pass
 
     # ── Paleta ────────────────────────────────────────────────────────────
 

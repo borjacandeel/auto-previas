@@ -229,6 +229,19 @@ def run_selftest() -> int:
         assert _vn.detect_look(_lk) == "circle" and _vn.match_aspect(1080, 1920) == "9:16"
         print("  ✓ Ventana de ajustes del vídeo construida")
 
+        # Rendimiento: el HPSS compartido y los hilos deben funcionar en el binario compilado (y dar lo mismo que librosa)
+        import librosa as _lb
+        from src import perf as _perf
+        from src.analysis import fastdsp as _fd
+        _ys = _np.sin(2 * _np.pi * 220 * _np.arange(22050) / 22050).astype(_np.float32)
+        _fd.clear_hpss_cache()
+        _h, _p = _fd.hpss_cached(_ys, margin=3.0)
+        _rh, _rp = _lb.effects.hpss(_ys, margin=3.0)
+        assert _np.array_equal(_h, _rh) and _np.array_equal(_p, _rp)
+        _fd.clear_hpss_cache()
+        assert _fd.pmap([lambda: 1, lambda: 2]) == [1, 2] and _perf.threads("analysis") >= 1
+        print("  ✓ Análisis acelerado (HPSS compartido + hilos) idéntico a librosa · " + _perf.describe())
+
         from src.ui import video_preview as _vp
         assert hasattr(_vp, "VideoPreviewDialog")
         print("  ✓ Vista previa del vídeo empaquetada")

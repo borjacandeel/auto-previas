@@ -40,21 +40,26 @@ BPM_MAX = 210
 
 
 def _onset_channels(y: np.ndarray, sr: int, hop: int):
-    """Devuelve (onset_full, onset_perc, onset_kick, kick_snr, full_snr)."""
-    onset_full = librosa.onset.onset_strength(
-        y=y, sr=sr, hop_length=hop, aggregate=np.median
-    )
-    _, y_perc = librosa.effects.hpss(y, margin=3.0)
-    onset_perc = librosa.onset.onset_strength(
-        y=y_perc, sr=sr, hop_length=hop, aggregate=np.median
-    )
-    sos = scipy.signal.butter(4, [50, 200], btype="bandpass", fs=sr, output="sos")
-    y_kick = scipy.signal.sosfilt(sos, y)
-    onset_kick = librosa.onset.onset_strength(
-        y=y_kick, sr=sr, hop_length=hop, aggregate=np.median
-    )
+    """Devuelve (onset_full, onset_perc, onset_kick, kick_snr, full_snr).
+    Los tres canales son independientes y se calculan a la vez (resultado idéntico al secuencial);
+    la separación percusiva comparte su STFT/filtros con el análisis de estructura (fastdsp.hpss_cached)."""
+    from src.analysis import fastdsp
+
+    def full():
+        return librosa.onset.onset_strength(y=y, sr=sr, hop_length=hop, aggregate=np.median)
+
+    def perc():
+        _, y_perc = fastdsp.hpss_cached(y, margin=3.0, which="perc")
+        return librosa.onset.onset_strength(y=y_perc, sr=sr, hop_length=hop, aggregate=np.median)
+
+    def kick():
+        sos = scipy.signal.butter(4, [50, 200], btype="bandpass", fs=sr, output="sos")
+        y_kick = scipy.signal.sosfilt(sos, y)
+        return librosa.onset.onset_strength(y=y_kick, sr=sr, hop_length=hop, aggregate=np.median)
+
+    onset_perc, onset_full, onset_kick = fastdsp.pmap([perc, full, kick])      # perc (el más lento) arranca primero
     kick_snr = np.std(onset_kick) / (np.mean(onset_kick) + 1e-9)
-    full_snr  = np.std(onset_full) / (np.mean(onset_full) + 1e-9)
+    full_snr = np.std(onset_full) / (np.mean(onset_full) + 1e-9)
     return onset_full, onset_perc, onset_kick, kick_snr, full_snr
 
 
