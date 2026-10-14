@@ -275,3 +275,16 @@ def test_looks_se_aplican_y_se_detectan_conservando_las_imagenes():
     back = vn.apply_look(vn.apply_look(base, "photo"), "bars")
     assert back["title"] and back["artist"] and back["wave"] and not back["only_photo"]
     assert vn.apply_look(base, "raro") == vn.normalize_custom(base)
+
+
+@pytest.mark.parametrize("aspect", list(vn.ASPECTS))
+@pytest.mark.parametrize("wave_style", ["bars", "line", "circle"])
+@pytest.mark.parametrize("wpos", ["top", "center", "bottom"])
+@pytest.mark.parametrize("tpos", ["top", "center", "bottom"])
+def test_la_onda_no_pisa_los_textos(tmp_path, aspect, wave_style, wpos, tpos):
+    cu = {"style": "image", "bg": {"default": _img(tmp_path)}, "wave_style": wave_style, "wave_pos": wpos, "texts_pos": tpos}
+    r = vn._Renderer(_analysis(), None, "Título", "Artista", 128.0, "8A", aspect, "crimson", "BANNER", "X", 1.0, custom=cu)
+    t0, t1 = r.text_block
+    w0, w1 = r.wave_rect[1], r.wave_rect[3]
+    assert w1 <= t0 or w0 >= t1, (aspect, wave_style, wpos, tpos, r.text_block, r.wave_rect)
+    assert 0 <= w0 and w1 <= r.L.H

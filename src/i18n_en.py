@@ -359,6 +359,7 @@ EN = {
     "Desactivar licencia": "Deactivate license",
     "Esta licencia ya está activada en otro equipo. Desactívala allí (⚙ Licencia → Desactivar licencia en este equipo) o escribe a radicalrecordsvlc@gmail.com.": "This license is already active on another computer. Deactivate it there (⚙ License → Deactivate license on this computer) or write to radicalrecordsvlc@gmail.com.",
     "Clave no válida": "Invalid key",
+    "Quitar": "Remove",
     "① Nombre y formatos": "① Name and formats",
     "② 🎬 VÍDEO ANIMADO": "② 🎬 ANIMATED VIDEO",
     "Look": "Look",

@@ -89,6 +89,7 @@
 - **Resumen antes de generar** (`_lbl_summary`, actualizado cada 500 ms): formatos, vídeo (formato, look, final), duración de la previa, efectos activos y carpeta. Cadenas traducibles al inglés.
 - Tests (171 passed, 1 skipped; sin `test_structure`): tarjeta/botones/looks, arrastrar imagen, Basic bloqueado, avanzadas, resumen, vista previa en vivo, looks del motor; los tests de interfaz usan ahora una configuración aislada (fixture `_config_aislada`), antes escribían en la real. Selftest ampliado.
 - Fallo propio corregido: una imagen válida de otro formato abría el aviso (y colgaba el test); ahora solo avisa si no es ninguno de los tres formatos.
+- **Arreglo de diseño (visto en las capturas):** con el círculo en el centro y los textos arriba (16:9 y 1:1) la onda pisaba el título y la pila podía salirse del encuadre. Ahora los textos tienen prioridad (dentro del encuadre) y la onda se reduce y se recoloca en el hueco libre si solapa o se sale; `text_block` expuesto y 81 combinaciones de formato/estilo/posiciones probadas (`test_la_onda_no_pisa_los_textos`). Botón «Quitar» legible en los selectores de imagen.
 - Manuales PDF y CHANGELOG/README al día (3.7.0).
 
 ### Resumen de Trabajo — Sesión 55 (2026-10-14): v3.6.0 (aún sin publicar) — aviso de formato de imagen, textos a elegir y «solo la foto»

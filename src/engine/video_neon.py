@@ -776,16 +776,35 @@ class _Renderer:
             for name, h in items:
                 y_of[name] = y
                 y += h + gap
-        # textos
+        # textos (prioridad): dentro del encuadre aunque la pila sea muy alta
+        tb = text_h + ban_h
         ty = y_of.get("texts", margin_t)
+        if tb:
+            ty = min(max(ty, margin_t), max(margin_t, H - margin_b - tb))
         self.text_items = []
         y = ty
         for k, (l, t0) in enumerate(tx_items):
             self.text_items.append((l, y, t0))
             y += l.height + gaps_all
         self.banner_y_img = (ty + text_h + 26) if lay else ty
-        # onda
+        self.text_block = (ty, ty + tb) if tb else None
+        # onda: en su sitio si cabe; si pisa los textos o se sale del encuadre, se reduce y se recoloca en el hueco libre
         wy = y_of.get("wave", H - margin_b - self.wave_h)
+        if c["wave"]:
+            out_of_frame = wy < 0 or wy + self.wave_h > H - 12
+            overlap = bool(self.text_block) and wy < self.text_block[1] + gap and wy + self.wave_h > self.text_block[0] - gap
+            if out_of_frame or overlap:
+                if self.text_block:
+                    above, below = self.text_block[0] - gap - margin_t, H - margin_b - (self.text_block[1] + gap)
+                    r0, r1 = (self.text_block[1] + gap, H - margin_b) if below >= above else (margin_t, self.text_block[0] - gap)
+                else:
+                    r0, r1 = margin_t, H - margin_b
+                rh = max(1, r1 - r0)
+                self.wave_h = min(self.wave_h, rh)
+                if c["wave_style"] == "circle":
+                    self.wave_w = self.wave_h
+                wy = r0 + (rh - self.wave_h) // 2
+        # onda
         self.wave_rect = ((W - self.wave_w) // 2, wy, (W + self.wave_w) // 2, wy + self.wave_h)
         # velo oscuro suave detrás de textos y onda (legibilidad sobre cualquier foto); se combina con el máximo de cada zona
         zones = []
