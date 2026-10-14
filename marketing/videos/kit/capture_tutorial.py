@@ -135,7 +135,7 @@ def _grab_modal():
     if m is not None:
         save(m.grab(), "t11_aviso_formato")
         RECTS["aviso_formato"] = {"dlg": [0, 0, m.width(), m.height()]}
-        m.close()
+        (m.defaultButton() or m.buttons()[0]).click()       # un QMessageBox sin botón de escape ignora close()
 
 
 QTimer.singleShot(700, _grab_modal)
