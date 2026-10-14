@@ -45,7 +45,12 @@ CUSTOM_DEFAULTS = {
     "wave_style": "bars",     # "bars" | "line" | "circle"
     "wave_pos": "bottom",     # "top" | "center" | "bottom"
     "wave_color": "palette",  # "palette" | "white"
-    "texts": True,
+    "texts": True,            # (compatibilidad) False = sin ningún texto
+    "title": True,            # título de la pista
+    "artist": True,           # artista
+    "chips": True,            # BPM y tonalidad
+    "kicker": True,           # etiqueta «PREVIA EXCLUSIVA»
+    "only_photo": False,      # solo la foto: sin textos, onda, banner ni barra de progreso
     "texts_pos": "top",       # "top" | "center" | "bottom"
     "end_image": "",          # imagen del final (modo de final «image»)
     "end_text": "",
@@ -65,8 +70,72 @@ def normalize_custom(c: Optional[dict]) -> dict:
         if out[k] not in allowed:
             out[k] = CUSTOM_DEFAULTS[k]
     out["wave"], out["texts"] = bool(out["wave"]), bool(out["texts"])
+    for k in ("title", "artist", "chips", "kicker", "only_photo"):
+        out[k] = bool(out[k])
+    if not out["texts"] or out["only_photo"]:          # «sin textos» / «solo la foto» apagan todos los textos
+        out["title"] = out["artist"] = out["chips"] = out["kicker"] = False
+    if out["only_photo"]:
+        out["wave"] = False
+    out["texts"] = any(out[k] for k in ("title", "artist", "chips", "kicker"))
     out["bg"] = {str(k): str(v) for k, v in (out["bg"] or {}).items() if v}
     out["end_image"], out["end_text"] = str(out["end_image"] or ""), str(out["end_text"] or "").strip()[:80]
+    return out
+
+
+ASPECT_VALUES = {a: w / h for a, (w, h) in ASPECTS.items()}
+_COMMON_RATIOS = ((4, 3), (3, 4), (4, 5), (5, 4), (3, 2), (2, 3), (21, 9), (9, 21), (16, 10), (10, 16), (2, 1), (1, 2))
+
+
+def match_aspect(w: int, h: int, tol: float = 0.06) -> Optional[str]:
+    """Formato de vídeo ('9:16' | '1:1' | '16:9') al que corresponde una imagen w×h, o None si no encaja (±6 %)."""
+    if w <= 0 or h <= 0:
+        return None
+    r = w / h
+    for a, v in ASPECT_VALUES.items():
+        if abs(r - v) / v <= tol:
+            return a
+    return None
+
+
+def describe_ratio(w: int, h: int) -> str:
+    """Proporción legible de una imagen: «4:3», «3:2»… o, si no es una habitual, «ancho×alto»."""
+    if w <= 0 or h <= 0:
+        return "?"
+    r = w / h
+    for a, b in _COMMON_RATIOS:
+        if abs(r - a / b) / (a / b) <= 0.02:
+            return f"{a}:{b}"
+    m = match_aspect(w, h)
+    return m or f"{w}×{h}"
+
+
+def image_size(path: str) -> Optional[tuple]:
+    """(ancho, alto) de una imagen sin cargarla entera; None si no se puede leer."""
+    try:
+        with Image.open(path) as im:
+            return im.size
+    except Exception:
+        return None
+
+
+def image_format_problems(custom: dict, aspect: str) -> list:
+    """Imágenes elegidas cuyo formato no coincide con el del vídeo `aspect`. Devuelve [(rol, ruta, proporción)], donde rol es
+    «fondo» o «final». Se usa antes de exportar para avisar al usuario."""
+    c = normalize_custom(custom)
+    out = []
+    if c["fit"] == "blur":              # la imagen se muestra entera sobre un fondo desenfocado: no hay recorte que avisar
+        return out
+    if c["style"] == "image":
+        p = resolve_bg(c, aspect)
+        if p:
+            sz = image_size(p)
+            if sz and match_aspect(*sz) != aspect:
+                out.append(("fondo", p, describe_ratio(*sz)))
+    ei = c["end_image"]
+    if ei and Path(ei).exists():
+        sz = image_size(ei)
+        if sz and match_aspect(*sz) != aspect:
+            out.append(("final", ei, describe_ratio(*sz)))
     return out
 
 
@@ -631,9 +700,14 @@ class _Renderer:
         self.kb_w, self.kb_h = int(W * 1.12), int(H * 1.12)
         self.kb = _fit_image(self.bg_path, self.kb_w, self.kb_h, self.custom["fit"])
         c = self.custom
-        lay = [self.kicker, self.title, self.artist, self.chips]
-        gaps = (14, 20, 26)
-        text_h = sum(l.height for l in lay) + sum(gaps) if c["texts"] else 0
+        if c["only_photo"]:
+            self.banner = None
+        tx_items = [(self.kicker, 0.10, c["kicker"]), (self.title, 0.22, c["title"]),
+                    (self.artist, 0.40, c["artist"]), (self.chips, 0.55, c["chips"])]
+        tx_items = [(l, t0) for l, t0, on in tx_items if on]
+        lay = [l for l, _ in tx_items]
+        gaps_all = 20
+        text_h = (sum(l.height for l in lay) + gaps_all * (len(lay) - 1)) if lay else 0
         ban_h = (self.banner.height + 30) if (self.banner is not None) else 0
         if c["wave"]:
             if c["wave_style"] == "circle":
@@ -646,7 +720,7 @@ class _Renderer:
             self.wave_h = self.wave_w = 0
         margin_t, margin_b, gap = int(H * 0.06), int(H * 0.075), 34
         slots = {"top": [], "center": [], "bottom": []}
-        if c["texts"] or ban_h:
+        if lay or ban_h:
             slots[c["texts_pos"]].append(("texts", text_h + ban_h))
         if c["wave"]:
             slots[c["wave_pos"]].append(("wave", self.wave_h))
@@ -661,18 +735,18 @@ class _Renderer:
                 y += h + gap
         # textos
         ty = y_of.get("texts", margin_t)
-        self.ys = []
+        self.text_items = []
         y = ty
-        for k, l in enumerate(lay):
-            self.ys.append(y)
-            y += l.height + (gaps[k] if k < 3 else 0)
-        self.banner_y_img = (ty + text_h + 26) if c["texts"] else ty
+        for k, (l, t0) in enumerate(tx_items):
+            self.text_items.append((l, y, t0))
+            y += l.height + gaps_all
+        self.banner_y_img = (ty + text_h + 26) if lay else ty
         # onda
         wy = y_of.get("wave", H - margin_b - self.wave_h)
         self.wave_rect = ((W - self.wave_w) // 2, wy, (W + self.wave_w) // 2, wy + self.wave_h)
         # velo oscuro suave detrás de textos y onda (legibilidad sobre cualquier foto); se combina con el máximo de cada zona
         zones = []
-        if c["texts"] or ban_h:
+        if lay or ban_h:
             zones.append((ty - 40, ty + text_h + ban_h + 40))
         if c["wave"]:
             zones.append((wy - 40, wy + self.wave_h + 40))
@@ -754,10 +828,12 @@ class _Renderer:
         cy = self.kb_h / 2 + 0.012 * self.kb_h * math.cos(t * 0.27)
         box = (cx - cw / 2, cy - ch / 2, cx + cw / 2, cy + ch / 2)
         base = self.kb.resize((W, H), Image.BILINEAR, box=box)
-        if flash > 0.02:
+        only = self.custom["only_photo"]
+        if flash > 0.02 and not only:
             base = Image.blend(base, Image.new("RGB", (W, H), self.F), min(0.30, flash * 0.35))
-        base.paste(self.veil, (0, 0), self.veil)
-        if self.custom["texts"]:
+        if not only:
+            base.paste(self.veil, (0, 0), self.veil)
+        if self.text_items:
             self._draw_texts(base, t, kick, flash, False, 99.0)
         if self.banner is not None:
             a = _ease_out((t - 0.9) / 0.35)
@@ -765,9 +841,10 @@ class _Renderer:
                 base.paste(self.banner, ((W - self.banner.width) // 2, self.banner_y_img + int((1 - a) * 60)), self.banner)
         if self.custom["wave"]:
             self._draw_wave(base, i, kick)
-        d = ImageDraw.Draw(base)
-        d.rectangle((0, H - 12, W, H), fill=(10, 11, 16))
-        d.rectangle((0, H - 12, int(W * min(1.0, t / max(0.1, an.duration))), H), fill=self.P)
+        if not only:
+            d = ImageDraw.Draw(base)
+            d.rectangle((0, H - 12, W, H), fill=(10, 11, 16))
+            d.rectangle((0, H - 12, int(W * min(1.0, t / max(0.1, an.duration))), H), fill=self.P)
         return self._finish(base, t)
 
     def _paste_layer(self, base, layer, x, y, scale=1.0, alpha=1.0):
@@ -782,8 +859,9 @@ class _Renderer:
     def _draw_texts(self, base, t, kick, flash, glitch, since):
         L = self.L
         cx = L.W // 2
-        for layer, y, t0 in ((self.kicker, self.ys[0], 0.10), (self.title, self.ys[1], 0.22),
-                             (self.artist, self.ys[2], 0.40), (self.chips, self.ys[3], 0.55)):
+        seq = self.text_items if self.img_mode else ((self.kicker, self.ys[0], 0.10), (self.title, self.ys[1], 0.22),
+                                                      (self.artist, self.ys[2], 0.40), (self.chips, self.ys[3], 0.55))
+        for layer, y, t0 in seq:
             a = _ease_out((t - t0) / 0.30)
             if a <= 0:
                 continue

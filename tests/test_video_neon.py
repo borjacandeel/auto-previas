@@ -192,6 +192,9 @@ def test_basic_ignora_la_imagen_propia(tmp_path):
 
 def test_render_completo_modo_imagen(tmp_path):
     import soundfile as sf
+    from src.config import get_ffmpeg_path
+    if not get_ffmpeg_path():
+        pytest.skip("sin ffmpeg")                       # el CI no tiene ffmpeg en la fase de tests
     sr = 22050
     t = np.arange(sr * 3) / sr
     y = (np.sin(2 * np.pi * 440 * t) * 0.3).astype(np.float32)
@@ -200,3 +203,56 @@ def test_render_completo_modo_imagen(tmp_path):
     vn.render_neon_video(str(wav), None, str(out), aspect_ratio="1:1", scale=0.25,
                          custom={"style": "image", "bg": {"default": _img(tmp_path)}, "wave_style": "circle"})
     assert out.exists() and out.stat().st_size > 1000
+
+
+# ───────────── formato de la imagen, textos por separado y «solo la foto» ─────────────
+
+@pytest.mark.parametrize("w,h,esperado", [(1080, 1920, "9:16"), (1000, 1000, "1:1"), (1920, 1080, "16:9"),
+                                          (1600, 1200, None), (1200, 1600, None), (2160, 3840, "9:16"), (1000, 1050, "1:1")])
+def test_formato_de_la_imagen(w, h, esperado):
+    assert vn.match_aspect(w, h) == esperado
+
+
+def test_proporcion_legible():
+    assert vn.describe_ratio(1600, 1200) == "4:3" and vn.describe_ratio(1200, 1800) == "2:3"
+    assert vn.describe_ratio(1080, 1920) == "9:16" and vn.describe_ratio(1111, 1000) == "1111×1000"
+
+
+def test_avisa_de_imagenes_con_otro_formato(tmp_path):
+    ok = _img(tmp_path, "ok.png", (1080, 1920)); mal = _img(tmp_path, "mal.png", (1600, 1200))
+    c = {"style": "image", "bg": {"default": mal}, "end_image": ok}
+    assert vn.image_format_problems(c, "9:16") == [("fondo", mal, "4:3")]
+    assert vn.image_format_problems({**c, "bg": {"default": ok}}, "9:16") == []
+    assert vn.image_format_problems({**c, "bg": {"1:1": mal, "default": ok}}, "1:1") == [("fondo", mal, "4:3"), ("final", ok, "9:16")]
+    assert vn.image_format_problems({**c, "fit": "blur"}, "9:16") == []           # entera con fondo desenfocado: nada que avisar
+    assert vn.image_format_problems({"style": "neon"}, "9:16") == []
+
+
+def test_textos_por_separado_y_solo_la_foto():
+    c = vn.normalize_custom({"title": False, "chips": False})
+    assert c["artist"] and c["kicker"] and not c["title"] and not c["chips"] and c["texts"]
+    assert not vn.normalize_custom({"texts": False})["title"]                         # compatibilidad: sin textos
+    o = vn.normalize_custom({"only_photo": True, "wave": True})
+    assert o["wave"] is False and o["texts"] is False and not o["kicker"]
+
+
+def test_cada_texto_se_dibuja_u_oculta_por_separado(tmp_path):
+    base = {"style": "image", "bg": {"default": _img(tmp_path)}, "wave": False}
+    mk = lambda **kw: vn._Renderer(_analysis(), None, "Título", "Artista", 128.0, "8A", "1:1", "crimson", "", "X", 1.0, custom={**base, **kw})
+    todos, sin_titulo, ninguno = mk(), mk(title=False), mk(title=False, artist=False, chips=False, kicker=False)
+    assert len(todos.text_items) == 4 and len(sin_titulo.text_items) == 3 and ninguno.text_items == []
+    a = np.asarray(todos.frame(12, 0.9), np.int16); b = np.asarray(sin_titulo.frame(12, 0.9), np.int16)
+    assert np.abs(a - b).sum() > 0
+
+
+def test_solo_la_foto_no_dibuja_nada_encima(tmp_path):
+    g = tmp_path / "g.png"
+    Image.fromarray(np.tile(np.linspace(0, 255, 400, dtype=np.uint8), (400, 1))[..., None].repeat(3, 2), "RGB").save(g)
+    r = vn._Renderer(_analysis(), None, "Título", "Artista", 128.0, "8A", "1:1", "crimson", "BANNER", "X", 1.0,
+                     custom={"style": "image", "bg": {"default": str(g)}, "only_photo": True})
+    assert r.banner is None and r.text_items == [] and r.wave_h == 0
+    full = r.frame(15, 1.0)
+    prog = np.asarray(full)[-12:]                                                      # sin barra de progreso
+    ref = vn._Renderer(_analysis(), None, "Título", "Artista", 128.0, "8A", "1:1", "crimson", "BANNER", "X", 1.0,
+                       custom={"style": "image", "bg": {"default": str(g)}})
+    assert np.abs(prog.astype(int) - np.asarray(ref.frame(15, 1.0))[-12:].astype(int)).sum() > 0

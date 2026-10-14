@@ -4772,6 +4772,15 @@ class MainWindow(QMainWindow):
         if not any([wav, mp3, flac, video]):
             self._set_progress(0, "⚠  Selecciona al menos un formato para exportar")
             return
+        if video and get_edition() == "plus" and options.get("video_custom"):
+            # Plus: avisa si la imagen elegida no tiene el formato del vídeo (9:16, 1:1 o 16:9)
+            from src.engine.video_neon import image_format_problems
+            from src.ui.video_custom import ask_format_mismatch
+            _asp = options.get("aspect_ratio", "9:16")
+            _probs = image_format_problems(options["video_custom"], _asp)
+            if _probs and ask_format_mismatch(self, _probs, _asp) == "change":
+                self._results._open_video_custom()
+                return
 
         seed = self._results.get_seed()
         metadata = self._results.get_branding_metadata()

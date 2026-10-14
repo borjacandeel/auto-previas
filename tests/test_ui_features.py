@@ -327,6 +327,15 @@ def test_export_basic_marca_de_agua_y_plus_no(tmp_path, monkeypatch):
         assert (seen["custom"] is None) == (ed == "basic")             # ni imagen propia
 
 
+def _cerrar(*widgets):
+    """Destruye los diálogos del test antes de que Qt se cierre (evita abortos al salir del intérprete)."""
+    for w in widgets:
+        w.close()
+        w.deleteLater()
+    QApplication.sendPostedEvents(None, 0)
+    QApplication.processEvents()
+
+
 def test_plus_ajustes_de_video_y_final_con_imagen(monkeypatch, tmp_path):
     from src.engine.video_neon import normalize_custom
     p = _panel(monkeypatch, "plus")
@@ -353,3 +362,62 @@ def test_dialogo_ajustes_de_video(monkeypatch, tmp_path):
     d._accept()
     r = d.result_custom()
     assert r["wave"] is False and r["texts_pos"] == "bottom" and r["bg"] == {"16:9": str(img)}
+    _cerrar(d)
+
+
+def test_dialogo_avisa_del_formato_y_muestra_ejemplos(monkeypatch, tmp_path):
+    from PySide6.QtWidgets import QApplication, QFileDialog
+    import src.ui.video_custom as VC
+    QApplication.instance() or QApplication([])
+    ok = tmp_path / "ok.png"; Image.new("RGB", (1080, 1920)).save(ok)
+    mal = tmp_path / "mal.png"; Image.new("RGB", (1600, 1200)).save(mal)
+    d = VC.VideoCustomDialog({"style": "image"})
+    pk = d._bg["9:16"]
+    # imagen correcta: se acepta sin preguntar
+    monkeypatch.setattr(QFileDialog, "getOpenFileName", staticmethod(lambda *a, **k: (str(ok), "")))
+    monkeypatch.setattr(VC, "ask_format_mismatch", lambda *a, **k: (_ for _ in ()).throw(AssertionError("no debía avisar")))
+    pk._pick()
+    assert pk.path() == str(ok) and pk._status.text().startswith("✓")
+    # imagen 4:3 para 9:16: avisa; «cambiar» no la guarda (y vuelve a abrir el selector); «usarla igualmente» sí
+    asked = []
+    answers = iter(["change", "continue"])
+    monkeypatch.setattr(VC, "ask_format_mismatch", lambda parent, rows, asp="": (asked.append((rows, asp)), next(answers))[1])
+    monkeypatch.setattr(QFileDialog, "getOpenFileName", staticmethod(lambda *a, **k: (str(mal), "")))
+    pk.set_path("")
+    pk._pick()
+    assert len(asked) == 2 and asked[0][0][0][2] == "4:3" and asked[0][1] == "9:16"
+    assert pk.path() == str(mal) and pk._status.text().startswith("⚠")
+    # imagen general: acepta cualquiera de los tres formatos sin avisar; una 4:3 sí avisa
+    g = d._bg["default"]
+    monkeypatch.setattr(VC, "ask_format_mismatch", lambda *a, **k: (_ for _ in ()).throw(AssertionError("no debía avisar")))
+    monkeypatch.setattr(QFileDialog, "getOpenFileName", staticmethod(lambda *a, **k: (str(ok), "")))
+    g._pick()
+    assert g.path() == str(ok)
+    ej = VC.FormatExamplesDialog(None, "16:9")
+    _cerrar(ej, d)
+
+
+def test_dialogo_solo_la_foto_y_textos(monkeypatch, tmp_path):
+    from PySide6.QtWidgets import QApplication
+    from src.ui.video_custom import VideoCustomDialog
+    QApplication.instance() or QApplication([])
+    img = tmp_path / "a.png"; Image.new("RGB", (1080, 1920)).save(img)
+    d = VideoCustomDialog({"style": "image", "bg": {"default": str(img)}})
+    d._chk_title.setChecked(False)
+    d._accept()
+    r = d.result_custom()
+    assert r["title"] is False and r["artist"] is True and r["only_photo"] is False
+    d2 = VideoCustomDialog({"style": "image", "bg": {"default": str(img)}})
+    d2._only.setChecked(True)
+    assert not d2._wave.isEnabled() and not d2._chk_title.isEnabled()
+    d2._accept()
+    r2 = d2.result_custom()
+    assert r2["only_photo"] and not r2["wave"] and not r2["texts"]
+    _cerrar(d, d2)
+
+
+def test_exportar_avisa_si_la_imagen_no_tiene_el_formato(monkeypatch, tmp_path):
+    from src.engine.video_neon import image_format_problems
+    mal = tmp_path / "mal.png"; Image.new("RGB", (1600, 1200)).save(mal)
+    c = {"style": "image", "bg": {"default": str(mal)}}
+    assert image_format_problems(c, "16:9") == [("fondo", str(mal), "4:3")]

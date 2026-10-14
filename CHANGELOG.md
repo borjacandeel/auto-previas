@@ -8,6 +8,8 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 ### Añadido
 - **Plus: vídeo con tu propia imagen.** Nuevo botón **«🖼 Estilo del vídeo…»** para elegir entre la plantilla Neón de siempre o **tu foto de fondo** con un zoom lento. Puedes poner **una imagen distinta para cada formato** (9:16, 1:1 y 16:9) o una sola para todos, y decidir si se **recorta** para rellenar la pantalla o se muestra **entera sobre un fondo desenfocado**.
 - **Plus: onda de sonido a tu gusto.** Mostrarla u ocultarla; en **barras, línea o círculo**; abajo, en el centro o arriba; con los colores de la paleta Neón o en blanco. También puedes colocar los textos (título, artista, BPM y tonalidad) arriba, en el centro o abajo, o quitarlos.
+- **Plus: aviso si la imagen no tiene el formato del vídeo.** Los vídeos son 9:16, 1:1 o 16:9. Si eliges una imagen con otra proporción (por ejemplo 4:3), AutoPrevias te avisa de que el formato no es correcto, te muestra **ejemplos de los tres formatos** y te deja cambiarla (o usarla igualmente, y se recortará o se verá con fondo desenfocado). Junto a cada imagen verás si el formato es correcto y si la resolución es baja. Si cambias de formato después de elegir la imagen, también te avisa al generar.
+- **Plus: elige qué textos se ven** (título, artista, BPM y tonalidad, etiqueta «Previa exclusiva») o **solo la foto**: sin textos, sin onda y sin banner, solo tu imagen con el zoom lento.
 - **Plus: final con tu imagen.** Nueva opción «Final: mi imagen»: el vídeo termina con la foto que elijas (tu logo, el cartel del sello…) y un texto opcional debajo.
 - Los ajustes del vídeo se recuerdan y se guardan en los presets de estilo, y la **vista previa** los muestra antes de generar.
 

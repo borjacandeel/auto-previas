@@ -273,7 +273,7 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 ---
 
 #### 🟢 [v3.6.0] — 2026-10-14 (Vídeo con tu propia imagen)
-- **Plus:** fondo con tu foto (una por formato), onda de sonido en barras, línea o círculo con posición a elegir, y final con tu imagen. **Basic:** elige el final entre la firma o un fundido a negro. Detalle en el [CHANGELOG](CHANGELOG.md).
+- **Plus:** fondo con tu foto (una por formato), onda de sonido en barras, línea o círculo con posición a elegir, final con tu imagen, aviso si la imagen no tiene el formato del vídeo y opción de «solo la foto». **Basic:** elige el final entre la firma o un fundido a negro. Detalle en el [CHANGELOG](CHANGELOG.md).
 
 #### [v3.5.1] — 2026-10-13 (Licencias por edición y más robustas)
 - **Una clave Basic solo activa Basic y una Plus solo activa Plus.** Una caída puntual del servicio de licencias ya no te pide la clave de nuevo. Detalle en el [CHANGELOG](CHANGELOG.md).

@@ -398,7 +398,8 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
             "<ul><li><b>Fondo:</b> la plantilla Neón de siempre o <b>Mi imagen</b>, tu foto de fondo con un zoom lento. Puedes poner <b>una imagen distinta para cada formato</b> "
             "(9:16, 1:1 y 16:9) o una sola para todos, y elegir si se <b>recorta</b> para rellenar la pantalla o se muestra <b>entera sobre un fondo desenfocado</b>.</li>"
             "<li><b>Onda de sonido:</b> mostrarla o no; en <b>barras</b>, <b>línea</b> o <b>círculo</b>; abajo, en el centro o arriba; con los colores de la paleta Neón o en blanco.</li>"
-            "<li><b>Textos</b> (título, artista, BPM y tonalidad): mostrarlos o no, y arriba, en el centro o abajo.</li>"
+            "<li><b>Textos:</b> elige cuáles se ven (título, artista, BPM y tonalidad, etiqueta «Previa exclusiva»), arriba, en el centro o abajo. Con <b>Solo la foto</b> se muestra únicamente tu imagen, sin textos, onda ni banner.</li>"
+            "<li><b>Formato de la imagen:</b> los vídeos son <b>9:16, 1:1 o 16:9</b>. Si eliges una imagen con otra proporción, AutoPrevias te avisa de que el formato no es correcto y te muestra ejemplos de los tres formatos (botón <b>📐 Ver formatos válidos</b>); puedes cambiarla o usarla igualmente. Junto a cada imagen ves si el formato es correcto y si la resolución es baja.</li>"
             "<li><b>Final con tu imagen:</b> elige la imagen y un texto opcional; después selecciona «Final: mi imagen» en el selector de final.</li></ul>"
             "<p>La <b>👁 Vista previa</b> muestra el resultado con tus ajustes. Los ajustes se recuerdan y se guardan también en tus presets de estilo.</p>"
             + fig(im.get('16_estilo_video', ''), 'Ventana «Estilo del vídeo» (solo Plus)', 'tiny')
