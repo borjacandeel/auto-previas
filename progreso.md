@@ -14,6 +14,7 @@
 | 1 | **(Usuario) Rotar las product-secret-keys de Payhip** (Basic y Plus), actualizar los secrets del Worker y revocar/regenerar la licencia de prueba | 🔴 Alta | Estuvieron en el historial público de git (sesión 36g) |
 | 2 | Probar el instalador en un **Windows real** y la edición **Basic** con clave Basic | 🟡 Media | CI solo valida selftest |
 | 3 | Probar en el Mac las funciones 3.1.0 (modo promo, presets, Recientes, Licencia, inglés) | 🟡 Media | Probadas offscreen y con tests; falta uso real en binario |
+| 0 | **Notificación al generar una previa (pedida 2026-10-14, «dejar pendiente»)**: cada vez que se genere una previa, notificación del sistema con el **logo de la app** y texto tipo «AutoPrevias · Previa X generada, pulsa para abrir»; **al pulsarla se abre la carpeta** donde está esa previa. | 🟡 Media | Hoy `src/notifications.py` usa `osascript` (macOS) / Toast de PowerShell (Windows) **sin logo y sin acción al pulsar**. Plan: `QSystemTrayIcon.showMessage()` con el icono de la app + señal `messageClicked` → abrir carpeta (Finder/Explorador) del archivo generado; fallback al método actual. Aplicar también al modo lote (una por pista o un resumen). Versión MINOR, con tests, manual y README. |
 | 4 | Posibles siguientes funciones Plus: previas múltiples (30/60/90 s en un clic), propuestas A/B/C, vídeo social v2, objetivos LUFS por plataforma, informe PDF/CSV del lote | 🟢 Baja | Propuestas de la sesión 36 |
 
 ---|-------|-----------|-------|

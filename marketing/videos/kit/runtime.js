@@ -1,7 +1,9 @@
 (function () {
   const SP = window.SPEC;
   const BEAT = 60 / SP.bpm;
-  const S0 = 1000 / 2240;           // escala de la captura (2240 px) al visor (1000 px)
+  const VP = SP.vp || { w: 1000, h: 1060 };       // visor de la demo (depende del formato)
+  const HK = (SP.H || 1920) / 1920;
+  const S0 = VP.w / 2240;           // escala de la captura (2240 px) al visor
   function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   const rnd = mulberry32(SP.seed || 2026);
   const $ = (s, r) => (r || document).querySelector(s);
@@ -29,7 +31,7 @@
     });
   }
   const tearEl = $("#tear");
-  for (let i = 0; i < 6; i++) { const b = document.createElement("i"); b.style.top = (80 + i * 300 + rnd() * 120) + "px"; b.style.height = (14 + rnd() * 40) + "px"; tearEl.appendChild(b); }
+  for (let i = 0; i < 6; i++) { const b = document.createElement("i"); b.style.top = ((80 + i * 300 + rnd() * 120) * HK) + "px"; b.style.height = (14 + rnd() * 40) + "px"; tearEl.appendChild(b); }
   function tear(t) {
     tl.set("#tear", { opacity: 1 }, t);
     $$("#tear i").forEach((b) => { tl.set(b, { x: (rnd() * 2 - 1) * 120 }, t); tl.set(b, { x: (rnd() * 2 - 1) * 120 }, t + 0.05); });
@@ -46,7 +48,7 @@
   B.words = function (sc, el, t0, dur) {
     if (sc.bars) {
       const bars = $(".hbars", el); const H = [];
-      for (let i = 0; i < 40; i++) { const b = document.createElement("i"); b.style.height = "760px"; bars.appendChild(b); H.push(0.25 + rnd() * 0.75); }
+      for (let i = 0; i < 40; i++) { const b = document.createElement("i"); b.style.height = Math.round((SP.H || 1920) * 0.396) + "px"; bars.appendChild(b); H.push(0.25 + rnd() * 0.75); }
       const be = Array.from(bars.children);
       tl.set(be, { scaleY: 0.04 }, t0);
       tl.to(be, { scaleY: (i) => H[i], duration: 0.55, ease: "power3.out", stagger: { each: 0.008, from: "center" } }, t0 + 0.05);
@@ -79,11 +81,11 @@
       // la cámara no sale de la captura (evita bandas negras)
       let cx = a.cx, cy = a.cy;
       if (sc.img_size) {
-        const vw = 1000 / S, vh = 1060 / S;
+        const vw = VP.w / S, vh = VP.h / S;
         cx = sc.img_size[0] <= vw ? sc.img_size[0] / 2 : Math.min(Math.max(cx, vw / 2), sc.img_size[0] - vw / 2);
         cy = sc.img_size[1] <= vh ? sc.img_size[1] / 2 : Math.min(Math.max(cy, vh / 2), sc.img_size[1] - vh / 2);
       }
-      const props = { x: 500 - cx * S, y: 530 - cy * S, scale: S };
+      const props = { x: VP.w / 2 - cx * S, y: VP.h / 2 - cy * S, scale: S };
       const cs = 2.0 / S;
       if (a.d <= 0) { tl.set(camEl, props, t0 + a.at); tl.set(cin, { scale: cs }, t0 + a.at); }
       else { tl.to(camEl, Object.assign({ duration: a.d, ease: a.ease || "power3.inOut" }, props), t0 + a.at); tl.to(cin, { scale: cs, duration: a.d, ease: a.ease || "power3.inOut" }, t0 + a.at); }
@@ -138,7 +140,7 @@
     if (sc.confetti !== undefined) {
       const conf = $(".conf", el);
       for (let i = 0; i < 46; i++) {
-        const c = document.createElement("i"); c.className = "cf"; c.style.left = "500px"; c.style.top = "820px"; c.style.background = ["#ff1f3a", "#ffffff", "#ffd21f", "#a855f7"][i % 4]; conf.appendChild(c);
+        const c = document.createElement("i"); c.className = "cf"; c.style.left = (VP.w / 2) + "px"; c.style.top = Math.round(VP.h * 0.774) + "px"; c.style.background = ["#ff1f3a", "#ffffff", "#ffd21f", "#a855f7"][i % 4]; conf.appendChild(c);
         const ang = -Math.PI / 2 + (rnd() * 2 - 1) * 1.1, sp = 320 + rnd() * 560;
         tl.fromTo(c, { x: 0, y: 0, opacity: 1, rotation: 0 }, { x: Math.cos(ang) * sp, y: Math.sin(ang) * sp, rotation: 360 * (rnd() * 2 - 1) * 2, duration: 0.55, ease: "power2.out" }, t0 + sc.confetti + 0.02);
         tl.to(c, { y: "+=700", opacity: 0, duration: 0.9, ease: "power2.in" }, t0 + sc.confetti + 0.57);
@@ -246,6 +248,34 @@
     tear(t0 + dur - 0.2);
   };
 
+  // ═══ demo (16:9: texto a la izquierda + ejemplos reales a la derecha) ═══
+  B.demo = function (sc, el, t0, dur) {
+    const num = $(".dnum", el), ttl = $(".dttl", el), sub = $(".dsub", el), li = $$(".dpts li", el);
+    tl.fromTo([num, ttl, sub], { x: -120, opacity: 0 }, { x: 0, opacity: 1, duration: 0.3, ease: "expo.out", stagger: 0.07 }, t0 + 0.08);
+    li.forEach((l, i) => tl.fromTo(l, { x: -70, opacity: 0 }, { x: 0, opacity: 1, duration: 0.28, ease: "power3.out" }, t0 + (sc.pts_at ? sc.pts_at[i] : 0.8 + i * 0.5)));
+    const stage = $(".dstage", el), imgs = $$(".dimg", el), labs = $$(".dlabel", el), ex = $(".dex", el);
+    tl.fromTo(stage, { opacity: 0, y: 320, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "expo.out" }, t0);
+    tl.set(imgs, { opacity: 0 }, t0); tl.set(labs, { opacity: 0 }, t0);
+    if (ex) tl.fromTo(ex, { opacity: 0, scale: 0.4, rotation: -8 }, { opacity: 1, scale: 1, rotation: -3, duration: 0.3, ease: "back.out(3)" }, t0 + 0.5);
+    sc.frames.forEach((f, i) => {
+      const at = t0 + f.at, end = i + 1 < sc.frames.length ? t0 + sc.frames[i + 1].at : t0 + dur - 0.2;
+      if (i) { tl.set(imgs[i - 1], { opacity: 0 }, at); tl.to(labs[i - 1], { opacity: 0, duration: 0.1 }, at - 0.05); flash(at, 0.3, 0.2, i % 2 === 1); }
+      tl.set(imgs[i], { opacity: 1 }, at);
+      tl.fromTo(imgs[i], { scale: 1.05 }, { scale: 1.0, duration: Math.max(0.4, end - at), ease: "none" }, at);
+      tl.fromTo(labs[i], { opacity: 0, scale: 1.5, y: 20 }, { opacity: 1, scale: 1, y: 0, duration: 0.24, ease: "expo.out" }, at + 0.05);
+    });
+    tl.to(el.querySelectorAll(".dtext,.dstage,.dlabel,.dex"), { opacity: 0, y: -60, duration: 0.2, ease: "power2.in" }, t0 + dur - 0.22);
+    tear(t0 + dur - 0.2); flash(t0 + dur - 0.08, 0.5, 0.22);
+  };
+
+  // ═══ recap (lista de puntos clave) ═══════════════════════════════════
+  B.recap = function (sc, el, t0, dur) {
+    if (sc.head) tl.fromTo($(".word", el), { opacity: 0, scale: 2.2, y: -50 }, { opacity: 1, scale: 1, y: 0, duration: 0.24, ease: "expo.out" }, t0 + 0.05);
+    $$(".ritem", el).forEach((it, i) => tl.fromTo(it, { opacity: 0, x: -80 }, { opacity: 1, x: 0, duration: 0.3, ease: "power3.out" }, t0 + sc.items_at[i]));
+    tl.to(el.querySelectorAll(".rgrid,.word"), { opacity: 0, y: -60, duration: 0.2, ease: "power2.in" }, t0 + dur - 0.22);
+    tear(t0 + dur - 0.2); flash(t0 + dur - 0.08, 0.5, 0.22);
+  };
+
   // ═══ scan (forma de onda por secciones + datos) ══════════════════════
   B.scan = function (sc, el, t0, dur) {
     const wrap = $(".wfrap", el), line = $(".scanline", el), bars = $$(".wfrap rect", el);
@@ -337,9 +367,9 @@
     tl.fromTo($$(".buy", el), { opacity: 0, y: 160, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "expo.out", stagger: 0.12 }, C0 + 1.35);
     tl.fromTo($(".ctabanner", el), { opacity: 0 }, { opacity: 1, duration: 0.4 }, C0 + 1.7);
     tl.fromTo($(".ctatag", el), { opacity: 0 }, { opacity: 1, duration: 0.4 }, C0 + 2.0);
-    const cur = $(".cur2", el), buy = [540 + 120, 1228 + 30], cc = C0 + sc.click_at;
+    const cur = $(".cur2", el), buy = SP.cta ? SP.cta.buy : [540 + 120, 1228 + 30], cstart = SP.cta ? SP.cta.start : [880, 1760], cc = C0 + sc.click_at;
     tl.set($(".cur2 .cin", el), { scale: 1.7 }, C0);
-    tl.set(cur, { x: 880, y: 1760, opacity: 1 }, C0 + 1.7);
+    tl.set(cur, { x: cstart[0], y: cstart[1], opacity: 1 }, C0 + 1.7);
     tl.to(cur, { x: buy[0], duration: sc.click_at - 1.9, ease: "power2.inOut" }, C0 + 1.9);
     tl.to(cur, { y: buy[1], duration: sc.click_at - 1.9, ease: "power1.inOut" }, C0 + 1.9);
     tl.fromTo($(".cur2 .cin", el), { scale: 1.7 }, { scale: 1.3, duration: 0.07, yoyo: true, repeat: 1 }, cc - 0.04);

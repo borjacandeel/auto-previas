@@ -1,0 +1,55 @@
+/* ═══ Modo apaisado 16:9 (1920×1080): tutorial ═══ */
+html, body { width: 1920px; height: 1080px; }
+#bg { background:
+  radial-gradient(1100px 700px at 82% 0%, rgba(255,31,58,.30), rgba(5,6,10,0) 70%),
+  radial-gradient(1000px 700px at 0% 100%, rgba(120,0,20,.38), rgba(5,6,10,0) 70%), #05060a; }
+#grain { width: 2176px; height: 1336px; }
+.wsub { left: 120px; right: 120px; font-size: 54px; }
+.hbars { left: 40px; right: 40px; }
+
+/* shot (demo de la app): texto a la izquierda, visor grande a la derecha */
+.caps { left: 70px; right: auto; width: 700px; top: 90px; height: 760px; }
+.cap .num { font-size: 120px; }
+.cap .ttl { font-size: 62px; line-height: 1.02; }
+.cap .sub { font-size: 33px; line-height: 1.28; }
+.cap .cex { margin-top: 24px; padding: 14px 20px; border-left: 6px solid var(--gold); background: rgba(255,210,31,.09); border-radius: 0 12px 12px 0;
+  font-size: 30px; font-weight: 700; color: #ffe58a; line-height: 1.3; }
+.vp { left: 820px; top: 60px; width: 1040px; height: 940px; }
+.conf { left: 820px; top: 60px; width: 1040px; height: 940px; }
+.stepper { left: 70px; right: auto; width: 700px; top: 930px; }
+.stlbl { left: 70px; top: 968px; font-size: 28px; }
+.logomini { right: auto; left: 560px; top: 962px; width: 200px; }
+
+/* demo (ejemplos reales) */
+.dtext { position: absolute; left: 70px; top: 110px; width: 700px; }
+.dnum { font-size: 120px; font-weight: 900; font-style: italic; line-height: 1; color: #05060a; -webkit-text-stroke: 3px var(--red); letter-spacing: -4px; }
+.dttl { margin-top: 4px; font-size: 62px; font-weight: 900; font-style: italic; letter-spacing: -2px; text-transform: uppercase; line-height: 1.02; }
+.dttl em { font-style: italic; color: var(--red); }
+.dsub { margin-top: 16px; font-size: 33px; font-weight: 500; color: #b3b8c8; line-height: 1.3; }
+.dpts { margin-top: 24px; list-style: none; }
+.dpts li { position: relative; font-size: 33px; font-weight: 700; color: #e8eaf2; padding: 8px 0 8px 46px; line-height: 1.2; opacity: 0; }
+.dpts li::before { content: "✓"; position: absolute; left: 0; color: var(--green); font-weight: 900; }
+.dstage { position: absolute; left: 810px; top: 60px; border-radius: 26px; overflow: hidden; background: #07080c; border: 3px solid rgba(255,31,58,.85);
+  box-shadow: 0 0 80px rgba(255,31,58,.35), 0 30px 90px rgba(0,0,0,.7); }
+.dimg { position: absolute; display: block; opacity: 0; border-radius: 6px; }
+.dlabel { position: absolute; left: 810px; width: 1060px; top: 930px; text-align: center; font-size: 46px; font-weight: 900; font-style: italic; letter-spacing: -1px; opacity: 0; }
+.dex { position: absolute; left: 836px; top: 84px; padding: 8px 22px; border-radius: 999px; background: var(--gold); color: #05060a; font-size: 28px; font-weight: 900;
+  letter-spacing: 4px; opacity: 0; }
+
+/* recap */
+.rhead { position: absolute; left: 0; right: 0; top: 110px; }
+.rgrid { position: absolute; left: 110px; right: 110px; top: 330px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px 40px; }
+.ritem { font-size: 38px; font-weight: 800; line-height: 1.2; padding: 20px 26px; border-radius: 20px; background: rgba(13,15,22,.92); border: 3px solid var(--line); opacity: 0; }
+.ritem b { color: var(--green); margin-right: 14px; }
+
+/* cta apaisado */
+.ctaemb { left: 810px; top: 40px; width: 300px; height: 248px; }
+.ctatitle { top: 300px; font-size: 118px; }
+.eds { top: 460px; }
+.eds span { font-size: 38px; padding: 10px 38px; }
+.ctaline { top: 560px; font-size: 46px; line-height: 1.18; }
+.buy { left: 560px; top: 700px; width: 800px; padding: 26px 20px; font-size: 52px; }
+.buy small { font-size: 26px; }
+.ctabanner { left: 780px; top: 905px; width: 360px; }
+.ctatag { top: 1016px; font-size: 30px; }
+.word { letter-spacing: -2px; }

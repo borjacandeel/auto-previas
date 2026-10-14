@@ -14,6 +14,7 @@ import hashlib
 import importlib.util
 import json
 import math
+import re
 import shutil
 import subprocess
 import sys
@@ -73,8 +74,38 @@ def box(ed: str, ref, pad=8):
     return [r[0] * FIT - pad, r[1] * FIT - pad, r[2] * FIT + 2 * pad, r[3] * FIT + 2 * pad]
 
 
+STAGE = {"W": 1080, "H": 1920, "land": False}
+
+
 def fmt_words(text: str, size: int) -> int:
-    return int(min(size, 980 / max(1, len(text)) / 0.74))
+    return int(min(size, (STAGE["W"] - 100) / max(1, len(text)) / 0.74))
+
+
+def img_dims(name: str, edition: str = "plus"):
+    """Tamaño (ancho, alto) de una imagen de la escena: captura de la app, fotograma de muestra o foto del tutorial."""
+    for p in (ROOT / "docs" / "manual" / "_work" / edition / f"{name}.png", VID / "stills" / f"{name}.jpg",
+              VID / "stills" / "tutorial" / f"{name}.jpg"):
+        if p.exists():
+            return Image.open(p).size
+    raise FileNotFoundError(name)
+
+
+_TM = re.compile(r"^v(\d+)(e?)([+-]\d+(?:\.\d+)?)?$")
+
+
+def subst_times(o, marks):
+    """Sustituye tiempos simbólicos «vN» (inicio de la línea de voz N), «vNe» (su final) y «vN+0.5» / «vNe-0.2»
+    por segundos de la escena: así las acciones (cámara, cursor, rótulos) siguen a la narración sin ajustar a mano."""
+    if isinstance(o, dict):
+        return {k: subst_times(v, marks) for k, v in o.items()}
+    if isinstance(o, list):
+        return [subst_times(v, marks) for v in o]
+    if isinstance(o, str):
+        m = _TM.match(o)
+        if m:
+            a, b = marks[int(m.group(1))]
+            return (b if m.group(2) else a) + float(m.group(3) or 0)
+    return o
 
 
 # ───────────────────────────── narración ─────────────────────────────
@@ -103,7 +134,7 @@ def word(text, cls="", size=150, extra=""):
 def html_words(sc, i):
     lines = sc["lines"]
     n = len(lines)
-    top = sc.get("top", max(120, int(960 - n * 120)))
+    top = sc.get("top", max(120, int(STAGE["H"] / 2 - n * 120)))
     body = "".join(word(l["t"], l.get("cls", ""), l.get("size", 150), '<i class="strike"></i>' if sc.get("strike", {}).get("line") == k else "")
                    for k, l in enumerate(lines))
     bars = f'<div class="hbars" style="top:{top - 100}px;height:{n * 140 + 300}px"></div>' if sc.get("bars") else ""
@@ -117,7 +148,8 @@ def html_shot(sc, i):
         sc["img_size"] = list(Image.open(ROOT / "docs" / "manual" / "_work" / ed / f"{sc['imgs'][0]['name']}.png").size)
     except Exception:
         sc["img_size"] = None
-    caps = "".join(f'<div class="cap"><div class="num">{c["num"]}</div><div class="ttl">{c["title"]}</div><div class="sub">{c["sub"]}</div></div>' for c in sc["caps"])
+    caps = "".join(f'<div class="cap"><div class="num">{c["num"]}</div><div class="ttl">{c["title"]}</div><div class="sub">{c["sub"]}</div>'
+                   + (f'<div class="cex">{c["ex"]}</div>' if c.get("ex") else "") + '</div>' for c in sc["caps"])
     imgs = "".join(f'<img class="shot" data-n="{n}" src="assets/{n}.jpg" alt="" />' for n in sorted({m["name"] for m in sc["imgs"]}))
     dlg = f'<img class="dlg" src="assets/{sc["dlg"]["name"]}.jpg" style="left:{sc["dlg"]["x"]}px;top:{sc["dlg"]["y"]}px;width:{sc["dlg"]["w"]}px" alt="" />' if sc.get("dlg") else ""
     chip = f'<div class="chip">{sc["chip"]["text"]}</div>' if sc.get("chip") else ""
@@ -248,9 +280,14 @@ def html_cta(sc, i):
     letters = "".join(f"<span>{c}</span>" for c in "AUTOPREVIAS")
     cur = '<svg width="40" height="44" viewBox="0 0 40 44"><path d="M4 2 L4 33 L12 26 L18 40 L24 37.5 L18 24 L29 24 Z" fill="#fff" stroke="#05060a" stroke-width="2.6" stroke-linejoin="round"/></svg>'
     lbl = sc.get("buy_lbl", "CÓMPRALO EN")
+    land = STAGE["land"]
     if sc.get("dual") and LK.BASIC_URL != LK.PLUS_URL:      # dos enlaces de producto distintos: un botón por edición
-        buy = (f'<div class="buy" style="top:1090px;padding:26px 20px;background:linear-gradient(180deg,#3b82f6,#1d4ed8)"><small>BASIC</small>{LK.short(LK.BASIC_URL)}</div>'
-               f'<div class="buy" style="top:1290px;padding:26px 20px;background:linear-gradient(180deg,#a855f7,#6d28d9)"><small>PLUS</small>{LK.short(LK.PLUS_URL)}</div>')
+        if land:
+            buy = (f'<div class="buy" style="top:700px;left:120px;width:790px;padding:26px 20px;background:linear-gradient(180deg,#3b82f6,#1d4ed8)"><small>BASIC</small>{LK.short(LK.BASIC_URL)}</div>'
+                   f'<div class="buy" style="top:700px;left:1010px;width:790px;padding:26px 20px;background:linear-gradient(180deg,#a855f7,#6d28d9)"><small>PLUS</small>{LK.short(LK.PLUS_URL)}</div>')
+        else:
+            buy = (f'<div class="buy" style="top:1090px;padding:26px 20px;background:linear-gradient(180deg,#3b82f6,#1d4ed8)"><small>BASIC</small>{LK.short(LK.BASIC_URL)}</div>'
+                   f'<div class="buy" style="top:1290px;padding:26px 20px;background:linear-gradient(180deg,#a855f7,#6d28d9)"><small>PLUS</small>{LK.short(LK.PLUS_URL)}</div>')
     else:
         buy = f'<div class="buy"><small>{lbl}</small>{LK.short(LK.STORE_URL)}</div>'
     return (f'<div class="ctaemb" data-hf-motion-blur=\'{{"samplesPerFrame": 10}}\'><img src="assets/logo_emblem.png" alt="" /></div>'
@@ -261,8 +298,32 @@ def html_cta(sc, i):
             f'<div class="rip2"></div><div class="cur2" data-layout-allow-overflow data-hf-motion-blur=\'{{"samplesPerFrame": 12, "shutterAngle": 540}}\'><div class="cin">{cur}</div></div>')
 
 
+def html_demo(sc, i):
+    """Escena «demo» (16:9): texto a la izquierda y, a la derecha, ejemplos reales (fotogramas del motor o capturas) que se van mostrando."""
+    ed = sc.get("edition", "tutorial")
+    pts = "".join(f"<li>{p}</li>" for p in sc.get("pts", []))
+    text = (f'<div class="dtext"><div class="dnum">{sc["num"]}</div><div class="dttl">{sc["title"]}</div>'
+            f'<div class="dsub">{sc.get("sub", "")}</div><ul class="dpts">{pts}</ul></div>')
+    bw, bh = sc.get("box", [1060, 840])
+    imgs, labs = "", ""
+    for f in sc["frames"]:
+        iw, ih = img_dims(f["src"], ed)
+        k = min(bw / iw, bh / ih)
+        w_, h_ = int(iw * k), int(ih * k)
+        imgs += f'<img class="dimg" src="assets/{f["src"]}.jpg" style="width:{w_}px;height:{h_}px;left:{(bw - w_) // 2}px;top:{(bh - h_) // 2}px" alt="" />'
+        labs += f'<div class="dlabel" style="color:{f.get("color", "#fff")}">{f["label"]}</div>'
+    ex = f'<div class="dex">{sc["ex"]}</div>' if sc.get("ex") else ""
+    return text + f'<div class="dstage" style="width:{bw}px;height:{bh}px">{imgs}</div>{ex}{labs}'
+
+
+def html_recap(sc, i):
+    head = f'<div class="rhead">{word(sc["head"], "red", sc.get("head_size", 120))}</div>' if sc.get("head") else ""
+    items = "".join(f'<div class="ritem"><b>✓</b>{t}</div>' for t in sc["items"])
+    return head + f'<div class="rgrid">{items}</div>'
+
+
 HTML = dict(words=html_words, shot=html_shot, race=html_race, cards=html_cards, compare=html_compare, tips=html_tips,
-            gallery=html_gallery, scan=html_scan, antileak=html_antileak, tempo=html_tempo, folder=html_folder, cta=html_cta)
+            gallery=html_gallery, demo=html_demo, recap=html_recap, scan=html_scan, antileak=html_antileak, tempo=html_tempo, folder=html_folder, cta=html_cta)
 
 
 # ───────────────────────────── resolución de escenas (tiempos y objetivos) ─────────────────────────────
@@ -335,6 +396,11 @@ def sfx_events(sc: dict, i: int):
             ev += [(t0 + p["at"], "stamp", 0.8), (t0 + p["fix_at"], "ding", 0.6)]
     elif ty == "gallery":
         ev += [(t0 + f["at"], "slam", 0.7) for f in sc["frames"]]
+    elif ty == "demo":
+        ev += [(t0 + f["at"], "pop", 0.8) for k, f in enumerate(sc["frames"])]
+        ev += [(t0 + a, "tick", 0.7) for a in sc.get("pts_at", [])]
+    elif ty == "recap":
+        ev += [(t0 + a, "tick", 0.8) for a in sc["items_at"]]
     elif ty == "scan":
         ev += [(t0 + sc["sweep_at"] + sc["sweep_d"] * s["from"], "hit" if s.get("hit") else "tick", 0.8) for s in sc["secs"]]
         ev += [(t0 + c["at"], "pop", 0.8) for c in sc["cards"]]
@@ -551,6 +617,8 @@ SCENE_CLS = "scene clip"
 
 def build(vid: str, render=True, voice=True):
     spec = load_spec(vid)
+    land = spec.get("format") == "16:9"
+    STAGE.update(W=1920 if land else 1080, H=1080 if land else 1920, land=land)
     work = VID / "work" / vid
     if work.exists():
         shutil.rmtree(work)
@@ -564,24 +632,40 @@ def build(vid: str, render=True, voice=True):
     for f in ("grain.png", "logo_emblem.png", "logo_banner.png"):
         shutil.copy(PROMO / "assets" / f, work / "assets" / f)
 
-    # escenas: voz → duración
+    # escenas: voz → duración (varias líneas de voz por escena y tiempos simbólicos relativos a la voz)
     t = 0.0
-    scenes = [resolve_scene(dict(sc)) for sc in spec["scenes"]]
-    vo = []
-    for k, sc in enumerate(scenes):
-        sc["t0"] = t
+    scenes, vo = [], []
+    for k, raw in enumerate(spec["scenes"]):
+        sc = dict(raw)
+        lines = sc.pop("vos", None)
+        if lines is None and sc.get("vo"):
+            lines = [dict(t=sc["vo"], at=sc.get("vo_at", 0.3), voice=sc.get("voice"))]
+        lines = lines or []
+        marks, items, cur = {}, [], 0.0
+        for n, ln in enumerate(lines, 1):
+            vname = ln.get("voice") or sc.get("voice") or spec["voice"]
+            if voice:
+                path, vlen = voice_line(ln["t"], vname, spec["lang"], spec.get("speed", 1.0))
+            else:
+                path, vlen = None, 0.06 * len(ln["t"])
+            at = ln.get("at")
+            if at is None:
+                at = sc.get("vo_at", 0.3) if n == 1 else cur + ln.get("gap", 0.3)
+            elif isinstance(at, str):
+                at = subst_times(at, marks)
+            marks[n] = (at, at + vlen)
+            cur = at + vlen
+            if path:
+                items.append((at, at + vlen, path))
+        sc = resolve_scene(subst_times(sc, marks))
         d = float(sc.get("dur", 3.0))
-        if sc.get("vo") and voice:
-            path, vlen = voice_line(sc["vo"], sc.get("voice", spec["voice"]), spec["lang"], spec.get("speed", 1.0))
-            at = sc.get("vo_at", 0.3)
-            d = max(d, at + vlen + sc.get("vo_pad", 0.45))
-            vo.append((t + at, t + at + vlen, path))
-        sc["dur"] = d
+        if lines:
+            d = max(d, cur + sc.get("vo_pad", 0.45))
+        sc["t0"], sc["dur"] = t, d
+        vo += [(t + a, t + b, p) for (a, b, p) in items]
         t += d
+        scenes.append(sc)
     total = t
-    for sc in scenes:
-        if sc["type"] == "cta" and sc["dur"] < 6.5:
-            pass
 
     # imágenes necesarias
     def need(name, edition="plus"):
@@ -592,10 +676,10 @@ def build(vid: str, render=True, voice=True):
         if src.exists():
             Image.open(src).convert("RGB").save(dst, quality=90, optimize=True)
             return
-        st = VID / "stills" / f"{name}.jpg"
-        if st.exists():
-            shutil.copy(st, dst)
-            return
+        for st in (VID / "stills" / f"{name}.jpg", VID / "stills" / "tutorial" / f"{name}.jpg"):
+            if st.exists():
+                shutil.copy(st, dst)
+                return
         raise FileNotFoundError(name)
 
     for sc in scenes:
@@ -614,6 +698,9 @@ def build(vid: str, render=True, voice=True):
         elif sc["type"] == "gallery":
             for f in sc["frames"]:
                 need(f["src"])
+        elif sc["type"] == "demo":
+            for f in sc["frames"]:
+                need(f["src"], sc.get("edition", "tutorial"))
 
     # HTML
     sc_html = ""
@@ -621,17 +708,20 @@ def build(vid: str, render=True, voice=True):
         body = HTML[sc["type"]](sc, k)
         sc_html += (f'<div class="scene clip" id="s{k}" data-start="{sc["t0"]:.3f}" data-duration="{sc["dur"]:.3f}">{body}</div>\n')
     # groove
-    spec_out = dict(bpm=BPM, dur=total, seed=spec.get("seed", 2026), groove=[spec["groove_from"], total - 0.9],
+    W_, H_ = STAGE["W"], STAGE["H"]
+    spec_out = dict(bpm=BPM, dur=total, seed=spec.get("seed", 2026), groove=[spec["groove_from"], total - 0.9], W=W_, H=H_,
+                    vp=dict(w=1040, h=940) if land else dict(w=1000, h=1060),
+                    cta=dict(buy=[515, 772] if LK.BASIC_URL != LK.PLUS_URL else [960, 772], start=[1500, 1000]) if land else None,
                     scenes=[{k: v for k, v in sc.items() if k not in ("vo",)} for sc in scenes])
-    css = (HERE / "scenes.css").read_text()
+    css = (HERE / "scenes.css").read_text() + ((HERE / "scenes_h.css").read_text() if land else "")
     js = (HERE / "runtime.js").read_text()
     mb = (PROMO / "compositions" / "components" / "motion-blur.html").read_text()
     i0 = mb.index("<script>"); j0 = mb.index("</script>", i0) + len("</script>")
     html = f"""<!doctype html>
-<html lang="{spec['lang']}"><head><meta charset="UTF-8" /><meta name="viewport" content="width=1080, height=1920" />
+<html lang="{spec['lang']}"><head><meta charset="UTF-8" /><meta name="viewport" content="width={W_}, height={H_}" />
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
-<style>{css}</style></head><body>
-<div id="root" data-composition-id="main" data-start="0" data-duration="{total:.3f}" data-width="1080" data-height="1920" data-fps="30">
+<style>{css}</style></head><body class="{'h' if land else ''}">
+<div id="root" data-composition-id="main" data-start="0" data-duration="{total:.3f}" data-width="{W_}" data-height="{H_}" data-fps="30">
 <div id="bg"></div><div id="gridlines"></div>
 <div id="world">
 {sc_html}</div>
