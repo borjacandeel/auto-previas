@@ -28,7 +28,7 @@ Cada vez que se complete un cambio, mejora o corrección solicitada por el usuar
    - `MAJOR` (`X.0.0`) **únicamente** con confirmación explícita del usuario.
 3. **Actualizar `CHANGELOG.md`:**
    - Formato *Keep a Changelog*, redactado en **español claro y comprensible para un usuario final**, sin jerga técnica innecesaria. Secciones: Añadido, Cambiado, Corregido.
-4. **Actualizar `README.md`:**
+4. **Actualizar `README.md`** (**regla permanente del usuario, 2026-10-14: «siempre acuérdate»**; además de la versión y el historial, reflejar las funciones nuevas en «Características Principales», en la tabla «Diferencias entre ediciones» y en los apartados que cambien; y **guardar todo en memoria**: decisiones del usuario en `CLAUDE.md` §6 y el detalle técnico en `progreso.md`):
    - Descripción de AutoPrevias y capturas si aplican.
    - Versión actual y fecha.
    - Tabla de descargas con enlaces directos predecibles a los instaladores de la última Release:
@@ -105,3 +105,4 @@ Cada vez que se complete un cambio, mejora o corrección solicitada por el usuar
 - **Vídeo personalizable (decisión del usuario, 2026-10-14, v3.6.0):** **Plus elige todo** (fondo: plantilla Neón o su imagen por formato; onda de sonido sí/no, barras/línea/círculo, posición y color; textos y su posición; final: firma, negro, sin cierre o su imagen). **Basic elige el final entre «Generado por AutoPrevias» (firma + enlace) o fundido a negro**, con marca de agua siempre y sin imagen propia. Código: `src/engine/video_neon.py` (`normalize_custom`), `src/ui/video_custom.py`.
 - **Panel de vídeo (decisión del usuario, 2026-10-14, v3.7.0):** el usuario aprobó las 8 propuestas de facilidad de uso: tarjeta única de vídeo con botones de formato, looks de un clic, arrastrar imagen, vista previa en vivo, resumen antes de generar, Basic con opciones de Plus bloqueadas y opciones avanzadas plegables. Las imágenes del vídeo deben ser 9:16, 1:1 o 16:9: si no lo son, la app avisa y enseña ejemplos.
 - **Rendimiento (2026-10-14, v3.8.0):** el usuario pidió una app más fluida que se adapte al equipo («dale caña pero no la cagues»). Regla: toda optimización debe dejar los resultados **idénticos** (BPM, secciones, audio, fotogramas) y llevar test de equivalencia; no tocar el procesado de audio. Código en `src/perf.py` y `src/analysis/fastdsp.py`; ajuste «Rendimiento» en ⚙ Licencia.
+- **Regla de cierre de cada cambio (decisión del usuario, 2026-10-14):** al terminar, **guardar todo en la memoria** (`CLAUDE.md` §6 + `progreso.md`) y **actualizar `README.md`** (versión, historial, características, tabla de ediciones) — siempre, sin que haya que recordarlo.

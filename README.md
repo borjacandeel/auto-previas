@@ -166,6 +166,12 @@ Si Windows muestra la pantalla azul con el mensaje *"Windows protegió su PC"* d
   - **MP3 de Difusión:** 320 kbps codificado mediante FFmpeg integrado de alto rendimiento, con carátula oficial incrustada de Radical Records y metadatos ID3v2.3 (título, artista, álbum, año y comentarios de estudio).
 - 🛡️ **Modo Promo Antifugas (Plus):**
   Repite tu firma de voz cada pocos segundos sobre toda la previa y la exporta solo en MP3 128 kbps con la marca «PROMO — NO DISTRIBUIR», para que el audio no se pueda reutilizar sin tu firma.
+- 🎬 **Vídeo Animado «Radical Neón» para Redes (Basic y Plus):**
+  MP4 en **9:16, 1:1 y 16:9** con tu carátula, analizador de espectro y destellos al ritmo del bombo, con **vista previa** antes de generar y título propio. **Basic** lleva una marca de agua pequeña y elige el final (firma con enlace o fundido a negro). **Plus** no lleva marca de agua y personaliza todo: **tu propia imagen de fondo** (una por formato, que puedes arrastrar sobre la tarjeta), **looks de un clic** (Neón clásico, foto + barras, foto + círculo, foto y título, solo la foto), **onda de sonido** en barras, línea o círculo con su posición, qué textos se ven, y un **final con tu imagen**. Avisa si la imagen no tiene el formato del vídeo y enseña ejemplos; la ventana «Personalizar…» tiene vista previa en vivo.
+- 🧭 **Panel de Exportación Ordenado en Pasos:**
+  ① Nombre y formatos, ② Vídeo animado (tarjeta única con botones de formato) y ③ Opciones avanzadas plegables (efectos, Voice Drop, Modo promo y firma, que se abren solas al activarlas), con una línea de **resumen** sobre «Generar previa» que dice qué se va a crear.
+- 🚀 **Rendimiento Adaptado a tu Equipo:**
+  El análisis de la canción y la generación de vídeo usan varios núcleos y son **mucho más rápidos con resultados idénticos** (BPM, secciones, audio y fotogramas exactamente iguales). El ajuste **«⚙ Licencia → Rendimiento»** (Automático / Ahorro de recursos / Máximo rendimiento) se adapta a los núcleos y la memoria del equipo, y la app consume menos en reposo.
 - 💾 **Presets de Firma y de Estilo (Plus):**
   Guarda con nombre tu firma (artista, sello, carátula…) y/o tu estilo (duración, formatos, efectos, voice drop, promo, vídeo) como archivos portables y aplícalos con un clic.
 - 🕒 **Panel de Recientes (Plus):**
@@ -190,6 +196,10 @@ AutoPrevias se distribuye en dos ediciones (**Basic** y **Plus**), protegidas po
 3. Al abrir AutoPrevias por primera vez, aparecerá la **pantalla de activación**.
 4. Introduce la clave y pulsa **Activar licencia** — la app se conecta a los servidores de verificación de forma segura y desbloquea la edición correspondiente en segundos.
 5. A partir de ese momento la app arranca directamente y se verifica sola, sin pedir la clave de nuevo.
+
+### Cada clave es de su edición
+
+La clave de **Basic** solo activa AutoPrevias Basic y la de **Plus** solo activa AutoPrevias Plus: si usas el instalador que no corresponde, la app lo indica con claridad y la clave no queda ligada a ningún equipo. Además, una caída puntual del servicio de licencias nunca invalida una licencia buena: la app reintenta sola más tarde.
 
 ### Una licencia = un equipo
 
@@ -219,7 +229,11 @@ Cada clave se puede usar en **un solo equipo a la vez**. Si ya está activa en u
 | Exportación WAV 24-bit | ❌ | ✅ |
 | Exportación FLAC y AIFF | ❌ | ✅ |
 | Vídeo animado MP4 (TikTok / Reels / YouTube), con vista previa | ✅ con marca de agua | ✅ sin marca de agua |
-| Final del vídeo a elegir (firma, fundido a negro o sin cierre) | ❌ (cierre con firma fijo) | ✅ |
+| Final del vídeo a elegir | ✅ firma con enlace o fundido a negro | ✅ firma, fundido a negro, sin cierre o **tu imagen** |
+| Vídeo con tu propia imagen de fondo (una por formato), looks de un clic y vista previa en vivo | 🔒 | ✅ |
+| Onda de sonido del vídeo (barras, línea, círculo), posición y textos a elegir, «solo la foto» | 🔒 | ✅ |
+| Aviso de formato de imagen (9:16, 1:1, 16:9) con ejemplos | — | ✅ |
+| Ajuste de Rendimiento (Automático / Ahorro / Máximo) | ✅ | ✅ |
 | Firma vocal / Voice Drop | ❌ | ✅ |
 | Sección de Firma y Carátula (Branding) | ❌ | ✅ |
 | Efectos de estudio (Flanger, Filter Sweep, Master LUFS) | ❌ | ✅ |
