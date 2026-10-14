@@ -647,6 +647,24 @@ class PlayerWidget(QWidget):
         else:
             self._player.play()
 
+    def release(self):
+        """Suelta el archivo cargado (en Windows un archivo abierto por el reproductor no se puede borrar)."""
+        if not HAS_MEDIA:
+            return
+        try:
+            self._player.stop()
+            self._player.setSource(QUrl())
+        except Exception:
+            pass
+        self._current_path = ""
+        self._source_path = ""
+        self._ready = False
+        self._dur_ms = 0
+        self._btn_play.setEnabled(False)
+        self._slider.setValue(0)
+        self._lbl_time.setText("0:00 / 0:00")
+        self._vu_meter.reset()
+
     def stop(self):
         """Detiene y vuelve al inicio."""
         if not HAS_MEDIA:

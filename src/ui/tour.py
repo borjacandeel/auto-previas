@@ -467,6 +467,20 @@ class TourOverlay(QWidget):
             ev.ignore()
 
 
+def _remove_demo_file(path, tries: int = 12):
+    """Borra la pista de ejemplo; si Windows aún la tiene abierta, reintenta unos segundos (liberación asíncrona)."""
+    if not path:
+        return
+    try:
+        if path.exists():
+            path.unlink()
+        return
+    except Exception:
+        pass
+    if tries > 0:
+        QTimer.singleShot(500, lambda: _remove_demo_file(path, tries - 1))
+
+
 class OnboardingTour(QObject):
     """Orquesta el recorrido: pasos, carga/limpieza de la pista de ejemplo y restauración de la app."""
     finished = Signal(bool)         # True = completado, False = omitido
@@ -548,7 +562,7 @@ class OnboardingTour(QObject):
             pl = getattr(w._results, "_player", None)
             if pl is not None:
                 try:
-                    pl.stop()
+                    pl.release()                          # Windows no deja borrar un archivo abierto por el reproductor
                 except Exception:
                     pass
             w._current_file = ""
@@ -558,11 +572,7 @@ class OnboardingTour(QObject):
             w._back_to_drop()
         except Exception:
             pass
-        try:
-            if self._demo_path and self._demo_path.exists():
-                self._demo_path.unlink()
-        except Exception:
-            pass
+        _remove_demo_file(self._demo_path)
 
     # — navegación —
     def _leave_current(self):

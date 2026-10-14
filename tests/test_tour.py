@@ -155,7 +155,8 @@ def test_recorrido_completo_sin_dejar_rastro(monkeypatch, size):
     assert C.load().get("recent_files") == []
     assert w._current_file == "" and w._analysis is None and w._stack.currentIndex() == 0
     assert (w._results._chk_video.isChecked(), w._results._chk_advanced.isChecked(), w._results._adv_open) == antes
-    assert not (C.get_cache_dir() / "tour" / tour.DEMO_NAME).exists()
+    demo = C.get_cache_dir() / "tour" / tour.DEMO_NAME
+    assert _pump(lambda: not demo.exists(), secs=10)               # en Windows el borrado puede esperar a que el reproductor suelte el archivo
     _cerrar(w)
 
 
