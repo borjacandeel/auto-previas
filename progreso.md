@@ -79,6 +79,19 @@
 - **Pendientes anotados** (tabla en esta sesión): producción de los 11 vídeos del plan + pruebas del usuario + tareas opcionales.
 
 
+### Resumen de Trabajo — Sesión 58 (2026-10-14): v3.9.0 — recorrido de bienvenida (tutorial interactivo de primer uso) + vídeo tutorial 16:9
+- **3.8.0 publicada** (run 66, CI verde). Release de 3.7.0/3.8.0 pendiente de verificar cuando el usuario avise.
+- **Petición del usuario:** tutorial post-instalación «solo la primera vez», con opción de seguirlo u omitirlo, **con todo al detalle de TODA la app**.
+- **`src/ui/tour.py` (nuevo)**: `should_offer_onboarding(cfg)` (no `onboarding_done` y sin `recent_files`) + `mark_onboarding_done()`; `make_demo_track()` (pista sintética a 128 BPM, 120 s, misma generación que las capturas de los manuales); `Step` (+`build_steps(win)`, adaptado a Basic/Plus: 36 pasos Plus, 25 Basic); `TourOverlay` (capa a pantalla completa: oscurece, deja un agujero animado con borde rojo y muestra la tarjeta con título, texto, ejemplo amarillo, barra de progreso y botones Omitir/Atrás/Siguiente; teclado → ← Intro Espacio Esc; bloquea los clics sobre la app; recoloca la tarjeta debajo/encima/al lado según el hueco); `OnboardingTour` (orquesta, hace scroll hasta el objetivo, carga la pista de ejemplo con `win._load_file` y espera con un temporizador de 200 ms, restaura casillas y paneles al terminar y borra el WAV de ejemplo); `WelcomeDialog` («Hacer el recorrido» / «Omitir»; cerrar = omitir).
+- **`src/ui/app.py`**: `_load_file` no añade a Recientes ni extrae carátula si `_tour_demo`; `MainWindow.maybe_start_onboarding()` / `start_tour()`; `launch()` lo dispara con `QTimer.singleShot(1200)` (no en tests ni selftest); `LicenseDialog` (⚙ Licencia) gana el botón **«Ver recorrido de bienvenida»** (`tour_requested`), solo manual. `src/config.py`: `onboarding_done: False` por defecto.
+- **Decisión técnica:** el recorrido se ofrece solo en instalaciones nuevas (sin `recent_files`); quien ya usaba la app no lo recibe solo. `onboarding_done` se guarda al elegir (no al terminar), así no reaparece aunque cierre la app a mitad.
+- **i18n:** `EN_TOUR` en `src/i18n_en.py` (todos los títulos, textos y ejemplos + botones); el test exige traducción de cada paso en ambas ediciones.
+- **`--selftest`** ahora empaqueta y construye `WelcomeDialog` y `TourOverlay` (comprobado en local).
+- **Pruebas:** `tests/test_tour.py` (8: solo primera vez, marca persistente, pista demo, traducción de todos los pasos en Plus y Basic, bienvenida omitir/recorrido, recorrido completo sin dejar rastro —sin Recientes, sin pista cargada, ajustes restaurados, WAV borrado— y Esc a mitad). Recorridos reales en offscreen (Plus 36 pasos, Basic 25) con capturas revisadas: cada paso resalta lo correcto y la tarjeta no lo tapa.
+- **Manuales:** nuevo apartado «Recorrido de bienvenida (solo la primera vez)» en «Actualizaciones, licencia e idioma» con captura (`01c_recorrido` en `capture.py`).
+- **Vídeo tutorial 16:9 (tarea paralela):** `marketing/videos/specs/t01_tutorial_videos.py`, 31 escenas, 453,6 s, voces Álvaro/Ximena; render con HyperFrames (13.608 fotogramas, ~3,5 fps). Salida final en `marketing/videos/publicados/AutoPrevias-Tutorial-Videos-Plus.mp4` (enlace al usuario).
+- **Pendiente (sin cambios):** notificación por previa generada (fila 0 de la tabla).
+
 ### Resumen de Trabajo — Sesión 57 (2026-10-14): v3.8.0 — rendimiento (análisis y vídeo más rápidos, ajuste de recursos, menos consumo en reposo)
 - **3.7.0 publicada** (run 65, CI verde; verificación de la Release pendiente de que el usuario avise).
 - **Medición previa** (pista sintética de 150 s, 4 núcleos): `detect_beat_grid` 28,9 s + `analyze_structure` 21,3 s ≈ 50 s. Hallazgo: **HPSS se calculaba dos veces** (BPM con margin=3 y estructura con margin=1) y sus filtros de mediana eran secuenciales; los 3 canales de onset, las 10 envolventes de estructura y la tonalidad eran independientes pero se ejecutaban en serie.

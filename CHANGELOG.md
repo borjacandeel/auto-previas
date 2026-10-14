@@ -3,6 +3,14 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [3.9.0] - 2026-10-14
+
+### Añadido
+- **Recorrido de bienvenida (solo la primera vez).** Al abrir AutoPrevias por primera vez en una instalación nueva, aparece un aviso con dos botones: **«Hacer el recorrido»** u **«Omitir»**. No se vuelve a preguntar nunca más. Si lo haces, la app oscurece la ventana y te va resaltando, paso a paso y con ejemplos, **toda la app**: carga del tema, Recientes, Lote y Vigilar carpeta (Plus), licencia e idioma, la forma de onda, el reproductor, las tarjetas de BPM y tonalidad, la duración de la previa, los presets, la edición de cortes y BPM (Plus), los formatos, el vídeo animado (formato, estilo, título, imagen propia, final y vista previa), los efectos, Voice Drop, modo promo y firma (Plus), la carpeta de destino, el botón Generar y la semilla. Para enseñarte el panel de resultados real carga una **pista de ejemplo** sintética; no se guarda nada (ni en Recientes ni en tu carpeta) y tus ajustes quedan como estaban.
+- Se maneja con **Siguiente / Atrás** o con las teclas **→ ← Intro Espacio**, y puedes salir en cualquier momento con **Omitir recorrido** o **Esc**. En la edición **Basic** solo enseña lo que tiene Basic.
+- Si quieres repetirlo, hay un botón **«Ver recorrido de bienvenida»** en la ventana **⚙ Licencia**.
+- El recorrido está en castellano y en inglés, y los manuales PDF lo explican.
+
 ## [3.8.0] - 2026-10-14
 
 ### Añadido

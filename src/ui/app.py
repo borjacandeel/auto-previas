@@ -4395,6 +4395,8 @@ class MainWindow(QMainWindow):
         self._beat_grid     = None
         self._worker        = None
         self._export_worker = None
+        self._tour = None                # recorrido de bienvenida en curso
+        self._tour_demo = False          # True mientras se analiza la pista de ejemplo del recorrido
         self._pending_project = None     # «Reabrir proyecto»: ajustes a aplicar tras el análisis
         self._update_info   = None
         i18n.init_from_config(self._cfg)
@@ -4923,17 +4925,19 @@ class MainWindow(QMainWindow):
         from src.engine.audio_io import repair_wav_header_if_needed
         repair_wav_header_if_needed(path)
 
+        demo = bool(getattr(self, "_tour_demo", False))      # pista de ejemplo del recorrido: sin rastro en Recientes
         # Registrar en historial de recientes (Apartado 3: 3)
         try:
             from src.config import add_recent_file
-            add_recent_file(path, self._cfg)
+            if not demo:
+                add_recent_file(path, self._cfg)
         except Exception:
             pass
 
         # Extracción automática de carátula incrustada (Apartado 2: 2)
         try:
             from src.config import extract_embedded_cover
-            emb_cover = extract_embedded_cover(path)
+            emb_cover = None if demo else extract_embedded_cover(path)
             if emb_cover and emb_cover.exists():
                 self._cfg["session_cover_path"] = str(emb_cover)
                 self._cfg["cover_path"] = str(emb_cover)
@@ -5298,11 +5302,37 @@ class MainWindow(QMainWindow):
             "🆕  AutoPrevias {v} disponible — <a href='update' style='color:#a78bfa;'>Actualizar</a>",
             v=info.version))
 
+    # ── Recorrido de bienvenida (solo la primera vez en una instalación nueva) ─────────────────
+    def maybe_start_onboarding(self):
+        """Primera vez: ofrece el recorrido («Hacer el recorrido» / «Omitir»). Después no vuelve a preguntar."""
+        from src.ui import tour
+        if not tour.should_offer_onboarding(load_cfg()):
+            return
+        dlg = tour.WelcomeDialog(self)
+        dlg.exec()
+        tour.mark_onboarding_done(self._cfg)
+        if dlg.choice == "tour":
+            self.start_tour()
+
+    def start_tour(self):
+        """Lanza el recorrido guiado (también desde ⚙ Licencia → «Ver recorrido de bienvenida»)."""
+        from src.ui import tour
+        if getattr(self, "_tour", None) is not None:
+            return
+        if self._worker is not None and self._worker.isRunning():
+            return
+        if self._stack.currentIndex() != 0:
+            self._back_to_drop()
+        self._tour = tour.OnboardingTour(self)
+        self._tour.finished.connect(lambda _c: setattr(self, "_tour", None))
+        self._tour.start()
+
     def _open_license_dialog(self):
         from src.ui.about import LicenseDialog
         found = []
         dlg = LicenseDialog(VERSION, get_edition(), parent=self)
         dlg.language_changed.connect(self._apply_language)
+        dlg.tour_requested.connect(lambda: QTimer.singleShot(0, self.start_tour))
         dlg.update_found.connect(found.append)
         dlg.license_removed.connect(lambda: QTimer.singleShot(0, self.close))
         dlg.exec()
@@ -5539,6 +5569,7 @@ def launch(initial_file: str = ""):
     # El splash se cierra 80ms después para asegurar que la transición es suave.
     win.show()
     QTimer.singleShot(80, splash.close)
+    QTimer.singleShot(1200, win.maybe_start_onboarding)      # bienvenida: solo en instalaciones nuevas
 
     _log_startup("Ventana principal visible. Ejecutando app.exec()...")
     sys.exit(app.exec())

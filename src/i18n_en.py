@@ -630,3 +630,147 @@ EN_PATTERNS = [
     (re.compile(r"⚠ MP3 no disponible: (.*)", re.S), "⚠ MP3 unavailable: {0}"),
     (re.compile(r"⚠ Vídeo social no generado: (.*)", re.S), "⚠ Social video not generated: {0}"),
 ]
+
+
+# ── Recorrido de bienvenida (src/ui/tour.py) ─────────────────────────────────────────────
+EN_TOUR = {
+    "Bienvenido a AutoPrevias": "Welcome to AutoPrevias",
+    "Recientes": "Recent",
+    "¡Bienvenido a AutoPrevias!": "Welcome to AutoPrevias!",
+    "¿Quieres un recorrido rápido por toda la app? Son unos 5 minutos: te enseño cada botón con una pista de ejemplo y no se guarda nada. Solo te lo propongo esta vez.":
+        "Want a quick tour of the whole app? It takes about 5 minutes: I show you every button with a sample track and nothing gets saved. I only offer it this once.",
+    "▶  Hacer el recorrido": "▶  Take the tour",
+    "Omitir": "Skip",
+    "Omitir recorrido": "Skip tour",
+    "← Atrás": "← Back",
+    "Siguiente →": "Next →",
+    "¡Terminar!": "Finish!",
+    "PASO {n} DE {t}": "STEP {n} OF {t}",
+    "Ver recorrido de bienvenida": "Replay the welcome tour",
+    "Repite el recorrido guiado por toda la app (solo se ofrece solo la primera vez)": "Replays the guided tour of the whole app (it is only offered automatically the first time)",
+    "Analizando la pista de ejemplo…": "Analyzing the sample track…",
+    "AutoPrevias está detectando el BPM, la tonalidad, los drops y la estructura. Solo tarda unos segundos.":
+        "AutoPrevias is detecting the BPM, key, drops and structure. It only takes a few seconds.",
+    "En unos 5 minutos te enseño toda la app, desde cargar un tema hasta exportar la previa con su vídeo. Puedes salir cuando quieras con «Omitir» o la tecla Esc. Todo lo que verás es la app real.":
+        "In about 5 minutes I'll show you the whole app, from loading a track to exporting the preview with its video. You can leave whenever you like with “Skip” or the Esc key. Everything you'll see is the real app.",
+    "1 · Carga tu tema": "1 · Load your track",
+    "Arrastra aquí un archivo de audio (WAV, MP3, FLAC, AIFF, M4A, OGG…) o pulsa «Abrir archivo». También puedes soltarlo en cualquier parte de la ventana.":
+        "Drag an audio file here (WAV, MP3, FLAC, AIFF, M4A, OGG…) or press “Open file”. You can also drop it anywhere in the window.",
+    "Ejemplo: tu máster «Midnight Groove (Original Mix).wav».": "Example: your master “Midnight Groove (Original Mix).wav”.",
+    "Guarda tus últimas previas y temas abiertos. Con un clic vuelves a cargarlos y, si quieres, «Reabrir proyecto» restaura los mismos ajustes y la misma semilla.":
+        "Keeps your latest previews and opened tracks. One click loads them again and, if you want, “Reopen project” restores the same settings and the same seed.",
+    "Modo Lote (Plus)": "Batch Mode (Plus)",
+    "Procesa muchas pistas de una vez: las añades a la lista, eliges ajustes y AutoPrevias genera todas las previas sola.":
+        "Process many tracks at once: add them to the list, pick your settings and AutoPrevias generates all the previews on its own.",
+    "Ejemplo: 20 temas del EP → 20 previas mientras tomas un café.": "Example: 20 tracks from the EP → 20 previews while you have a coffee.",
+    "Vigilar carpeta (Plus)": "Watch Folder (Plus)",
+    "Elige una carpeta y cada tema nuevo que caiga en ella se convierte en previa automáticamente.":
+        "Pick a folder and every new track that lands in it automatically becomes a preview.",
+    "Licencia, idioma y actualizaciones": "License, language and updates",
+    "Aquí ves tu versión y tu licencia (1 equipo por clave), cambias el idioma, buscas actualizaciones y ajustas el rendimiento del equipo. La licencia se revalida sola: no tienes que volver a escribirla.":
+        "Here you see your version and license (1 computer per key), change the language, check for updates and tune the computer's performance. The license revalidates itself: you never have to type it again.",
+    "Idioma ES / EN": "Language ES / EN",
+    "Cambia entre castellano e inglés en caliente, sin reiniciar. Se recuerda para la próxima vez.":
+        "Switch between Spanish and English on the fly, without restarting. It is remembered for next time.",
+    "Tu edición: PLUS": "Your edition: PLUS",
+    "Tu edición: BÁSICA": "Your edition: BASIC",
+    "Plus incluye WAV 24 bit, FLAC, vídeo sin marca de agua con todas las opciones, lote, presets, modo promo y firma.":
+        "Plus includes 24-bit WAV, FLAC, watermark-free video with every option, batch mode, presets, promo mode and signature.",
+    "Básica genera MP3 y vídeo animado con marca de agua. Las funciones de Plus aparecerán marcadas con un candado.":
+        "Basic generates MP3 and an animated video with a watermark. Plus features appear marked with a padlock.",
+    "Barra de estado": "Status bar",
+    "Abajo ves siempre qué está pasando: análisis, progreso de la exportación y el resultado (BPM, tonalidad y drops).":
+        "Down here you always see what is happening: analysis, export progress and the result (BPM, key and drops).",
+    "Vamos a verlo en acción": "Let's see it in action",
+    "Voy a cargar una pista de ejemplo (sintética, no se guarda nada) para enseñarte el panel de resultados real. Pulsa «Siguiente»: el análisis tarda unos segundos.":
+        "I'm going to load a sample track (synthetic, nothing is saved) to show you the real results panel. Press “Next”: the analysis takes a few seconds.",
+    "La forma de onda": "The waveform",
+    "Aquí ves la estructura del tema: intro, subida, drop, descanso… AutoPrevias la detecta sola. Haz clic para escuchar desde ese punto y arrastra los marcadores para retocar dónde se corta.":
+        "Here you see the structure of the track: intro, build-up, drop, breakdown… AutoPrevias detects it by itself. Click to listen from that point and drag the markers to fine-tune where it cuts.",
+    "Reproductor": "Player",
+    "Escucha la pista original y la previa generada, y cambia de una a otra al instante. Barra espaciadora = reproducir/pausar · flechas = saltar 5 s · Esc = detener.":
+        "Listen to the original track and the generated preview and switch between them instantly. Space bar = play/pause · arrow keys = skip 5 s · Esc = stop.",
+    "Lo que AutoPrevias ha medido": "What AutoPrevias has measured",
+    "Archivo, BPM, tonalidad (en Camelot, para mezclar en armonía), duración, número de drops y duración estimada de la previa. Si el BPM no es correcto, haz doble clic en la tarjeta BPM y corrígelo.":
+        "File, BPM, key (in Camelot, to mix harmonically), duration, number of drops and estimated preview length. If the BPM is wrong, double-click the BPM card and correct it.",
+    "Duración de la previa": "Preview length",
+    "Elige 15 s (teaser), 30 s (promo), 60 s (extendida) o 120 s (club). Los cortes se recalculan al instante y siempre caen en compás.":
+        "Pick 15 s (teaser), 30 s (promo), 60 s (extended) or 120 s (club). The cuts are recalculated instantly and always land on the beat.",
+    "Para TikTok o Reels usa 15 o 30 s; para mandar al promotor, 120 s.": "For TikTok or Reels use 15 or 30 s; to send to a promoter, 120 s.",
+    "Mis presets (Plus)": "My presets (Plus)",
+    "Guarda tu firma, formatos y estilo de vídeo con un nombre y vuélvelos a aplicar con un clic. Los presets son archivos: puedes copiarlos a otro ordenador.":
+        "Save your signature, formats and video style under a name and apply them again with one click. Presets are files: you can copy them to another computer.",
+    "Estructura de previa optimizada": "Optimized preview structure",
+    "AutoPrevias ya ha calculado 3 cortes con transiciones suaves. Para la mayoría de temas basta con pulsar Generar.":
+        "AutoPrevias has already calculated 3 cuts with smooth transitions. For most tracks you just press Generate.",
+    "Personalizar cortes y BPM (Plus)": "Customize cuts and BPM (Plus)",
+    "Activa esta casilla para abrir tres pestañas: el editor de cortes (inicio, fin y duración exactos), la variación de BPM (acelera ligeramente la previa para que nadie pueda mezclarla con tu tema) y la estructura musical con nivel LUFS.":
+        "Tick this box to open three tabs: the cut editor (exact start, end and length), the BPM variation (slightly speeds up the preview so nobody can mix it with your track) and the musical structure with LUFS level.",
+    "① Nombre y formatos": "① Name and formats",
+    "El nombre del archivo ya viene puesto («PREVIA - tu tema»), pero puedes cambiarlo. Marca los formatos que quieres: WAV 24 bit, MP3 320k y FLAC.":
+        "The file name is already filled in (“PREVIA - your track”) but you can change it. Tick the formats you want: 24-bit WAV, MP3 320k and FLAC.",
+    "El nombre del archivo ya viene puesto («PREVIA - tu tema»), pero puedes cambiarlo. Se exporta MP3 320k (con vídeo siempre se genera también el MP3).":
+        "The file name is already filled in (“PREVIA - your track”) but you can change it. MP3 320k is exported (with video, the MP3 is always generated too).",
+    "Usa WAV para el promotor, MP3 para las redes y FLAC si quieres calidad sin pérdidas.":
+        "Use WAV for the promoter, MP3 for social media and FLAC if you want lossless quality.",
+    "② Vídeo animado": "② Animated video",
+    "Marca esta casilla y aparece la tarjeta del vídeo: AutoPrevias crea un vídeo animado que late con la música, listo para TikTok, Reels y YouTube. Todo el vídeo se configura en esa tarjeta.":
+        "Tick this box and the video card appears: AutoPrevias creates an animated video that pulses with the music, ready for TikTok, Reels and YouTube. The whole video is set up in that card.",
+    "Formato del vídeo": "Video format",
+    "9:16 vertical (TikTok, Reels, Shorts), 1:1 cuadrado (feed de Instagram) o 16:9 horizontal (YouTube). Elige el que vayas a publicar.":
+        "9:16 vertical (TikTok, Reels, Shorts), 1:1 square (Instagram feed) or 16:9 horizontal (YouTube). Choose the one you'll publish.",
+    "Estilo y colores": "Style and colors",
+    "Elige la paleta de colores y, con «Look», cinco aspectos listos para usar: Neón clásico, foto + barras, foto + círculo, foto y título o solo la foto.":
+        "Pick the color palette and, with “Look”, five ready-made styles: classic Neon, photo + bars, photo + circle, photo and title, or photo only.",
+    "Elige la paleta de colores de la plantilla Neón: Radical, Rave, Carmesí, Ámbar o Cyber.":
+        "Pick the color palette of the Neon template: Radical, Rave, Crimson, Amber or Cyber.",
+    "Título y banner (Plus)": "Title and banner (Plus)",
+    "El título es lo que sale en el vídeo (si lo dejas vacío usa el nombre de la pista) y el banner es tu frase de sello encima del vídeo.":
+        "The title is what appears in the video (if you leave it empty it uses the track name) and the banner is your label line over the video.",
+    "Título: MIDNIGHT GROOVE · Banner: RADICAL RECORDS · PROMO EXCLUSIVA": "Title: MIDNIGHT GROOVE · Banner: RADICAL RECORDS · EXCLUSIVE PROMO",
+    "Personalizar el vídeo (Plus)": "Customize the video (Plus)",
+    "Aquí eliges todo: tu imagen de fondo para cada formato, la onda de sonido (barras, línea o círculo, su posición y color), qué textos salen y dónde, y el final del vídeo. Tiene vista previa en vivo.":
+        "Here you choose everything: your background image for each format, the sound wave (bars, line or circle, its position and color), which texts appear and where, and the end of the video. It has a live preview.",
+    "Tu propia imagen de fondo": "Your own background image",
+    "Arrastra una foto sobre la tarjeta para usarla de fondo. Debe ser 9:16, 1:1 o 16:9: si no lo es, la app te avisa y te enseña ejemplos de formatos válidos.":
+        "Drag a photo onto the card to use it as the background. It must be 9:16, 1:1 or 16:9: if it isn't, the app warns you and shows examples of valid formats.",
+    "Final del vídeo": "Video ending",
+    "Elige cómo acaba: firma AutoPrevias, fundido a negro, sin cierre o tu propia imagen con texto.":
+        "Choose how it ends: AutoPrevias signature, fade to black, no ending or your own image with text.",
+    "Elige cómo acaba: firma «Generado por AutoPrevias» o fundido a negro. La marca de agua pequeña se quita con Plus.":
+        "Choose how it ends: “Generated by AutoPrevias” signature or fade to black. The small watermark is removed with Plus.",
+    "Vista previa del vídeo": "Video preview",
+    "Antes de generar, mira un fragmento real del vídeo con tus ajustes. Si no te convence, cámbialo y vuelve a verlo.":
+        "Before generating, watch a real excerpt of the video with your settings. If you don't like it, change it and watch again.",
+    "③ Efectos de estudio (Plus)": "③ Studio effects (Plus)",
+    "Flanger y Filter Sweep añaden transiciones antes de cada drop; Master LUFS deja la previa al volumen estándar de las plataformas.":
+        "Flanger and Filter Sweep add transitions before each drop; Master LUFS sets the preview to the standard loudness of the platforms.",
+    "Voice Drop (Plus)": "Voice Drop (Plus)",
+    "Añade tu firma de voz o jingle («Radical Records…») justo antes del drop o al empezar la previa.":
+        "Adds your voice tag or jingle (“Radical Records…”) right before the drop or at the start of the preview.",
+    "Modo promo antifugas (Plus)": "Anti-leak promo mode (Plus)",
+    "Para que nadie pueda aprovechar tu previa: la exporta en MP3 128 kbps y repite tu firma de voz cada pocos segundos, así no sirve para mezclarla ni para subirla a otras plataformas.":
+        "So nobody can exploit your preview: it exports as 128 kbps MP3 and repeats your voice tag every few seconds, so it's useless for mixing or re-uploading.",
+    "Firma, carátula y datos (Plus)": "Signature, cover art and metadata (Plus)",
+    "Tu nombre de artista, sello, género y carátula se incrustan en los archivos y se usan en el vídeo.":
+        "Your artist name, label, genre and cover art are embedded in the files and used in the video.",
+    "Carpeta de destino": "Destination folder",
+    "Por defecto las previas se guardan en Música/Previas. Cambia la carpeta con «Cambiar» y ábrela con «Abrir».":
+        "By default previews are saved in Music/Previas. Change the folder with “Change” and open it with “Open”.",
+    "Resumen antes de generar": "Summary before generating",
+    "Un vistazo a lo que se va a crear (formatos, vídeo, duración y carpeta) para que no haya sorpresas.":
+        "A quick look at what is going to be created (formats, video, length and folder) so there are no surprises.",
+    "▶ Generar previa": "▶ Generate preview",
+    "Pulsa aquí y AutoPrevias hace el resto: corta, mezcla, aplica efectos, exporta los archivos y crea el vídeo. Al terminar aparece una tarjeta con «Abrir carpeta».":
+        "Press here and AutoPrevias does the rest: it cuts, mixes, applies effects, exports the files and creates the video. When it finishes a card appears with “Open folder”.",
+    "Semilla y regenerar": "Seed and regenerate",
+    "Cada previa usa una semilla; con la misma semilla y los mismos ajustes obtienes siempre el mismo resultado. El dado 🎲 prueba otra variante.":
+        "Each preview uses a seed; with the same seed and settings you always get the same result. The dice 🎲 tries another variant.",
+    "Nuevo track": "New track",
+    "Cuando termines, pulsa «Nuevo track» para volver al inicio y cargar otro tema.":
+        "When you're done, press “New track” to go back to the start and load another track.",
+    "¡Listo! Ya sabes usar AutoPrevias": "All set! You now know how to use AutoPrevias",
+    "Arrastra tu primer tema y genera tu previa. Si necesitas ayuda, escribe a radicalrecordsvlc@gmail.com. Mucha suerte con tus lanzamientos · Radical Records.":
+        "Drag in your first track and generate your preview. If you need help, write to radicalrecordsvlc@gmail.com. Good luck with your releases · Radical Records.",
+}
+EN.update(EN_TOUR)

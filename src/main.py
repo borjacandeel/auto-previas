@@ -203,6 +203,18 @@ def run_selftest() -> int:
         _dlg.deleteLater()
         print("  ✓ Widgets de forma de onda y activación construidos sin crash")
 
+        # Recorrido de bienvenida: debe empaquetarse y construir su capa y su diálogo sin crash
+        from src.ui import tour as _tour
+        _wd = _tour.WelcomeDialog()
+        _host = QtWidgets.QWidget()
+        _host.resize(400, 300)
+        _ov = _tour.TourOverlay(_host)
+        assert _tour.should_offer_onboarding({}) and not _tour.should_offer_onboarding({"onboarding_done": True})
+        _wd.deleteLater()
+        _ov.deleteLater()
+        _host.deleteLater()
+        print("  ✓ Recorrido de bienvenida empaquetado y construido sin crash")
+
         # Vídeo animado Radical Neón: debe renderizar fotogramas reales en el binario compilado
         from src.engine import video_neon as _vn
         import numpy as _np

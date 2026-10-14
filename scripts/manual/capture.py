@@ -182,6 +182,14 @@ rec("welcome", open_btn=w._drop_zone._btn_open, drop=w._drop_zone, recents=w._bt
 annotate(img, items, d, "01_bienvenida_anot")
 meta["welcome_items"] = [n for _, n in items]
 
+# ── 1c. Recorrido de bienvenida (paso «Modo Lote» en Plus, «Recientes» en Basic) ──
+from src.ui import tour as _tour
+_T = _tour.OnboardingTour(w)
+_T.start(); pump(10, 0.02)
+_T._goto(3 if EDITION == "plus" else 2, +1); pump(30, 0.03)
+save(grab(w), "01c_recorrido")
+_T.finish(False); pump(10)
+
 # ── 2. Análisis en curso ──────────────────────────────────────────────────
 w._stack.setCurrentIndex(1)
 w._analysis_page.start(TRACK_NAME)

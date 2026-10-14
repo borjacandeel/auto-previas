@@ -44,6 +44,7 @@ _DEFAULTS = {
     "watch_folder_enabled": False,
     "watch_folder_path": "",
     "recent_files": [],
+    "onboarding_done": False,   # recorrido de bienvenida: se ofrece solo la primera vez
     # Firma y metadatos de audio personalizados
     "tag_artist": "",
     "tag_label": "",

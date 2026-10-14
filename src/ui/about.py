@@ -48,6 +48,7 @@ class LicenseDialog(QDialog):
     language_changed = Signal(str)
     update_found = Signal(object)        # ReleaseInfo
     license_removed = Signal()
+    tour_requested = Signal()            # «Ver recorrido de bienvenida»
 
     def __init__(self, version: str, edition: str, parent=None):
         super().__init__(parent)
@@ -140,6 +141,11 @@ class LicenseDialog(QDialog):
         btn_row.addWidget(self._btn_update)
         btn_row.addWidget(self._btn_remove)
         root.addLayout(btn_row)
+
+        self._btn_tour = QPushButton("Ver recorrido de bienvenida")
+        self._btn_tour.setToolTip("Repite el recorrido guiado por toda la app (solo se ofrece solo la primera vez)")
+        self._btn_tour.clicked.connect(lambda: (self.tour_requested.emit(), self.accept()))
+        root.addWidget(self._btn_tour)
 
         self._lbl_support = QLabel()
         self._lbl_support.setStyleSheet(f"font-size: 11px; color: {TEXT2};")

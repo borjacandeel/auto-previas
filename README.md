@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v3.8.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v3.9.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -150,6 +150,8 @@ Si Windows muestra la pantalla azul con el mensaje *"Windows protegió su PC"* d
 
 ## ✨ Características Principales
 
+- 🎓 **Recorrido de bienvenida (primera vez):**
+  Al abrir la app por primera vez, un tutorial guiado y omitible resalta cada parte de la interfaz real con una explicación y un ejemplo (con una pista de ejemplo que no deja rastro). Atajos: → ← Intro Espacio, Esc para salir; se puede repetir desde ⚙ Licencia.
 - 🧠 **Diferenciación Inteligente de Drops vs Descansos (HPSS + Fullness):**
   Utiliza separación de fuentes armónicas y percusivas (Harmonic-Percussive Source Separation) para distinguir con precisión descansos (con bombos, vocales o percusiones secas) de auténticos drops melódicos (sintetizadores densos, leads y acordes de clímax).
 - ⏱️ **Alineación Rítmica Quirúrgica (Beat Grid):**
@@ -234,6 +236,7 @@ Cada clave se puede usar en **un solo equipo a la vez**. Si ya está activa en u
 | Onda de sonido del vídeo (barras, línea, círculo), posición y textos a elegir, «solo la foto» | 🔒 | ✅ |
 | Aviso de formato de imagen (9:16, 1:1, 16:9) con ejemplos | — | ✅ |
 | Ajuste de Rendimiento (Automático / Ahorro / Máximo) | ✅ | ✅ |
+| Recorrido de bienvenida interactivo (primera vez, omitible) | ✅ | ✅ (con las funciones de Plus) |
 | Firma vocal / Voice Drop | ❌ | ✅ |
 | Sección de Firma y Carátula (Branding) | ❌ | ✅ |
 | Efectos de estudio (Flanger, Filter Sweep, Master LUFS) | ❌ | ✅ |
@@ -286,7 +289,10 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v3.8.0] — 2026-10-14 (Más rápida y más fluida)
+#### 🟢 [v3.9.0] — 2026-10-14 (Recorrido de bienvenida)
+- **Tutorial interactivo de primer uso:** al instalar y abrir AutoPrevias por primera vez ofrece **«Hacer el recorrido»** u **«Omitir»** (solo esa vez). El recorrido oscurece la ventana y resalta, paso a paso y con ejemplos, toda la app (con una pista de ejemplo, sin guardar nada); se maneja con Siguiente/Atrás o con el teclado y se sale con Esc. En castellano e inglés; se puede repetir desde ⚙ Licencia. Detalle en el [CHANGELOG](CHANGELOG.md).
+
+#### [v3.8.0] — 2026-10-14 (Más rápida y más fluida)
 - **Análisis de la canción hasta ~2 veces más rápido** y **vídeo hasta ~2,4 veces más rápido**, con resultados idénticos; ajuste **Rendimiento** (Automático / Ahorro / Máximo) y menos consumo en reposo. Detalle en el [CHANGELOG](CHANGELOG.md).
 
 #### [v3.7.0] — 2026-10-14 (Panel de vídeo más fácil)

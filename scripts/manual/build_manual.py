@@ -571,6 +571,15 @@ def s_updates(ed: str, plus: bool, im: dict, n: int) -> str:
 {steps(["Lee las novedades de la versión.", "Pulsa <b>Descargar e instalar</b>: AutoPrevias descarga el instalador directamente en tu carpeta de <b>Descargas</b>, comprueba su integridad (SHA-256) y lo abre.",
         "Sigue el instalador como la primera vez; tus ajustes y tu licencia se conservan.",
         "Si prefieres esperar, pulsa <b>Omitir esta versión</b> y no te volverá a avisar de esa."])}
+<h3>Recorrido de bienvenida (solo la primera vez)</h3>
+<p>La primera vez que abres AutoPrevias en un equipo nuevo, tras activar la licencia, aparece un aviso de bienvenida con dos botones: <b>Hacer el recorrido</b> u <b>Omitir</b>. No se vuelve a preguntar nunca más.</p>
+{fig(im.get('01c_recorrido',''), 'El recorrido oscurece la ventana y resalta cada parte de la app real con una explicación', 'mid')}
+<ul>
+<li>Son unos 5 minutos: te enseña la pantalla de inicio, carga una <b>pista de ejemplo</b> sintética y recorre todo el panel de resultados (forma de onda, reproductor, duración, formatos, vídeo animado, efectos, carpeta y botón Generar).</li>
+<li>Avanza con <b>Siguiente</b> (o las teclas <b>→</b>, <b>Intro</b> o <b>Espacio</b>), vuelve con <b>Atrás</b> (<b>←</b>) y sal cuando quieras con <b>Omitir recorrido</b> o <b>Esc</b>.</li>
+<li>No guarda nada: la pista de ejemplo no aparece en Recientes y tus ajustes quedan como estaban.</li>
+<li>Si quieres repetirlo, pulsa <b>Ver recorrido de bienvenida</b> en la ventana <b>⚙ Licencia</b>.</li>
+</ul>
 <h3>Ventana «⚙ Licencia»</h3>
 {fig(im.get('11_licencia',''), 'Versión, licencia e idioma', 'tiny')}
 <ul>
