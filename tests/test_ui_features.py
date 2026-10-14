@@ -8,6 +8,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 pytest.importorskip("PySide6")
 sf = pytest.importorskip("soundfile")
 import numpy as np
+from PIL import Image
 from PySide6.QtWidgets import QApplication
 
 from src import history, i18n, presets
@@ -288,9 +289,13 @@ def test_basic_tiene_video_con_marca_y_sin_opciones_plus(monkeypatch):
     assert not p._chk_video.isHidden()                 # Basic ya puede generar vídeo
     p._chk_video.setChecked(True)
     assert p._row_video_title_widget.isVisibleTo(p) and p._lbl_vbasic.isVisibleTo(p)
-    assert not p._combo_vend.isVisibleTo(p) and not p._edit_promo.isVisibleTo(p)
+    assert not p._edit_promo.isVisibleTo(p) and not p._btn_vcustom.isVisibleTo(p)
+    assert p._combo_vend.isVisibleTo(p)                                    # Basic elige: firma o fundido a negro
+    assert [p._combo_vend.itemData(i) for i in range(p._combo_vend.count())] == ["brand", "fade"]
     o = p.get_export_options()
-    assert o["export_video"] and o["export_mp3"] and o["video_end"] == "brand"
+    assert o["export_video"] and o["export_mp3"] and o["video_end"] == "brand" and o["video_custom"] is None
+    p._set_combo_by_data(p._combo_vend, "fade")
+    assert p.get_export_options()["video_end"] == "fade"
 
 
 def test_plus_elige_el_final_del_video(monkeypatch):
@@ -308,11 +313,43 @@ def test_export_basic_marca_de_agua_y_plus_no(tmp_path, monkeypatch):
     import src.engine.video_neon as VN
     seen = {}
     monkeypatch.setattr(VN, "render_neon_video", lambda **kw: (seen.update(kw), Path(kw["output_video_path"]).write_bytes(b"x")))
-    for ed, wm, end in (("basic", True, "brand"), ("plus", False, "fade")):
+    custom = {"style": "image", "bg": {"default": "x.jpg"}}
+    for ed, wm, vend, end in (("basic", True, "fade", "fade"), ("basic", True, "none", "brand"),
+                              ("basic", True, "image", "brand"), ("plus", False, "fade", "fade"),
+                              ("plus", False, "image", "image")):
         seen.clear()
         monkeypatch.setattr(C, "get_edition", lambda ed=ed: ed)
-        paths = {"wav": tmp_path / f"PREVIA - X{ed}.wav", "video": tmp_path / f"PREVIA - X{ed}.mp4"}
+        paths = {"wav": tmp_path / f"PREVIA - X{ed}{vend}.wav", "video": tmp_path / f"PREVIA - X{ed}{vend}.mp4"}
         E.export_files(np.zeros((2, 4410), dtype="float32"), 44100, paths,
-                       metadata={"video_end": "fade", "video_promo_text": "BANNER"})
+                       metadata={"video_end": vend, "video_promo_text": "BANNER", "video_custom": custom})
         assert seen["watermark"] is wm and seen["end_mode"] == end
         assert (seen["promo_text"] == "") == (ed == "basic")           # Basic no pone banner propio
+        assert (seen["custom"] is None) == (ed == "basic")             # ni imagen propia
+
+
+def test_plus_ajustes_de_video_y_final_con_imagen(monkeypatch, tmp_path):
+    from src.engine.video_neon import normalize_custom
+    p = _panel(monkeypatch, "plus")
+    p._chk_video.setChecked(True)
+    assert p._btn_vcustom.isVisibleTo(p)
+    assert [p._combo_vend.itemData(i) for i in range(p._combo_vend.count())] == ["brand", "fade", "none", "image"]
+    img = tmp_path / "a.png"; Image.new("RGB", (64, 64), (200, 30, 30)).save(img)
+    p._video_custom = normalize_custom({"style": "image", "bg": {"default": str(img)}, "wave_style": "circle",
+                                        "wave_pos": "center", "end_image": str(img)})
+    p._set_combo_by_data(p._combo_vend, "image")
+    o = p.get_export_options()
+    assert o["video_end"] == "image" and o["video_custom"]["wave_style"] == "circle" and o["video_custom"]["bg"]["default"] == str(img)
+
+
+def test_dialogo_ajustes_de_video(monkeypatch, tmp_path):
+    from PySide6.QtWidgets import QApplication
+    from src.ui.video_custom import VideoCustomDialog
+    QApplication.instance() or QApplication([])
+    img = tmp_path / "a.png"; Image.new("RGB", (64, 64)).save(img)
+    d = VideoCustomDialog({"style": "image", "bg": {"16:9": str(img)}, "wave_style": "line", "texts_pos": "bottom"})
+    assert d._style.currentData() == "image" and d._wave_style.currentData() == "line" and d._bg["16:9"].path() == str(img)
+    d._wave.setChecked(False)
+    assert not d._wave_style.isEnabled()
+    d._accept()
+    r = d.result_custom()
+    assert r["wave"] is False and r["texts_pos"] == "bottom" and r["bg"] == {"16:9": str(img)}

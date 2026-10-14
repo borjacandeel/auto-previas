@@ -744,9 +744,12 @@ def export_files(
         except Exception:
             _basic = False
         _end_mode = str(meta.get("video_end") or "brand")
+        _custom = meta.get("video_custom")
         if _basic:
             common["promo_text"] = ""
-            _end_mode = "brand"
+            _custom = None                                   # Basic: sin imagen propia ni onda a medida
+            if _end_mode not in ("brand", "fade"):           # Basic solo elige entre la firma y el fundido a negro
+                _end_mode = "brand"
         try:
             from src.engine.video_neon import render_neon_video
             render_neon_video(
@@ -755,6 +758,7 @@ def export_files(
                 progress_cb=lambda p, m: _prog(90 + int(p * 0.09), m),
                 watermark=_basic,
                 end_mode=_end_mode,
+                custom=_custom,
             )
             generated.append(video_target)
         except Exception as e_neon:

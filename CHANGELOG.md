@@ -3,6 +3,18 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [3.6.0] - 2026-10-14
+
+### Añadido
+- **Plus: vídeo con tu propia imagen.** Nuevo botón **«🖼 Estilo del vídeo…»** para elegir entre la plantilla Neón de siempre o **tu foto de fondo** con un zoom lento. Puedes poner **una imagen distinta para cada formato** (9:16, 1:1 y 16:9) o una sola para todos, y decidir si se **recorta** para rellenar la pantalla o se muestra **entera sobre un fondo desenfocado**.
+- **Plus: onda de sonido a tu gusto.** Mostrarla u ocultarla; en **barras, línea o círculo**; abajo, en el centro o arriba; con los colores de la paleta Neón o en blanco. También puedes colocar los textos (título, artista, BPM y tonalidad) arriba, en el centro o abajo, o quitarlos.
+- **Plus: final con tu imagen.** Nueva opción «Final: mi imagen»: el vídeo termina con la foto que elijas (tu logo, el cartel del sello…) y un texto opcional debajo.
+- Los ajustes del vídeo se recuerdan y se guardan en los presets de estilo, y la **vista previa** los muestra antes de generar.
+
+### Cambiado
+- **Basic ya puede elegir el final del vídeo** entre la firma «Generado por AutoPrevias · Radical Records» con el enlace o un **fundido a negro**. La marca de agua pequeña se mantiene.
+- Los manuales PDF de Basic y Plus explican las nuevas opciones.
+
 ## [3.5.1] - 2026-10-13
 
 ### Añadido

@@ -96,6 +96,8 @@ def test_final_elegible_en_plus_y_cierre_obligatorio_en_basic():
     assert _rend(end_mode="none").end_mode == "none"
     assert _rend(end_mode="raro").end_mode == "brand"
     assert _rend(watermark=True, end_mode="none").end_mode == "brand"     # Basic no puede quitar el cierre
+    assert _rend(watermark=True, end_mode="fade").end_mode == "fade"      # pero sí elegir el fundido a negro
+    assert _rend(watermark=True, end_mode="image").end_mode == "brand"    # la imagen propia es de Plus
 
 
 def test_final_fundido_a_negro_y_sin_cierre():
@@ -108,3 +110,93 @@ def test_final_fundido_a_negro_y_sin_cierre():
     assert np.asarray(fade.frame(n - 2, t_end)).mean() < 8                 # casi negro
     assert np.asarray(none.frame(n - 2, t_end)).mean() > 25                # sigue la animación
     assert np.abs(np.asarray(brand.frame(n - 2, t_end), np.int16) - np.asarray(brand.outro, np.int16)).mean() < 6   # cierre de marca
+
+
+# ───────────── vídeo propio (Plus): imagen de fondo, onda, disposición y final con imagen ─────────────
+
+def _img(tmp_path, name="f.png", size=(300, 200), color=(40, 90, 200)):
+    p = tmp_path / name
+    Image.new("RGB", size, color).save(p)
+    return str(p)
+
+
+def test_normalize_custom_valida_y_completa():
+    c = vn.normalize_custom({"style": "raro", "wave_style": "zigzag", "wave_pos": "abajo", "bg": {"9:16": "a.jpg", "1:1": ""}})
+    assert c["style"] == "neon" and c["wave_style"] == "bars" and c["wave_pos"] == "bottom" and c["bg"] == {"9:16": "a.jpg"}
+    assert vn.normalize_custom(None)["texts"] is True and vn.normalize_custom(None)["fit"] == "crop"
+
+
+def test_imagen_por_formato_manda_sobre_la_general(tmp_path):
+    a, b = _img(tmp_path, "a.png"), _img(tmp_path, "b.png")
+    c = vn.normalize_custom({"bg": {"default": a, "9:16": b}})
+    assert vn.resolve_bg(c, "9:16") == b and vn.resolve_bg(c, "1:1") == a and vn.resolve_bg(c, "16:9") == a
+    assert vn.resolve_bg(vn.normalize_custom({"bg": {"default": str(tmp_path / "no.png")}}), "1:1") is None
+
+
+@pytest.mark.parametrize("aspect", list(vn.ASPECTS))
+@pytest.mark.parametrize("wave_style", ["bars", "line", "circle"])
+@pytest.mark.parametrize("pos", ["top", "center", "bottom"])
+def test_modo_imagen_dibuja_en_todos_los_formatos(tmp_path, aspect, wave_style, pos):
+    cu = {"style": "image", "bg": {"default": _img(tmp_path)}, "wave_style": wave_style, "wave_pos": pos, "texts_pos": "center"}
+    r = vn._Renderer(_analysis(), None, "Título", "Artista", 128.0, "8A", aspect, "crimson", "BANNER", "PREVIA EXCLUSIVA", 1.0, custom=cu)
+    assert r.img_mode and r.L.W == vn.ASPECTS[aspect][0]
+    im = r.frame(12, 0.4)
+    assert im.size == vn.ASPECTS[aspect] and np.asarray(im).mean() > 5
+
+
+def test_modo_imagen_sin_imagen_cae_a_la_plantilla_neon(tmp_path):
+    r = vn._Renderer(_analysis(), None, "T", "A", 128.0, "8A", "1:1", "crimson", "", "X", 0.25,
+                     custom={"style": "image", "bg": {"default": str(tmp_path / "nada.png")}})
+    assert not r.img_mode
+
+
+def test_onda_y_textos_se_pueden_ocultar(tmp_path):
+    base = {"style": "image", "bg": {"default": _img(tmp_path)}}
+    mk = lambda **kw: vn._Renderer(_analysis(), None, "Título", "Artista", 128.0, "8A", "1:1", "crimson", "", "X", 1.0,
+                                   custom={**base, **kw})
+    full, nowave, notext = mk(), mk(wave=False), mk(texts=False)
+    f0, f1, f2 = (np.asarray(r.frame(12, 0.9), np.int16) for r in (full, nowave, notext))
+    assert np.abs(f0 - f1).sum() > 0 and np.abs(f0 - f2).sum() > 0          # cada elemento cambia el fotograma
+    assert nowave.wave_h == 0 and notext.custom["texts"] is False
+
+
+def test_el_zoom_lento_mueve_la_imagen(tmp_path):
+    grad = np.tile(np.linspace(0, 255, 600, dtype=np.uint8), (900, 1))
+    p = tmp_path / "g.png"; Image.fromarray(np.stack([grad, grad[::-1], grad], -1), "RGB").save(p)
+    r = vn._Renderer(_analysis(), None, "T", "A", 128.0, "8A", "9:16", "crimson", "", "X", 1.0,
+                     custom={"style": "image", "bg": {"default": str(p)}, "wave": False, "texts": False})
+    a, b = np.asarray(r.frame(0, 1.0), np.int16)[:1800], np.asarray(r.frame(29, 9.0), np.int16)[:1800]
+    assert np.abs(a - b).mean() > 0.5
+
+
+def test_final_con_imagen_propia_y_texto(tmp_path):
+    img = _img(tmp_path, color=(10, 200, 60))
+    n = 330
+    an = vn.AudioAnalysis(duration=n / vn.FPS, n_frames=n, bars=np.full((n, 44), 0.5, dtype=np.float32),
+                          kick=np.zeros(n, dtype=np.float32), energy=np.full(n, 0.5, dtype=np.float32), drops=[])
+    r = vn._Renderer(an, None, "T", "A", 120.0, "1A", "9:16", "crimson", "", "X", 0.25, end_mode="image",
+                     custom={"end_image": img, "end_text": "Disponible en Beatport"})
+    assert r.end_mode == "image"
+    g = np.asarray(r.outro, np.int16)
+    assert g[..., 1].mean() > g[..., 0].mean()                                   # es la imagen verde del usuario
+    last = np.asarray(r.frame(n - 2, an.duration - 0.05), np.int16)
+    assert np.abs(last - g).mean() < 6                                           # el vídeo acaba en esa imagen
+    assert vn._Renderer(an, None, "T", "A", 120.0, "1A", "9:16", "crimson", "", "X", 0.25, end_mode="image").end_mode == "brand"
+
+
+def test_basic_ignora_la_imagen_propia(tmp_path):
+    cu = {"style": "image", "bg": {"default": _img(tmp_path)}, "end_image": _img(tmp_path, "e.png")}
+    r = vn._Renderer(_analysis(), None, "T", "A", 128.0, "8A", "1:1", "crimson", "", "X", 0.25, watermark=True, end_mode="image", custom=cu)
+    assert not r.img_mode and r.end_mode == "brand" and r.wm_layer is not None
+
+
+def test_render_completo_modo_imagen(tmp_path):
+    import soundfile as sf
+    sr = 22050
+    t = np.arange(sr * 3) / sr
+    y = (np.sin(2 * np.pi * 440 * t) * 0.3).astype(np.float32)
+    wav = tmp_path / "a.wav"; sf.write(wav, y, sr)
+    out = tmp_path / "v.mp4"
+    vn.render_neon_video(str(wav), None, str(out), aspect_ratio="1:1", scale=0.25,
+                         custom={"style": "image", "bg": {"default": _img(tmp_path)}, "wave_style": "circle"})
+    assert out.exists() and out.stat().st_size > 1000

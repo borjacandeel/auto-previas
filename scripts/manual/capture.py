@@ -340,6 +340,8 @@ if EDITION == "plus":
     from src.ui.presets_bar import SavePresetDialog
     dlg_shot(BatchDialog(initial_files=[str(track)]), "14_lote")
     dlg_shot(SavePresetDialog(["Radical Main", "Set de Verano"], "Radical Main"), "15_guardar_preset")
+    from src.ui.video_custom import VideoCustomDialog
+    dlg_shot(VideoCustomDialog({"style": "image"}), "16_estilo_video")
 
 meta["rects"] = meta_rects
 (OUT / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")

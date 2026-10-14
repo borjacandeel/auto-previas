@@ -13,7 +13,7 @@ import math
 import os
 import subprocess
 import tempfile
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -35,6 +35,65 @@ NEON_PALETTES = {
     "cyber":   ((176, 38, 255), (0, 245, 255), (245, 230, 255)),
 }
 BG = (5, 6, 10)
+
+# Ajustes de «vídeo propio» (solo Plus): imagen de fondo, onda de sonido, disposición y final con foto
+CUSTOM_DEFAULTS = {
+    "style": "neon",          # "neon" (plantilla) | "image" (imagen propia)
+    "bg": {},                 # {"default": ruta, "9:16": ruta, "1:1": ruta, "16:9": ruta}
+    "fit": "crop",            # "crop" (rellena recortando) | "blur" (imagen entera con fondo desenfocado)
+    "wave": True,
+    "wave_style": "bars",     # "bars" | "line" | "circle"
+    "wave_pos": "bottom",     # "top" | "center" | "bottom"
+    "wave_color": "palette",  # "palette" | "white"
+    "texts": True,
+    "texts_pos": "top",       # "top" | "center" | "bottom"
+    "end_image": "",          # imagen del final (modo de final «image»)
+    "end_text": "",
+}
+_CHOICES = {"style": ("neon", "image"), "fit": ("crop", "blur"), "wave_style": ("bars", "line", "circle"),
+            "wave_pos": ("top", "center", "bottom"), "wave_color": ("palette", "white"), "texts_pos": ("top", "center", "bottom")}
+
+
+def normalize_custom(c: Optional[dict]) -> dict:
+    """Completa y valida los ajustes de vídeo propio (valores desconocidos → por defecto)."""
+    out = {k: (dict(v) if isinstance(v, dict) else v) for k, v in CUSTOM_DEFAULTS.items()}
+    if isinstance(c, dict):
+        for k in out:
+            if k in c and c[k] is not None:
+                out[k] = c[k]
+    for k, allowed in _CHOICES.items():
+        if out[k] not in allowed:
+            out[k] = CUSTOM_DEFAULTS[k]
+    out["wave"], out["texts"] = bool(out["wave"]), bool(out["texts"])
+    out["bg"] = {str(k): str(v) for k, v in (out["bg"] or {}).items() if v}
+    out["end_image"], out["end_text"] = str(out["end_image"] or ""), str(out["end_text"] or "").strip()[:80]
+    return out
+
+
+def resolve_bg(custom: dict, aspect: str) -> Optional[str]:
+    """Imagen de fondo para un formato: la específica del formato o, si no hay, la general. None si no existe."""
+    bg = custom.get("bg") or {}
+    for key in (aspect, "default"):
+        p = bg.get(key)
+        if p and Path(p).exists():
+            return p
+    return None
+
+
+def _fit_image(path: str, w: int, h: int, mode: str) -> Image.Image:
+    """Ajusta una imagen a w×h: «crop» la recorta centrada; «blur» la deja entera sobre su propio fondo desenfocado."""
+    im = Image.open(path).convert("RGB")
+    cover_k = max(w / im.width, h / im.height)
+    cov = im.resize((max(w, int(im.width * cover_k + 0.5)), max(h, int(im.height * cover_k + 0.5))), Image.LANCZOS)
+    l, t = (cov.width - w) // 2, (cov.height - h) // 2
+    cov = cov.crop((l, t, l + w, t + h))
+    if mode != "blur":
+        return cov
+    bg = cov.filter(ImageFilter.GaussianBlur(max(w, h) // 40)).point(lambda v: int(v * 0.55))
+    k = min(w / im.width, h / im.height)
+    fg = im.resize((max(1, int(im.width * k)), max(1, int(im.height * k))), Image.LANCZOS)
+    bg.paste(fg, ((w - fg.width) // 2, (h - fg.height) // 2))
+    return bg
 
 
 # ───────────────────────────── análisis de audio ─────────────────────────────
@@ -269,53 +328,67 @@ def _layout(aspect: str) -> _Layout:
 
 class _Renderer:
     def __init__(self, an: AudioAnalysis, cover_path, title, artist, bpm, key_str, aspect, palette_key, promo_text,
-                 kicker, scale: float, watermark: bool = False, end_mode: str = "brand"):
+                 kicker, scale: float, watermark: bool = False, end_mode: str = "brand", custom: Optional[dict] = None):
         self.an = an
         self.watermark = bool(watermark)
-        # Edición Basic (marca de agua): el cierre con firma es obligatorio
-        self.end_mode = "brand" if self.watermark or end_mode not in ("brand", "fade", "none") else end_mode
         self.aspect = aspect
+        # Edición Basic (marca de agua): sin ajustes propios; el final solo puede ser la firma o el fundido a negro
+        self.custom = normalize_custom(None if self.watermark else custom)
+        self.end_image = self.custom["end_image"] if self.custom["end_image"] and Path(self.custom["end_image"]).exists() else ""
+        if end_mode not in ("brand", "fade", "none", "image"):
+            end_mode = "brand"
+        if self.watermark and end_mode not in ("brand", "fade"):
+            end_mode = "brand"
+        if end_mode == "image" and not self.end_image:
+            end_mode = "brand"
+        self.end_mode = end_mode
+        self.bg_path = resolve_bg(self.custom, aspect) if self.custom["style"] == "image" else None
+        self.img_mode = bool(self.bg_path)
         self.L = _layout(aspect)
+        if self.img_mode:                       # con imagen propia los textos van centrados y a todo el ancho útil
+            self.L = replace(self.L, center_text=True, text_w=self.L.W - (140 if self.L.W < self.L.H else 360),
+                             title_size=self.L.title_size if self.L.W < self.L.H else 84)
         self.P, self.S, self.F = NEON_PALETTES.get(palette_key, NEON_PALETTES["crimson"])
         self.promo_text = promo_text.strip()
         L = self.L
         W, H = L.W, L.H
 
-        # fondo: carátula ampliada, desenfocada y oscura + rejilla + viñeta
-        big = _cover_square(cover_path, 256).resize((max(W, H) // 2, max(W, H) // 2), Image.BICUBIC)
-        big = big.filter(ImageFilter.GaussianBlur(26)).convert("RGB")
-        l, t = (big.width - W // 2) // 2, (big.height - H // 2) // 2
-        bgp = big.crop((l, t, l + W // 2, t + H // 2)).resize((W, H), Image.BICUBIC)
-        arr = np.asarray(bgp, np.float32) * 0.28 + np.array(BG, np.float32) * 0.72
-        yy, xx = np.mgrid[0:H, 0:W]
-        grid = (((xx % 90) < 1) | ((yy % 90) < 1)).astype(np.float32)[..., None] * 9
-        vig = np.clip(1 - 0.78 * (np.sqrt(((xx - W / 2) / (W / 2)) ** 2 + ((yy - H / 2) / (H / 2)) ** 2) / 1.4) ** 2.2, 0.15, 1)[..., None]
-        self.bg = Image.fromarray(np.clip((arr + grid) * vig, 0, 255).astype(np.uint8), "RGB")
-        # resplandor: se hornea en dos fondos (frío y caliente) con rayas CRT y varios granos; por fotograma solo se mezclan
-        gh, gw = H // 4, W // 4
-        gl = _radial(gh, gw, gw * (0.5 if L.center_text else 0.30), gh * 0.34, max(gw, gh) * 0.75)
-        glow_full = np.asarray(Image.fromarray((np.clip(gl, 0, 1) * 255).astype(np.uint8), "L")
-                               .resize((W, H), Image.BILINEAR), np.float32)[..., None] / 255.0
-        base_arr = np.asarray(self.bg, np.float32)
-        hot_arr = base_arr + glow_full * np.array(self.P, np.float32)[None, None, :] * 1.9
-        stripes = np.zeros((H, W, 1), np.float32)
-        stripes[::4] = 11
-        rn = np.random.default_rng(5)
-        self.bg_cold, self.bg_hot = [], []
-        for _ in range(3):
-            n = np.asarray(Image.fromarray(rn.integers(0, 12, size=(H // 4, W // 4), dtype=np.uint8), "L")
-                           .resize((W, H), Image.NEAREST), np.float32)[..., None]
-            self.bg_cold.append(Image.fromarray(np.clip(base_arr - stripes + n, 0, 255).astype(np.uint8), "RGB"))
-            self.bg_hot.append(Image.fromarray(np.clip(hot_arr - stripes + n, 0, 255).astype(np.uint8), "RGB"))
+        if not self.img_mode:
+            # fondo: carátula ampliada, desenfocada y oscura + rejilla + viñeta
+            big = _cover_square(cover_path, 256).resize((max(W, H) // 2, max(W, H) // 2), Image.BICUBIC)
+            big = big.filter(ImageFilter.GaussianBlur(26)).convert("RGB")
+            l, t = (big.width - W // 2) // 2, (big.height - H // 2) // 2
+            bgp = big.crop((l, t, l + W // 2, t + H // 2)).resize((W, H), Image.BICUBIC)
+            arr = np.asarray(bgp, np.float32) * 0.28 + np.array(BG, np.float32) * 0.72
+            yy, xx = np.mgrid[0:H, 0:W]
+            grid = (((xx % 90) < 1) | ((yy % 90) < 1)).astype(np.float32)[..., None] * 9
+            vig = np.clip(1 - 0.78 * (np.sqrt(((xx - W / 2) / (W / 2)) ** 2 + ((yy - H / 2) / (H / 2)) ** 2) / 1.4) ** 2.2, 0.15, 1)[..., None]
+            self.bg = Image.fromarray(np.clip((arr + grid) * vig, 0, 255).astype(np.uint8), "RGB")
+            # resplandor: se hornea en dos fondos (frío y caliente) con rayas CRT y varios granos; por fotograma solo se mezclan
+            gh, gw = H // 4, W // 4
+            gl = _radial(gh, gw, gw * (0.5 if L.center_text else 0.30), gh * 0.34, max(gw, gh) * 0.75)
+            glow_full = np.asarray(Image.fromarray((np.clip(gl, 0, 1) * 255).astype(np.uint8), "L")
+                                   .resize((W, H), Image.BILINEAR), np.float32)[..., None] / 255.0
+            base_arr = np.asarray(self.bg, np.float32)
+            hot_arr = base_arr + glow_full * np.array(self.P, np.float32)[None, None, :] * 1.9
+            stripes = np.zeros((H, W, 1), np.float32)
+            stripes[::4] = 11
+            rn = np.random.default_rng(5)
+            self.bg_cold, self.bg_hot = [], []
+            for _ in range(3):
+                n = np.asarray(Image.fromarray(rn.integers(0, 12, size=(H // 4, W // 4), dtype=np.uint8), "L")
+                               .resize((W, H), Image.NEAREST), np.float32)[..., None]
+                self.bg_cold.append(Image.fromarray(np.clip(base_arr - stripes + n, 0, 255).astype(np.uint8), "RGB"))
+                self.bg_hot.append(Image.fromarray(np.clip(hot_arr - stripes + n, 0, 255).astype(np.uint8), "RGB"))
 
-        # carátula
-        cs = L.cover
-        self.cover = _cover_square(cover_path, cs)
-        mask = Image.new("L", (cs, cs), 0)
-        ImageDraw.Draw(mask).rounded_rectangle((0, 0, cs - 1, cs - 1), radius=int(cs * 0.05), fill=255)
-        self.cover.putalpha(mask)
-        dim, hot = self._neon_frame(cs, 0.35), self._neon_frame(cs, 1.0)
-        self._frame_levels = [Image.blend(dim, hot, k / 5) for k in range(6)]
+            # carátula
+            cs = L.cover
+            self.cover = _cover_square(cover_path, cs)
+            mask = Image.new("L", (cs, cs), 0)
+            ImageDraw.Draw(mask).rounded_rectangle((0, 0, cs - 1, cs - 1), radius=int(cs * 0.05), fill=255)
+            self.cover.putalpha(mask)
+            dim, hot = self._neon_frame(cs, 0.35), self._neon_frame(cs, 1.0)
+            self._frame_levels = [Image.blend(dim, hot, k / 5) for k in range(6)]
 
         # textos
         self.lang_en = str(kicker).upper().startswith("EXCLUSIVE")
@@ -327,7 +400,9 @@ class _Renderer:
         self.chips = self._chips(bpm, key_str)
         self._stack_texts()
         self.banner = self._banner(self.promo_text) if self.promo_text else None
-        self.outro = self._outro()
+        self.outro = self._outro_image() if self.end_mode == "image" else self._outro()
+        if self.img_mode:
+            self._setup_image_mode()
         self.wm_layer = self._watermark_layer() if self.watermark else None
         self.spark = {k: _glow_sprite(r, self.F if k == "hot" else self.P) for k, r in (("sm", 7), ("md", 12), ("hot", 18))}
         rng = np.random.default_rng(11)
@@ -436,6 +511,8 @@ class _Renderer:
 
     # — fotograma —
     def frame(self, i: int, t: float) -> Image.Image:
+        if self.img_mode:
+            return self._frame_image(i, t)
         L, an, P = self.L, self.an, self.P
         W, H = L.W, L.H
         kick = float(an.kick[min(i, an.n_frames - 1)])
@@ -507,14 +584,19 @@ class _Renderer:
         d.rectangle((0, H - 12, W, H), fill=(10, 11, 16))
         d.rectangle((0, H - 12, int(W * min(1.0, t / max(0.1, an.duration))), H), fill=self.P)
 
-        # entrada desde negro y cierre con la marca Radical Records
+        return self._finish(base, t)
+
+    def _finish(self, base: Image.Image, t: float) -> Image.Image:
+        """Entrada desde negro, marca de agua (Basic) y final elegido (firma / imagen propia / fundido a negro / corte)."""
+        L, an = self.L, self.an
+        W, H = L.W, L.H
         if t < 0.35:
             base = Image.blend(Image.new("RGB", (W, H), (0, 0, 0)), base, t / 0.35)
         if self.wm_layer is not None:
             wl = self.wm_layer
             base.paste(wl, (W - wl.width - int(W * 0.025), H - 12 - wl.height - int(min(W, H) * 0.02)), wl)
         if an.duration > 8:
-            if self.end_mode == "brand":
+            if self.end_mode in ("brand", "image"):
                 out_len = 3.2
                 if t > an.duration - out_len:
                     a = _ease_out((t - (an.duration - out_len)) / 0.7)
@@ -524,6 +606,169 @@ class _Renderer:
                 if t > an.duration - out_len:
                     base = Image.blend(base, Image.new("RGB", (W, H), (0, 0, 0)), min(1.0, (t - (an.duration - out_len)) / out_len))
         return base
+
+    # — modo «imagen propia» (Plus) —
+    def _outro_image(self) -> Image.Image:
+        """Final con la imagen elegida por el autor (+ texto opcional)."""
+        L = self.L
+        im = _fit_image(self.end_image, L.W, L.H, self.custom["fit"])
+        txt = self.custom["end_text"]
+        if txt:
+            shade = Image.new("RGBA", (L.W, L.H), (0, 0, 0, 0))
+            sd = ImageDraw.Draw(shade)
+            for k in range(int(L.H * 0.30)):
+                sd.line((0, L.H - 1 - k, L.W, L.H - 1 - k), fill=(0, 0, 0, int(190 * (1 - k / (L.H * 0.30)) ** 1.6)))
+            im = im.convert("RGBA"); im.alpha_composite(shade); im = im.convert("RGB")
+            lay = _text_layer(txt, int(L.W * 0.05) if L.W < L.H else 52, (255, 255, 255, 255), "black", tracking=2,
+                              upper=False, max_w=int(L.W * 0.86))
+            im.paste(lay, ((L.W - lay.width) // 2, int(L.H * 0.86) - lay.height // 2), lay)
+        return im
+
+    def _setup_image_mode(self):
+        """Prepara la imagen de fondo (con margen para el zoom lento), el velo de legibilidad y la disposición."""
+        L = self.L
+        W, H = L.W, L.H
+        self.kb_w, self.kb_h = int(W * 1.12), int(H * 1.12)
+        self.kb = _fit_image(self.bg_path, self.kb_w, self.kb_h, self.custom["fit"])
+        c = self.custom
+        lay = [self.kicker, self.title, self.artist, self.chips]
+        gaps = (14, 20, 26)
+        text_h = sum(l.height for l in lay) + sum(gaps) if c["texts"] else 0
+        ban_h = (self.banner.height + 30) if (self.banner is not None) else 0
+        if c["wave"]:
+            if c["wave_style"] == "circle":
+                self.wave_h = int(min(W, H) * (0.46 if W < H else 0.62))
+                self.wave_w = self.wave_h
+            else:
+                self.wave_h = int(H * (0.12 if W < H else 0.20))
+                self.wave_w = W - (140 if W < H else 360)
+        else:
+            self.wave_h = self.wave_w = 0
+        margin_t, margin_b, gap = int(H * 0.06), int(H * 0.075), 34
+        slots = {"top": [], "center": [], "bottom": []}
+        if c["texts"] or ban_h:
+            slots[c["texts_pos"]].append(("texts", text_h + ban_h))
+        if c["wave"]:
+            slots[c["wave_pos"]].append(("wave", self.wave_h))
+        y_of = {}
+        for slot, items in slots.items():
+            if not items:
+                continue
+            total = sum(h for _, h in items) + gap * (len(items) - 1)
+            y = margin_t if slot == "top" else (H - margin_b - total if slot == "bottom" else (H - total) // 2)
+            for name, h in items:
+                y_of[name] = y
+                y += h + gap
+        # textos
+        ty = y_of.get("texts", margin_t)
+        self.ys = []
+        y = ty
+        for k, l in enumerate(lay):
+            self.ys.append(y)
+            y += l.height + (gaps[k] if k < 3 else 0)
+        self.banner_y_img = (ty + text_h + 26) if c["texts"] else ty
+        # onda
+        wy = y_of.get("wave", H - margin_b - self.wave_h)
+        self.wave_rect = ((W - self.wave_w) // 2, wy, (W + self.wave_w) // 2, wy + self.wave_h)
+        # velo oscuro suave detrás de textos y onda (legibilidad sobre cualquier foto); se combina con el máximo de cada zona
+        zones = []
+        if c["texts"] or ban_h:
+            zones.append((ty - 40, ty + text_h + ban_h + 40))
+        if c["wave"]:
+            zones.append((wy - 40, wy + self.wave_h + 40))
+        yy = np.arange(H, dtype=np.float32)
+        alpha = np.zeros(H, np.float32)
+        for (z0, z1) in zones:
+            fade = max(30, (z1 - z0) // 3)
+            up = np.clip((yy - (z0 - fade)) / fade, 0, 1)
+            down = np.clip(1 - (yy - z1) / fade, 0, 1)
+            alpha = np.maximum(alpha, np.minimum(up, down))
+        col = np.repeat((alpha * 150).astype(np.uint8)[:, None], W, axis=1)
+        veil = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        veil.putalpha(Image.fromarray(col, "L"))
+        self.veil = veil
+
+    def _wave_color(self, v: float):
+        if self.custom["wave_color"] == "white":
+            return (255, 255, 255)
+        return _lerp(self.P, self.S, v * 2) if v < 0.5 else _lerp(self.S, self.F, (v - 0.5) * 2)
+
+    def _draw_wave(self, base, i, kick):
+        an = self.an
+        x0, y0, x1, y1 = self.wave_rect
+        w, h = x1 - x0, y1 - y0
+        pad = 40
+        layer = Image.new("RGBA", (w + 2 * pad, h + 2 * pad), (0, 0, 0, 0))
+        d = ImageDraw.Draw(layer)
+        vals = an.bars[min(i, an.n_frames - 1)].astype(np.float32)
+        n = len(vals)
+        style = self.custom["wave_style"]
+        if style == "bars":
+            slot = w / n
+            bw = max(4, int(slot * 0.62))
+            for k in range(n):
+                v = float(vals[k]) ** 0.9
+                bh = max(6, int(v * h))
+                x = pad + int(k * slot + (slot - bw) / 2)
+                d.rounded_rectangle((x, pad + h - bh, x + bw, pad + h), radius=bw // 2, fill=self._wave_color(v) + (255,))
+        elif style == "line":
+            xs = np.linspace(0, w, 120)
+            vv = np.interp(xs, np.linspace(0, w, n), vals)
+            vv = np.convolve(np.pad(vv, 2, mode="edge"), np.ones(5) / 5, mode="valid")[:len(xs)]
+            cy = pad + h / 2
+            up = [(pad + float(x), cy - float(v) ** 0.9 * h / 2) for x, v in zip(xs, vv)]
+            dn = [(px, 2 * cy - py) for px, py in up]
+            col = self._wave_color(0.55) + (255,)
+            d.line(up, fill=col, width=7, joint="curve")
+            d.line(dn, fill=col, width=7, joint="curve")
+            mid = [(pad + float(x), cy) for x in xs]
+            d.line(mid, fill=self._wave_color(0.2) + (140,), width=3)
+        else:   # circle
+            cx, cy = pad + w / 2, pad + h / 2
+            r0 = h * 0.30 * (1 + 0.05 * kick)
+            rmax = h / 2 - r0
+            m = n * 2
+            for k in range(m):
+                v = float(vals[k % n if k < n else (m - 1 - k) % n]) ** 0.9
+                ang = 2 * math.pi * k / m - math.pi / 2
+                r1 = r0 + max(5.0, v * rmax)
+                d.line((cx + r0 * math.cos(ang), cy + r0 * math.sin(ang), cx + r1 * math.cos(ang), cy + r1 * math.sin(ang)),
+                       fill=self._wave_color(v) + (255,), width=max(4, int(2 * math.pi * r0 / m * 0.62)))
+        glow = layer.filter(ImageFilter.GaussianBlur(11))
+        base.paste(glow, (x0 - pad, y0 - pad), glow)
+        base.paste(layer, (x0 - pad, y0 - pad), layer)
+
+    def _frame_image(self, i: int, t: float) -> Image.Image:
+        L, an = self.L, self.an
+        W, H = L.W, L.H
+        kick = float(an.kick[min(i, an.n_frames - 1)])
+        en = float(an.energy[min(i, an.n_frames - 1)])
+        since = min([(i - d) / FPS for d in an.drops if d <= i] or [99.0])
+        flash = max(0.0, 1 - since / 0.45) ** 2 if since < 0.45 else 0.0
+        # zoom lento (efecto cámara) + pequeño latido con el bombo
+        prog = min(1.0, t / max(1.0, an.duration))
+        z = 1.0 + 0.07 * prog + 0.012 * kick + 0.012 * flash
+        # el zoom 1.0 enseña el lienzo entero menos el margen (1/1.12 del tamaño ampliado)
+        cw, ch = (self.kb_w / 1.12) / z, (self.kb_h / 1.12) / z
+        cx = self.kb_w / 2 + 0.018 * self.kb_w * math.sin(t * 0.35)
+        cy = self.kb_h / 2 + 0.012 * self.kb_h * math.cos(t * 0.27)
+        box = (cx - cw / 2, cy - ch / 2, cx + cw / 2, cy + ch / 2)
+        base = self.kb.resize((W, H), Image.BILINEAR, box=box)
+        if flash > 0.02:
+            base = Image.blend(base, Image.new("RGB", (W, H), self.F), min(0.30, flash * 0.35))
+        base.paste(self.veil, (0, 0), self.veil)
+        if self.custom["texts"]:
+            self._draw_texts(base, t, kick, flash, False, 99.0)
+        if self.banner is not None:
+            a = _ease_out((t - 0.9) / 0.35)
+            if a > 0:
+                base.paste(self.banner, ((W - self.banner.width) // 2, self.banner_y_img + int((1 - a) * 60)), self.banner)
+        if self.custom["wave"]:
+            self._draw_wave(base, i, kick)
+        d = ImageDraw.Draw(base)
+        d.rectangle((0, H - 12, W, H), fill=(10, 11, 16))
+        d.rectangle((0, H - 12, int(W * min(1.0, t / max(0.1, an.duration))), H), fill=self.P)
+        return self._finish(base, t)
 
     def _paste_layer(self, base, layer, x, y, scale=1.0, alpha=1.0):
         if alpha <= 0:
@@ -596,6 +841,7 @@ def render_neon_video(
     progress_cb: Optional[Callable[[int, str], None]] = None,
     watermark: bool = False,
     end_mode: str = "brand",
+    custom: Optional[dict] = None,
 ) -> str:
     """Renderiza el vídeo animado Radical Neón. scale<1 = borrador rápido (menos resolución)."""
     def _prog(p, m):
@@ -612,7 +858,7 @@ def render_neon_video(
     an = analyze_audio(audio_path)
     _prog(12, "Preparando el diseño Radical Neón…")
     r = _Renderer(an, cover_image_path, title, artist, bpm, key_str, aspect_ratio, palette_key, promo_text, kicker, scale,
-                  watermark=watermark, end_mode=end_mode)
+                  watermark=watermark, end_mode=end_mode, custom=custom)
     W, H = r.L.W, r.L.H
     ow, oh = (int(W * scale) // 2 * 2, int(H * scale) // 2 * 2)
 
@@ -669,6 +915,7 @@ def render_preview(
     progress_cb: Optional[Callable[[int, str], None]] = None,
     watermark: bool = False,
     end_mode: str = "brand",
+    custom: Optional[dict] = None,
 ) -> dict:
     """Vista previa rápida del vídeo: unos segundos de la pista (desde `start_sec`, o desde el 30 % si es <0)
     a baja resolución, seguidos del cierre con firma. Devuelve {"frames": [PIL.Image RGB], "fps": fps, "audio": wav|None}."""
@@ -693,7 +940,7 @@ def render_preview(
     _prog(20, "Analizando el ritmo…")
     an = analyze_audio(str(clip))
     r = _Renderer(an, cover_image_path, title, artist, bpm, key_str, aspect_ratio, palette_key, promo_text, kicker, 1.0,
-                  watermark=watermark, end_mode=end_mode)
+                  watermark=watermark, end_mode=end_mode, custom=custom)
     W, H = r.L.W, r.L.H
     k = out_height / float(H)
     size = (max(2, int(W * k)) // 2 * 2, out_height)
@@ -707,7 +954,7 @@ def render_preview(
         if j % 6 == 0:
             _prog(25 + 70 * j / n, "Dibujando la vista previa…")
     last = frames[-1]
-    if r.end_mode == "brand":
+    if r.end_mode in ("brand", "image"):
         out_img = r.outro.convert("RGB").resize(size, Image.BILINEAR)
         for j in range(int(1.8 * fps)):          # cierre con firma y enlace
             frames.append(Image.blend(last, out_img, min(1.0, _ease_out(j / (0.6 * fps)))))

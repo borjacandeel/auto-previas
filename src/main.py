@@ -213,6 +213,20 @@ def run_selftest() -> int:
             assert _r.frame(3, 0.1).size
         print("  ✓ Generador de vídeo Radical Neón construye fotogramas en los 3 formatos")
 
+        # Vídeo propio (Plus): imagen de fondo, onda de sonido (barras/línea/círculo) y final con imagen
+        from src.config import get_assets_dir as _gad
+        _img = next((str(_p) for _p in (Path(_gad()) / "logo.png", Path(_gad()) / "logo_emblem.png") if _p.exists()), "")
+        if _img:
+            for _asp, _ws in zip(_vn.ASPECTS, ("bars", "line", "circle")):
+                _r = _vn._Renderer(_an, None, "TEST", "Radical Records", 128.0, "8A · Am", _asp, "crimson", "", "PREVIA EXCLUSIVA", 0.25,
+                                   end_mode="image", custom={"style": "image", "bg": {"default": _img}, "wave_style": _ws,
+                                                             "end_image": _img, "end_text": "TEST"})
+                assert _r.img_mode and _r.frame(3, 0.1).size and _r.outro.size
+            print("  ✓ Vídeo con imagen propia, onda y final con imagen construyen fotogramas")
+        from src.ui import video_custom as _vc
+        _vc.VideoCustomDialog({"style": "image"}).deleteLater()
+        print("  ✓ Ventana de ajustes del vídeo construida")
+
         from src.ui import video_preview as _vp
         assert hasattr(_vp, "VideoPreviewDialog")
         print("  ✓ Vista previa del vídeo empaquetada")

@@ -56,6 +56,7 @@ from src.analysis.structure import analyze_structure, SectionType
 from src.analysis.segments import build_preview_plan
 from src.engine.export import build_preview_audio, export_files, output_paths
 from src.engine.variations import compute_preview_tempo_curve
+from src.engine.video_neon import normalize_custom
 from src import i18n
 from src.i18n import tr
 
@@ -254,6 +255,7 @@ class ExportWorker(QThread):
             metadata["video_promo_text"] = self.cfg.get("video_promo_text", "RADICAL RECORDS · PROMO EXCLUSIVA")
             metadata["video_title"]      = self.cfg.get("video_title", "")
             metadata["video_end"]        = self.cfg.get("video_end", "brand")
+            metadata["video_custom"]     = self.cfg.get("video_custom")
             metadata["aspect_ratio"]     = self.cfg.get("aspect_ratio", "9:16")
             if self.cfg.get("mp3_kbps"):
                 metadata["mp3_kbps"] = int(self.cfg["mp3_kbps"])
@@ -1377,6 +1379,8 @@ class BrandingCard(QFrame):
                 c["aspect_ratio"]  = parent._combo_aspect.currentData()
             if hasattr(parent, "_combo_vend"):
                 c["video_end"]     = parent._combo_vend.currentData()
+            if hasattr(parent, "_video_custom"):
+                c["video_custom"]  = parent._video_custom
             if hasattr(parent, "_chk_fx_flanger"):
                 c["fx_flanger"]      = parent._chk_fx_flanger.isChecked()
                 c["fx_filter_sweep"] = parent._chk_fx_filter.isChecked()
@@ -1905,10 +1909,19 @@ class ResultPanel(QWidget):
         self._combo_vend.addItem("✨ Final: firma AutoPrevias + enlace", "brand")
         self._combo_vend.addItem("🌑 Final: fundido a negro", "fade")
         self._combo_vend.addItem("✂ Final: sin cierre (corte seco)", "none")
-        self._combo_vend.setToolTip("Cómo termina el vídeo: con el cierre «Generado por AutoPrevias · Radical Records» y el enlace, con un fundido a negro o sin cierre.")
+        self._combo_vend.addItem("🖼 Final: mi imagen", "image")
+        self._combo_vend.setToolTip("Cómo termina el vídeo: con el cierre «Generado por AutoPrevias · Radical Records» y el enlace, con un fundido a negro, con tu propia imagen o sin cierre (Plus). En Basic puedes elegir entre la firma o el fundido a negro.")
+        self._video_custom = normalize_custom(None)
+        self._btn_vcustom = QPushButton("🖼 Estilo del vídeo…")
+        self._btn_vcustom.setFixedHeight(24)
+        self._btn_vcustom.setCursor(Qt.PointingHandCursor)
+        self._btn_vcustom.setStyleSheet(_btn("#1f2937", "#e5e7eb", "#374151", radius=5, fs=10.5))
+        self._btn_vcustom.setToolTip("Plus: elige la plantilla Neón o tu propia imagen (una por formato), la onda de sonido (barras, línea o círculo), su posición, los textos y un final con tu imagen.")
+        self._btn_vcustom.clicked.connect(self._open_video_custom)
+        self._combo_vend.currentIndexChanged.connect(self._on_vend_changed)
         self._lbl_vbasic = QLabel("Marca de agua incluida · se quita con Plus")
         self._lbl_vbasic.setStyleSheet("color:#c084fc; font-size:10px; font-weight:600; background: transparent; border: none;")
-        self._lbl_vbasic.setToolTip("En la edición Basic el vídeo lleva una marca de agua pequeña («Generado por Radical Records · AutoPrevias Basic») y el cierre con firma. La edición Plus no lleva marca de agua y te deja elegir el final.")
+        self._lbl_vbasic.setToolTip("En la edición Basic el vídeo lleva una marca de agua pequeña («Generado por Radical Records · AutoPrevias Basic») y termina con la firma de AutoPrevias o con un fundido a negro, como prefieras. La edición Plus no lleva marca de agua y te deja elegirlo todo: fondo, onda de sonido, textos y final.")
         self._btn_vprev = QPushButton("👁 Vista previa")
         self._btn_vprev.setFixedHeight(24)
         self._btn_vprev.setCursor(Qt.PointingHandCursor)
@@ -1918,6 +1931,7 @@ class ResultPanel(QWidget):
         row_vt.addWidget(lbl_vt)
         row_vt.addWidget(self._edit_vtitle, stretch=1)
         row_vt.addWidget(self._combo_vend)
+        row_vt.addWidget(self._btn_vcustom)
         row_vt.addWidget(self._lbl_vbasic)
         row_vt.addWidget(self._btn_vprev)
         self._row_video_title_widget.setVisible(False)
@@ -2294,6 +2308,9 @@ class ResultPanel(QWidget):
                 if self._combo_video_pal.itemData(i) == persisted_cfg["video_palette"]:
                     self._combo_video_pal.setCurrentIndex(i)
                     break
+        if hasattr(self, "_video_custom") and persisted_cfg.get("video_custom"):
+            from src.engine.video_neon import normalize_custom
+            self._video_custom = normalize_custom(persisted_cfg["video_custom"])
         if hasattr(self, "_combo_vend") and persisted_cfg.get("video_end"):
             self._set_combo_by_data(self._combo_vend, persisted_cfg["video_end"])
         if hasattr(self, "_combo_aspect") and persisted_cfg.get("aspect_ratio"):
@@ -2484,7 +2501,8 @@ class ResultPanel(QWidget):
             "video_palette": video_pal,
             "video_promo_text": promo_txt,
             "video_title": vtitle,
-            "video_end": self._combo_vend.currentData() if (hasattr(self, "_combo_vend") and get_edition() == "plus") else "brand",
+            "video_end": self._video_end_for_edition(),
+            "video_custom": dict(self._video_custom) if get_edition() == "plus" else None,
             "aspect_ratio": aspect,
             "voice_drop_enabled": bool(self._voice_drop_path),
             "voice_drop_path": self._voice_drop_path,
@@ -2515,6 +2533,51 @@ class ResultPanel(QWidget):
             opts.update({"export_wav": False, "export_flac": False, "export_mp3": True, "mp3_kbps": 128})
         return opts
 
+    def _video_end_for_edition(self) -> str:
+        """Final elegido; en Basic solo vale la firma o el fundido a negro."""
+        v = self._combo_vend.currentData() if hasattr(self, "_combo_vend") else "brand"
+        if get_edition() != "plus" and v not in ("brand", "fade"):
+            return "brand"
+        return v or "brand"
+
+    def _refresh_vend_items(self, plus: bool):
+        """Basic ofrece solo «firma» y «fundido a negro»; Plus añade «sin cierre» y «mi imagen»."""
+        cb = self._combo_vend
+        cur = cb.currentData()
+        cb.blockSignals(True)
+        cb.clear()
+        cb.addItem(tr("✨ Final: firma AutoPrevias + enlace"), "brand")
+        cb.addItem(tr("🌑 Final: fundido a negro"), "fade")
+        if plus:
+            cb.addItem(tr("✂ Final: sin cierre (corte seco)"), "none")
+            cb.addItem(tr("🖼 Final: mi imagen"), "image")
+        for i in range(cb.count()):
+            if cb.itemData(i) == cur:
+                cb.setCurrentIndex(i)
+                break
+        cb.blockSignals(False)
+
+    def _on_vend_changed(self, *_):
+        if self._combo_vend.currentData() == "image" and not self._video_custom.get("end_image"):
+            self._open_video_custom()
+
+    def _open_video_custom(self):
+        if get_edition() != "plus":
+            return
+        from src.ui.video_custom import VideoCustomDialog
+        from src.config import load as _lc, save as _sc
+        dlg = VideoCustomDialog(self._video_custom, self)
+        if dlg.exec():
+            self._video_custom = dlg.result_custom()
+            try:
+                cfg = _lc()
+                cfg["video_custom"] = self._video_custom
+                _sc(cfg)
+            except Exception:
+                pass
+        if self._combo_vend.currentData() == "image" and not self._video_custom.get("end_image"):
+            self._set_combo_by_data(self._combo_vend, "brand")      # sin imagen de final, vuelve a la firma
+
     def _open_video_preview(self):
         """Vista previa rápida del vídeo con los ajustes actuales (título, paleta, formato, banner, carátula)."""
         src = getattr(self, "_source_path", "") or ""
@@ -2543,6 +2606,7 @@ class ResultPanel(QWidget):
             start_sec=start,
             watermark=(get_edition() != "plus"),
             end_mode=opts.get("video_end", "brand"),
+            custom=opts.get("video_custom"),
         )
         dlg = VideoPreviewDialog(params, self)
         dlg.setAttribute(Qt.WA_DeleteOnClose, True)
@@ -2610,7 +2674,8 @@ class ResultPanel(QWidget):
                           "time_sec": self._voice_drop_time_sec},
                 "promo": {"enabled": self._chk_promo.isChecked(), "interval_sec": int(self._spin_promo.value())},
                 "video": {"palette": self._combo_video_pal.currentData(), "aspect": self._combo_aspect.currentData(),
-                          "banner": self._edit_promo.text().strip(), "end": self._combo_vend.currentData()},
+                          "banner": self._edit_promo.text().strip(), "end": self._combo_vend.currentData(),
+                          "custom": self._video_custom if get_edition() == "plus" else None},
             }
         if signature and hasattr(self, "_branding_card"):
             md = self._branding_card.get_metadata()
@@ -2667,6 +2732,9 @@ class ResultPanel(QWidget):
             self._edit_promo.setText(vid.get("banner", ""))
             if plus and vid.get("end"):
                 self._set_combo_by_data(self._combo_vend, vid.get("end"))
+            if plus and vid.get("custom"):
+                from src.engine.video_neon import normalize_custom
+                self._video_custom = normalize_custom(vid.get("custom"))
         promo = st.get("promo") or {}
         if plus and promo:
             self._spin_promo.setValue(int(promo.get("interval_sec", 20)))
@@ -3818,7 +3886,9 @@ class ResultPanel(QWidget):
 
         # Vídeo: Basic lo tiene con marca de agua + cierre con firma obligatorios; Plus sin marca y con final a elegir
         self._chk_video.setVisible(True)
-        self._combo_vend.setVisible(plus)
+        self._refresh_vend_items(plus)
+        self._combo_vend.setVisible(True)          # Basic: firma o fundido a negro · Plus: todas las opciones
+        self._btn_vcustom.setVisible(plus)
         self._lbl_vbasic.setVisible(not plus)
         self._edit_promo.setVisible(plus)          # el banner propio es de Plus
         if not plus:
