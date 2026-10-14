@@ -671,14 +671,32 @@ class OnboardingTour(QObject):
         if sa is None:
             return
         content = sa.widget()
-        top = min(x.mapTo(content, QPoint(0, 0)).y() for x in ws)
-        bottom = max(x.mapTo(content, QPoint(0, x.height())).y() for x in ws)
-        vp_h = sa.viewport().height()
         sb = sa.verticalScrollBar()
-        want_top = max(24, int(vp_h * 0.12))
-        if bottom - top > vp_h * 0.55:                   # objetivo muy alto: que se vea entero
-            want_top = 24
-        sb.setValue(max(0, top - want_top))
+        for _ in range(3):                               # el diseño puede tardar en asentarse (equipos lentos, Windows)
+            lay = content.layout()
+            if lay is not None:
+                lay.activate()
+            QApplicationProcess()
+            top = min(x.mapTo(content, QPoint(0, 0)).y() for x in ws)
+            bottom = max(x.mapTo(content, QPoint(0, x.height())).y() for x in ws)
+            vp_h = sa.viewport().height()
+            want_top = max(24, int(vp_h * 0.12))
+            if bottom - top > vp_h * 0.55:               # objetivo muy alto: que se vea entero
+                want_top = 24
+            goal = max(0, top - want_top)
+            # horizontal: en ventanas estrechas (o con fuentes anchas) el panel desborda y hay que acercar el objetivo
+            hb = sa.horizontalScrollBar()
+            left = min(x.mapTo(content, QPoint(0, 0)).x() for x in ws)
+            right = max(x.mapTo(content, QPoint(x.width(), 0)).x() for x in ws)
+            vp_w = sa.viewport().width()
+            hgoal = hb.value()
+            if left < hb.value() + 40 or right > hb.value() + vp_w - 40:
+                hgoal = left - 40 if (right - left) > vp_w - 80 else right - vp_w + 40
+                hgoal = max(0, hgoal)
+            if sb.value() == min(goal, sb.maximum()) and hb.value() == min(hgoal, hb.maximum()):
+                break
+            sb.setValue(goal)
+            hb.setValue(hgoal)
         QApplicationProcess()
 
     # — pista de ejemplo —

@@ -33,7 +33,7 @@ def _cerrar(*widgets):
     QApplication.processEvents()
 
 
-def _ventana(monkeypatch, edition):
+def _ventana(monkeypatch, edition, size=(1400, 900)):
     import src.config as C
     import src.ui.app as A
     monkeypatch.setattr(C, "get_edition", lambda: edition)
@@ -42,7 +42,7 @@ def _ventana(monkeypatch, edition):
     cfg["edition"] = edition
     C.save(cfg)
     w = A.MainWindow()
-    w.resize(1400, 900)
+    w.resize(*size)
     w.show()
     for _ in range(10):
         QApplication.processEvents()
@@ -121,10 +121,11 @@ def test_dialogo_de_bienvenida_omitir_y_recorrido():
     _cerrar(d, d2)
 
 
-def test_recorrido_completo_sin_dejar_rastro(monkeypatch):
+@pytest.mark.parametrize("size", [(1400, 900), (980, 640)])        # la ventana mínima desborda el panel: hay que desplazar también en horizontal
+def test_recorrido_completo_sin_dejar_rastro(monkeypatch, size):
     import src.config as C
     from src.ui import tour
-    w = _ventana(monkeypatch, "plus")
+    w = _ventana(monkeypatch, "plus", size)
     antes = (w._results._chk_video.isChecked(), w._results._chk_advanced.isChecked(), w._results._adv_open)
     w.start_tour()
     T = w._tour
@@ -136,13 +137,14 @@ def test_recorrido_completo_sin_dejar_rastro(monkeypatch):
         if T._busy:
             time.sleep(0.1)
             continue
-        for _ in range(12):                              # deja que el paso se presente (temporizador de 60 ms)
-            QApplication.processEvents()
-            time.sleep(0.02)
         st = T._steps[T._i]
+        if st.target is not None:                        # todo paso con objetivo resalta algo (en CI lenta puede tardar)
+            assert _pump(lambda: not T._overlay._hole.isNull(), secs=5), f"sin resaltado: {st.key}"
+        else:
+            for _ in range(10):
+                QApplication.processEvents()
+                time.sleep(0.02)
         visto.append(st.key)
-        if st.target is not None:                        # todo paso con objetivo resalta algo
-            assert not T._overlay._hole.isNull(), f"sin resaltado: {st.key}"
         T._overlay.next_clicked.emit()
         for _ in range(8):
             QApplication.processEvents()
