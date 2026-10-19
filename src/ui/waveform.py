@@ -33,6 +33,10 @@ try:
 except ImportError:
     HAS_PYQTGRAPH = False
 
+if HAS_PYQTGRAPH:
+    from src.ui.fx_lane import FxBandItem, FxPalette, FxInspector, FxPlotWidget, assign_lanes, fx_label
+    from src.engine.fx_events import DEFAULT_AMOUNT, DEFAULT_DURATION, MAX_EVENTS, MIN_DURATION, normalize_events
+
 # ── Paleta estética ───────────────────────────────────────────────────────────
 SECTION_COLORS: dict[str, tuple] = {
     "intro":     (220,  30,  50, 55),
@@ -62,6 +66,7 @@ MASK_BG_COLOR      = (6, 7, 10, 195)       # máscara oscura zonas fuera de prev
 BG_COLOR           = (12, 13, 16)          # rack synth deep black
 
 MAX_POINTS = 1600
+SNAP_SEC = 0.12            # los efectos «imantan» a los pulsos si están a menos de esto
 
 
 # ── Loader ultrarrápido en background ──────────────────────────────────────────
@@ -116,6 +121,7 @@ class WaveformWidget(QWidget):
     boundaries_changed = Signal(list)   # límites arrastrados → [t0, t1, …]
     cuts_changed       = Signal(list)   # cortes ajustados → [(start, end), …]
     voice_drop_moved   = Signal(float)  # marcador voice drop arrastrado → segundos
+    fx_changed         = Signal(list)   # efectos manuales cambiados → [{id, type, start, end, amount}, …]
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -146,6 +152,14 @@ class WaveformWidget(QWidget):
         self._voice_drop_line   = None  # InfiniteLine marcador de inicio Voice Drop (arrastrable)
         self._voice_drop_region = None  # LinearRegionItem región sombreada [t, t+dur]
         self._voice_drop_dur    = 0.0   # duración del archivo de voice drop en segundos
+
+        # Efectos manuales (carril de efectos): tiempos del tema original
+        self._fx_enabled       = False
+        self._fx_events: list[dict] = []
+        self._fx_bands         = []
+        self._fx_selected      = None
+        self._fx_ghost         = None
+        self._beat_times       = np.zeros(0)
 
         self._loader           = None
         self._preview_loader   = None
@@ -249,7 +263,7 @@ class WaveformWidget(QWidget):
         layout.addLayout(top_bar)
 
         # ── Área gráfica de waveform ───────────────────────────────────────
-        self._plot = pg.PlotWidget()
+        self._plot = FxPlotWidget()
         self._plot.setMinimumHeight(135)
         self._plot.showGrid(x=False, y=False)
         self._plot.hideAxis("left")
@@ -287,7 +301,23 @@ class WaveformWidget(QWidget):
 
         # Clic para seek instantáneo
         self._plot.scene().sigMouseClicked.connect(self._on_click)
+        self._plot.setFocusPolicy(Qt.StrongFocus)
+        self._plot.fx_over.connect(self._on_fx_over)
+        self._plot.fx_left.connect(self._clear_fx_ghost)
+        self._plot.fx_dropped.connect(self._on_fx_dropped)
+        self._plot.fx_delete_key.connect(self._delete_selected_fx)
         layout.addWidget(self._plot)
+
+        # ── Carril de efectos: paleta arrastrable + ajustes del efecto elegido ──
+        self._fx_palette = FxPalette()
+        self._fx_palette.add_at_cursor.connect(self._fx_add_at_cursor)
+        self._fx_palette.clear_all.connect(self.clear_fx)
+        self._fx_palette.setVisible(False)
+        layout.addWidget(self._fx_palette)
+        self._fx_inspector = FxInspector()
+        self._fx_inspector.changed.connect(self._on_inspector_changed)
+        self._fx_inspector.removed.connect(self._delete_selected_fx)
+        layout.addWidget(self._fx_inspector)
 
         # ── Leyenda de colores inline ──────────────────────────────────────
         self._legend_row = QHBoxLayout()
@@ -301,6 +331,8 @@ class WaveformWidget(QWidget):
         """Carga el audio original en background."""
         if not HAS_PYQTGRAPH:
             return
+        self._fx_events = []
+        self._fx_selected = None
         self._clear_all()
         self._mode = "source"
         self._update_badges()
@@ -391,6 +423,7 @@ class WaveformWidget(QWidget):
                 self._update_omitted_masks_positions()
             else:
                 self._draw_plan_highlights()
+            self._refresh_fx_dim()
 
     def set_mode(self, mode: str):
         """Alterna entre la vista de 'source' (original) y 'preview' (previa generada)."""
@@ -559,9 +592,11 @@ class WaveformWidget(QWidget):
         self._draw_waveform(color=WAVEFORM_COLOR)
         self._draw_regions()
         self._draw_plan_highlights()
+        self._draw_fx_bands()
         self._draw_legend()
         self._playhead_line.setValue(0.0)
         self._playhead_glow.setValue(0.0)
+        self._update_fx_visibility()
 
     def _draw_preview_view(self):
         """Dibuja la onda de la previa generada con sus secciones consecutivas."""
@@ -576,6 +611,7 @@ class WaveformWidget(QWidget):
         self._draw_legend_preview()
         self._playhead_line.setValue(0.0)
         self._playhead_glow.setValue(0.0)
+        self._update_fx_visibility()
 
     def _draw_waveform(self, color: tuple):
         if self._rms is None or not HAS_PYQTGRAPH or self._duration <= 0:
@@ -881,6 +917,217 @@ class WaveformWidget(QWidget):
         self.cuts_changed.emit(cuts)
         QTimer.singleShot(80, lambda: setattr(self, "_dragging", False))
 
+    # ── Carril de efectos (manual: el usuario elige qué efecto y dónde) ──────────
+
+    def set_fx_enabled(self, on: bool):
+        self._fx_enabled = bool(on)
+        self._update_fx_visibility()
+
+    def set_beat_times(self, beat_times):
+        try:
+            self._beat_times = np.asarray(sorted(float(x) for x in beat_times), dtype=float)
+        except Exception:
+            self._beat_times = np.zeros(0)
+
+    def fx_events(self) -> list[dict]:
+        return [dict(e) for e in self._fx_events]
+
+    def set_fx_events(self, events, emit: bool = False):
+        self._fx_events = normalize_events(events, self._duration or self._source_dur or None)
+        self._fx_selected = None
+        self._draw_fx_bands()
+        self._update_fx_visibility()
+        if emit:
+            self.fx_changed.emit(self.fx_events())
+
+    def clear_fx(self):
+        if self._fx_events:
+            self.set_fx_events([], emit=True)
+
+    def _update_fx_visibility(self):
+        if not HAS_PYQTGRAPH or not hasattr(self, "_fx_palette"):
+            return
+        show = self._fx_enabled and self._mode == "source"
+        self._fx_palette.setVisible(show)
+        self._fx_palette.btn_clear.setVisible(show and bool(self._fx_events))
+        sel = self._fx_event(self._fx_selected)
+        want = show and sel is not None
+        if want:
+            self._fx_inspector.show_event(sel, self._duration)
+        if want != self._fx_inspector.isVisible():
+            from src.ui import anim as _anim
+            _anim.reveal(self._fx_inspector, want)
+        self._plot.setAcceptDrops(show)
+
+    def _fx_event(self, fid):
+        for e in self._fx_events:
+            if e["id"] == fid:
+                return e
+        return None
+
+    def _draw_fx_bands(self):
+        """(Re)dibuja los bloques de efecto en la parte baja de la onda."""
+        if not HAS_PYQTGRAPH or not hasattr(self, "_plot"):
+            return
+        for b in self._fx_bands:
+            try:
+                self._plot.removeItem(b)
+            except Exception:
+                pass
+        self._fx_bands = []
+        if self._mode != "source" or self._duration <= 0 or not self._fx_enabled:
+            return
+        lanes = assign_lanes(self._fx_events)
+        for ev in self._fx_events:
+            it = FxBandItem(self, ev, lane=lanes.get(ev["id"], 0))
+            it.selected = ev["id"] == self._fx_selected
+            self._plot.addItem(it, ignoreBounds=True)
+            self._fx_bands.append(it)
+        self._refresh_fx_dim()
+
+    def _refresh_fx_dim(self):
+        """Un efecto fuera de todos los cortes no sonará: se ve apagado."""
+        for it in self._fx_bands:
+            s, e = it.ev["start"], it.ev["end"]
+            it.dim = bool(self._plan_segs) and not any(
+                min(e, float(g.source_end)) - max(s, float(g.source_start)) > 0.05 for g in self._plan_segs)
+            it.setToolTip(tr("{name} · {a}s – {b}s · arrástralo para moverlo, estira los bordes para cambiar la duración", name=fx_label(it.ev["type"]),
+                             a=f"{s:.1f}", b=f"{e:.1f}") + (tr(" · fuera de los cortes: no sonará") if it.dim else ""))
+            it.update()
+
+    def _snap(self, t: float) -> float:
+        bt = self._beat_times
+        if len(bt) == 0:
+            return t
+        i = int(np.searchsorted(bt, t))
+        cands = [bt[j] for j in (i - 1, i) if 0 <= j < len(bt)]
+        best = min(cands, key=lambda x: abs(x - t))
+        return float(best) if abs(best - t) <= SNAP_SEC else t
+
+    def _fx_move(self, fid, mode, s0, e0, dx):
+        """Nuevo (inicio, fin) al arrastrar el bloque (mode 'm') o uno de sus bordes ('l'/'r')."""
+        dur = self._duration
+        if mode == "m":
+            ln = e0 - s0
+            s = s0 + dx
+            s2 = self._snap(s)
+            if s2 == s:                                   # si el inicio no encaja, prueba con el final
+                e2 = self._snap(s + ln)
+                s2 = e2 - ln if e2 != s + ln else s
+            s = max(0.0, min(s2, dur - ln))
+            return s, s + ln
+        if mode == "l":
+            s = self._snap(s0 + dx)
+            s = max(0.0, min(s, e0 - MIN_DURATION))
+            s = max(s, e0 - 60.0)
+            return s, e0
+        e = self._snap(e0 + dx)
+        e = min(dur, max(e, s0 + MIN_DURATION))
+        e = min(e, s0 + 60.0)
+        return s0, e
+
+    def _fx_live(self, fid, s, e):
+        ev = self._fx_event(fid)
+        if ev is not None:
+            ev["start"], ev["end"] = round(s, 3), round(e, 3)
+            self._fx_inspector.update_range(s, e)
+            i18n.set_text(self._hint_lbl, "🎛 Efecto: {a}s – {b}s (duración: {d}s)", a=f"{s:.1f}", b=f"{e:.1f}", d=f"{e - s:.1f}")
+
+    def _fx_commit(self, fid, s, e):
+        self._fx_live(fid, s, e)
+        QTimer.singleShot(0, self._draw_fx_bands)            # fuera del evento de arrastre del propio bloque
+        self.fx_changed.emit(self.fx_events())
+        i18n.set_text(self._hint_lbl, "Arrastra las líneas 🟩 verdes (inicio) y 🟥 rojas (fin) para ajustar los cortes")
+        QTimer.singleShot(80, lambda: setattr(self, "_dragging", False))
+
+    def _select_fx(self, fid):
+        self._fx_selected = fid
+        for it in self._fx_bands:
+            it.selected = it.ev["id"] == fid
+            it.update()
+        self._update_fx_visibility()
+        try:
+            self._plot.setFocus()
+        except Exception:
+            pass
+
+    def _remove_fx(self, fid):
+        self._fx_events = [e for e in self._fx_events if e["id"] != fid]
+        if self._fx_selected == fid:
+            self._fx_selected = None
+        self._draw_fx_bands()
+        self._update_fx_visibility()
+        self.fx_changed.emit(self.fx_events())
+
+    def _delete_selected_fx(self):
+        if self._fx_selected is not None:
+            self._remove_fx(self._fx_selected)
+
+    def _add_fx(self, kind: str, t: float):
+        """Pone un efecto nuevo con su duración habitual a partir de `t` (se ajusta al pulso más cercano)."""
+        if self._duration <= 0 or len(self._fx_events) >= MAX_EVENTS:
+            return None
+        d = min(DEFAULT_DURATION.get(kind, 6.0), self._duration)
+        s = max(0.0, min(self._snap(float(t)), self._duration - d))
+        fid = max([e["id"] for e in self._fx_events] + [0]) + 1
+        self._fx_events.append({"id": fid, "type": kind, "start": round(s, 3), "end": round(s + d, 3),
+                                "amount": DEFAULT_AMOUNT})
+        self._fx_events.sort(key=lambda e: (e["start"], e["id"]))
+        self._fx_selected = fid
+        self._draw_fx_bands()
+        self._update_fx_visibility()
+        self.fx_changed.emit(self.fx_events())
+        return fid
+
+    def _fx_add_at_cursor(self, kind: str):
+        t = float(self._playhead_line.value()) if hasattr(self, "_playhead_line") else 0.0
+        if t <= 0.05 and self._plan_segs:
+            t = min(float(g.source_start) for g in self._plan_segs)
+        self._add_fx(kind, t)
+
+    def _on_fx_over(self, kind: str, t: float):
+        """Vista previa del hueco mientras se arrastra una tarjeta por encima de la onda."""
+        if self._duration <= 0:
+            return
+        d = min(DEFAULT_DURATION.get(kind, 6.0), self._duration)
+        s = max(0.0, min(self._snap(t), self._duration - d))
+        ev = {"id": 0, "type": kind, "start": s, "end": s + d, "amount": DEFAULT_AMOUNT}
+        if self._fx_ghost is None:
+            self._fx_ghost = FxBandItem(self, ev, lane=0, ghost=True)
+            self._plot.addItem(self._fx_ghost, ignoreBounds=True)
+        else:
+            self._fx_ghost.ev["type"] = kind
+            self._fx_ghost.set_range(s, s + d)
+        i18n.set_text(self._hint_lbl, "🎛 Suelta aquí: {a}s – {b}s", a=f"{s:.1f}", b=f"{s + d:.1f}")
+
+    def _clear_fx_ghost(self):
+        if self._fx_ghost is not None:
+            try:
+                self._plot.removeItem(self._fx_ghost)
+            except Exception:
+                pass
+            self._fx_ghost = None
+        self._update_badges() if self._mode != "source" else i18n.set_text(
+            self._hint_lbl, "Arrastra las líneas 🟩 verdes (inicio) y 🟥 rojas (fin) para ajustar los cortes")
+
+    def _on_fx_dropped(self, kind: str, t: float):
+        self._clear_fx_ghost()
+        self._add_fx(kind, t)
+
+    def _on_inspector_changed(self, s: float, e: float, amt: float):
+        ev = self._fx_event(self._fx_selected)
+        if ev is None:
+            return
+        s = max(0.0, min(s, self._duration - MIN_DURATION))
+        e = min(self._duration, max(e, s + MIN_DURATION))
+        ev["start"], ev["end"], ev["amount"] = round(s, 3), round(e, 3), round(amt, 2)
+        for it in self._fx_bands:
+            if it.ev["id"] == ev["id"]:
+                it.ev["amount"] = ev["amount"]
+                it.set_range(s, e)
+        self._draw_fx_bands()
+        self.fx_changed.emit(self.fx_events())
+
     def _draw_boundaries(self):
         """Líneas divisorias mantenidas para compatibilidad."""
         pass
@@ -1132,6 +1379,8 @@ class WaveformWidget(QWidget):
         self._cut_badges      = []
         self._omitted_masks   = []
         self._omitted_labels  = []
+        self._fx_bands        = []
+        self._fx_ghost        = None
         self._voice_drop_line   = None
         self._voice_drop_region = None
         self._plot.addItem(self._playhead_line)

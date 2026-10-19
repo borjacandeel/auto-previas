@@ -296,6 +296,27 @@ def run_selftest() -> int:
             _x.deleteLater()
         print("  ✓ Presets, historial, licencia, idioma y modo promo construidos sin crash")
 
+        # Efectos manuales en la onda (3.11): motor por bloque + carril arrastrable con widgets reales
+        from src.engine.fx_events import FX_TYPES, apply_events_to_blocks, normalize_events
+        _fxa = [np.random.RandomState(3).randn(2, 44100 * 3).astype("float32") * 0.1]
+        for _k in FX_TYPES:
+            _o = apply_events_to_blocks(_fxa, [[0.0, 3.0]], 44100,
+                                        [{"id": 1, "type": _k, "start": 0.5, "end": 2.5, "amount": 0.75}])
+            assert _o[0].shape == _fxa[0].shape and np.isfinite(_o[0]).all() and not np.array_equal(_o[0], _fxa[0])
+        assert normalize_events([{"type": "flanger", "start": 1, "end": 5}], 10.0)[0]["end"] == 5.0
+        from src.ui.waveform import HAS_PYQTGRAPH as _HPG, WaveformWidget as _WW
+        if _HPG:
+            _ww = _WW()
+            _ww._source_dur = _ww._duration = 30.0
+            _ww._source_rms = np.abs(np.sin(np.linspace(0, 50, 300))) * 0.5
+            _ww.set_fx_enabled(True)
+            _ww._draw_source_view()
+            _ww._add_fx("filter_up", 5.0)
+            assert len(_ww.fx_events()) == 1 and len(_ww._fx_bands) == 1
+            _ww.grab()
+            _ww.deleteLater()
+        print("  ✓ Efectos manuales (Flanger / Filter Sweep) y carril de la onda operativos")
+
         try:
             tmp_ctx = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         except TypeError:

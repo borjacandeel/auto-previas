@@ -3,6 +3,16 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [3.11.0] - 2026-10-19
+
+### Añadido
+- **Efectos en la onda (Basic y Plus).** Debajo de la forma de onda aparecen las tarjetas **🌀 Flanger**, **🌊 Filter Sweep ↗** (sube la tensión quitando graves) y **🌊 Filter Sweep ↘** (los graves vuelven poco a poco). **Arrastra una tarjeta hasta la onda** y suéltala donde quieras que suene (o púlsala para ponerla donde está el cursor de reproducción). El efecto se comporta como un corte: **arrástralo para moverlo, estira sus bordes para elegir la duración** y ajusta el **inicio, la duración y la intensidad** en la fila de ajustes que aparece al seleccionarlo. Mientras arrastras ves el hueco que ocupará y se ajusta solo al pulso más cercano. **Supr** (o clic derecho) borra el seleccionado y **Quitar todos** limpia la onda. Si dos efectos se solapan, se ven en dos filas.
+- El efecto se queda pegado a su trozo del tema: si cambias el orden de los cortes sigue sonando en ese mismo trozo. Lo que queda **fuera de los cortes** se ve apagado y no suena. Los efectos se guardan con el proyecto («Reabrir proyecto») pero no en los presets, porque pertenecen a cada tema.
+- El recorrido de bienvenida tiene un paso nuevo, «Efectos en la onda» (con un efecto de ejemplo), y los manuales PDF Basic y Plus lo explican.
+
+### Cambiado
+- **Ya no hay efectos automáticos:** desaparecen las casillas **Flanger** y **Filter Sweep** que se aplicaban solas 5 segundos antes de cada drop. Ahora tú eliges qué efecto y dónde. En Plus se mantiene **Master LUFS** en las opciones avanzadas. (Flanger y Filter Sweep antes eran solo de Plus; ahora también están en Basic.)
+
 ## [3.10.0] - 2026-10-19
 
 ### Añadido

@@ -180,8 +180,8 @@ def indice(plus: bool) -> str:
 
 def s_intro(ed: str, plus: bool) -> str:
     inc = ("Exportación en <b>MP3 320 kbps</b> con metadatos, análisis de BPM y tonalidad, previas de 15/30/60/120 s, "
-           "<b>vídeo animado Radical Neón</b> (con marca de agua), forma de onda con cortes ajustables, reproductor A/B y actualizaciones automáticas." if not plus else
-           "Todo lo de Basic y además: exportación <b>WAV 24 bit / FLAC / MP3</b>, editor avanzado de cortes y BPM, efectos de estudio, "
+           "<b>vídeo animado Radical Neón</b> (con marca de agua), forma de onda con cortes ajustables, <b>efectos Flanger y Filter Sweep</b> que colocas tú sobre la onda, reproductor A/B y actualizaciones automáticas." if not plus else
+           "Todo lo de Basic y además: exportación <b>WAV 24 bit / FLAC / MP3</b>, editor avanzado de cortes y BPM, efectos en la onda y Master LUFS, "
            "<b>Voice Drop</b>, <b>Modo promo antifugas</b>, firma y carátula, presets propios, historial, lote, carpeta vigilada y vídeo animado Radical Neón <b>sin marca de agua</b>, con tu propia imagen, onda de sonido y final a tu elección.")
     return f"""
 <section><h1>1. Qué es AutoPrevias</h1>
@@ -284,8 +284,9 @@ def s_interfaz(ed: str, plus: bool, im: dict) -> str:
               ("Duración de la previa", "15 s, 30 s, 60 s o 2 min (club)."),
               ("Mis presets", "guarda y aplica tus propios ajustes de firma y estilo."),
               ("Personalizar cortes y BPM", "abre el editor avanzado."),
+              ("Efectos en la onda", "arrastra Flanger o Filter Sweep hasta donde quieras que suenen."),
               ("Nombre y formatos", "nombre del archivo y formatos de salida."),
-              ("Flanger / Filter Sweep / Master LUFS", "efectos de estudio opcionales."),
+              ("Master LUFS", "volumen de club; los efectos Flanger y Filter Sweep se arrastran sobre la onda."),
               ("Voice Drop", "superpone tu firma de voz o jingle sobre la previa."),
               ("Modo promo", "firma repetida y MP3 128 kbps para proteger el audio."),
               ("Firma y carátula", "artista, sello, álbum, género, comentario y portada."),
@@ -296,6 +297,7 @@ def s_interfaz(ed: str, plus: bool, im: dict) -> str:
               ("BPM", "tempo detectado; haz doble clic para corregirlo."),
               ("Duración de la previa", "15 s, 30 s, 60 s o 2 min (club)."),
               ("Ordenar y mover cortes", "pon nombre y orden a los cortes y elige dónde empieza la previa."),
+              ("Efectos en la onda", "arrastra Flanger o Filter Sweep hasta donde quieras que suenen."),
               ("Nombre", "nombre del archivo de la previa."),
               ("Cambiar carpeta", "elige dónde se guardan las previas."),
               ("GENERAR PREVIA", "crea y exporta la previa en MP3 320 kbps.")]
@@ -357,6 +359,17 @@ def s_onda(ed: str, plus: bool, im: dict) -> str:
 <li><b>«La previa empieza»</b>: <b>⏮ Al inicio del tema</b> lleva el primer corte al principio de la canción y <b>⏺ A mitad del tema</b> lo coloca a la mitad (siempre ajustado a un compás). Para cualquier otro punto, <b>arrastra el primer corte</b> sobre la forma de onda o cambia sus segundos en la tabla.</li>
 <li>Puedes <b>añadir</b> cortes, <b>quitarlos</b> y escuchar cada uno con ▶. Los presets rápidos (<i>Estándar AI</i>, <i>Solo Drops</i>, <i>Intro corta 15 s</i>) recolocan los cortes de golpe.</li>
 </ul>
+<h3>Efectos en la onda (Flanger y Filter Sweep)</h3>
+{fig(im.get('z_efectos',''), 'Efectos colocados sobre la onda: tarjetas para arrastrar, bloques en la onda y ajustes del efecto elegido')}
+<p>Debajo de la onda están las <b>tarjetas de efecto</b>. Tú decides <b>qué efecto</b>, <b>dónde empieza</b> y <b>cuánto dura</b>; AutoPrevias no coloca nada por su cuenta.</p>
+<table><tr><th>Efecto</th><th>Qué hace</th></tr>
+<tr><td><b>🌀 Flanger</b></td><td>Flanger analógico estéreo con modulación LFO.</td></tr>
+<tr><td><b>🌊 Filter Sweep ↗</b></td><td>Barrido de filtro hacia arriba: va quitando graves y sube la tensión (ideal antes de un drop).</td></tr>
+<tr><td><b>🌊 Filter Sweep ↘</b></td><td>Barrido hacia abajo: el filtro se abre y los graves vuelven poco a poco.</td></tr></table>
+{steps(["<b>Arrastra</b> una tarjeta hasta la onda y suéltala donde quieras que empiece (o <b>púlsala</b> para ponerla donde está el cursor de reproducción). Mientras arrastras ves el hueco que ocupará y se ajusta solo al pulso más cercano.",
+        "<b>Muévelo</b> arrastrando el bloque y <b>estira sus bordes</b> para elegir la duración, igual que haces con los cortes. Si hay dos efectos a la vez, se colocan en dos filas.",
+        "Con el bloque seleccionado, la fila de abajo te deja afinar el <b>inicio</b>, la <b>duración</b> y la <b>intensidad</b>. <b>Quitar</b> (o la tecla " + kbd('Supr') + ", o clic derecho sobre el bloque) lo borra; <b>Quitar todos</b> limpia la onda."])}
+{tip("El efecto se queda pegado a su trozo del tema: si cambias el orden de los cortes, sigue sonando en ese mismo trozo. Si lo dejas <b>fuera de los cortes</b> verás el bloque apagado y no sonará. Los efectos pertenecen a este tema: no se guardan en los presets, pero sí en «Reabrir proyecto».", "tip")}
 <h3>El reproductor</h3>
 {fig(im.get('z_player',''), 'Reproductor con pestañas Pista Original / Previa Generada')}
 <ul>
@@ -492,11 +505,10 @@ def s_plus_fx(im: dict) -> str:
     return f"""
 <section><h1>9. Efectos, Voice Drop y Modo promo</h1>
 <p><span class="badge plus">PLUS</span></p>
-<h3>Efectos de estudio</h3>
-<table><tr><th>Efecto</th><th>Qué hace</th></tr>
-<tr><td><b>🎛 Flanger</b></td><td>Flanger analógico estéreo con modulación LFO.</td></tr>
-<tr><td><b>🌊 Filter Sweep</b></td><td>Barrido de filtro dinámico que genera tensión en las subidas.</td></tr>
+<h3>Master LUFS</h3>
+<table><tr><th>Opción</th><th>Qué hace</th></tr>
 <tr><td><b>🔊 Master LUFS</b></td><td>Normalización y limitador transparente a <b>−9 LUFS</b> (nivel de club / Beatport).</td></tr></table>
+{tip("Flanger y Filter Sweep ya no son casillas automáticas: se arrastran sobre la forma de onda y eliges tú dónde suenan (capítulo 6, «Efectos en la onda»). Están disponibles en Basic y en Plus.", "tip")}
 <h3>Voice Drop (tu firma de voz)</h3>
 <p>Superpone tu firma de voz o <i>jingle</i> de DJ sobre la previa.</p>
 {steps(["Pulsa <b>🎙 Voice Drop…</b> y elige tu audio de firma (WAV, MP3…).", "Elige el momento: <b>📍 Pre-Drop</b> (justo antes del primer drop), <b>📍 Intro</b> o <b>🎯 Manual</b>.",
@@ -578,7 +590,7 @@ def s_basic_upsell() -> str:
 <div class="card"><h4>🎚 Más formatos</h4><p>Exportación <b>WAV 24 bit</b> y <b>FLAC</b>, y <b>vídeo animado sin marca de agua</b> (MP4 9:16, 1:1 o 16:9) con tu propia imagen de fondo (una por formato), onda de sonido en barras, línea o círculo y el final a tu elección: firma AutoPrevias, fundido a negro, tu imagen o sin cierre.</p></div>
 <div class="card"><h4>✂ Editor avanzado</h4><p>Controla la variación de BPM, elige si la previa arranca con el efecto de vinilo o a los BPM originales y consulta la estructura musical detallada.</p></div>
 <div class="card"><h4>🖋 Firmar temas enteros</h4><p>Mete carátula y etiquetas a canciones completas y guárdalas en FLAC o WAV a máxima calidad, sin tocar el audio.</p></div>
-<div class="card"><h4>🎛 Efectos de estudio</h4><p>Flanger, Filter Sweep y Master LUFS (−9 LUFS, nivel de club).</p></div>
+<div class="card"><h4>🔊 Master LUFS</h4><p>Nivel de club (−9 LUFS) con limitador transparente. Los efectos Flanger y Filter Sweep ya los tienes también en Basic.</p></div>
 <div class="card"><h4>🎙 Voice Drop</h4><p>Superpón tu firma de voz o jingle en el momento exacto.</p></div>
 <div class="card"><h4>🛡 Modo promo antifugas</h4><p>Firma repetida y MP3 128 kbps para enviar previas sin riesgo de reutilización.</p></div>
 <div class="card"><h4>🏷 Firma y carátula</h4><p>Artista, sello, álbum, género, comentario y portada propia en los metadatos.</p></div>
@@ -602,7 +614,7 @@ def s_updates(ed: str, plus: bool, im: dict, n: int) -> str:
 <p>La primera vez que abres AutoPrevias en un equipo nuevo, tras activar la licencia, aparece un aviso de bienvenida con dos botones: <b>Hacer el recorrido</b> u <b>Omitir</b>. No se vuelve a preguntar nunca más.</p>
 {fig(im.get('01c_recorrido',''), 'El recorrido oscurece la ventana y resalta cada parte de la app real con una explicación', 'mid')}
 <ul>
-<li>Son unos 5 minutos: te enseña la pantalla de inicio, carga una <b>pista de ejemplo</b> sintética y recorre todo el panel de resultados (forma de onda, reproductor, duración, formatos, vídeo animado, efectos, carpeta y botón Generar).</li>
+<li>Son unos 5 minutos: te enseña la pantalla de inicio, carga una <b>pista de ejemplo</b> sintética y recorre todo el panel de resultados (forma de onda, efectos arrastrables, reproductor, duración, formatos, vídeo animado, carpeta y botón Generar).</li>
 <li>Avanza con <b>Siguiente</b> (o las teclas <b>→</b>, <b>Intro</b> o <b>Espacio</b>), vuelve con <b>Atrás</b> (<b>←</b>) y sal cuando quieras con <b>Omitir recorrido</b> o <b>Esc</b>.</li>
 <li>No guarda nada: la pista de ejemplo no aparece en Recientes y tus ajustes quedan como estaban.</li>
 <li>Si quieres repetirlo, pulsa <b>Ver recorrido de bienvenida</b> en la ventana <b>⚙ Licencia</b>.</li>
@@ -628,7 +640,8 @@ def s_atajos(n: int) -> str:
 <tr><td>{kbd('←')} {kbd('→')}</td><td>Retroceder / avanzar 5 segundos</td></tr>
 <tr><td>{kbd('Inicio')} · {kbd('0')}</td><td>Volver al principio</td></tr>
 <tr><td>{kbd('Esc')}</td><td>Detener</td></tr>
-<tr><td>{kbd('M')}</td><td>Silenciar / activar sonido</td></tr></table>
+<tr><td>{kbd('M')}</td><td>Silenciar / activar sonido</td></tr>
+<tr><td>{kbd('Supr')}</td><td>Borrar el efecto seleccionado en la onda</td></tr></table>
 </section>"""
 
 
@@ -646,6 +659,7 @@ def s_faq(ed: str, plus: bool, n: int) -> str:
 <tr><td>«Esta licencia ya está activada en otro equipo»</td><td>Tu clave solo puede estar en un ordenador. Desactívala en el otro (<b>⚙ Licencia → Desactivar licencia en este equipo</b>) o escribe a soporte si ese equipo ya no está disponible.</td></tr>
 <tr><td>Me dice que necesita conexión para verificar la licencia</td><td>Han pasado más de 14 días sin verificarla: conéctate a Internet y pulsa <b>Reintentar</b>. No hace falta volver a escribir la clave.</td></tr>
 <tr><td>El BPM detectado es el doble o la mitad</td><td>Haz doble clic en la tarjeta <b>BPM</b> y escribe el valor real.</td></tr>
+<tr><td>Un efecto que puse en la onda no suena</td><td>Solo suena dentro de los cortes de la previa. Si el bloque se ve apagado está fuera de ellos: muévelo sobre un corte o amplía el corte.</td></tr>
 <tr><td>La previa no empieza donde quiero</td><td>Arrastra los marcadores verdes/rojos en la forma de onda{' o usa el Editor de Cortes' if plus else ' o elige otro preset de duración'}.</td></tr>
 <tr><td>No oigo nada al reproducir</td><td>Revisa el volumen del reproductor y que no esté silenciado (tecla {kbd('M')}) y el dispositivo de salida de tu sistema.</td></tr>
 <tr><td>No encuentro mis previas</td><td>Pulsa <b>Abrir</b> junto a «Carpeta» para ver la carpeta de destino; puedes cambiarla con <b>Cambiar</b>.</td></tr>

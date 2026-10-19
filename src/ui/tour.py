@@ -213,6 +213,26 @@ def build_steps(win) -> list:
             lambda: [R._chk_advanced, R._tabs], page=2,
             before=lambda: R._chk_advanced.setChecked(True), after=lambda: R._chk_advanced.setChecked(False),
             example="Para que suene primero el drop, sube el corte del drop con ▲.")
+    if wave_frame is not None:
+        def _fx_demo():
+            try:
+                segs = wave_frame._plan_segs
+                if segs and wave_frame._duration > 0 and not wave_frame._fx_events:
+                    wave_frame._add_fx("flanger", float(segs[0].source_start) + 2.0)
+            except Exception:
+                pass
+
+        def _fx_demo_off():
+            try:
+                wave_frame.clear_fx()
+            except Exception:
+                pass
+        add("efectos_onda", "🎛 Efectos en la onda",
+            "Debajo de la onda están Flanger y Filter Sweep. Arrastra uno hasta donde quieras que suene (o púlsalo para ponerlo en el "
+            "cursor). El bloque se comporta como un corte: arrástralo para moverlo, estira los bordes para cambiar la duración y "
+            "ajusta la intensidad en la fila de abajo. Supr borra el seleccionado. Solo suena dentro de los cortes de la previa.",
+            lambda: wave_frame._fx_palette, page=2, before=_fx_demo, after=_fx_demo_off,
+            example="Un Filter Sweep ↗ de 8 s justo antes del drop sube la tensión.")
     add("formatos", "① Nombre y formatos",
         "El nombre del archivo ya viene puesto («PREVIA - tu tema»), pero puedes cambiarlo. "
         + ("Marca los formatos que quieres: WAV 24 bit, MP3 320k y FLAC." if plus else
@@ -250,9 +270,9 @@ def build_steps(win) -> list:
         "Antes de generar, mira un fragmento real del vídeo con tus ajustes. Si no te convence, cámbialo y vuelve a verlo.",
         lambda: R._btn_vprev, page=2)
     if plus:
-        add("efectos", "③ Efectos de estudio (Plus)",
-            "Flanger y Filter Sweep añaden transiciones antes de cada drop; Master LUFS deja la previa al volumen estándar "
-            "de las plataformas.", lambda: R._adv_fx_widget, page=2,
+        add("efectos", "③ Master LUFS y Voice Drop (Plus)",
+            "Master LUFS deja la previa al volumen estándar de las plataformas. Los efectos Flanger y Filter Sweep ya no son "
+            "automáticos: los colocas tú arrastrándolos sobre la onda.", lambda: R._adv_fx_widget, page=2,
             before=lambda: R._set_adv_open(True))
         add("voice_drop", "Voice Drop (Plus)",
             "Añade tu firma de voz o jingle («Radical Records…») justo antes del drop o al empezar la previa.",

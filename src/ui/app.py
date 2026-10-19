@@ -1506,6 +1506,7 @@ class ResultPanel(QWidget):
             self._waveform.seek_requested.connect(self._on_waveform_seek)
             self._waveform.boundaries_changed.connect(self._on_boundaries_changed)
             self._waveform.cuts_changed.connect(self._on_waveform_cuts_changed)
+            self._waveform.set_fx_enabled(True)               # efectos arrastrables a la onda (Basic y Plus)
             self._waveform.voice_drop_moved.connect(self._on_voice_drop_marker_moved)
             wave_lay.addWidget(self._waveform)
         else:
@@ -1867,9 +1868,15 @@ class ResultPanel(QWidget):
         self._lbl_voice_drop = QLabel("")
         self._lbl_voice_drop.setStyleSheet(f"color: {GREEN}; font-size: 10px; font-weight: 600; background: transparent; border: none;")
 
+        # Flanger y Filter Sweep ya no son casillas automáticas: se arrastran a la onda (Basic y Plus).
+        # Las casillas se conservan ocultas y siempre apagadas por compatibilidad con presets antiguos.
+        self._chk_fx_flanger.setVisible(False)
+        self._chk_fx_filter.setVisible(False)
+        self._lbl_fx_hint = QLabel("🎛 Flanger y Filter Sweep: arrástralos sobre la onda")
+        self._lbl_fx_hint.setStyleSheet(f"color: {TEXT_MID}; font-size: 10px; font-weight: 600; background: transparent; border: none;")
+        self._lbl_fx_hint.setToolTip("Bajo la forma de onda están las tarjetas de efecto: arrástralas hasta donde quieras que suenen")
         row_fx.addWidget(lbl_fx)
-        row_fx.addWidget(self._chk_fx_flanger)
-        row_fx.addWidget(self._chk_fx_filter)
+        row_fx.addWidget(self._lbl_fx_hint)
         row_fx.addWidget(self._chk_fx_master)
         row_fx.addSpacing(4)
         row_fx.addWidget(self._btn_voice_drop)
@@ -2464,10 +2471,6 @@ class ResultPanel(QWidget):
                     self._combo_aspect.setCurrentIndex(i)
                     break
         # Restaurar estado de FX (los tres checkboxes se persisten entre sesiones)
-        if "fx_flanger" in persisted_cfg:
-            self._chk_fx_flanger.setChecked(persisted_cfg["fx_flanger"])
-        if "fx_filter_sweep" in persisted_cfg:
-            self._chk_fx_filter.setChecked(persisted_cfg["fx_filter_sweep"])
         if "studio_mastering" in persisted_cfg:
             self._chk_fx_master.setChecked(persisted_cfg["studio_mastering"])
 
@@ -2642,8 +2645,9 @@ class ResultPanel(QWidget):
             "export_mp3": self._chk_mp3.isChecked() or self._chk_video.isChecked(),   # sin previa no hay vídeo
             "export_flac": self._chk_flac.isChecked(),
             "export_video": self._chk_video.isChecked(),
-            "fx_flanger": self._chk_fx_flanger.isChecked(),
-            "fx_filter_sweep": self._chk_fx_filter.isChecked(),
+            "fx_flanger": False,                         # el efecto automático antes del drop ya no existe
+            "fx_filter_sweep": False,
+            "fx_events": self._waveform.fx_events() if HAS_WAVEFORM else [],
             "studio_mastering": self._chk_fx_master.isChecked(),
             "speed_mode": speed_mode,
             "video_palette": video_pal,
@@ -2848,8 +2852,7 @@ class ResultPanel(QWidget):
 
     def _adv_active_names(self) -> list:
         names = []
-        for chk, nm in ((self._chk_fx_flanger, "Flanger"), (self._chk_fx_filter, "Filter Sweep"),
-                        (self._chk_fx_master, "Master LUFS"), (self._chk_promo, "Modo promo")):
+        for chk, nm in ((self._chk_fx_master, "Master LUFS"), (self._chk_promo, "Modo promo")):
             if chk.isChecked():
                 names.append(nm)
         if self._voice_drop_path:
@@ -2986,7 +2989,8 @@ class ResultPanel(QWidget):
                           name=Path(self._voice_drop_path).stem[:14], sec=self._spin_promo.value())
 
     # ── Estado guardable (presets e historial) ────────────────────────────────
-    def get_state(self, signature: bool = True, style: bool = True) -> dict:
+    def get_state(self, signature: bool = True, style: bool = True, events: bool = False) -> dict:
+        """`events=True` (solo al guardar el proyecto de una pista) incluye los efectos colocados en su onda."""
         state: dict = {}
         if style:
             saved = self._promo_saved if (self._chk_promo.isChecked() and self._promo_saved) else None
@@ -2995,8 +2999,7 @@ class ResultPanel(QWidget):
             state["style"] = {
                 "duration_sec": int(getattr(self, "_active_preset_sec", 120)),
                 "export": {"wav": wav, "mp3": mp3, "flac": flac, "video": self._chk_video.isChecked()},
-                "fx": {"flanger": self._chk_fx_flanger.isChecked(), "filter_sweep": self._chk_fx_filter.isChecked(),
-                       "master": self._chk_fx_master.isChecked()},
+                "fx": {"master": self._chk_fx_master.isChecked()},
                 "voice": {"path": self._voice_drop_path, "position": self._combo_voice_pos.currentData(),
                           "time_sec": self._voice_drop_time_sec},
                 "promo": {"enabled": self._chk_promo.isChecked(), "interval_sec": int(self._spin_promo.value())},
@@ -3005,6 +3008,8 @@ class ResultPanel(QWidget):
                           "banner": self._edit_promo.text().strip(), "end": self._combo_vend.currentData(),
                           "custom": self._video_custom if get_edition() == "plus" else None},
             }
+        if style and events and HAS_WAVEFORM:
+            state["style"]["fx_events"] = self._waveform.fx_events()
         if signature and hasattr(self, "_branding_card"):
             md = self._branding_card.get_metadata()
             state["signature"] = {k: md.get(k, "") for k in ("artist", "label", "album", "genre", "comment")}
@@ -3036,10 +3041,10 @@ class ResultPanel(QWidget):
                 chk.setChecked(bool(ex[key]))
         if plus:
             fx = st.get("fx") or {}
-            for key, chk in (("flanger", self._chk_fx_flanger), ("filter_sweep", self._chk_fx_filter),
-                             ("master", self._chk_fx_master)):
-                if key in fx:
-                    chk.setChecked(bool(fx[key]))
+            if "master" in fx:
+                self._chk_fx_master.setChecked(bool(fx["master"]))
+        if st.get("fx_events") and HAS_WAVEFORM:
+            self._waveform.set_fx_events(st["fx_events"], emit=True)
         sec = st.get("duration_sec")
         if sec in (15, 30, 60, 120):
             self._apply_duration_preset(int(sec))
@@ -3781,6 +3786,8 @@ class ResultPanel(QWidget):
             self._beat_times = [float(x) for x in beat_times]
         except Exception:
             self._beat_times = []
+        if HAS_WAVEFORM:
+            self._waveform.set_beat_times(self._beat_times)
 
     def _snap_to_bar(self, t: float) -> float:
         bpm = float(self._bpm or 128.0)
@@ -4435,11 +4442,13 @@ class ResultPanel(QWidget):
             i18n.set_text(self._chk_advanced, "✂️  Ordenar y mover cortes")
 
         # FX (Flanger, Filter, Master) — solo Plus
-        for w in (self._chk_fx_flanger, self._chk_fx_filter, self._chk_fx_master):
+        for w in (self._chk_fx_master, self._lbl_fx_hint):
             w.setVisible(plus)
+        self._chk_fx_flanger.setVisible(False)          # sustituidos por los efectos de la onda (Basic y Plus)
+        self._chk_fx_filter.setVisible(False)
+        self._chk_fx_flanger.setChecked(False)
+        self._chk_fx_filter.setChecked(False)
         if not plus:
-            self._chk_fx_flanger.setChecked(False)
-            self._chk_fx_filter.setChecked(False)
             self._chk_fx_master.setChecked(False)
 
         # BrandingCard (firma + carátula) y efectos — solo Plus, dentro de «Opciones avanzadas» (plegadas por defecto)
@@ -5521,7 +5530,7 @@ class MainWindow(QMainWindow):
             from src.history import add_entry
             r = self._results
             est = r._plan.estimated_duration_after_stretch if r._plan else 0.0
-            settings = {"state": r.get_state(True, True), "tempo_mode": r.get_tempo_mode(),
+            settings = {"state": r.get_state(True, True, events=True), "tempo_mode": r.get_tempo_mode(),
                         "tempo_events": r.get_tempo_events()}
             add_entry(self._current_file, generated, seed=seed, bpm=r._bpm, key=r._key_str, duration_sec=est,
                       settings=settings, promo=bool(r.get_export_options().get("promo_mode")))

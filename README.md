@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v3.10.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v3.11.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -61,7 +61,7 @@ Manual profesional de **Radical Records** con capturas de pantalla reales y la e
 | Edición | Manual | Contenido |
 | :--- | :--- | :--- |
 | **Basic** | [⬇️ **AutoPrevias-Manual-Basic.pdf**](https://github.com/borjacandeel/auto-previas/raw/main/docs/manual/AutoPrevias-Manual-Basic.pdf) | Instalación, activación, interfaz, primera previa, exportación MP3 320k, actualizaciones, atajos y solución de problemas |
-| **Plus** | [⬇️ **AutoPrevias-Manual-Plus.pdf**](https://github.com/borjacandeel/auto-previas/raw/main/docs/manual/AutoPrevias-Manual-Plus.pdf) | Todo lo anterior + editor de cortes y BPM, efectos, Voice Drop, modo promo, firma y carátula, presets, historial, lote y carpeta vigilada |
+| **Plus** | [⬇️ **AutoPrevias-Manual-Plus.pdf**](https://github.com/borjacandeel/auto-previas/raw/main/docs/manual/AutoPrevias-Manual-Plus.pdf) | Todo lo anterior + editor de cortes y BPM, Master LUFS, Voice Drop, modo promo, firma y carátula, presets, historial, lote y carpeta vigilada |
 
 Además, cada Release publica ambos PDF junto a los instaladores.
 
@@ -150,6 +150,8 @@ Si Windows muestra la pantalla azul con el mensaje *"Windows protegió su PC"* d
 
 ## ✨ Características Principales
 
+- 🎛 **Efectos en la onda (Basic y Plus):**
+  Arrastras **Flanger** o **Filter Sweep ↗/↘** desde las tarjetas bajo la forma de onda hasta donde quieras que suenen; el bloque se mueve y se estira como un corte (inicio, duración e intensidad a tu gusto). Ya no hay efectos automáticos.
 - ✂️ **Cortes con nombre, orden y punto de inicio:**
   Cada corte tiene su nombre fijo («Corte 1», «Corte 2»…); con ▲ ▼ eliges en qué orden suenan y con «⏮ Al inicio / ⏺ A mitad del tema» (o arrastrando el primer corte) decides dónde empieza la previa. Disponible en Basic y Plus.
 - 🖋 **Firmar temas enteros (Plus):**
@@ -249,7 +251,8 @@ Cada clave se puede usar en **un solo equipo a la vez**. Si ya está activa en u
 | Notificaciones con logo que abren la carpeta al pulsarlas | ✅ | ✅ |
 | Firma vocal / Voice Drop | ❌ | ✅ |
 | Sección de Firma y Carátula (Branding) | ❌ | ✅ |
-| Efectos de estudio (Flanger, Filter Sweep, Master LUFS) | ❌ | ✅ |
+| Efectos Flanger y Filter Sweep arrastrables a la onda (tú eliges dónde y cuánto dura) | ✅ | ✅ |
+| Master LUFS (−9 LUFS, nivel de club) | ❌ | ✅ |
 | Corrección manual de BPM | ❌ | ✅ |
 
 ---
@@ -299,7 +302,10 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v3.10.0] — 2026-10-19 (Cortes con nombre y orden, firmar temas enteros, notificaciones con logo)
+#### 🟢 [v3.11.0] — 2026-10-19 (Efectos arrastrables en la onda, Basic y Plus)
+- **Efectos en la onda:** tarjetas **Flanger**, **Filter Sweep ↗** y **Filter Sweep ↘** que se arrastran hasta la forma de onda; el bloque se mueve y se estira como un corte, con inicio, duración e intensidad ajustables, ajuste al pulso, Supr para borrar y vista apagada si cae fuera de los cortes. Disponible en **Basic y Plus**. Desaparecen los efectos automáticos antes del drop. Paso nuevo en el recorrido de bienvenida y capítulo nuevo en los manuales. Detalle en el [CHANGELOG](CHANGELOG.md).
+
+#### [v3.10.0] — 2026-10-19 (Cortes con nombre y orden, firmar temas enteros, notificaciones con logo)
 - **Cortes con nombre y orden (Basic y Plus):** «Corte 1», «Corte 2»… con **▲ ▼** para ordenarlos y botones para que la previa **empiece al inicio o a mitad del tema** (o donde arrastres el primer corte). **Plus:** arranque de la previa a elegir (**vinilo de 0 al tempo en N segundos** o **BPM originales**) y **🖋 Firmar tema**: ventana para firmar **canciones enteras** con carátula y etiquetas en **FLAC/WAV a máxima calidad**, sin tocar el audio. **Notificaciones con el logo de AutoPrevias** que abren la carpeta al pulsarlas, **más animaciones** y las **previas en WAV ahora llevan carátula y etiquetas**. Detalle en el [CHANGELOG](CHANGELOG.md).
 
 #### [v3.9.0] — 2026-10-14 (Recorrido de bienvenida)

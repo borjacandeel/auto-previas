@@ -1,27 +1,27 @@
-# Propuesta: efectos que elige y coloca el usuario en la forma de onda
+# Efectos en la onda — propuesta aprobada e implementada en la v3.11.0
 
-**Estado: PROPUESTA — sin implementar. Pendiente de que el usuario diga sí o no.**
-Imágenes: `efectos-1-carril.png`, `efectos-2-colocar.png`, `efectos-3-ajustar.png`, `efectos-4-opciones.png` (en esta carpeta).
+> Estado: **implementado** (Basic y Plus). Las imágenes son las maquetas que se enseñaron al usuario antes de construirlo.
 
-## Qué cambia
-Hoy Flanger y Filter Sweep se aplican solos 5 s antes de cada drop que detecta la app. La propuesta quita esa detección:
-**solo suena un efecto si el usuario lo coloca.**
+**Idea:** el programa no detecta ni aplica efectos solo. El usuario coge un efecto, lo **arrastra hasta la forma de onda** y, **como con los cortes**, elige dónde empieza y cuánto dura.
 
-## Cómo funciona (3 pasos)
-1. **Paleta de efectos** bajo la onda: `🌀 Flanger`, `🌊 Filter Sweep ↗` (subida), `🌊 Filter Sweep ↘` (bajada). Hay hueco para añadir más efectos en el futuro.
-2. **Carril de efectos** alineado con la onda y con los cortes. Eliges un efecto, aparece un bloque «fantasma» pegado al cursor que se ajusta al compás (por defecto 4 compases) y, al hacer clic, se coloca. Se mueve arrastrando el centro y se alarga o acorta arrastrando los bordes.
-3. **Ajuste del bloque**: al pulsarlo se abre un panel pequeño con intensidad (0–100 %), dirección (subida/bajada), duración en compases, `▶ Oír este efecto` y `🗑 Quitar`.
+| Imagen | Qué enseña |
+|---|---|
+| `efectos-1-carril.png` | Tarjetas de efecto bajo la onda y bloques de efecto dentro de la onda |
+| `efectos-2-colocar.png` | Arrastrando una tarjeta: hueco fantasma, ajuste al pulso y tiempos |
+| `efectos-3-ajustar.png` | Bloque seleccionado: bordes para estirar y fila de ajustes (inicio, duración, intensidad, quitar) |
+| `efectos-4-opciones.png` | Antes/después de las opciones avanzadas (sin casillas automáticas) |
 
-## Reglas
-- Los efectos van ligados al **tema original** (igual que los cortes). Si se reordenan los cortes con ▲ ▼, cada efecto se va con su corte. Un efecto fuera de los cortes aparece rayado y no suena.
-- En «Opciones avanzadas» las casillas Flanger y Filter Sweep se sustituyen por un botón **«🎛 Efectos en la onda…»** (con el número de efectos puestos). **Master LUFS** sigue siendo una casilla porque afecta a todo el tema.
-- Opcional (apagado por defecto): botón **«✨ Sugerir»** que coloca bloques antes de cada drop para que el usuario los mueva o los borre.
-- Se guardan en los presets de estilo y en «Reabrir proyecto». Solo en **Plus**.
+## Cómo funciona
 
-## Trabajo previsto
-Motor (aplicar cada bloque sobre el audio del corte correspondiente), carril interactivo en la forma de onda, panel de ajuste, guardado en presets/proyectos, paso nuevo en el recorrido de bienvenida, manuales, tests de equivalencia (sin efectos = audio idéntico al actual) y traducción al inglés. Versión MINOR.
+1. **Tarjetas:** 🌀 Flanger · 🌊 Filter Sweep ↗ (sube la tensión) · 🌊 Filter Sweep ↘ (los graves vuelven).
+2. **Arrastrar y soltar** sobre la onda (o pulsar la tarjeta para ponerla en el cursor). Se ajusta al pulso más cercano.
+3. **Como un corte:** el bloque se mueve arrastrándolo y se estira por los bordes; con él seleccionado se afinan inicio, duración e intensidad. **Supr** o clic derecho lo borra.
+4. **Pegado a su trozo del tema:** si se reordenan los cortes, el efecto sigue en el mismo trozo. Fuera de los cortes se ve apagado y no suena.
+5. Se guarda con el proyecto («Reabrir proyecto»), no en los presets.
 
-## Decisiones que necesito
-1. ¿Sí o no a la propuesta tal cual?
-2. ¿Quitar del todo la detección automática o dejar el botón «✨ Sugerir»?
-3. ¿Más efectos desde el principio (por ejemplo eco/delay, reverso, «riser»)?
+## Decisiones técnicas
+
+- Eventos `{id, type, start, end, amount}` en tiempo del tema original (`src/engine/fx_events.py`).
+- Se aplican a cada bloque de audio extraído en el solape evento ∩ bloque, antes de las transiciones; sin eventos la previa es idéntica a la de siempre.
+- Desaparecen las casillas automáticas «Flanger» y «Filter Sweep» (5 s antes del drop). Master LUFS se mantiene como casilla de Plus.
+- Pendiente para el futuro: botón «▶ Oír» para escuchar solo el efecto, y más efectos (el diseño admite añadir tipos nuevos).

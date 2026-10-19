@@ -209,20 +209,21 @@ while time.time() - t0 < 180:
 pump(60, 0.02)
 R = w._results
 R._set_adv_open(True)      # el manual muestra también las opciones avanzadas (efectos, voz, modo promo y firma)
-R._waveform.parentWidget().setMaximumHeight(300)
-R._waveform.setMaximumHeight(230)   # onda compacta, como en una ventana normal
+R._waveform.parentWidget().setMaximumHeight(380)
+R._waveform.setMaximumHeight(310)   # onda compacta (con la paleta de efectos debajo), como en una ventana normal
 pump(20)
 img = grab(w); d = dpr_of(img)
 save(img, "03_cargada")
 
 items = [(rect_of(R._waveform, w), 1), (rect_of(R._player, w), 2), (rect_of(R._card_bpm, w), 3),
-         (rect_of(R._btn_p120, w), 4), (rect_of(R._chk_advanced, w), 5), (rect_of(R._edit_name, w), 6),
-         (rect_of(R._btn_folder, w), 7), (rect_of(R._btn_generate, w), 8)]
+         (rect_of(R._btn_p120, w), 4), (rect_of(R._chk_advanced, w), 5), (rect_of(R._waveform._fx_palette, w), 6),
+         (rect_of(R._edit_name, w), 7), (rect_of(R._btn_folder, w), 8), (rect_of(R._btn_generate, w), 9)]
 if EDITION == "plus":
     items = [(rect_of(R._waveform, w), 1), (rect_of(R._player, w), 2), (rect_of(R._card_bpm, w), 3),
              (rect_of(R._btn_p120, w), 4), (rect_of(R._preset_bar, w), 5), (rect_of(R._chk_advanced, w), 6),
-             (rect_of(R._edit_name, w), 7), (rect_of(R._chk_fx_flanger, w), 8), (rect_of(R._btn_voice_drop, w), 9),
-             (rect_of(R._chk_promo, w), 10), (rect_of(R._branding_card, w), 11), (rect_of(R._btn_generate, w), 12)]
+             (rect_of(R._waveform._fx_palette, w), 7),
+             (rect_of(R._edit_name, w), 8), (rect_of(R._chk_fx_master, w), 9), (rect_of(R._btn_voice_drop, w), 10),
+             (rect_of(R._chk_promo, w), 11), (rect_of(R._branding_card, w), 12), (rect_of(R._btn_generate, w), 13)]
 rec("loaded", waveform=R._waveform, player=R._player, bpm=R._card_bpm, key=R._card_key, drops=R._card_drops, pv=R._card_pv,
     p15=R._btn_p15, p30=R._btn_p30, p60=R._btn_p60, p120=R._btn_p120, name=R._edit_name, generate=R._btn_generate,
     folder=R._btn_folder, stats_row=R._card_file)
@@ -243,6 +244,17 @@ stats_rect = rect_of(R._card_file, w).united(rect_of(R._card_pv, w))
 save(crop(img, stats_rect, d, 4), "z_stats")
 if EDITION == "plus":
     save(crop(img, rect_of(R._branding_card, w), d, 4), "z_firma")
+
+# ── 3a. Efectos colocados en la onda (Basic y Plus) ──
+_segs = R._plan.segments
+_wv = R._waveform
+_wv._add_fx("filter_up", float(_segs[-1].source_start) - 9.0)
+_wv._add_fx("flanger", float(_segs[0].source_start) + 3.0)
+_wv._add_fx("filter_down", float(_segs[-1].source_start) + 4.0)
+pump(30, 0.02)
+_im = grab(w)
+save(crop(_im, rect_of(_wv, w).united(rect_of(_wv._fx_inspector, w)), dpr_of(_im), 4), "z_efectos")
+_wv.clear_fx(); pump(20)
 
 # ── 3b. Tarjeta del vídeo (para el manual): formato, look, título, final y vista previa ──
 from PIL import Image as _PImg, ImageDraw as _PDraw

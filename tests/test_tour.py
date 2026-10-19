@@ -105,9 +105,10 @@ def test_todos_los_pasos_tienen_traduccion_inglesa(monkeypatch, edition):
         assert not {"lote", "vigilar", "firmar_tema", "presets", "avanzado", "arranque", "efectos", "voice_drop", "modo_promo",
                     "firma", "personalizar", "titulo", "imagen"} & set(keys)
         assert "cortes" in keys                                   # Basic también ordena y mueve los cortes
+        assert "efectos_onda" in keys                             # y coloca efectos arrastrándolos a la onda
     else:
         assert {"lote", "vigilar", "firmar_tema", "presets", "avanzado", "arranque", "efectos", "voice_drop", "modo_promo",
-                "firma", "personalizar"} <= set(keys)
+                "firma", "personalizar", "efectos_onda"} <= set(keys)
         assert "cortes" not in keys
     _cerrar(w)
 

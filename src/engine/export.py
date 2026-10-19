@@ -155,6 +155,12 @@ def build_preview_audio(
                 pre_drop_sec=5.0,
             )
 
+    # ── paso 1c: efectos manuales que el usuario colocó en la onda (viajan con su trozo de tema) ──
+    if cfg.get("fx_events"):
+        from src.engine.fx_events import apply_events_to_blocks
+        _prog(42, "Aplicando los efectos que colocaste en la onda…")
+        block_audios = apply_events_to_blocks(block_audios, blocks, SR_OUT, cfg.get("fx_events"))
+
     # ── Aplicar en los cortes entre bloques: 1.0s bajada a cero y 1.0s subida a 100% ──
     _prog(45, "Aplicando transición en cortes (1s bajada a 0 y 1s subida)…")
     n_dip = int(1.0 * SR_OUT)  # 1.0 segundo exacto a 44100 Hz
