@@ -20,6 +20,15 @@ from src import i18n
 _app = QApplication.instance() or QApplication([])
 
 
+def _ffmpeg():
+    from src.config import get_ffmpeg_path
+    return get_ffmpeg_path()
+
+
+# en la CI los tests corren ANTES de descargar FFmpeg: sin él no se puede incrustar ni comprobar la carátula
+necesita_ffmpeg = pytest.mark.skipif(_ffmpeg() is None, reason="sin FFmpeg")
+
+
 @pytest.fixture(autouse=True)
 def _aislado(tmp_path, monkeypatch):
     monkeypatch.setattr("src.config.get_user_data_dir", lambda: tmp_path)
@@ -58,6 +67,7 @@ def _imagen(tmp_path, kind):
 
 @pytest.mark.parametrize("kind", ["jpg", "png_alpha", "webp", "cmyk", "gif"])
 @pytest.mark.parametrize("fmt", ["flac", "wav"])
+@necesita_ffmpeg
 def test_la_caratula_se_incrusta_con_cualquier_imagen_y_se_comprueba(tmp_path, kind, fmt):
     from src.engine.sign import sign_track
     src = _wav(tmp_path / "tema.wav")
@@ -68,6 +78,7 @@ def test_la_caratula_se_incrusta_con_cualquier_imagen_y_se_comprueba(tmp_path, k
     assert "Video: mjpeg" in txt and "1400x1400" in txt
 
 
+@necesita_ffmpeg
 def test_sin_caratula_se_dice_y_no_se_inventa_una(tmp_path):
     from src.engine.sign import sign_track
     r = sign_track(_wav(tmp_path / "t.wav"), str(tmp_path / "o"), "flac", None, {})
@@ -76,6 +87,7 @@ def test_sin_caratula_se_dice_y_no_se_inventa_una(tmp_path):
     assert r2["cover"] is False and "caratula_no_encontrada" in r2["warnings"]        # no se calla que la imagen no estaba
 
 
+@necesita_ffmpeg
 def test_wav_lleva_etiqueta_id3_con_las_dos_grafias_y_lista_info_y_el_audio_no_cambia(tmp_path):
     from src.engine.sign import sign_track
     src = _wav(tmp_path / "a.wav")
@@ -99,6 +111,7 @@ def _esperar(d, secs=60):
         QApplication.processEvents()
 
 
+@necesita_ffmpeg
 def test_la_ventana_conserva_la_caratula_aunque_qt_no_pueda_mostrar_la_miniatura(tmp_path, monkeypatch):
     """Antes, si Qt no leía la imagen (p. ej. WebP sin plugin) la carátula se descartaba EN SILENCIO y el tema salía sin ella."""
     import src.ui.sign_track as S
@@ -122,6 +135,7 @@ def test_la_ventana_conserva_la_caratula_aunque_qt_no_pueda_mostrar_la_miniatura
     d.deleteLater()
 
 
+@necesita_ffmpeg
 def test_la_ventana_avisa_cuando_se_firma_sin_caratula(tmp_path):
     import src.ui.sign_track as S
     d = S.SignTrackDialog({}, None, [_wav(tmp_path / "t.wav")])
@@ -150,6 +164,7 @@ def test_la_ventana_usa_la_caratula_y_las_etiquetas_de_firma_y_caratula_de_la_ve
     d3.deleteLater()
 
 
+@necesita_ffmpeg
 def test_la_caratula_elegida_se_recuerda_para_la_proxima_vez(tmp_path):
     import src.ui.sign_track as S
     from src.config import load
