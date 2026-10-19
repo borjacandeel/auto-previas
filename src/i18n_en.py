@@ -964,3 +964,36 @@ EN_500 = {
     "Destino aplicado: puedes cambiar lo que quieras en los pasos ② y ③": "Destination applied: you can change anything in steps ② and ③",
 }
 EN.update(EN_500)
+
+
+EN_500B = {
+    "🧰 Herramientas": "🧰 Tools",
+    "Todo lo que no es «hacer una previa» está aquí: «Recientes» guarda tus últimas previas (con «Reabrir proyecto» vuelves a los mismos ajustes y la misma semilla), «Modo Lote» procesa muchas pistas de una vez, «Vigilar carpeta» convierte en previa cada tema nuevo que caiga en una carpeta y «Firmar tema entero» incrusta carátula y etiquetas en canciones completas (FLAC/WAV, sin masterizar).":
+        "Everything that isn't “making a preview” is here: “Recents” keeps your latest previews (with “Reopen project” you get the same settings and seed back), “Batch mode” processes many tracks at once, “Watch folder” turns every new track dropped in a folder into a preview and “Sign full track” embeds cover and tags into complete songs (FLAC/WAV, no mastering).",
+    "Todo lo que no es «hacer una previa» está aquí: «Recientes» guarda tus últimas previas (con «Reabrir proyecto» vuelves a los mismos ajustes y la misma semilla). Lote, Vigilar carpeta y Firmar tema aparecen con candado: son de Plus.":
+        "Everything that isn't “making a preview” is here: “Recents” keeps your latest previews (with “Reopen project” you get the same settings and seed back). Batch, Watch folder and Sign track show a lock: they are Plus.",
+    "Ejemplo: 20 temas del EP → 20 previas con Modo Lote mientras tomas un café.": "Example: 20 EP tracks → 20 previews with Batch mode while you have a coffee.",
+    "❓ Ayuda": "❓ Help",
+    "Aquí repites esta guía de 2 minutos cuando quieras, ves todos los atajos de teclado (también con F1) y escribes a soporte.":
+        "Here you can repeat this 2-minute guide whenever you like, see all the keyboard shortcuts (also with F1) and write to support.",
+    "🧰 Herramientas  ▾": "🧰 Tools  ▾", "❓ Ayuda  ▾": "❓ Help  ▾",
+    "🕒 Recientes": "🕒 Recents", "📁 Modo Lote": "📁 Batch mode", "👁 Vigilar carpeta": "👁 Watch folder",
+    "🖋 Firmar tema entero": "🖋 Sign full track", "🔒 Modo Lote (Plus)": "🔒 Batch mode (Plus)",
+    "🔒 Vigilar carpeta (Plus)": "🔒 Watch folder (Plus)", "🔒 Firmar tema entero (Plus)": "🔒 Sign full track (Plus)",
+    "🎓 Guía de 2 minutos": "🎓 2-minute guide", "⌨ Atajos de teclado": "⌨ Keyboard shortcuts", "✉ Escribir a soporte": "✉ Write to support",
+    "Atajos de teclado": "Keyboard shortcuts", "Cerrar": "Close",
+    "Reproducir / pausa": "Play / pause", "Saltar 5 segundos": "Skip 5 seconds", "Volver al principio": "Back to the start",
+    "Detener": "Stop", "Silenciar / activar sonido": "Mute / unmute", "Abrir un tema": "Open a track", "Generar la previa": "Generate the preview",
+    "Ir al paso ② Tu previa  ·  ③ Exportar": "Go to step ② Your preview  ·  ③ Export",
+    "Cambiar entre asistente y modo Estudio": "Switch between wizard and Studio mode",
+    "Deshacer (cortes y efectos)": "Undo (cuts and effects)", "Rehacer": "Redo",
+    "Borrar el efecto seleccionado de la onda": "Delete the selected effect from the waveform", "Ver esta ayuda": "Show this help",
+    "Espacio": "Space", "Supr": "Del",
+    "Nada que deshacer": "Nothing to undo", "Nada que rehacer": "Nothing to redo", "↶ Deshecho": "↶ Undone", "↷ Rehecho": "↷ Redone",
+    "Primero carga un tema": "Load a track first",
+    "Suelta una imagen cuando el tema esté cargado y la usaré como carátula.": "Drop an image once a track is loaded and I'll use it as the cover.",
+    "Carátula propia: solo en Plus": "Custom cover: Plus only",
+    "La edición Plus te deja elegir tu carátula y firmar los archivos.": "The Plus edition lets you choose your cover and sign the files.",
+    "Ver Plus": "See Plus", "Carátula cambiada": "Cover changed", "No se pudo usar la imagen": "Couldn't use the image",
+}
+EN.update(EN_500B)

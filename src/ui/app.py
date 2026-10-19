@@ -728,133 +728,169 @@ class DropZone(QWidget):
         self._pulse_timer.timeout.connect(self._tick)
         self._pulse_timer.start(66)  # ~15 fps — suficiente para partículas
 
-    def showEvent(self, event):
-        super().showEvent(event)
-        if not self._pulse_timer.isActive():
-            self._pulse_timer.start(66)
-
     def hideEvent(self, event):
         super().hideEvent(event)
         if self._pulse_timer.isActive():
             self._pulse_timer.stop()
 
     def _build_ui(self):
+        # v5: inicio guiado — título, zona para soltar el tema, los 3 pasos explicados y accesos a la guía / último tema
         outer = QVBoxLayout(self)
         outer.setAlignment(Qt.AlignCenter)
-        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setContentsMargins(20, 0, 20, 0)
+        outer.setSpacing(14)
 
-        # Card principal
+        title = QLabel("Crea la previa de tu tema en 3 pasos")
+        title.setAlignment(Qt.AlignCenter)
+        title.setStyleSheet(f"font-size: 26px; font-weight: 900; color: {TEXT}; background: transparent; border: none; letter-spacing: -0.5px;")
+        outer.addWidget(title)
+        self._lbl_home_sub = QLabel("Sin conocimientos técnicos: tú eliges el tema y para qué lo quieres; AutoPrevias hace el resto.")
+        self._lbl_home_sub.setAlignment(Qt.AlignCenter)
+        self._lbl_home_sub.setStyleSheet(f"font-size: 12.5px; color: {TEXT_MID}; background: transparent; border: none;")
+        outer.addWidget(self._lbl_home_sub)
+
+        # Tarjeta para soltar el tema (la que resalta el recorrido)
         self._card = GlowFrame()
         self._card.setObjectName("drop-card")
-        self._card.setFixedSize(580, 420)
+        self._card.setFixedSize(720, 190)
         self._card.setStyleSheet(f"""
             QFrame#drop-card {{
-                background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
-                    stop:0 {BG3}, stop:1 {BG2});
+                background: qlineargradient(x1:0,y1:0,x2:0,y2:1, stop:0 {BG3}, stop:1 {BG2});
                 border: 1px solid {BORDER};
                 border-radius: 20px;
             }}
         """)
+        lay = QHBoxLayout(self._card)
+        lay.setContentsMargins(34, 18, 34, 18)
+        lay.setSpacing(26)
 
-        lay = QVBoxLayout(self._card)
-        lay.setAlignment(Qt.AlignCenter)
-        lay.setSpacing(14)
-        lay.setContentsMargins(60, 36, 60, 36)
-
-        # Emblema Radical Records
         emblem_path = _ASSETS_DIR / "logo_emblem.png"
         if not emblem_path.exists():
             emblem_path = _ASSETS_DIR / "logo_emblem_red.png"
-        self._icon_pix_normal = None   # pixmap original (o None si es emoji)
+        self._icon_pix_normal = None
+        self._icon_lbl = QLabel("🎧")
+        self._icon_lbl.setAlignment(Qt.AlignCenter)
+        self._icon_lbl.setFixedWidth(120)
+        self._icon_lbl.setStyleSheet("font-size: 64px; background: transparent; border: none;")
         if emblem_path.exists():
             pix = QPixmap(str(emblem_path))
             if not pix.isNull():
-                self._icon_lbl = QLabel()
-                self._icon_lbl.setAlignment(Qt.AlignCenter)
                 scaled = pix.scaled(110, 110, Qt.KeepAspectRatio, Qt.SmoothTransformation)
                 self._icon_lbl.setPixmap(scaled)
-                self._icon_lbl.setStyleSheet("background: transparent; border: none;")
                 self._icon_pix_normal = scaled
-            else:
-                self._icon_lbl = QLabel("🎧")
-                self._icon_lbl.setAlignment(Qt.AlignCenter)
-                self._icon_lbl.setStyleSheet("font-size: 64px; background: transparent; border: none;")
-        else:
-            self._icon_lbl = QLabel("🎧")
-            self._icon_lbl.setAlignment(Qt.AlignCenter)
-            self._icon_lbl.setStyleSheet("font-size: 64px; background: transparent; border: none;")
         lay.addWidget(self._icon_lbl)
 
-        # Título
-        title = QLabel("Arrastra tu track aquí")
-        title.setAlignment(Qt.AlignCenter)
-        title.setStyleSheet(
-            f"font-size: 24px; font-weight: 800; color: {TEXT};"
-            "background: transparent; border: none; letter-spacing: -0.5px;"
-        )
-        lay.addWidget(title)
-
-        # Formatos
+        col = QVBoxLayout()
+        col.setSpacing(6)
+        col.setAlignment(Qt.AlignVCenter)
+        t2 = QLabel("Arrastra tu tema aquí")
+        t2.setStyleSheet(f"font-size: 22px; font-weight: 800; color: {TEXT}; background: transparent; border: none;")
+        col.addWidget(t2)
         sub = QLabel("WAV  ·  MP3  ·  FLAC  ·  AIFF  ·  M4A")
-        sub.setAlignment(Qt.AlignCenter)
-        sub.setStyleSheet(
-            f"font-size: 11px; color: {TEXT_DIM}; letter-spacing: 3px;"
-            "background: transparent; border: none; font-weight: 600;"
-        )
-        lay.addWidget(sub)
-
-        # Separador
-        sep = QLabel("— o —")
-        sep.setAlignment(Qt.AlignCenter)
-        sep.setStyleSheet(
-            f"font-size: 12px; color: {TEXT_DIM}; margin: 2px 0;"
-            "background: transparent; border: none;"
-        )
-        lay.addWidget(sep)
-
-        # Botón abrir
+        sub.setStyleSheet(f"font-size: 11px; color: {TEXT_DIM}; letter-spacing: 3px; background: transparent; border: none; font-weight: 600;")
+        col.addWidget(sub)
+        col.addSpacing(6)
+        row_b = QHBoxLayout()
+        row_b.setSpacing(10)
         self._btn_open = QPushButton("  Abrir archivo  ")
-        self._btn_open.setFixedHeight(46)
-        self._btn_open.setMinimumWidth(220)
+        self._btn_open.setFixedHeight(44)
+        self._btn_open.setMinimumWidth(200)
         self._btn_open.setStyleSheet(f"""
             QPushButton {{
-                background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
-                    stop:0 {ACCENT}, stop:1 #a80016);
-                color: white;
-                border: 1px solid #ff4d63;
-                border-radius: 12px;
-                font-size: 14px;
-                font-weight: 800;
-                padding: 0 28px;
-                letter-spacing: 0.5px;
+                background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 {ACCENT}, stop:1 #a80016);
+                color: white; border: 1px solid #ff4d63; border-radius: 12px;
+                font-size: 14px; font-weight: 800; padding: 0 28px; letter-spacing: 0.5px;
             }}
             QPushButton:hover {{
-                background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
-                    stop:0 {ACCENT_HV}, stop:1 #d6001e);
+                background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 {ACCENT_HV}, stop:1 #d6001e);
                 border: 1px solid #ff7588;
             }}
-            QPushButton:pressed {{
-                background: #800010;
-            }}
+            QPushButton:pressed {{ background: #800010; }}
         """)
         self._btn_open.setCursor(Qt.PointingHandCursor)
         self._btn_open.clicked.connect(self._open_dialog)
-        lay.addWidget(self._btn_open, alignment=Qt.AlignCenter)
+        row_b.addWidget(self._btn_open)
+        # «Seguir con …»: el último tema abierto (si sigue existiendo)
+        self._btn_continue = QPushButton("")
+        self._btn_continue.setFixedHeight(44)
+        self._btn_continue.setCursor(Qt.PointingHandCursor)
+        self._btn_continue.setStyleSheet(f"QPushButton {{ background: {BG4}; color: {TEXT}; border: 1px solid {BORDER}; border-radius: 12px;"
+                                         " font-size: 12px; font-weight: 700; padding: 0 16px; }"
+                                         f"QPushButton:hover {{ border-color: {ACCENT}; }}")
+        self._btn_continue.clicked.connect(lambda _=False: self._continue_last())
+        row_b.addWidget(self._btn_continue)
+        row_b.addStretch()
+        col.addLayout(row_b)
+        lay.addLayout(col, 1)
+        outer.addWidget(self._card, 0, Qt.AlignCenter)
 
-        # Marca Radical Records en drop zone
-        banner_path = _ASSETS_DIR / "logo_banner.png"
-        if not banner_path.exists():
-            banner_path = _ASSETS_DIR / "logo_banner_red.png"
-        if banner_path.exists():
-            b_pix = QPixmap(str(banner_path))
-            if not b_pix.isNull():
-                lbl_wm = QLabel()
-                lbl_wm.setAlignment(Qt.AlignCenter)
-                lbl_wm.setPixmap(b_pix.scaledToHeight(22, Qt.SmoothTransformation))
-                lbl_wm.setStyleSheet("background: transparent; border: none; margin-top: 10px;")
-                lay.addWidget(lbl_wm, alignment=Qt.AlignCenter)
+        # Los 3 pasos
+        steps = QHBoxLayout()
+        steps.setSpacing(12)
+        steps.setAlignment(Qt.AlignCenter)
+        self._home_steps = []
+        for n, head, body in (
+            ("1", "Carga tu tema", "Suéltalo aquí. Lo analizo solo: BPM, tonalidad y estructura."),
+            ("2", "Elige para qué es", "Redes, radio, sello o club: dejo lista la duración, los cortes y los formatos."),
+            ("3", "Exporta", "MP3 (y WAV o FLAC en Plus) y un vídeo animado para redes."),
+        ):
+            c = QFrame()
+            c.setFixedSize(232, 92)
+            c.setStyleSheet(f"QFrame {{ background: {BG2}; border: 1px solid {BORDER}; border-radius: 14px; }} QLabel {{ background: transparent; border: none; }}")
+            cl = QVBoxLayout(c)
+            cl.setContentsMargins(14, 10, 14, 10)
+            cl.setSpacing(3)
+            h = QLabel(f"{n}  ·  {head}")
+            h.setStyleSheet(f"color: {ACCENT}; font-size: 12.5px; font-weight: 800;")
+            b = QLabel(body)
+            b.setWordWrap(True)
+            b.setStyleSheet(f"color: {TEXT_MID}; font-size: 11px;")
+            cl.addWidget(h)
+            cl.addWidget(b)
+            cl.addStretch()
+            steps.addWidget(c)
+            self._home_steps.append(c)
+        outer.addLayout(steps)
 
-        outer.addWidget(self._card)
+        self._btn_guide = QPushButton("🎓  Guía de 2 minutos")
+        self._btn_guide.setFixedHeight(32)
+        self._btn_guide.setCursor(Qt.PointingHandCursor)
+        self._btn_guide.setStyleSheet(f"QPushButton {{ background: transparent; color: {TEXT_MID}; border: 1px solid {BORDER}; border-radius: 16px;"
+                                      " font-size: 11.5px; font-weight: 700; padding: 0 18px; }"
+                                      f"QPushButton:hover {{ color: {TEXT}; border-color: {ACCENT}; }}")
+        outer.addWidget(self._btn_guide, 0, Qt.AlignCenter)
+        self.refresh_continue()
+
+    # — «Seguir con…» —
+    def last_track(self) -> str:
+        try:
+            from src.config import get_recent_files
+            for f in get_recent_files():
+                if Path(f).exists():
+                    return f
+        except Exception:
+            pass
+        return ""
+
+    def refresh_continue(self):
+        last = self.last_track()
+        self._btn_continue.setVisible(bool(last))
+        if last:
+            name = Path(last).stem
+            name = name if len(name) <= 24 else name[:22] + "…"
+            self._btn_continue.setText(tr("↻  Seguir con «{n}»", n=name))
+            self._btn_continue.setToolTip(last)
+
+    def _continue_last(self):
+        last = self.last_track()
+        if last:
+            self.file_dropped.emit(last)
+
+    def showEvent(self, event):
+        self.refresh_continue()
+        super().showEvent(event)
+        if not self._pulse_timer.isActive():
+            self._pulse_timer.start(66)
 
     def _init_particles(self):
         import random
@@ -1481,6 +1517,17 @@ class ResultPanel(QWidget):
         self._promo_saved         = None  # formatos del usuario mientras el modo promo está activo
         self._build_ui()
         self._apply_edition_limits()
+        # v5: deshacer/rehacer de cortes y efectos. Una «foto» del estado editable cada 300 ms: si cambió y ya no se mueve
+        # (el usuario soltó el ratón) se guarda como un paso; así cubre TODAS las formas de editar sin tocar cada una.
+        from src.ui.undo import History
+        self._hist = History()
+        self._hist_ready = False
+        self._hist_restoring = False
+        self._hist_pending = None
+        self._hist_timer = QTimer(self)
+        self._hist_timer.setInterval(300)
+        self._hist_timer.timeout.connect(self._hist_poll)
+        self._hist_timer.start()
 
     def _build_ui(self):
         # v5: asistente de 3 pasos. ① Tu tema (ya analizado) · ② Tu previa · ③ Exportar. Cada paso es un contenedor;
@@ -1528,6 +1575,7 @@ class ResultPanel(QWidget):
         if HAS_WAVEFORM:
             self._waveform = WaveformWidget()
             self._waveform.setMinimumHeight(135)
+            self._waveform.setMaximumHeight(340)         # v5: el paso ② cabe mejor en pantalla (antes crecía con la ventana)
             self._waveform.seek_requested.connect(self._on_waveform_seek)
             self._waveform.boundaries_changed.connect(self._on_boundaries_changed)
             self._waveform.cuts_changed.connect(self._on_waveform_cuts_changed)
@@ -2341,6 +2389,7 @@ class ResultPanel(QWidget):
 
         self._card_export_success.setVisible(False)
         root.addWidget(self._card_export_success)
+        root.addStretch(1)                               # el hueco sobrante va abajo, no repartido entre las tarjetas
 
     # ── Helpers de UI ─────────────────────────────────────────────────────
 
@@ -2484,6 +2533,7 @@ class ResultPanel(QWidget):
         self._analysis    = analysis
         self._plan        = plan
         self._source_path = file_path
+        self.hist_reset()
         self._dest_card.group.setExclusive(False)
         for _b in self._dest_card.buttons.values():
             _b.setChecked(False)
@@ -2628,6 +2678,71 @@ class ResultPanel(QWidget):
         self._page3.setVisible(n == 3)
         if animate:
             _anim.fade_in(self._page3 if n == 3 else self._page2, 240)
+
+    # ── v5: deshacer / rehacer ─────────────────────────────────────────────
+    def _snapshot(self):
+        rows = tuple((round(a, 3), round(b, 3), int(c)) for a, b, c in self._cut_rows()) if hasattr(self, "_tbl_cuts") else ()
+        ev = ()
+        if HAS_WAVEFORM:
+            ev = tuple(sorted((str(e.get("id")), e.get("type"), round(float(e.get("start", 0)), 3),
+                               round(float(e.get("end", 0)), 3), round(float(e.get("amount", 0)), 3))
+                              for e in self._waveform.fx_events()))
+        return (rows, ev)
+
+    def _hist_poll(self, force: bool = False):
+        if self._hist_restoring or not self._analysis or not self.isVisible():
+            return
+        snap = self._snapshot()
+        if not self._hist_ready:
+            self._hist.reset(snap)
+            self._hist_ready = True
+            self._hist_pending = None
+            return
+        if snap == self._hist.current():
+            self._hist_pending = None
+            return
+        if force or snap == self._hist_pending:
+            self._hist.record(snap)
+            self._hist_pending = None
+        else:
+            self._hist_pending = snap
+
+    def hist_reset(self):
+        self._hist_ready = False
+        self._hist_pending = None
+
+    def _hist_restore(self, snap):
+        rows, ev = snap
+        self._hist_restoring = True
+        try:
+            if tuple(rows) != self._snapshot()[0]:
+                self._apply_cut_rows([(a, b, c) for a, b, c in rows])
+            if HAS_WAVEFORM and tuple(ev) != self._snapshot()[1]:
+                self._waveform.set_fx_events([{"id": i, "type": t, "start": a, "end": b, "amount": m} for i, t, a, b, m in ev],
+                                             emit=True)
+            self._hist.replace_current(self._snapshot())
+        finally:
+            self._hist_restoring = False
+
+    def undo(self):
+        self._hist_poll(force=True)
+        snap = self._hist.undo()
+        if snap is None:
+            self.status_message.emit("Nada que deshacer")
+            return False
+        self._hist_restore(snap)
+        self.status_message.emit("↶ Deshecho")
+        return True
+
+    def redo(self):
+        self._hist_poll(force=True)
+        snap = self._hist.redo()
+        if snap is None:
+            self.status_message.emit("Nada que rehacer")
+            return False
+        self._hist_restore(snap)
+        self.status_message.emit("↷ Rehecho")
+        return True
 
     def _on_stepper_clicked(self, n: int):
         if n == 1:
@@ -5039,7 +5154,7 @@ class MainWindow(QMainWindow):
         )
         logo_row.addWidget(self._logo_lbl)
 
-        v_badge = QLabel(f"PRO STUDIO v{VERSION}")
+        v_badge = QLabel(f"v{VERSION}")
         v_badge.setStyleSheet("""
             color: #ffffff;
             background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
@@ -5059,7 +5174,7 @@ class MainWindow(QMainWindow):
         self._btn_recents.setStyleSheet(_btn(BG3, TEXT_MID, BG4, radius=4, fs=10))
         self._btn_recents.setToolTip("Ver y cargar archivos de audio procesados recientemente")
         self._btn_recents.clicked.connect(self._open_history_dialog)
-        logo_row.addWidget(self._btn_recents)
+        self._btn_recents.setVisible(False)          # v5: viven en el menú «Herramientas»
 
         self._btn_batch_hdr = QPushButton("📁 Modo Lote")
         self._btn_batch_hdr.setFixedHeight(22)
@@ -5067,7 +5182,7 @@ class MainWindow(QMainWindow):
         self._btn_batch_hdr.setStyleSheet(_btn(BG3, TEXT_MID, BG4, radius=4, fs=10))
         self._btn_batch_hdr.setToolTip("Procesar múltiples pistas en lote automáticamente")
         self._btn_batch_hdr.clicked.connect(lambda: self._open_batch_dialog())
-        logo_row.addWidget(self._btn_batch_hdr)
+        self._btn_batch_hdr.setVisible(False)          # v5: viven en el menú «Herramientas»
 
         self._btn_watch = QPushButton("👁️ Vigilar Carpeta")
         self._btn_watch.setFixedHeight(22)
@@ -5075,7 +5190,7 @@ class MainWindow(QMainWindow):
         self._update_watch_button_style()
         self._btn_watch.setToolTip("Vigilar una carpeta y generar previas automáticamente cuando caiga un nuevo tema")
         self._btn_watch.clicked.connect(self._toggle_watch_folder)
-        logo_row.addWidget(self._btn_watch)
+        self._btn_watch.setVisible(False)          # v5: viven en el menú «Herramientas»
 
         self._btn_sign = QPushButton("🖋 Firmar tema")
         self._btn_sign.setFixedHeight(22)
@@ -5083,7 +5198,10 @@ class MainWindow(QMainWindow):
         self._btn_sign.setStyleSheet(_btn(BG3, TEXT_MID, BG4, radius=4, fs=10))
         self._btn_sign.setToolTip("Firma un tema entero (no una previa): solo le mete la carátula y las etiquetas y lo guarda en FLAC o WAV a máxima calidad")
         self._btn_sign.clicked.connect(lambda _=False: self._open_sign_dialog())
-        logo_row.addWidget(self._btn_sign)
+        self._btn_sign.setVisible(False)          # v5: viven en el menú «Herramientas»
+
+        # v5: cabecera simple — «Herramientas ▾» y «Ayuda ▾» agrupan lo que antes eran seis botones sueltos
+        self._build_header_menus(logo_row)
 
         self._btn_license = QPushButton("⚙ Licencia")
         self._btn_license.setFixedHeight(22)
@@ -5105,10 +5223,6 @@ class MainWindow(QMainWindow):
         logo_row.addWidget(self._btn_lang)
 
         # Ocultar features de lote en edición Básica
-        _plus = get_edition() == "plus"
-        self._btn_batch_hdr.setVisible(_plus)
-        self._btn_watch.setVisible(_plus)
-        self._btn_sign.setVisible(_plus)
 
         logo_col.addLayout(logo_row)
 
@@ -5188,6 +5302,7 @@ class MainWindow(QMainWindow):
         # Página 0 — Drop zone
         self._drop_zone = DropZone()
         self._drop_zone.file_dropped.connect(self._load_file)
+        self._drop_zone._btn_guide.clicked.connect(lambda _=False: self.start_tour())
         self._stack.addWidget(self._drop_zone)
 
         # Página 1 — Análisis en curso (logo animado + progress)
@@ -5680,20 +5795,65 @@ class MainWindow(QMainWindow):
 
     # ── Drag global (ventana) ─────────────────────────────────────────────
 
+    _IMG_EXTS = (".png", ".jpg", ".jpeg", ".webp", ".bmp")
+
+    def _classify_drop(self, md):
+        audio, images = [], []
+        for url in md.urls():
+            path = url.toLocalFile()
+            suf = Path(path).suffix.lower()
+            if suf in AUDIO_EXTS:
+                audio.append(path)
+            elif suf in self._IMG_EXTS:
+                images.append(path)
+        return audio, images
+
     def dragEnterEvent(self, e: QDragEnterEvent):
-        if e.mimeData().hasUrls():
+        # v5: se acepta audio (en cualquier pantalla) e imágenes (carátula, en Plus y con un tema cargado); se carga al SOLTAR
+        if not e.mimeData().hasUrls():
+            return
+        audio, images = self._classify_drop(e.mimeData())
+        if audio or images:
             e.acceptProposedAction()
 
-        audio_files = []
-        for url in e.mimeData().urls():
-            path = url.toLocalFile()
-            if Path(path).suffix.lower() in AUDIO_EXTS:
-                audio_files.append(path)
+    def dragMoveEvent(self, e):
+        if e.mimeData().hasUrls():
+            audio, images = self._classify_drop(e.mimeData())
+            if audio or images:
+                e.acceptProposedAction()
 
-        if len(audio_files) > 1:
-            self._open_batch_dialog(audio_files)
-        elif len(audio_files) == 1:
-            self._load_file(audio_files[0])
+    def dropEvent(self, e: QDropEvent):
+        audio, images = self._classify_drop(e.mimeData())
+        if audio:
+            e.acceptProposedAction()
+            if len(audio) > 1 and get_edition() == "plus":
+                self._open_batch_dialog(audio)
+            else:
+                self._load_file(audio[0])
+        elif images:
+            e.acceptProposedAction()
+            self._cover_dropped(images[0])
+
+    def _cover_dropped(self, path: str):
+        """Imagen soltada en la ventana con un tema cargado = carátula de la previa (Plus)."""
+        from src.ui.toast import toast
+        if self._stack.currentIndex() != 2:
+            toast(self, "info", "Primero carga un tema", "Suelta una imagen cuando el tema esté cargado y la usaré como carátula.")
+            return
+        if get_edition() != "plus":
+            toast(self, "info", "Carátula propia: solo en Plus",
+                  "La edición Plus te deja elegir tu carátula y firmar los archivos.",
+                  action=("Ver Plus", self._results._open_plus_page))
+            return
+        try:
+            self._results._branding_card._drop_area.set_cover(path)
+            self._results._set_adv_open(True)
+            toast(self, "success", "Carátula cambiada", Path(path).name)
+        except Exception as ex:
+            toast(self, "error", "No se pudo usar la imagen", str(ex))
+
+    def _open_audio_dialog(self):
+        self._drop_zone._open_dialog()
 
     def _open_batch_dialog(self, initial_files: list | None = None):
         try:
@@ -5702,6 +5862,87 @@ class MainWindow(QMainWindow):
             dlg.exec()
         except Exception as ex:
             self._set_progress(0, "❌ Error abriendo Modo Lote: {err}", err=str(ex))
+
+    def _build_header_menus(self, logo_row):
+        """Botones «🧰 Herramientas ▾» y «❓ Ayuda ▾» de la cabecera."""
+        from PySide6.QtGui import QAction
+        from PySide6.QtWidgets import QMenu
+        plus = get_edition() == "plus"
+        menu_css = (f"QMenu {{ background: {BG2}; color: {TEXT}; border: 1px solid {BORDER}; border-radius: 8px; padding: 6px; }}"
+                    f"QMenu::item {{ padding: 7px 18px; border-radius: 5px; font-size: 12px; }}"
+                    f"QMenu::item:selected {{ background: {ACCENT}; color: #ffffff; }}"
+                    f"QMenu::separator {{ height: 1px; background: {BORDER}; margin: 5px 8px; }}")
+        btn_css = (f"QPushButton {{ background: {BG3}; color: {TEXT_SUB}; border: 1px solid {BORDER}; border-radius: 6px;"
+                   " font-size: 11px; font-weight: 700; padding: 0 12px; }"
+                   f"QPushButton:hover {{ border-color: {ACCENT}; color: {TEXT}; }}"
+                   "QPushButton::menu-indicator { image: none; width: 0; }")
+
+        def _lock(txt: str):
+            return f"🔒 {txt} (Plus)"
+
+        # — Herramientas —
+        self._btn_tools = QPushButton("🧰 Herramientas  ▾")
+        self._btn_tools.setFixedHeight(26)
+        self._btn_tools.setCursor(Qt.PointingHandCursor)
+        self._btn_tools.setStyleSheet(btn_css)
+        self._btn_tools.setToolTip("Recientes, Modo Lote, Vigilar carpeta y Firmar tema entero")
+        self._tools_menu = QMenu(self._btn_tools)
+        self._tools_menu.setStyleSheet(menu_css)
+        self._act_recents = self._tools_menu.addAction("🕒 Recientes")
+        self._act_recents.triggered.connect(lambda _=False: self._open_history_dialog())
+        self._tools_menu.addSeparator()
+        self._act_batch = self._tools_menu.addAction("📁 Modo Lote" if plus else _lock("Modo Lote"))
+        self._act_watch = self._tools_menu.addAction("👁 Vigilar carpeta" if plus else _lock("Vigilar carpeta"))
+        self._act_sign = self._tools_menu.addAction("🖋 Firmar tema entero" if plus else _lock("Firmar tema entero"))
+        if plus:
+            self._act_batch.triggered.connect(lambda _=False: self._open_batch_dialog())
+            self._act_watch.triggered.connect(lambda _=False: self._toggle_watch_folder())
+            self._act_sign.triggered.connect(lambda _=False: self._open_sign_dialog())
+        else:
+            for a in (self._act_batch, self._act_watch, self._act_sign):
+                a.triggered.connect(lambda _=False: self._results._open_plus_page())
+        self._tools_menu.aboutToShow.connect(self._refresh_tools_menu)
+        self._btn_tools.setMenu(self._tools_menu)
+        logo_row.addWidget(self._btn_tools)
+
+        # — Ayuda —
+        self._btn_help = QPushButton("❓ Ayuda  ▾")
+        self._btn_help.setFixedHeight(26)
+        self._btn_help.setCursor(Qt.PointingHandCursor)
+        self._btn_help.setStyleSheet(btn_css)
+        self._btn_help.setToolTip("Guía de 2 minutos, atajos de teclado y soporte")
+        self._help_menu = QMenu(self._btn_help)
+        self._help_menu.setStyleSheet(menu_css)
+        self._act_tour = self._help_menu.addAction("🎓 Guía de 2 minutos")
+        self._act_tour.triggered.connect(lambda _=False: self.start_tour())
+        self._act_keys = self._help_menu.addAction("⌨ Atajos de teclado")
+        self._act_keys.triggered.connect(lambda _=False: self._show_shortcuts())
+        self._help_menu.addSeparator()
+        self._act_support = self._help_menu.addAction("✉ Escribir a soporte")
+        self._act_support.triggered.connect(lambda _=False: self._open_support_mail())
+        self._btn_help.setMenu(self._help_menu)
+        logo_row.addWidget(self._btn_help)
+
+    def _refresh_tools_menu(self):
+        """El texto de «Vigilar carpeta» refleja si está activo."""
+        if get_edition() != "plus":
+            return
+        if self._watching and self._watched_folder:
+            self._act_watch.setText(tr("👁 Dejar de vigilar «{n}»", n=Path(self._watched_folder).name))
+        else:
+            self._act_watch.setText(tr("👁 Vigilar carpeta"))
+
+    def _open_support_mail(self):
+        try:
+            from PySide6.QtCore import QUrl
+            from PySide6.QtGui import QDesktopServices
+            QDesktopServices.openUrl(QUrl(f"mailto:{SUPPORT}"))
+        except Exception:
+            pass
+
+    def _show_shortcuts(self):
+        from src.ui.shortcuts import ShortcutsDialog
+        ShortcutsDialog(self).exec()
 
     def _update_watch_button_style(self):
         if not hasattr(self, "_btn_watch"):
@@ -5924,6 +6165,47 @@ class MainWindow(QMainWindow):
         # Atajos de reproducción para DJs cuando no se está editando un campo de texto
         focus = QApplication.focusWidget()
         in_input = isinstance(focus, (QLineEdit, QTextEdit, QSpinBox, QDoubleSpinBox))
+        mods = e.modifiers()
+        ctrl = bool(mods & Qt.ControlModifier)
+        k0 = e.key()
+        R = getattr(self, "_results", None)
+        on_results = R is not None and self._stack.currentIndex() == 2
+        if ctrl and k0 == Qt.Key_O:
+            self._open_audio_dialog()
+            e.accept()
+            return
+        if ctrl and k0 == Qt.Key_G and on_results:
+            R.go_step(3, animate=False)
+            if R._btn_generate.isEnabled():
+                R._btn_generate.click()
+            e.accept()
+            return
+        if ctrl and k0 in (Qt.Key_2, Qt.Key_3) and on_results:
+            R.go_step(2 if k0 == Qt.Key_2 else 3)
+            e.accept()
+            return
+        if ctrl and k0 == Qt.Key_E and on_results:
+            R.set_studio(not R._studio)
+            self._cfg["always_studio"] = bool(R._studio)
+            try:
+                c = load_cfg()
+                c["always_studio"] = bool(R._studio)
+                save_cfg(c)
+            except Exception:
+                pass
+            e.accept()
+            return
+        if not in_input and on_results and ctrl and (k0 == Qt.Key_Z or k0 == Qt.Key_Y):
+            if k0 == Qt.Key_Y or (mods & Qt.ShiftModifier):
+                R.redo()
+            else:
+                R.undo()
+            e.accept()
+            return
+        if not in_input and (k0 == Qt.Key_F1 or (k0 == Qt.Key_Question and not ctrl)):
+            self._show_shortcuts()
+            e.accept()
+            return
         if not in_input and hasattr(self, "_results") and self._results._player:
             player = self._results._player
             k = e.key()

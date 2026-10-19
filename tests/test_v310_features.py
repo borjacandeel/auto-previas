@@ -265,7 +265,7 @@ def test_boton_firmar_tema_solo_en_plus(monkeypatch):
     for ed, visible in (("plus", True), ("basic", False)):
         monkeypatch.setattr(A, "get_edition", lambda ed=ed: ed)
         w = A.MainWindow()
-        assert (not w._btn_sign.isHidden()) == visible
+        assert w._act_sign.text().startswith("🖋" if visible else "🔒")      # en Basic aparece con candado
         _cerrar(w)
 
 

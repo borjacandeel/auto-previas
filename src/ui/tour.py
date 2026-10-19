@@ -135,20 +135,18 @@ def build_steps(win) -> list:
         "Arrastra aquí un archivo de audio (WAV, MP3, FLAC, AIFF, M4A, OGG…) o pulsa «Abrir archivo». "
         "También puedes soltarlo en cualquier parte de la ventana.",
         lambda: win._drop_zone._card, example="Ejemplo: tu máster «Midnight Groove (Original Mix).wav».")
-    add("recientes", "Recientes",
-        "Guarda tus últimas previas y temas abiertos. Con un clic vuelves a cargarlos y, si quieres, "
-        "«Reabrir proyecto» restaura los mismos ajustes y la misma semilla.", lambda: win._btn_recents)
-    if plus:
-        add("lote", "Modo Lote (Plus)",
-            "Procesa muchas pistas de una vez: las añades a la lista, eliges ajustes y AutoPrevias genera todas las previas sola.",
-            lambda: win._btn_batch_hdr, example="Ejemplo: 20 temas del EP → 20 previas mientras tomas un café.")
-        add("vigilar", "Vigilar carpeta (Plus)",
-            "Elige una carpeta y cada tema nuevo que caiga en ella se convierte en previa automáticamente.",
-            lambda: win._btn_watch)
-        add("firmar_tema", "Firmar tema entero (Plus)",
-            "Abre una ventana aparte para firmar canciones completas, no previas: arrastras el tema, eliges la carátula y las "
-            "etiquetas y se guarda en FLAC o WAV a máxima calidad. Sin masterización ni efectos: el audio queda igual.",
-            lambda: win._btn_sign, example="Ejemplo: tu máster de 24 bits con la portada del EP incrustada, listo para subir.")
+    add("herramientas", "🧰 Herramientas",
+        "Todo lo que no es «hacer una previa» está aquí: «Recientes» guarda tus últimas previas (con «Reabrir proyecto» vuelves a los mismos "
+        "ajustes y la misma semilla)"
+        + (", «Modo Lote» procesa muchas pistas de una vez, «Vigilar carpeta» convierte en previa cada tema nuevo que caiga en una carpeta y "
+           "«Firmar tema entero» incrusta carátula y etiquetas en canciones completas (FLAC/WAV, sin masterizar)."
+           if plus else
+           ". Lote, Vigilar carpeta y Firmar tema aparecen con candado: son de Plus."),
+        lambda: win._btn_tools,
+        example=("Ejemplo: 20 temas del EP → 20 previas con Modo Lote mientras tomas un café." if plus else ""))
+    add("ayuda", "❓ Ayuda",
+        "Aquí repites esta guía de 2 minutos cuando quieras, ves todos los atajos de teclado (también con F1) y escribes a soporte.",
+        lambda: win._btn_help)
     add("licencia", "Licencia, idioma y actualizaciones",
         "Aquí ves tu versión y tu licencia (1 equipo por clave), cambias el idioma, buscas actualizaciones y ajustas el "
         "rendimiento del equipo. La licencia se revalida sola: no tienes que volver a escribirla.", lambda: win._btn_license)

@@ -102,12 +102,14 @@ def test_todos_los_pasos_tienen_traduccion_inglesa(monkeypatch, edition):
         assert txt in EN
     # la edición Básica no enseña funciones de Plus (lote, presets, efectos…)
     if edition == "basic":
-        assert not {"lote", "vigilar", "firmar_tema", "presets", "avanzado", "arranque", "efectos", "voice_drop", "modo_promo",
+        assert not {"presets", "avanzado", "arranque", "efectos", "voice_drop", "modo_promo",
                     "firma", "personalizar", "titulo", "imagen"} & set(keys)
+        assert {"herramientas", "ayuda", "pasos", "destino"} <= set(keys)
+        assert {"herramientas", "ayuda", "pasos", "destino"} <= set(keys)
         assert "cortes" in keys                                   # Basic también ordena y mueve los cortes
         assert "efectos_onda" in keys                             # y coloca efectos arrastrándolos a la onda
     else:
-        assert {"lote", "vigilar", "firmar_tema", "presets", "avanzado", "arranque", "efectos", "voice_drop", "modo_promo",
+        assert {"herramientas", "ayuda", "pasos", "destino", "presets", "avanzado", "arranque", "efectos", "voice_drop", "modo_promo",
                 "firma", "personalizar", "efectos_onda"} <= set(keys)
         assert "cortes" not in keys
     _cerrar(w)
