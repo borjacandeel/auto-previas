@@ -15,6 +15,8 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ## [3.10.0] - 2026-10-19
 
+> Esta versión no se publicó por separado: sus novedades llegan junto con la 3.11.0.
+
 ### Añadido
 - **Orden y nombres de los cortes (Basic y Plus).** Cada corte se crea con su nombre: **Corte 1, Corte 2, Corte 3…** (el nombre no cambia aunque cambies el orden). Con **▲ ▼** decides en qué orden suenan en la previa (por ejemplo, que el drop suene primero). La forma de onda y la tabla muestran el orden y el nombre. La edición **Basic** ahora tiene la casilla **«✂ Ordenar y mover cortes»**.
 - **Dónde empieza la previa (Basic y Plus).** Dos botones, **⏮ Al inicio del tema** y **⏺ A mitad del tema**, colocan el primer corte donde quieras (siempre ajustado a un compás). Y puedes **arrastrar el primer corte** sobre la onda hasta cualquier punto.
