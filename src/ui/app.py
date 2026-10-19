@@ -1483,9 +1483,34 @@ class ResultPanel(QWidget):
         self._apply_edition_limits()
 
     def _build_ui(self):
-        root = QVBoxLayout(self)
+        # v5: asistente de 3 pasos. ① Tu tema (ya analizado) · ② Tu previa · ③ Exportar. Cada paso es un contenedor;
+        # el que no toca se oculta (no ocupa sitio). Los widgets conservan sus nombres de siempre.
+        from src.ui.wizard import DestinationCard, WizardStepper
+        shell = QVBoxLayout(self)
+        shell.setSpacing(10)
+        shell.setContentsMargins(0, 0, 0, 0)
+        self._stepper = WizardStepper()
+        self._stepper.step_clicked.connect(self._on_stepper_clicked)
+        shell.addWidget(self._stepper)
+        self._page2 = QWidget()
+        self._page3 = QWidget()
+        for _pg in (self._page2, self._page3):
+            _pg.setStyleSheet("background: transparent;")
+        root = QVBoxLayout(self._page2)
         root.setSpacing(10)
         root.setContentsMargins(0, 0, 0, 0)
+        root3 = QVBoxLayout(self._page3)
+        root3.setSpacing(10)
+        root3.setContentsMargins(0, 0, 0, 0)
+        shell.addWidget(self._page2)
+        shell.addWidget(self._page3, 1)
+        self._wizard_step = 2
+        self._studio = False
+
+        # ── 0. DESTINO: «¿Para qué es esta previa?» ────────────────────────
+        self._dest_card = DestinationCard()
+        self._dest_card.chosen.connect(self._apply_destination)
+        root.addWidget(self._dest_card)
 
         # ── 1. WAVEFORM ───────────────────────────────────────────────────
         wave_frame = QFrame()
@@ -1714,6 +1739,45 @@ class ResultPanel(QWidget):
         self._tabs.addTab(self._tbl_structure, "  📊 Estructura Musical  ")
         self._tabs.setVisible(False)  # Super simple por defecto
         root.addWidget(self._tabs, stretch=1)
+
+        # Navegación del paso ② al ③
+        self._nav2 = QWidget()
+        n2 = QHBoxLayout(self._nav2)
+        n2.setContentsMargins(0, 4, 0, 0)
+        n2.setSpacing(8)
+        self._btn_back_drop = QPushButton("← Otro tema")
+        self._btn_back_drop.setFixedHeight(36)
+        self._btn_back_drop.setCursor(Qt.PointingHandCursor)
+        self._btn_back_drop.setStyleSheet(_btn(BG3, TEXT_SUB, BG4, radius=9, fs=12))
+        self._btn_back_drop.clicked.connect(lambda _=False: self._pick_new_file())
+        self._btn_next = ShimmerButton("Siguiente: Exportar  →")
+        self._btn_next.setFixedHeight(40)
+        self._btn_next.setCursor(Qt.PointingHandCursor)
+        self._btn_next.setStyleSheet(
+            f"QPushButton {{ background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 #ff1e38, stop:1 #990014); color: white;"
+            " border: 1px solid #ff4d63; border-radius: 10px; font-size: 13px; font-weight: 800; padding: 0 26px; }"
+            "QPushButton:hover { border: 1px solid #ff7588; }")
+        self._btn_next.clicked.connect(lambda _=False: self.go_step(3))
+        n2.addWidget(self._btn_back_drop)
+        n2.addStretch()
+        n2.addWidget(self._btn_next)
+        root.addWidget(self._nav2)
+        root.addStretch(1)
+
+        root = root3
+
+        # Navegación del paso ③ al ②
+        self._nav3 = QWidget()
+        n3 = QHBoxLayout(self._nav3)
+        n3.setContentsMargins(0, 0, 0, 0)
+        self._btn_back = QPushButton("←  Volver a la previa")
+        self._btn_back.setFixedHeight(32)
+        self._btn_back.setCursor(Qt.PointingHandCursor)
+        self._btn_back.setStyleSheet(_btn(BG3, TEXT_SUB, BG4, radius=8, fs=11.5))
+        self._btn_back.clicked.connect(lambda _=False: self.go_step(2))
+        n3.addWidget(self._btn_back)
+        n3.addStretch()
+        root.addWidget(self._nav3)
 
         # ── 5. PANEL DE EXPORTACIÓN ───────────────────────────────────────
         exp_frame = QFrame()
@@ -2420,6 +2484,12 @@ class ResultPanel(QWidget):
         self._analysis    = analysis
         self._plan        = plan
         self._source_path = file_path
+        self._dest_card.group.setExclusive(False)
+        for _b in self._dest_card.buttons.values():
+            _b.setChecked(False)
+        self._dest_card.group.setExclusive(True)
+        self.set_studio(bool(load_cfg().get("always_studio")))
+        self.go_step(2, animate=False)
         self._session_cover = cfg.get("cover_path", "") if isinstance(cfg, dict) else ""
         if hasattr(self, "_edit_vtitle"):
             self._edit_vtitle.clear()        # el título del vídeo es por pista
@@ -2544,6 +2614,62 @@ class ResultPanel(QWidget):
                 """)
             else:
                 btn.setStyleSheet(_btn(BG3, TEXT_MID, BG4, radius=4, fs=10))
+
+    # ── v5: asistente de 3 pasos, destinos y modo Estudio ─────────────────
+
+    def go_step(self, n: int, animate: bool = True):
+        """Muestra el paso ② (Tu previa) o ③ (Exportar). En modo Estudio se ve todo y no hace nada."""
+        n = 3 if n == 3 else 2
+        self._wizard_step = n
+        self._stepper.set_step(n)
+        if self._studio:
+            return
+        self._page2.setVisible(n == 2)
+        self._page3.setVisible(n == 3)
+        if animate:
+            _anim.fade_in(self._page3 if n == 3 else self._page2, 240)
+
+    def _on_stepper_clicked(self, n: int):
+        if n == 1:
+            self._pick_new_file()
+        else:
+            self.go_step(n)
+
+    def set_studio(self, on: bool):
+        """Modo Estudio (expertos): ② y ③ juntos en una sola página, sin cinta de pasos ni botones de navegación."""
+        self._studio = bool(on)
+        self._stepper.setVisible(not on)
+        self._nav2.setVisible(not on)
+        self._nav3.setVisible(not on)
+        if on:
+            self._page2.setVisible(True)
+            self._page3.setVisible(True)
+        else:
+            self.go_step(self._wizard_step, animate=False)
+
+    def _apply_destination(self, key: str):
+        """Un clic en «¿Para qué es?»: duración, formatos, vídeo y arranque/final del destino elegido."""
+        from src.ui.wizard import destination_settings
+        plus = get_edition() == "plus"
+        s = destination_settings(key, plus)
+        self._dest_key = key
+        if s["seconds"]:
+            self._apply_duration_preset(s["seconds"])
+        if key != "custom":
+            if not self._chk_promo.isChecked():
+                if plus:
+                    self._chk_wav.setChecked(s["wav"])
+                    self._chk_flac.setChecked(s["flac"])
+                self._chk_mp3.setChecked(s["mp3"])
+            self._chk_video.setChecked(bool(s["video"]))
+            if s["video"]:
+                self._set_combo_by_data(self._combo_aspect, s["aspect"])
+            if plus and s["start_mode"]:
+                self._set_start_mode(s["start_mode"])
+                self._set_end_mode(s["end_mode"])
+        if s["open_detail"]:
+            self._chk_advanced.setChecked(True)
+        self.status_message.emit("Destino aplicado: puedes cambiar lo que quieras en los pasos ② y ③")
 
     def _apply_duration_preset(self, seconds: int):
         self._active_preset_sec = seconds
@@ -4571,9 +4697,9 @@ class ResultPanel(QWidget):
                 letter-spacing: 0.4px;
             """)
             # Insertar bajo el check de avanzado (último widget antes de tabs)
-            lay = self.layout()
+            lay = self._page2.layout()
             if lay is not None:
-                lay.insertWidget(lay.count() - 1, self._badge_basic)
+                lay.insertWidget(max(0, lay.count() - 2), self._badge_basic)
 
 
 # ── Helpers de tabla ──────────────────────────────────────────────────────────

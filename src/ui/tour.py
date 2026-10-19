@@ -110,6 +110,7 @@ class Step:
     optional: bool = False                             # se salta si el objetivo no está visible (edición Básica)
     example: str = ""                                  # cuadro amarillo con un ejemplo / consejo
     hole_pad: int = 6
+    wiz: int = 2                                       # paso del asistente (② Tu previa · ③ Exportar) donde se ve
 
 
 def _vis(*ws):
@@ -167,6 +168,14 @@ def build_steps(win) -> list:
 
     # ── Panel de resultados (con la pista de ejemplo) ─────────────────────────────────────────
     wave_frame = getattr(R, "_waveform", None)
+    add("pasos", "Tres pasos y listo",
+        "Arriba ves la cinta de pasos: ① Tu tema (ya cargado y analizado), ② Tu previa (duración, cortes, efectos) y ③ Exportar "
+        "(formatos, vídeo y GENERAR). Puedes pulsar cualquier paso para ir y volver sin perder nada.",
+        lambda: R._stepper, page=2)
+    add("destino", "¿Para qué es esta previa?",
+        "Elige un destino —redes, radio, sello o club— y AutoPrevias deja listas la duración, los formatos, el vídeo y, en Plus, "
+        "el arranque y el frenazo de vinilo. Después puedes cambiar lo que quieras.",
+        lambda: R._dest_card, page=2, example="Para TikTok o Reels: «Redes sociales» → 15 s, MP3 y vídeo vertical.")
     add("onda", "La forma de onda",
         "Aquí ves la estructura del tema: intro, subida, drop, descanso… AutoPrevias la detecta sola. "
         "Haz clic para escuchar desde ese punto y arrastra los marcadores para retocar dónde se corta.",
@@ -303,6 +312,11 @@ def build_steps(win) -> list:
     add("fin", "¡Listo! Ya sabes usar AutoPrevias",
         "Arrastra tu primer tema y genera tu previa. Si necesitas ayuda, escribe a radicalrecordsvlc@gmail.com. "
         "Mucha suerte con tus lanzamientos · Radical Records.", None)
+    seen = False
+    for st in S:                                       # desde «Nombre y formatos» todo vive en el paso ③ Exportar
+        seen = seen or st.key == "formatos"
+        if seen and st.page == 2 and st.key != "nuevo":
+            st.wiz = 3
     return S
 
 
@@ -660,6 +674,11 @@ class OnboardingTour(QObject):
             w._stack.setCurrentIndex(0)
         if st.page == 2 and w._stack.currentIndex() != 2:
             w._stack.setCurrentIndex(2)
+        if st.page == 2 and w._stack.currentIndex() == 2:
+            try:
+                w._results.go_step(st.wiz, animate=False)
+            except Exception:
+                pass
         if st.before:
             try:
                 st.before()

@@ -942,3 +942,25 @@ EN.update({
     "⚠ La carátula no se pudo comprobar en {k} de {n} archivos": "⚠ The cover art could not be verified in {k} of {n} files",
     "ℹ Firmado SIN carátula (no elegiste ninguna)": "ℹ Signed WITHOUT cover art (you did not choose one)",
 })
+
+
+EN_500 = {
+    "Tres pasos y listo": "Three steps and done",
+    "Arriba ves la cinta de pasos: ① Tu tema (ya cargado y analizado), ② Tu previa (duración, cortes, efectos) y ③ Exportar (formatos, vídeo y GENERAR). Puedes pulsar cualquier paso para ir y volver sin perder nada.":
+        "At the top you see the steps bar: ① Your track (already loaded and analysed), ② Your preview (length, cuts, effects) and ③ Export (formats, video and GENERATE). You can click any step to go back and forth without losing anything.",
+    "¿Para qué es esta previa?": "What is this preview for?",
+    "Elige un destino —redes, radio, sello o club— y AutoPrevias deja listas la duración, los formatos, el vídeo y, en Plus, el arranque y el frenazo de vinilo. Después puedes cambiar lo que quieras.":
+        "Pick a destination — social, radio, label or club — and AutoPrevias sets the length, formats, video and, in Plus, the vinyl start and stop. Then you can change anything you like.",
+    "Para TikTok o Reels: «Redes sociales» → 15 s, MP3 y vídeo vertical.": "For TikTok or Reels: “Social media” → 15 s, MP3 and vertical video.",
+    "Tu tema": "Your track", "Tu previa": "Your preview", "Exportar": "Export",
+    "Redes sociales": "Social media", "15 s · MP3 + vídeo vertical": "15 s · MP3 + vertical video",
+    "Radio / emisoras": "Radio / stations", "30 s · MP3": "30 s · MP3",
+    "Sello / promo": "Label / promo", "60 s · WAV (Plus) o MP3": "60 s · WAV (Plus) or MP3",
+    "Club / DJ": "Club / DJ", "2 min · FLAC (Plus) o MP3, con arranque y frenazo": "2 min · FLAC (Plus) or MP3, with vinyl start and stop",
+    "Lo monto yo": "I'll build it myself", "Sin ajustes previos: lo eliges todo": "No presets: you choose everything",
+    "Elige un destino y dejo la duración, los formatos y el vídeo listos. Luego puedes cambiar lo que quieras.":
+        "Pick a destination and I'll set the length, formats and video. Then you can change anything you like.",
+    "Siguiente: Exportar  →": "Next: Export  →", "← Otro tema": "← Another track", "←  Volver a la previa": "←  Back to the preview",
+    "Destino aplicado: puedes cambiar lo que quieras en los pasos ② y ③": "Destination applied: you can change anything in steps ② and ③",
+}
+EN.update(EN_500)
