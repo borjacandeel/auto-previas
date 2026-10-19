@@ -372,7 +372,7 @@ jobs:
   # ── Publicar release con los 4 instaladores ────────────────────────────────
   publish-release:
     name: Publicar GitHub Release
-    if: always() && (needs.build-macos-arm64.result == 'success' || needs.build-windows-x64.result == 'success')
+    if: always() && !cancelled() && (needs.build-macos-arm64.result == 'success' || needs.build-windows-x64.result == 'success')
     needs: [build-macos-arm64, build-windows-x64]
     runs-on: ubuntu-latest
     steps:
