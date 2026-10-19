@@ -199,13 +199,11 @@ def build_steps(win) -> list:
             "de BPM (acelera ligeramente la previa para que nadie pueda mezclarla con tu tema) y la estructura musical con nivel LUFS.",
             lambda: [R._chk_advanced, R._tabs], page=2,
             before=lambda: R._chk_advanced.setChecked(True), after=lambda: R._chk_advanced.setChecked(False))
-        add("arranque", "Arranque de la previa (Plus)",
-            "En la pestaña «Variación de BPM» eliges cómo empieza la previa: con el efecto de vinilo (de 0 al tempo del tema en los "
-            "segundos que quieras) o directamente a los BPM originales, sin efecto.",
-            lambda: [R._btn_start_vinyl, R._spin_start, R._btn_start_orig], page=2,
-            before=lambda: (R._chk_advanced.setChecked(True), R._tabs.setCurrentIndex(1)),
-            after=lambda: (R._tabs.setCurrentIndex(0), R._chk_advanced.setChecked(False)),
-            example="«De 0 a 128 BPM en 1 s» suena como un disco que arranca.")
+        add("arranque", "Cómo empieza y cómo acaba la previa (Plus)",
+            "Elige cómo EMPIEZA la previa (con el efecto de vinilo, de 0 al tempo del tema en los segundos que quieras, o directamente "
+            "a los BPM originales) y cómo ACABA (con el frenazo de vinilo hasta parar, o a los BPM originales, sin efecto).",
+            lambda: R._card_startend, page=2,
+            example="«De 0 a 128 BPM en 1 s» suena como un disco que arranca; el frenazo final es el disco al pararse.")
     else:
         add("cortes", "Ordena y mueve los cortes",
             "Con esta casilla ves los cortes de la previa con su nombre («Corte 1», «Corte 2»…). Cámbialos de orden con ▲ ▼, "

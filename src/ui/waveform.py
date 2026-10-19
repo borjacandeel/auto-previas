@@ -34,7 +34,7 @@ except ImportError:
     HAS_PYQTGRAPH = False
 
 if HAS_PYQTGRAPH:
-    from src.ui.fx_lane import FxBandItem, FxPalette, FxInspector, FxPlotWidget, assign_lanes, fx_label
+    from src.ui.fx_lane import CutActionItem, FxBandItem, FxPalette, FxInspector, FxPlotWidget, assign_lanes, fx_label
     from src.engine.fx_events import DEFAULT_AMOUNT, DEFAULT_DURATION, MAX_EVENTS, MIN_DURATION, normalize_events
 
 # ── Paleta estética ───────────────────────────────────────────────────────────
@@ -66,6 +66,7 @@ MASK_BG_COLOR      = (6, 7, 10, 195)       # máscara oscura zonas fuera de prev
 BG_COLOR           = (12, 13, 16)          # rack synth deep black
 
 MAX_POINTS = 1600
+CUT_ACT_Y = 0.64           # altura (en la onda) de los botones ▶ ✕ de cada corte, justo bajo su etiqueta
 SNAP_SEC = 0.12            # los efectos «imantan» a los pulsos si están a menos de esto
 
 
@@ -121,6 +122,8 @@ class WaveformWidget(QWidget):
     boundaries_changed = Signal(list)   # límites arrastrados → [t0, t1, …]
     cuts_changed       = Signal(list)   # cortes ajustados → [(start, end), …]
     voice_drop_moved   = Signal(float)  # marcador voice drop arrastrado → segundos
+    cut_play_requested   = Signal(int)  # ▶ de un corte en la onda → posición del corte
+    cut_remove_requested = Signal(int)  # ✕ de un corte en la onda → posición del corte
     fx_changed         = Signal(list)   # efectos manuales cambiados → [{id, type, start, end, amount}, …]
 
     def __init__(self, parent=None):
@@ -145,6 +148,7 @@ class WaveformWidget(QWidget):
         self._section_lines    = []   # InfiniteLine divisores sutiles de secciones
         self._plan_highlights  = []   # LinearRegionItem cajas de corte interactivas
         self._cut_badges       = []   # TextItem títulos flotantes de los cortes
+        self._cut_actions      = []   # botoncitos ▶ ✕ de cada corte
         self._omitted_masks    = []   # LinearRegionItem máscaras oscuras para zonas fuera de previa
         self._omitted_labels   = []   # TextItem etiquetas 'FUERA DE PREVIA'
         self._boundaries       = []   # InfiniteLine transiciones en vista preview
@@ -302,6 +306,7 @@ class WaveformWidget(QWidget):
         # Clic para seek instantáneo
         self._plot.scene().sigMouseClicked.connect(self._on_click)
         self._plot.setFocusPolicy(Qt.StrongFocus)
+        self._plot.getViewBox().sigTransformChanged.connect(self._refresh_cut_action_geometry)
         self._plot.fx_over.connect(self._on_fx_over)
         self._plot.fx_left.connect(self._clear_fx_ghost)
         self._plot.fx_dropped.connect(self._on_fx_dropped)
@@ -413,6 +418,8 @@ class WaveformWidget(QWidget):
                         sec_title = tr(SECTION_LABELS.get(type_name, type_name.capitalize())).upper()
                         icon = SECTION_ICONS.get(type_name, "✂")
                         self._cut_badges[i].setPos((s_start + s_end) / 2.0, 0.80)
+                        if i < len(self._cut_actions):
+                            self._cut_actions[i].setPos((s_start + s_end) / 2.0, CUT_ACT_Y)
                         self._cut_badges[i].setHtml(
                             f"<div style='color:#ffffff; font-weight:800; font-size:9pt; "
                             f"background:#1b080b; border:1px solid #ff2542; border-radius:4px; "
@@ -726,7 +733,7 @@ class WaveformWidget(QWidget):
             return
 
         # Limpiar cortes, badges y máscaras anteriores
-        for item_list in [self._plan_highlights, self._cut_badges, self._omitted_masks, self._omitted_labels]:
+        for item_list in [self._plan_highlights, self._cut_badges, self._cut_actions, self._omitted_masks, self._omitted_labels]:
             for item in item_list:
                 try: self._plot.removeItem(item)
                 except Exception: pass
@@ -803,6 +810,10 @@ class WaveformWidget(QWidget):
             self._plot.addItem(badge)
             self._plan_highlights.append(hl)
             self._cut_badges.append(badge)
+            act = CutActionItem(self, i)
+            act.setPos((s_start + s_end) / 2.0, CUT_ACT_Y)
+            self._plot.addItem(act, ignoreBounds=True)
+            self._cut_actions.append(act)
 
         # 2. ZONAS FUERA DE PREVIA (OMITIDAS / NO INCLUIDAS)
         self._draw_omitted_masks()
@@ -880,6 +891,8 @@ class WaveformWidget(QWidget):
         dur   = end - start
 
         # Actualizar posición y duración del badge flotante del corte
+        if idx < len(self._cut_actions):
+            self._cut_actions[idx].setPos((start + end) / 2.0, CUT_ACT_Y)
         if idx < len(self._cut_badges):
             badge = self._cut_badges[idx]
             badge.setPos((start + end) / 2.0, 0.86)
@@ -950,13 +963,13 @@ class WaveformWidget(QWidget):
         show = self._fx_enabled and self._mode == "source"
         self._fx_palette.setVisible(show)
         self._fx_palette.btn_clear.setVisible(show and bool(self._fx_events))
+        self._fx_inspector.setVisible(show)                  # siempre ahí con la paleta: así la onda no cambia de alto al pinchar un efecto
         sel = self._fx_event(self._fx_selected)
-        want = show and sel is not None
-        if want:
-            self._fx_inspector.show_event(sel, self._duration)
-        if want != self._fx_inspector.isVisible():
-            from src.ui import anim as _anim
-            _anim.reveal(self._fx_inspector, want)
+        if show:
+            if sel is not None:
+                self._fx_inspector.show_event(sel, self._duration)
+            else:
+                self._fx_inspector.set_idle()
         self._plot.setAcceptDrops(show)
 
     def _fx_event(self, fid):
@@ -1128,6 +1141,15 @@ class WaveformWidget(QWidget):
         self._draw_fx_bands()
         self.fx_changed.emit(self.fx_events())
 
+    def _refresh_cut_action_geometry(self, *_):
+        """Con el zoom o al redimensionar, los botones ▶ ✕ (tamaño fijo en píxeles) recalculan su rectángulo."""
+        for it in self._cut_actions:
+            try:
+                it.prepareGeometryChange()
+                it.update()
+            except RuntimeError:
+                pass
+
     def _draw_boundaries(self):
         """Líneas divisorias mantenidas para compatibilidad."""
         pass
@@ -1265,6 +1287,12 @@ class WaveformWidget(QWidget):
             self.reset_zoom()
             return
         pos = event.scenePos()
+        for it in list(self._fx_bands) + list(self._cut_actions):      # pinchar un efecto o un botón de corte no mueve la reproducción
+            try:
+                if it.sceneBoundingRect().contains(pos):
+                    return
+            except RuntimeError:
+                pass
         p_item = self._plot.getPlotItem() if self._plot is not None else None
         if p_item is not None:
             vb = p_item.getViewBox()
@@ -1377,6 +1405,7 @@ class WaveformWidget(QWidget):
         self._boundary_times  = []
         self._section_lines   = []
         self._cut_badges      = []
+        self._cut_actions     = []
         self._omitted_masks   = []
         self._omitted_labels  = []
         self._fx_bands        = []
@@ -1410,7 +1439,7 @@ class WaveformWidget(QWidget):
                 self._plot.removeItem(sl)
             except Exception:
                 pass
-        for cb in self._cut_badges:
+        for cb in self._cut_badges + self._cut_actions:
             try:
                 self._plot.removeItem(cb)
             except Exception:
@@ -1430,5 +1459,6 @@ class WaveformWidget(QWidget):
         self._boundaries      = []
         self._section_lines   = []
         self._cut_badges      = []
+        self._cut_actions     = []
         self._omitted_masks   = []
         self._omitted_labels  = []

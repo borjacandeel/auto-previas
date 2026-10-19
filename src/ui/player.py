@@ -251,14 +251,14 @@ class PlayerWidget(QWidget):
         self._btn_mode_source.setFixedHeight(24)
         self._btn_mode_source.setCursor(Qt.PointingHandCursor)
         self._btn_mode_source.setToolTip("Escuchar la canción completa original")
-        self._btn_mode_source.clicked.connect(self._switch_to_source)
+        self._btn_mode_source.clicked.connect(lambda _=False: self._switch_to_source())
 
         self._btn_mode_preview = QPushButton("✨ Previa Generada")
         self._btn_mode_preview.setFixedHeight(24)
         self._btn_mode_preview.setCursor(Qt.PointingHandCursor)
         self._btn_mode_preview.setEnabled(False)
         self._btn_mode_preview.setToolTip("Escuchar la previa recortada con sus transiciones y cambios de BPM")
-        self._btn_mode_preview.clicked.connect(self._switch_to_preview)
+        self._btn_mode_preview.clicked.connect(lambda _=False: self._switch_to_preview())
 
         self._update_mode_buttons_style(is_source=True)
 

@@ -285,6 +285,7 @@ def s_interfaz(ed: str, plus: bool, im: dict) -> str:
               ("Mis presets", "guarda y aplica tus propios ajustes de firma y estilo."),
               ("Personalizar cortes y BPM", "abre el editor avanzado."),
               ("Efectos en la onda", "arrastra Flanger o Filter Sweep hasta donde quieras que suenen."),
+              ("Cómo empieza y acaba", "arranque y final de la previa: con el efecto de vinilo o a los BPM originales."),
               ("Nombre y formatos", "nombre del archivo y formatos de salida."),
               ("Master LUFS", "volumen de club; los efectos Flanger y Filter Sweep se arrastran sobre la onda."),
               ("Voice Drop", "superpone tu firma de voz o jingle sobre la previa."),
@@ -357,8 +358,17 @@ def s_onda(ed: str, plus: bool, im: dict) -> str:
 <ul>
 <li><b>▲ ▼</b> cambian el <b>orden</b> en que suenan en la previa (por ejemplo, que el drop suene primero). La primera columna indica el orden («1º · Corte 2»).</li>
 <li><b>«La previa empieza»</b>: <b>⏮ Al inicio del tema</b> lleva el primer corte al principio de la canción y <b>⏺ A mitad del tema</b> lo coloca a la mitad (siempre ajustado a un compás). Para cualquier otro punto, <b>arrastra el primer corte</b> sobre la forma de onda o cambia sus segundos en la tabla.</li>
-<li>Puedes <b>añadir</b> cortes, <b>quitarlos</b> y escuchar cada uno con ▶. Los presets rápidos (<i>Estándar AI</i>, <i>Solo Drops</i>, <i>Intro corta 15 s</i>) recolocan los cortes de golpe.</li>
+<li>Puedes <b>añadir</b> cortes, <b>quitarlos</b> con ✕ y escuchar cada uno con ▶ (suena desde su inicio hasta su final). Los mismos botones <b>▶ ✕</b> están sobre cada corte en la propia onda. Siempre queda al menos un corte. Los presets rápidos (<i>Estándar AI</i>, <i>Solo Drops</i>, <i>Intro corta 15 s</i>) recolocan los cortes de golpe.</li>
 </ul>
+{f"""<h3>Cómo empieza y cómo acaba la previa</h3>
+{fig(im.get('z_startend',''), 'Tarjeta «Cómo empieza y cómo acaba la previa»: arranque y final a tu elección')}
+<p>Justo encima del panel de exportación tienes esta tarjeta, siempre a la vista (no hace falta abrir ninguna pestaña). Elige cada extremo por separado:</p>
+<table><tr><th>Opción</th><th>Qué hace</th></tr>
+<tr><td><b>ARRANQUE · 🌀 Vinilo: de 0 al tempo</b></td><td>La previa arranca como un disco que coge velocidad: de 0 BPM al tempo del tema en los segundos que pongas (por defecto 1 s).</td></tr>
+<tr><td><b>ARRANQUE · ▶ BPM originales desde el inicio</b></td><td>La previa empieza ya a los BPM originales, sin efecto.</td></tr>
+<tr><td><b>FINAL · 🌀 Vinilo: frena hasta parar</b></td><td>La previa acaba como un disco que se para: del tempo a 0 BPM en los segundos que pongas (por defecto 1 s).</td></tr>
+<tr><td><b>FINAL · ⏹ Acabar a los BPM originales</b></td><td>La previa acaba a los BPM originales, sin frenazo (queda solo el fundido final).</td></tr></table>
+<p>Tu elección se guarda en los presets y en «Reabrir proyecto». En Basic la previa siempre arranca y acaba con el efecto de vinilo de 1 s.</p>""" if plus else ""}
 <h3>Efectos en la onda (Flanger y Filter Sweep)</h3>
 {fig(im.get('z_efectos',''), 'Efectos colocados sobre la onda: tarjetas para arrastrar, bloques en la onda y ajustes del efecto elegido')}
 <p>Debajo de la onda están las <b>tarjetas de efecto</b>. Tú decides <b>qué efecto</b>, <b>dónde empieza</b> y <b>cuánto dura</b>; AutoPrevias no coloca nada por su cuenta.</p>
@@ -491,8 +501,6 @@ def s_plus_editor(im: dict) -> str:
 {legend([("Automático", "micro-variaciones orgánicas de tempo según la seed. Suena natural pero impide mezclar la previa sin permiso."),
          ("Manual (Presets DJ)", "tú decides las subidas de BPM."),
          ("Curva de tempo", "muestra cómo cambia la velocidad a lo largo de la previa.")])}
-<h4>Arranque de la previa</h4>
-<p>En la fila <b>ARRANQUE</b> eliges cómo empieza la previa: con el <b>efecto de vinilo</b> (el disco arranca de 0 BPM hasta el tempo del tema en los segundos que pongas, por defecto 1 s) o con <b>▶ BPM originales desde el inicio</b>, sin efecto. Tu elección se guarda en los presets y en «Reabrir proyecto».</p>
 <p>Es la <b>protección anti-retoque por tempo</b>: al variar ligeramente la velocidad, nadie puede pinchar ni sincronizar la previa con otro tema sin pasar por ti.
 En modo manual dispones de presets: <b>+5 BPM en Drops</b>, <b>+8 % Rampa</b>, <b>±4 BPM Vaivén</b>, <b>+3 BPM Fijo</b> y <b>0 BPM</b>, además de <b>➕ Momento</b> para añadir cambios exactos.</p>
 <h3>Pestaña «Estructura Musical»</h3>

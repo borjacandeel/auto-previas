@@ -233,7 +233,12 @@ def build_preview_audio(
     if str(cfg.get("start_mode", "vinyl")).lower() != "original":
         spin_in_sec = max(0.2, min(float(cfg.get("start_spin_sec", SPIN_SEC)), 6.0))
     n_in = min(int(spin_in_sec * SR_OUT), assembled.shape[1] // 4) if spin_in_sec > 0 else 0
-    n_out = min(int(SPIN_SEC * SR_OUT), assembled.shape[1] // 4)
+    # Final (Plus): «vinyl» = el disco frena de tempo a casi cero en N segundos (por defecto 1 s);
+    # «original» = la previa acaba a los BPM originales, sin frenazo (queda solo el fundido final).
+    spin_out_sec = 0.0
+    if str(cfg.get("end_mode", "vinyl")).lower() != "original":
+        spin_out_sec = max(0.2, min(float(cfg.get("end_spin_sec", SPIN_SEC)), 6.0))
+    n_out = min(int(spin_out_sec * SR_OUT), assembled.shape[1] // 4) if spin_out_sec > 0 else 0
 
     if n_in > 0:
         # Rampa suave tipo coseno (curva en S sin saltos audibles)

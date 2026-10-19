@@ -1507,6 +1507,8 @@ class ResultPanel(QWidget):
             self._waveform.boundaries_changed.connect(self._on_boundaries_changed)
             self._waveform.cuts_changed.connect(self._on_waveform_cuts_changed)
             self._waveform.set_fx_enabled(True)               # efectos arrastrables a la onda (Basic y Plus)
+            self._waveform.cut_play_requested.connect(self._audition_cut)      # ▶ sobre cada corte de la onda
+            self._waveform.cut_remove_requested.connect(self._remove_cut)      # ✕ sobre cada corte de la onda
             self._waveform.voice_drop_moved.connect(self._on_voice_drop_marker_moved)
             wave_lay.addWidget(self._waveform)
         else:
@@ -1536,6 +1538,7 @@ class ResultPanel(QWidget):
             if HAS_WAVEFORM:
                 self._player.position_changed.connect(self._waveform.set_playhead)
                 self._player.track_switched.connect(self._on_track_switched)
+            self._player.position_changed.connect(self._on_audition_tick)
             pl.addWidget(self._player)
             root.addWidget(player_frame)
         else:
@@ -1694,6 +1697,9 @@ class ResultPanel(QWidget):
         sb_lay.addWidget(self._chk_advanced)
 
         root.addWidget(self._simple_box)
+
+        # ── 4b. Cómo EMPIEZA y cómo ACABA la previa (Plus): siempre visible, no escondido en una pestaña ──
+        root.addWidget(self._build_startend_card())
 
         # ── 5. TABS AVANZADAS (Ocultas por defecto) ───────────────────────
         self._tabs = QTabWidget()
@@ -2664,6 +2670,8 @@ class ResultPanel(QWidget):
             # Arranque de la previa (solo Plus elige; en Basic siempre el efecto de vinilo de 1 s)
             "start_mode": self._start_mode if get_edition() == "plus" else "vinyl",
             "start_spin_sec": float(self._spin_start.value()) if get_edition() == "plus" else 1.0,
+            "end_mode": self._end_mode if get_edition() == "plus" else "vinyl",
+            "end_spin_sec": float(self._spin_end.value()) if get_edition() == "plus" else 1.0,
             **self._promo_options(),
         }
 
@@ -3004,6 +3012,7 @@ class ResultPanel(QWidget):
                           "time_sec": self._voice_drop_time_sec},
                 "promo": {"enabled": self._chk_promo.isChecked(), "interval_sec": int(self._spin_promo.value())},
                 "start": {"mode": self._start_mode, "sec": float(self._spin_start.value())},
+                "end": {"mode": self._end_mode, "sec": float(self._spin_end.value())},
                 "video": {"palette": self._combo_video_pal.currentData(), "aspect": self._combo_aspect.currentData(),
                           "banner": self._edit_promo.text().strip(), "end": self._combo_vend.currentData(),
                           "custom": self._video_custom if get_edition() == "plus" else None},
@@ -3053,6 +3062,13 @@ class ResultPanel(QWidget):
             self._set_start_mode(start.get("mode", "vinyl"))
             try:
                 self._spin_start.setValue(float(start.get("sec", 1.0)))
+            except Exception:
+                pass
+        end = st.get("end") or {}
+        if plus and end:
+            self._set_end_mode(end.get("mode", "vinyl"))
+            try:
+                self._spin_end.setValue(float(end.get("sec", 1.0)))
             except Exception:
                 pass
         voice = st.get("voice") or {}
@@ -3461,6 +3477,7 @@ class ResultPanel(QWidget):
             segments=new_segs,
             estimated_duration_before_stretch=raw_dur,
             estimated_duration_after_stretch=est_stretch,
+            drop_starts=list(getattr(self._plan, "drop_starts", []) or []),
         )
 
         i18n.set_text(self._lbl_cuts_summary, "{n} cortes  ·  Total: {raw}s  ·  Previa est: {est}",
@@ -3614,7 +3631,7 @@ class ResultPanel(QWidget):
             btn_s_now.setStyleSheet(_btn_icon(BG4, TEXT, BG5))
             btn_s_now.setToolTip("Poner inicio del corte en la posición actual del reproductor")
             btn_s_now.setCursor(Qt.PointingHandCursor)
-            def _set_start(sp=spin_s):
+            def _set_start(_checked=False, sp=spin_s):
                 if self._player:
                     if hasattr(self._player, "_current_path") and hasattr(self._player, "_source_path"):
                         if self._player._current_path != self._player._source_path and self._player._source_path:
@@ -3646,7 +3663,7 @@ class ResultPanel(QWidget):
             btn_e_now.setStyleSheet(_btn_icon(BG4, TEXT, BG5))
             btn_e_now.setToolTip("Poner fin del corte en la posición actual del reproductor")
             btn_e_now.setCursor(Qt.PointingHandCursor)
-            def _set_end(sp=spin_e):
+            def _set_end(_checked=False, sp=spin_e):
                 if self._player:
                     if hasattr(self._player, "_current_path") and hasattr(self._player, "_source_path"):
                         if self._player._current_path != self._player._source_path and self._player._source_path:
@@ -3678,15 +3695,7 @@ class ResultPanel(QWidget):
             btn_play.setStyleSheet(_btn_icon(BG4, GREEN, BG5))
             btn_play.setCursor(Qt.PointingHandCursor)
             btn_play.setToolTip("Escuchar este corte en la pista original")
-            def _play_cut(start_t=seg.source_start):
-                if self._player:
-                    if hasattr(self._player, "_current_path") and hasattr(self._player, "_source_path"):
-                        if self._player._current_path != self._player._source_path and self._player._source_path:
-                            self._player._switch_to_source(autoplay=False)
-                    self._player.seek(start_t)
-                    if not self._player.is_playing():
-                        self._player.toggle_play()
-            btn_play.clicked.connect(_play_cut)
+            btn_play.clicked.connect(lambda _=False, b=btn_play: self._audition_cut(self._cut_row_of(b, 6)))
             tbl.setCellWidget(row, 6, btn_play)
 
             # Col 7: ELIMINAR CORTE (✕)
@@ -3695,13 +3704,7 @@ class ResultPanel(QWidget):
             btn_del.setStyleSheet(_btn_icon(BG3, RED, BG4))
             btn_del.setCursor(Qt.PointingHandCursor)
             btn_del.setToolTip("Eliminar este corte de la previa")
-            def _del_cut(target_btn=btn_del):
-                for r in range(self._tbl_cuts.rowCount()):
-                    if self._tbl_cuts.cellWidget(r, 7) == target_btn:
-                        self._tbl_cuts.removeRow(r)
-                        break
-                self._sync_cuts_from_table()
-            btn_del.clicked.connect(_del_cut)
+            btn_del.clicked.connect(lambda _=False, b=btn_del: self._remove_cut(self._cut_row_of(b, 7)))
             tbl.setCellWidget(row, 7, btn_del)
 
             # Col 8: ORDEN (▲ ▼): el corte suena antes o después en la previa
@@ -3770,6 +3773,58 @@ class ResultPanel(QWidget):
         if HAS_WAVEFORM and self._source_path:
             self._waveform.update_plan_highlights(self._plan.segments)
         self._update_tempo_plot()
+
+    def _cut_row_of(self, widget, col: int) -> int:
+        """Fila de la tabla de cortes donde está este botón (-1 si ya no está)."""
+        for r in range(self._tbl_cuts.rowCount()):
+            if self._tbl_cuts.cellWidget(r, col) is widget:
+                return r
+        return -1
+
+    def _audition_cut(self, idx: int):
+        """▶: escucha este corte en la pista original, desde su inicio ACTUAL (el de la tabla) y hasta su final."""
+        rows = self._cut_rows()
+        if not self._player or not (0 <= idx < len(rows)):
+            return
+        start, end, _cid = rows[idx]
+        pl = self._player
+        if hasattr(pl, "_current_path") and hasattr(pl, "_source_path"):
+            if pl._current_path != pl._source_path and pl._source_path:
+                pl._switch_to_source(autoplay=False)
+        self._audition_end = float(end)
+        pl.seek(float(start))
+        if not pl.is_playing():
+            pl.toggle_play()
+        self._audition_pos = float(start)
+
+    def _on_audition_tick(self, pos: float):
+        """Al llegar al final del corte que se está escuchando, pausa."""
+        end = getattr(self, "_audition_end", None)
+        if end is None:
+            return
+        if pos + 0.05 < getattr(self, "_audition_pos", 0.0) - 1.0:     # el usuario saltó hacia atrás: deja de vigilar
+            self._audition_end = None
+            return
+        self._audition_pos = pos
+        if pos >= end:
+            self._audition_end = None
+            try:
+                if self._player and self._player.is_playing():
+                    self._player.toggle_play()
+            except Exception:
+                pass
+
+    def _remove_cut(self, idx: int):
+        """✕: quita este corte. Se renumera el orden, se rehacen las flechas ▲ ▼ y se redibuja la onda.
+        Siempre debe quedar al menos un corte."""
+        rows = self._cut_rows()
+        if not (0 <= idx < len(rows)):
+            return
+        if len(rows) <= 1:
+            self.status_message.emit(tr("⚠ La previa necesita al menos un corte"))
+            return
+        rows.pop(idx)
+        self._apply_cut_rows(rows)
 
     def _move_cut(self, idx: int, delta: int):
         """▲ ▼: cambia el orden en que suenan los cortes (cada corte conserva su nombre «Corte N»)."""
@@ -3956,41 +4011,6 @@ class ResultPanel(QWidget):
 
         lay.addLayout(top_bar)
 
-        # 2b. Arranque de la previa (Plus): BPM originales desde el primer instante, o el efecto de vinilo (de 0 al tempo en N s)
-        start_row = QHBoxLayout()
-        start_row.setSpacing(5)
-        lbl_start = QLabel("ARRANQUE:")
-        lbl_start.setStyleSheet(
-            f"color: {TEXT_DIM}; font-size: 9.5px; font-weight: 700; letter-spacing: 0.5px; background: transparent; border: none;"
-        )
-        start_row.addWidget(lbl_start)
-        self._btn_start_vinyl = QPushButton("🌀 Vinilo: de 0 al tempo")
-        self._btn_start_vinyl.setFixedHeight(24)
-        self._btn_start_vinyl.setCursor(Qt.PointingHandCursor)
-        self._btn_start_vinyl.setToolTip("La previa arranca como un disco que coge velocidad: de 0 BPM al tempo de la canción en los segundos que elijas")
-        self._btn_start_vinyl.clicked.connect(lambda: self._set_start_mode("vinyl"))
-        start_row.addWidget(self._btn_start_vinyl)
-        self._spin_start = QDoubleSpinBox()
-        self._spin_start.setRange(0.5, 6.0)
-        self._spin_start.setDecimals(1)
-        self._spin_start.setSingleStep(0.5)
-        self._spin_start.setValue(1.0)
-        self._spin_start.setSuffix(" s")
-        self._spin_start.setFixedHeight(24)
-        self._spin_start.setStyleSheet(_input_style())
-        self._spin_start.setToolTip("Segundos que tarda en llegar al tempo original")
-        start_row.addWidget(self._spin_start)
-        self._btn_start_orig = QPushButton("▶ BPM originales desde el inicio")
-        self._btn_start_orig.setFixedHeight(24)
-        self._btn_start_orig.setCursor(Qt.PointingHandCursor)
-        self._btn_start_orig.setToolTip("La previa empieza ya a los BPM originales, sin efecto de arranque")
-        self._btn_start_orig.clicked.connect(lambda: self._set_start_mode("original"))
-        start_row.addWidget(self._btn_start_orig)
-        start_row.addStretch()
-        lay.addLayout(start_row)
-        self._start_mode = "vinyl"
-        self._refresh_start_mode_ui()
-
         # 2. Mini gráfico de BPM interactivo
         self._tempo_plot_frame = QFrame()
         self._tempo_plot_frame.setFixedHeight(80)
@@ -4073,8 +4093,76 @@ class ResultPanel(QWidget):
         self._update_tempo_mode_ui()
         return tab
 
+    def _build_startend_card(self) -> QFrame:
+        """Tarjeta «Cómo empieza y cómo acaba la previa» (Plus): con el efecto de vinilo (de 0 al tempo al empezar,
+        del tempo a 0 al acabar, en los segundos que elijas) o directamente a los BPM originales."""
+        card = QFrame()
+        card.setStyleSheet(f"QFrame {{ background: {BG2}; border: 1px solid {BORDER}; border-radius: 10px; border-left: 3px solid {ACCENT}; }}"
+                           " QLabel { background: transparent; border: none; }")
+        v = QVBoxLayout(card)
+        v.setContentsMargins(12, 7, 12, 7)
+        v.setSpacing(5)
+        lbl_t = QLabel("🎚 Cómo empieza y cómo acaba la previa")
+        lbl_t.setStyleSheet(f"color: {TEXT}; font-size: 12px; font-weight: 700; background: transparent; border: none;")
+        v.addWidget(lbl_t)
+
+        def _row(label, vinyl_txt, vinyl_tip, orig_txt, orig_tip, spin_tip, mode_setter):
+            r = QHBoxLayout()
+            r.setSpacing(6)
+            lab = QLabel(label)
+            lab.setFixedWidth(66)
+            lab.setStyleSheet(f"color: {TEXT_DIM}; font-size: 9.5px; font-weight: 700; letter-spacing: 0.5px; background: transparent; border: none;")
+            r.addWidget(lab)
+            b_v = QPushButton(vinyl_txt)
+            b_v.setFixedHeight(24)
+            b_v.setCursor(Qt.PointingHandCursor)
+            b_v.setToolTip(vinyl_tip)
+            b_v.clicked.connect(lambda _=False: mode_setter("vinyl"))
+            r.addWidget(b_v)
+            sp = QDoubleSpinBox()
+            sp.setRange(0.5, 6.0)
+            sp.setDecimals(1)
+            sp.setSingleStep(0.5)
+            sp.setValue(1.0)
+            sp.setSuffix(" s")
+            sp.setFixedHeight(24)
+            sp.setStyleSheet(_input_style())
+            sp.setToolTip(spin_tip)
+            r.addWidget(sp)
+            b_o = QPushButton(orig_txt)
+            b_o.setFixedHeight(24)
+            b_o.setCursor(Qt.PointingHandCursor)
+            b_o.setToolTip(orig_tip)
+            b_o.clicked.connect(lambda _=False: mode_setter("original"))
+            r.addWidget(b_o)
+            r.addStretch()
+            return r, b_v, sp, b_o
+
+        r1, self._btn_start_vinyl, self._spin_start, self._btn_start_orig = _row(
+            "ARRANQUE:", "🌀 Vinilo: de 0 al tempo",
+            "La previa arranca como un disco que coge velocidad: de 0 BPM al tempo de la canción en los segundos que elijas",
+            "▶ BPM originales desde el inicio", "La previa empieza ya a los BPM originales, sin efecto de arranque",
+            "Segundos que tarda en llegar al tempo original", self._set_start_mode)
+        r2, self._btn_end_vinyl, self._spin_end, self._btn_end_orig = _row(
+            "FINAL:", "🌀 Vinilo: frena hasta parar",
+            "La previa acaba como un disco que se para: del tempo de la canción a 0 BPM en los segundos que elijas",
+            "⏹ Acabar a los BPM originales", "La previa acaba a los BPM originales, sin frenazo (solo el fundido final)",
+            "Segundos que tarda en frenar hasta parar", self._set_end_mode)
+        v.addLayout(r1)
+        v.addLayout(r2)
+        self._start_mode = "vinyl"
+        self._end_mode = "vinyl"
+        self._refresh_start_mode_ui()
+        self._card_startend = card
+        card.setVisible(get_edition() == "plus")
+        return card
+
     def _set_start_mode(self, mode: str):
         self._start_mode = "original" if mode == "original" else "vinyl"
+        self._refresh_start_mode_ui()
+
+    def _set_end_mode(self, mode: str):
+        self._end_mode = "original" if mode == "original" else "vinyl"
         self._refresh_start_mode_ui()
 
     def _refresh_start_mode_ui(self):
@@ -4083,6 +4171,9 @@ class ResultPanel(QWidget):
         self._btn_start_vinyl.setStyleSheet(on if self._start_mode == "vinyl" else off)
         self._btn_start_orig.setStyleSheet(on if self._start_mode == "original" else off)
         self._spin_start.setEnabled(self._start_mode == "vinyl")
+        self._btn_end_vinyl.setStyleSheet(on if self._end_mode == "vinyl" else off)
+        self._btn_end_orig.setStyleSheet(on if self._end_mode == "original" else off)
+        self._spin_end.setEnabled(self._end_mode == "vinyl")
 
     def _set_tempo_mode(self, mode: str):
         self._tempo_mode = mode
@@ -4259,7 +4350,7 @@ class ResultPanel(QWidget):
         btn_here.setStyleSheet(_btn(BG4, TEXT, BG5, radius=5, fs=10))
         btn_here.setToolTip("Tomar posición actual del reproductor")
         btn_here.setCursor(Qt.PointingHandCursor)
-        def _set_here(sp=spin_t):
+        def _set_here(_checked=False, sp=spin_t):
             pos = self._player.get_position_seconds() if self._player else 0.0
             sp.setValue(round(pos, 1))
         btn_here.clicked.connect(_set_here)
@@ -4321,7 +4412,7 @@ class ResultPanel(QWidget):
         btn_del.setStyleSheet(_btn(BG3, RED, BG4, radius=5, fs=10))
         btn_del.setCursor(Qt.PointingHandCursor)
         btn_del.setToolTip("Eliminar este momento")
-        def _del_row(target_btn=btn_del):
+        def _del_row(_checked=False, target_btn=btn_del):
             for r in range(self._tbl_tempo.rowCount()):
                 if self._tbl_tempo.cellWidget(r, 5) == target_btn:
                     self._tbl_tempo.removeRow(r)
@@ -4453,6 +4544,9 @@ class ResultPanel(QWidget):
 
         # BrandingCard (firma + carátula) y efectos — solo Plus, dentro de «Opciones avanzadas» (plegadas por defecto)
         self._apply_adv_visibility()
+
+        # Cómo empieza y cómo acaba la previa — solo Plus (en Basic siempre el efecto de vinilo)
+        self._card_startend.setVisible(plus)
 
         # Presets y modo promo antifugas — solo Plus
         self._preset_bar.setVisible(plus)
@@ -4862,7 +4956,7 @@ class MainWindow(QMainWindow):
         self._btn_sign.setCursor(Qt.PointingHandCursor)
         self._btn_sign.setStyleSheet(_btn(BG3, TEXT_MID, BG4, radius=4, fs=10))
         self._btn_sign.setToolTip("Firma un tema entero (no una previa): solo le mete la carátula y las etiquetas y lo guarda en FLAC o WAV a máxima calidad")
-        self._btn_sign.clicked.connect(self._open_sign_dialog)
+        self._btn_sign.clicked.connect(lambda _=False: self._open_sign_dialog())
         logo_row.addWidget(self._btn_sign)
 
         self._btn_license = QPushButton("⚙ Licencia")

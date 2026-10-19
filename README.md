@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v4.0.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v4.1.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -150,6 +150,8 @@ Si Windows muestra la pantalla azul con el mensaje *"Windows protegió su PC"* d
 
 ## ✨ Características Principales
 
+- 🎚 **Arranque y final de la previa a tu elección (Plus):**
+  Una tarjeta siempre visible: empezar y acabar con el efecto de vinilo (en los segundos que elijas) o a los BPM originales.
 - 🎛 **Efectos en la onda (Basic y Plus):**
   Arrastras **Flanger** o **Filter Sweep ↗/↘** desde las tarjetas bajo la forma de onda hasta donde quieras que suenen; el bloque se mueve y se estira como un corte (inicio, duración e intensidad a tu gusto). Ya no hay efectos automáticos.
 - ✂️ **Cortes con nombre, orden y punto de inicio:**
@@ -246,7 +248,7 @@ Cada clave se puede usar en **un solo equipo a la vez**. Si ya está activa en u
 | Ajuste de Rendimiento (Automático / Ahorro / Máximo) | ✅ | ✅ |
 | Recorrido de bienvenida interactivo (primera vez, omitible) | ✅ | ✅ (con las funciones de Plus) |
 | Cortes con nombre («Corte 1…»), orden con ▲ ▼ y punto de inicio (inicio / mitad / arrastrando) | ✅ | ✅ |
-| Arranque de la previa a elegir: vinilo de 0 al tempo en N s o BPM originales | ❌ | ✅ |
+| Arranque y FINAL de la previa a elegir: vinilo (de 0 al tempo / frenazo hasta parar) en N s o BPM originales | ❌ | ✅ |
 | 🖋 Firmar temas enteros (carátula + etiquetas, FLAC/WAV a máxima calidad, sin tocar el audio) | ❌ | ✅ |
 | Notificaciones con logo que abren la carpeta al pulsarlas | ✅ | ✅ |
 | Firma vocal / Voice Drop | ❌ | ✅ |
@@ -302,7 +304,10 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v4.0.0] — 2026-10-19 (Versión 4: efectos en la onda, cortes con nombre y orden, firmar temas enteros)
+#### 🟢 [v4.1.0] — 2026-10-19 (Arranque y final de la previa a tu elección; cortes y efectos corregidos)
+- **Plus: arranque y final de la previa a tu elección**, siempre a la vista: efecto de vinilo (de 0 al tempo al empezar, frenazo hasta parar al acabar, en los segundos que elijas) o a los BPM originales. **Botones ▶ ✕ sobre cada corte en la onda**, y arreglados ▶ ✕ 📍 de la tabla de cortes. Pinchar un efecto ya no mueve la onda ni la reproducción.
+
+#### [v4.0.0] — 2026-10-19 (Versión 4: efectos en la onda, cortes con nombre y orden, firmar temas enteros)
 - **Efectos en la onda (Basic y Plus):** tarjetas **Flanger**, **Filter Sweep ↗** y **Filter Sweep ↘** que se arrastran hasta la forma de onda; el bloque se mueve y se estira como un corte, con inicio, duración e intensidad ajustables, ajuste al pulso, Supr para borrar y vista apagada si cae fuera de los cortes. Desaparecen los efectos automáticos antes del drop.
 - **Cortes con nombre y orden (Basic y Plus):** «Corte 1», «Corte 2»… con **▲ ▼** para ordenarlos y botones para que la previa **empiece al inicio o a mitad del tema** (o donde arrastres el primer corte). **Plus:** arranque de la previa a elegir (**vinilo de 0 al tempo en N segundos** o **BPM originales**) y **🖋 Firmar tema**: ventana para firmar **canciones enteras** con carátula y etiquetas en **FLAC/WAV a máxima calidad**, sin tocar el audio. **Notificaciones con el logo de AutoPrevias** que abren la carpeta al pulsarlas, **más animaciones** y las **previas en WAV ahora llevan carátula y etiquetas**. Paso nuevo en el recorrido de bienvenida y capítulos nuevos en los manuales. Detalle en el [CHANGELOG](CHANGELOG.md).
 

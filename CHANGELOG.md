@@ -3,6 +3,16 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [4.1.0] - 2026-10-19
+
+### Añadido
+- **Plus: «Cómo empieza y cómo acaba la previa», siempre a la vista.** Una tarjeta nueva encima del panel de exportación (ya no está escondida en una pestaña) con dos filas: **ARRANQUE** (efecto de vinilo de 0 al tempo en los segundos que elijas, o directamente a los BPM originales) y **FINAL** (frenazo de vinilo hasta parar en los segundos que elijas, o acabar a los BPM originales, sin frenazo). Se guarda en los presets y en «Reabrir proyecto». En Basic la previa sigue arrancando y acabando con el efecto de vinilo de 1 s.
+- **Botones ▶ (oír) y ✕ (quitar) sobre cada corte, en la propia forma de onda**, además de los de la tabla de cortes. ▶ suena el corte desde su inicio hasta su final.
+
+### Corregido
+- **En la tabla de cortes no se podía quitar un corte, ni oírlo desde su inicio, ni «tomar la posición» con 📍** (los botones ▶, ✕ y 📍 de los cortes y de los momentos de tempo manual no hacían caso). Ahora funcionan: ✕ quita el corte y renumera el orden y las flechas ▲ ▼ (siempre queda al menos uno), ▶ suena el corte desde su inicio actual hasta su final y 📍 toma la posición del reproductor. También se corrigieron los botones «Firmar tema» y «Pista original / Previa generada», que recibían un valor que no debían.
+- **Al pinchar un efecto, la onda de detrás ya no «se bugueaba»:** antes, al seleccionar un efecto aparecía la fila de ajustes y la onda cambiaba de tamaño a mitad del clic, y además el clic movía la reproducción. Ahora la fila de ajustes está siempre en su sitio (apagada si no hay efecto seleccionado) y pinchar un efecto o un botón de corte no mueve el cursor de reproducción.
+
 ## [4.0.0] - 2026-10-19
 
 > **Versión 4.** Pasamos a la 4.0 en lugar de la 3.10: incluye todo lo preparado como 3.10 (cortes con nombre, firmar temas, arranque de BPM, notificaciones con logo) y los efectos en la onda.

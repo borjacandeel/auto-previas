@@ -221,9 +221,9 @@ items = [(rect_of(R._waveform, w), 1), (rect_of(R._player, w), 2), (rect_of(R._c
 if EDITION == "plus":
     items = [(rect_of(R._waveform, w), 1), (rect_of(R._player, w), 2), (rect_of(R._card_bpm, w), 3),
              (rect_of(R._btn_p120, w), 4), (rect_of(R._preset_bar, w), 5), (rect_of(R._chk_advanced, w), 6),
-             (rect_of(R._waveform._fx_palette, w), 7),
-             (rect_of(R._edit_name, w), 8), (rect_of(R._chk_fx_master, w), 9), (rect_of(R._btn_voice_drop, w), 10),
-             (rect_of(R._chk_promo, w), 11), (rect_of(R._branding_card, w), 12), (rect_of(R._btn_generate, w), 13)]
+             (rect_of(R._waveform._fx_palette, w), 7), (rect_of(R._card_startend, w), 8),
+             (rect_of(R._edit_name, w), 9), (rect_of(R._chk_fx_master, w), 10), (rect_of(R._btn_voice_drop, w), 11),
+             (rect_of(R._chk_promo, w), 12), (rect_of(R._branding_card, w), 13), (rect_of(R._btn_generate, w), 14)]
 rec("loaded", waveform=R._waveform, player=R._player, bpm=R._card_bpm, key=R._card_key, drops=R._card_drops, pv=R._card_pv,
     p15=R._btn_p15, p30=R._btn_p30, p60=R._btn_p60, p120=R._btn_p120, name=R._edit_name, generate=R._btn_generate,
     folder=R._btn_folder, stats_row=R._card_file)
@@ -244,6 +244,10 @@ stats_rect = rect_of(R._card_file, w).united(rect_of(R._card_pv, w))
 save(crop(img, stats_rect, d, 4), "z_stats")
 if EDITION == "plus":
     save(crop(img, rect_of(R._branding_card, w), d, 4), "z_firma")
+
+if EDITION == "plus":
+    _im0 = grab(w)
+    save(crop(_im0, rect_of(R._card_startend, w), dpr_of(_im0), 4), "z_startend")
 
 # ── 3a. Efectos colocados en la onda (Basic y Plus) ──
 _segs = R._plan.segments
@@ -322,6 +326,7 @@ if EDITION == "plus":
 
 # ── 7. Generar una previa real (MP3, y WAV en Plus) ───────────────────────
 R._chk_fx_master.setChecked(EDITION == "plus")
+R._waveform._add_fx("flanger", float(R._plan.segments[0].source_start) + 2.0)     # la previa real también lleva un efecto de la onda
 w._generate()
 t0 = time.time()
 while time.time() - t0 < 240:
@@ -338,6 +343,7 @@ im = grab(w); d = dpr_of(im)
 save(im, "08_generada")
 rec("generated", success=R._card_export_success, open=R._btn_succ_open, new=R._btn_succ_new, player=R._player,
     generate=R._btn_generate, waveform=R._waveform, folder=R._btn_folder)
+R._waveform.clear_fx()
 if R._card_export_success.isVisible():
     sr = rect_of(R._card_export_success, w)
     save(crop(im, sr, d, 6), "z_exito")

@@ -913,3 +913,25 @@ EN.update({
     "Plus: tu imagen de fondo (una por formato), la onda de sonido (barras, línea o círculo), los textos, su posición y un final con tu imagen, con vista previa en vivo.":
         "Plus: your background image (one per format), the sound wave (bars, line or circle), the texts, their position and an ending with your image, with live preview.",
 })
+
+EN_400 = {
+    "🎚 Cómo empieza y cómo acaba la previa": "🎚 How the preview starts and ends",
+    "FINAL:": "END:",
+    "🌀 Vinilo: frena hasta parar": "🌀 Vinyl: slow down to a stop",
+    "⏹ Acabar a los BPM originales": "⏹ End at the original BPM",
+    "La previa acaba como un disco que se para: del tempo de la canción a 0 BPM en los segundos que elijas":
+        "The preview ends like a record coming to a stop: from the song tempo down to 0 BPM in the seconds you choose",
+    "La previa acaba a los BPM originales, sin frenazo (solo el fundido final)":
+        "The preview ends at the original BPM, with no slow-down (only the final fade)",
+    "Segundos que tarda en frenar hasta parar": "Seconds it takes to slow down to a stop",
+    "Cómo empieza y cómo acaba la previa (Plus)": "How the preview starts and ends (Plus)",
+    "Elige cómo EMPIEZA la previa (con el efecto de vinilo, de 0 al tempo del tema en los segundos que quieras, o directamente a los BPM originales) y cómo ACABA (con el frenazo de vinilo hasta parar, o a los BPM originales, sin efecto).":
+        "Choose how the preview STARTS (with the vinyl effect, from 0 to the track tempo in the seconds you want, or straight at the original BPM) and how it ENDS (with the vinyl slow-down to a stop, or at the original BPM, with no effect).",
+    "«De 0 a 128 BPM en 1 s» suena como un disco que arranca; el frenazo final es el disco al pararse.":
+        "“From 0 to 128 BPM in 1 s” sounds like a record starting up; the final slow-down is the record coming to a stop.",
+    "Selecciona un efecto de la onda para ajustarlo": "Select an effect on the waveform to adjust it",
+    "Oír este corte": "Listen to this cut",
+    "Quitar este corte de la previa": "Remove this cut from the preview",
+    "⚠ La previa necesita al menos un corte": "⚠ The preview needs at least one cut",
+}
+EN.update(EN_400)

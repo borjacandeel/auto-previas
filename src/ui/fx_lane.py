@@ -218,6 +218,75 @@ if HAS_PG:
                 self.owner._fx_commit(self.ev["id"], s, e)
 
 
+    class CutActionItem(pg.GraphicsObject):
+        """Dos botoncitos sobre cada corte de la onda: ▶ oír el corte y ✕ quitarlo.
+        Tienen tamaño fijo en píxeles (se dibujan con la transformación del lienzo) pero su rectángulo está en
+        coordenadas de la onda, para que el ratón los encuentre bien."""
+        W, H = 21, 18
+
+        def __init__(self, owner, index: int):
+            super().__init__()
+            self.owner = owner
+            self.index = index
+            self._hover = None
+            self.setZValue(11)
+            self.setAcceptHoverEvents(True)
+            self.setCursor(Qt.PointingHandCursor)
+
+        def _scales(self):
+            """(segundos por píxel, unidades verticales por píxel) de la onda en pantalla."""
+            vb = self.getViewBox()
+            if vb is None or vb.width() <= 0 or vb.height() <= 0:
+                return 0.05, 0.01
+            (x0, x1), (y0, y1) = vb.viewRange()
+            return (x1 - x0) / vb.width(), (y1 - y0) / vb.height()
+
+        def boundingRect(self) -> QRectF:
+            kx, ky = self._scales()
+            return QRectF(-(self.W + 2) * kx, -(self.H + 2) * ky, (2 * self.W + 4) * kx, (self.H + 2) * ky)
+
+        def _hit(self, x: float) -> str:
+            return "play" if x < 0 else "del"
+
+        def paint(self, p: QPainter, *_):
+            r = p.worldTransform().mapRect(self.boundingRect())
+            p.save()
+            p.resetTransform()
+            p.setRenderHint(QPainter.Antialiasing, True)
+            for name, sym, x0 in (("play", "▶", r.left()), ("del", "✕", r.left() + self.W + 4)):
+                b = QRectF(x0 + 0.5, r.top() + 0.5, self.W - 1, self.H - 1)
+                hot = self._hover == name
+                col = QColor(46, 213, 115) if name == "play" else QColor(255, 71, 87)
+                p.setPen(QPen(col, 1.2))
+                p.setBrush(QColor(col.red(), col.green(), col.blue(), 90 if hot else 38))
+                p.drawRoundedRect(b, 5, 5)
+                f = QFont(p.font())
+                f.setPointSizeF(8.5)
+                f.setBold(True)
+                p.setFont(f)
+                p.setPen(QColor(255, 255, 255, 240))
+                p.drawText(b, Qt.AlignCenter, sym)
+            p.restore()
+
+        def hoverEvent(self, ev):
+            if ev.isExit():
+                self._hover = None
+            else:
+                self._hover = self._hit(ev.pos().x())
+                self.setToolTip(tr("Oír este corte") if self._hover == "play" else tr("Quitar este corte de la previa"))
+            self.update()
+
+        def mouseClickEvent(self, ev):
+            if ev.button() != Qt.LeftButton:
+                ev.ignore()
+                return
+            ev.accept()
+            if self._hit(ev.pos().x()) == "play":
+                self.owner.cut_play_requested.emit(self.index)
+            else:
+                self.owner.cut_remove_requested.emit(self.index)
+
+
     class FxPlotWidget(pg.PlotWidget):
         """Onda que acepta tarjetas de efecto soltadas encima."""
         fx_over = Signal(str, float)
@@ -422,10 +491,21 @@ class FxInspector(QFrame):
         self.sp_start.valueChanged.connect(self._emit)
         self.sp_dur.valueChanged.connect(self._emit)
         self.sl_amt.valueChanged.connect(self._emit)
-        self.btn_del.clicked.connect(self.removed.emit)
-        self.hide()
+        self.btn_del.clicked.connect(lambda _=False: self.removed.emit())
+        self.setFixedHeight(38)
+        self.set_idle()
+
+    def set_idle(self):
+        """Sin efecto seleccionado: la fila sigue ahí (para que la onda no salte de tamaño) pero apagada."""
+        self._busy = True
+        self.lbl_kind.setText(tr("Selecciona un efecto de la onda para ajustarlo"))
+        for w in (self.sp_start, self.sp_dur, self.sl_amt, self.btn_del):
+            w.setEnabled(False)
+        self._busy = False
 
     def show_event(self, ev: dict, duration: float):
+        for w in (self.sp_start, self.sp_dur, self.sl_amt, self.btn_del):
+            w.setEnabled(True)
         self._busy = True
         self.lbl_kind.setText(f"{FX_ICONS.get(ev['type'], '')} {fx_label(ev['type'])}")
         self.sp_start.setRange(0.0, max(0.0, duration - MIN_DURATION))
