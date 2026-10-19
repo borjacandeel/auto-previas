@@ -306,6 +306,7 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 #### 🟢 [v4.1.0] — 2026-10-19 (Arranque y final de la previa a tu elección; cortes y efectos corregidos)
 - **Plus: arranque y final de la previa a tu elección**, siempre a la vista: efecto de vinilo (de 0 al tempo al empezar, frenazo hasta parar al acabar, en los segundos que elijas) o a los BPM originales. **Botones ▶ ✕ sobre cada corte en la onda**, y arreglados ▶ ✕ 📍 de la tabla de cortes. Pinchar un efecto ya no mueve la onda ni la reproducción.
+- **Firmar tema:** la carátula ahora se incrusta siempre (JPG, PNG, WebP, GIF…), se comprueba en el archivo guardado y la ventana avisa si no hay ninguna; usa la carátula y las etiquetas de «Firma y carátula». En WAV, etiquetas compatibles con Rekordbox, Serato, Música y el Explorador de Windows.
 
 #### [v4.0.0] — 2026-10-19 (Versión 4: efectos en la onda, cortes con nombre y orden, firmar temas enteros)
 - **Efectos en la onda (Basic y Plus):** tarjetas **Flanger**, **Filter Sweep ↗** y **Filter Sweep ↘** que se arrastran hasta la forma de onda; el bloque se mueve y se estira como un corte, con inicio, duración e intensidad ajustables, ajuste al pulso, Supr para borrar y vista apagada si cae fuera de los cortes. Desaparecen los efectos automáticos antes del drop.

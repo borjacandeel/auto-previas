@@ -109,18 +109,75 @@ def build_id3v23(tags: dict, cover_jpeg: Optional[bytes]) -> bytes:
     return b"ID3\x03\x00\x00" + _syncsafe(len(frames)) + frames
 
 
-def append_id3_to_wav(wav_path: str, tag: bytes) -> None:
-    """Añade el trozo «id3 » al final del WAV y corrige el tamaño de la cabecera RIFF."""
+def append_id3_to_wav(wav_path: str, tag: bytes, info: bytes = b"", chunk_ids=(b"id3 ", b"ID3 ")) -> None:
+    """Añade al final del WAV el trozo LIST/INFO (opcional) y la etiqueta ID3 (carátula incluida) y corrige el tamaño de la
+    cabecera RIFF. La etiqueta se escribe con las dos grafías habituales del trozo («id3 » y «ID3 ») porque cada programa
+    (Rekordbox, Serato, Traktor, Música, foobar…) busca una u otra."""
     import struct
+    chunks = info
     pad = b"\x00" if len(tag) % 2 else b""
-    chunk = b"id3 " + struct.pack("<I", len(tag)) + tag + pad
+    for cid in chunk_ids:
+        chunks += cid + struct.pack("<I", len(tag)) + tag + pad
     with open(wav_path, "r+b") as f:
         f.seek(0, os.SEEK_END)
-        f.write(chunk)
+        f.write(chunks)
         f.seek(4)
         riff = struct.unpack("<I", f.read(4))[0]
         f.seek(4)
-        f.write(struct.pack("<I", riff + len(chunk)))
+        f.write(struct.pack("<I", riff + len(chunks)))
+
+
+def make_cover_jpeg(image_path: str, size: int = COVER_SIZE) -> Optional[str]:
+    """Convierte CUALQUIER imagen (JPG, PNG con transparencia, WebP, GIF, CMYK…) en un JPEG cuadrado RGB de `size` px
+    (la imagen entera, centrada sobre fondo oscuro) en un archivo temporal propio. Devuelve su ruta o None si no se pudo."""
+    try:
+        from PIL import Image, ImageOps
+        with Image.open(image_path) as im:
+            im = ImageOps.exif_transpose(im)
+            if im.mode in ("RGBA", "LA", "P"):
+                im = im.convert("RGBA")
+                base = Image.new("RGBA", im.size, (14, 14, 17, 255))
+                base.alpha_composite(im)
+                im = base
+            im = im.convert("RGB")
+            im.thumbnail((size, size), Image.LANCZOS)
+            square = Image.new("RGB", (size, size), (14, 14, 17))
+            square.paste(im, ((size - im.width) // 2, (size - im.height) // 2))
+            tmp = tempfile.NamedTemporaryFile(prefix="autoprevias_cover_", suffix=".jpg", delete=False)
+            tmp.close()
+            square.save(tmp.name, "JPEG", quality=92, optimize=True, subsampling=0)
+            return tmp.name
+    except Exception:
+        return None
+
+
+def verify_cover(ffmpeg: str, path: str) -> bool:
+    """Comprueba en el archivo YA guardado que lleva una carátula incrustada (un flujo de imagen)."""
+    try:
+        res = subprocess.run([ffmpeg, "-hide_banner", "-i", path], capture_output=True, timeout=30)
+        txt = (res.stderr or b"").decode("utf-8", "ignore")
+        return "Video:" in txt
+    except Exception:
+        return False
+
+
+def _info_chunk(tags: dict) -> bytes:
+    """Trozo LIST/INFO del WAV (lo leen el Explorador de Windows y muchos programas): título, artista, álbum, etc."""
+    import struct
+    items = b""
+    for fid, key in (("INAM", "title"), ("IART", "artist"), ("IPRD", "album"), ("ICMT", "comment"), ("IGNR", "genre"),
+                     ("ICRD", "year"), ("ISFT", "software")):
+        v = str(tags.get(key) or "").strip()
+        if not v:
+            continue
+        data = v.encode("utf-8", "replace") + b"\x00"
+        if len(data) % 2:
+            data += b"\x00"
+        items += fid.encode("ascii") + struct.pack("<I", len(data)) + data
+    if not items:
+        return b""
+    body = b"INFO" + items
+    return b"LIST" + struct.pack("<I", len(body)) + body
 
 
 def read_source_tags(ffmpeg: str, src: str) -> dict:
@@ -188,13 +245,20 @@ def sign_track(
             if is_lossy(src):
                 warnings.append("origen_con_perdida")
 
-        # 2) carátula cuadrada (si hay)
+        # 2) carátula cuadrada (si hay): JPEG RGB propio, venga la imagen como venga
         cover = None
-        if cover_path and Path(cover_path).is_file():
-            from src.engine.export import prepare_cover_art
-            cover = prepare_cover_art(cover_path, output_size=COVER_SIZE)
-            if cover is None:
-                warnings.append("sin_caratula")
+        if cover_path:
+            if not Path(cover_path).is_file():
+                warnings.append("caratula_no_encontrada")
+            else:
+                cover = make_cover_jpeg(cover_path)
+                if cover:
+                    tmp_files.append(cover)
+                else:
+                    from src.engine.export import prepare_cover_art
+                    cover = prepare_cover_art(cover_path, output_size=COVER_SIZE)
+                    if cover is None:
+                        warnings.append("sin_caratula")
 
         # 3) guardar con carátula y etiquetas (las del original se conservan salvo las que se cambien)
         prog(55, "Incrustando la carátula y las etiquetas…")
@@ -210,7 +274,8 @@ def sign_track(
                 cmd += ["-map", "2:v"]
             cmd += ["-map_metadata", "1", "-c:a", "flac", "-compression_level", "8"]
             if cover:
-                cmd += ["-c:v", "copy", "-disposition:v:0", "attached_pic"]
+                cmd += ["-c:v", "copy", "-disposition:v:0", "attached_pic",
+                        "-metadata:s:v:0", "title=Cover", "-metadata:s:v:0", "comment=Cover (front)"]
             for k, v in tags.items():
                 if v is not None and str(v).strip():
                     cmd += ["-metadata", f"{k}={str(v).strip()}"]
@@ -235,10 +300,16 @@ def sign_track(
                 "key": old_tags.get("tkey") or old_tags.get("initialkey") or old_tags.get("key"),
             }
             jpeg = Path(cover).read_bytes() if cover else None
-            append_id3_to_wav(str(target), build_id3v23(merged, jpeg))
+            append_id3_to_wav(str(target), build_id3v23(merged, jpeg), _info_chunk({
+                "title": merged["title"], "artist": merged["artist"], "album": merged["album"], "comment": merged["comment"],
+                "genre": merged["genre"], "year": merged["year"], "software": "AutoPrevias · Radical Records"}))
+        # 4) comprobar en el archivo guardado que la carátula está de verdad dentro
+        cover_ok = verify_cover(ffmpeg, str(target)) if cover else False
+        if cover and not cover_ok:
+            warnings.append("caratula_no_verificada")
         prog(100, "¡Listo!")
         return {"path": str(target), "format": fmt, "sr": info["sr"], "bits": bits, "channels": info["channels"],
-                "cover": bool(cover), "warnings": warnings}
+                "cover": bool(cover), "cover_ok": cover_ok, "warnings": warnings}
     finally:
         for f in tmp_files:
             try:

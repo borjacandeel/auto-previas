@@ -5671,7 +5671,19 @@ class MainWindow(QMainWindow):
         from src.ui.sign_track import SignTrackDialog
         dlg = getattr(self, "_sign_dialog", None)
         if dlg is None or not dlg.isVisible():
-            dlg = SignTrackDialog(self._cfg, parent=self, files=files if isinstance(files, (list, tuple)) else None)
+            # datos al día (no los de cuando se abrió la app) y lo que haya ahora en «Firma y carátula»
+            try:
+                fresh = load_cfg()
+            except Exception:
+                fresh = dict(self._cfg)
+            defaults = {}
+            try:
+                r = self._results
+                defaults = {"meta": r.get_branding_metadata(), "cover": r.get_branding_cover_path()}
+            except Exception:
+                pass
+            dlg = SignTrackDialog(fresh, parent=self, files=files if isinstance(files, (list, tuple)) else None,
+                                  defaults=defaults)
             dlg.setAttribute(Qt.WA_DeleteOnClose, True)
             dlg.destroyed.connect(lambda *_: setattr(self, "_sign_dialog", None))
             self._sign_dialog = dlg

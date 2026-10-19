@@ -935,3 +935,10 @@ EN_400 = {
     "⚠ La previa necesita al menos un corte": "⚠ The preview needs at least one cut",
 }
 EN.update(EN_400)
+EN.update({
+    "⚠ Sin carátula: elige una imagen o el tema se firmará sin ella": "⚠ No cover art: choose an image or the track will be signed without it",
+    "Carátula elegida": "Cover art chosen",
+    "🖼 Carátula incrustada y comprobada en {n} de {n}": "🖼 Cover art embedded and verified in {n} of {n}",
+    "⚠ La carátula no se pudo comprobar en {k} de {n} archivos": "⚠ The cover art could not be verified in {k} of {n} files",
+    "ℹ Firmado SIN carátula (no elegiste ninguna)": "ℹ Signed WITHOUT cover art (you did not choose one)",
+})

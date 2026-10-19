@@ -125,9 +125,10 @@ class _DropFrame(QFrame):
 
 
 class SignTrackDialog(QDialog):
-    def __init__(self, cfg: dict, parent=None, files=None):
+    def __init__(self, cfg: dict, parent=None, files=None, defaults: dict | None = None):
         super().__init__(parent)
         self._cfg = cfg
+        self._defaults = dict(defaults or {})
         self._files: list = []
         self._results: list = []
         self._worker = None
@@ -189,8 +190,13 @@ class SignTrackDialog(QDialog):
         self._btn_cover.clicked.connect(self._pick_cover)
         cov.addWidget(self._btn_cover)
         self._btn_cover_off = QPushButton("Quitar carátula")
-        self._btn_cover_off.clicked.connect(lambda: self._set_cover(""))
+        self._btn_cover_off.clicked.connect(lambda _=False: self._set_cover(""))
         cov.addWidget(self._btn_cover_off)
+        self._lbl_cover_hint = QLabel("")
+        self._lbl_cover_hint.setWordWrap(True)
+        self._lbl_cover_hint.setMaximumWidth(168)
+        self._lbl_cover_hint.setStyleSheet(f"color: {WARN}; font-size: 10.5px; font-weight: 600;")
+        cov.addWidget(self._lbl_cover_hint)
         cov.addStretch()
         mid.addLayout(cov)
 
@@ -211,10 +217,10 @@ class SignTrackDialog(QDialog):
             r.addWidget(e, stretch=1)
             form.addLayout(r)
             self._ed[key] = e
-        self._ed["artist"].setText(str(cfg.get("tag_artist", "") or ""))
-        self._ed["label"].setText(str(cfg.get("tag_label", "") or ""))
-        self._ed["album"].setText(str(cfg.get("tag_album", "") or ""))
-        self._ed["genre"].setText(str(cfg.get("tag_genre", "") or ""))
+        # etiquetas: lo que hay ahora en «Firma y carátula» de la ventana principal; si no, lo último guardado
+        live = self._defaults.get("meta") or {}
+        for key, cfg_key in (("artist", "tag_artist"), ("label", "tag_label"), ("album", "tag_album"), ("genre", "tag_genre")):
+            self._ed[key].setText(str(live.get(key) or cfg.get(cfg_key, "") or ""))
         self._ed["comment"].setText("")
         mid.addLayout(form, stretch=1)
         root.addLayout(mid)
@@ -283,9 +289,14 @@ class SignTrackDialog(QDialog):
         brow.addWidget(self._btn_sign)
         root.addLayout(brow)
 
-        # carátula por defecto: la guardada en «Firma y carátula»
-        saved_cover = str(cfg.get("custom_cover_path", "") or "")
-        self._set_cover(saved_cover if saved_cover and Path(saved_cover).is_file() else "")
+        # carátula por defecto: la que está puesta AHORA en «Firma y carátula» de la ventana principal; si no hay,
+        # la última que se usó aquí y, por último, la que se guardó como predeterminada
+        first = ""
+        for cand in (self._defaults.get("cover"), cfg.get("sign_cover_path"), cfg.get("custom_cover_path")):
+            if cand and Path(str(cand)).is_file():
+                first = str(cand)
+                break
+        self._set_cover(first)
         self._refresh()
         i18n.translate_tree(self)
         if files:
@@ -345,14 +356,31 @@ class SignTrackDialog(QDialog):
             if not pm.isNull():
                 self._lbl_cover.setPixmap(pm.scaled(166, 166, Qt.KeepAspectRatio, Qt.SmoothTransformation))
                 self._btn_cover_off.setEnabled(True)
+                self._cover_hint()
                 return
+        # la vista previa no se pudo leer con Qt (p. ej. WebP sin plugin): la carátula SE CONSERVA igualmente, porque el
+        # motor la convierte con Pillow; solo se avisa de que no hay miniatura
+        if path and Path(path).is_file():
+            self._lbl_cover.setPixmap(QPixmap())
+            self._lbl_cover.setText(tr("Carátula elegida"))
+            self._btn_cover_off.setEnabled(True)
+            self._cover_hint()
+            return
         self._cover = ""
         self._lbl_cover.setPixmap(QPixmap())
         self._lbl_cover.setText(tr("Sin carátula"))
         self._btn_cover_off.setEnabled(False)
+        self._cover_hint()
 
     def cover(self) -> str:
         return self._cover
+
+    def _cover_hint(self):
+        """Aviso bajo la carátula: si no hay ninguna, el tema se firma sin ella."""
+        if not self._cover:
+            self._lbl_cover_hint.setText(tr("⚠ Sin carátula: elige una imagen o el tema se firmará sin ella"))
+        else:
+            self._lbl_cover_hint.setText(Path(self._cover).name)
 
     def _pick_out(self):
         d = QFileDialog.getExistingDirectory(self, tr("Carpeta donde guardar los temas firmados"), self._out_dir)
@@ -393,6 +421,7 @@ class SignTrackDialog(QDialog):
             from src.config import load, save
             c = load()
             c["sign_out_dir"] = self._out_dir
+            c["sign_cover_path"] = self._cover
             save(c)
         except Exception:
             pass
@@ -423,7 +452,17 @@ class SignTrackDialog(QDialog):
             ok = len(results)
             i18n.set_text(self._lbl_status, "✅ {n} tema firmado en {dir}" if ok == 1 else "✅ {n} temas firmados en {dir}",
                           n=ok, dir=self._out_dir)
+            con = sum(1 for r in results if r.get("cover_ok"))
+            if self._cover:
+                if con == ok:
+                    self._lbl_status.setText(self._lbl_status.text() + "\n" + tr("🖼 Carátula incrustada y comprobada en {n} de {n}", n=ok))
+                else:
+                    self._lbl_status.setText(self._lbl_status.text() + "\n" + tr("⚠ La carátula no se pudo comprobar en {k} de {n} archivos", k=ok - con, n=ok))
+            else:
+                self._lbl_status.setText(self._lbl_status.text() + "\n" + tr("ℹ Firmado SIN carátula (no elegiste ninguna)"))
             self._lbl_status.setStyleSheet(f"color: {GREEN}; font-size: 12px; font-weight: 700;")
+            if self._cover and con != ok:
+                self._lbl_status.setStyleSheet(f"color: {WARN}; font-size: 12px; font-weight: 700;")
             try:
                 from src.notifications import notify
                 notify("AutoPrevias", tr("✅ {n} tema(s) firmado(s) · pulsa para abrir", n=ok), folder=results[0]["path"])

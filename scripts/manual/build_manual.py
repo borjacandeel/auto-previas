@@ -546,9 +546,10 @@ imagen sobre la <b>carátula</b> para personalizarla (con <b>Restablecer portada
 {fig(im.get('17_firmar_tema',''), 'Ventana «Firmar tema entero»', 'tiny')}
 <p>El botón <b>🖋 Firmar tema</b> de la cabecera abre una ventana aparte pensada para <b>canciones completas, no previas</b>. Solo le mete la <b>carátula y las etiquetas</b>:
 sin masterización, sin efectos y sin tocar el volumen ni la duración. El audio queda <b>exactamente igual</b>.</p>
-{steps(["<b>Arrastra el tema</b> (o varios) a la ventana, o pulsa la zona para elegirlos.", "Elige la <b>carátula</b> (si guardaste una en «Firma y carátula», aparece sola) y rellena artista, sello, álbum, género y comentario.",
+{steps(["<b>Arrastra el tema</b> (o varios) a la ventana, o pulsa la zona para elegirlos.", "Elige la <b>carátula</b> (la que tengas puesta en «Firma y carátula» aparece sola; vale JPG, PNG, WebP o GIF) y rellena artista, sello, álbum, género y comentario. Si no hay ninguna, la ventana te avisa en rojo antes de firmar.",
         "Elige el formato: <b>FLAC</b> (sin pérdidas, recomendado) o <b>WAV</b> (sin comprimir).", "Pulsa <b>🖋 Firmar</b>. Los temas firmados se guardan en la carpeta <b>Firmados</b> (puedes cambiarla) y se muestra una notificación; púlsala para abrir la carpeta."])}
 <ul>
+<li>Al terminar, AutoPrevias <b>comprueba en el archivo guardado que la carátula está dentro</b> y te lo dice («🖼 Carátula incrustada y comprobada»).</li>
 <li>Se conservan la <b>frecuencia de muestreo</b> y los <b>bits</b> del original (hasta 24 bits).</li>
 <li>Si el original es un MP3 o M4A, se guarda sin perder nada más, pero <b>no gana calidad</b>.</li>
 <li>Nunca se pisa tu archivo original: si ya existe uno con ese nombre, se añade «(2)».</li>

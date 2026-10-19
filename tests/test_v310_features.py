@@ -203,7 +203,7 @@ def test_id3_en_wav_no_rompe_el_audio_y_corrige_la_cabecera(tmp_path):
     append_id3_to_wav(wav, tag)
     data = Path(wav).read_bytes()
     assert struct.unpack("<I", data[4:8])[0] == len(data) - 8       # tamaño RIFF correcto
-    assert b"id3 " in data[-len(tag) - 16:]
+    assert b"id3 " in data and b"ID3 " in data and data.count(tag) == 2      # las dos grafías del trozo que usan los programas
     despues = sf.read(wav, dtype="int32")[0]
     assert np.array_equal(antes, despues)
 
