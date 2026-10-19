@@ -62,7 +62,7 @@ class Toast(QFrame):
         if action:
             row = QHBoxLayout()
             row.setContentsMargins(0, 6, 0, 0)
-            b = QPushButton(action[0])
+            b = QPushButton(tr(action[0]))
             b.setCursor(Qt.PointingHandCursor)
             b.setFixedHeight(24)
             b.setStyleSheet(f"QPushButton {{ background: {col}; color: #0b0c10; border: none; border-radius: 6px;"

@@ -45,6 +45,8 @@ _DEFAULTS = {
     "watch_folder_path": "",
     "recent_files": [],
     "onboarding_done": False,   # recorrido de bienvenida: se ofrece solo la primera vez
+    "skip_destination": False,  # v5: no enseñar la pantalla «¿Para qué es esta previa?»
+    "always_studio": False,     # v5: abrir siempre en modo Estudio (todo en una pantalla, sin asistente)
     # Firma y metadatos de audio personalizados
     "tag_artist": "",
     "tag_label": "",

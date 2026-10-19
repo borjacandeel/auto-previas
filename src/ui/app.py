@@ -752,113 +752,109 @@ class DropZone(QWidget):
         # Tarjeta para soltar el tema (la que resalta el recorrido)
         self._card = GlowFrame()
         self._card.setObjectName("drop-card")
-        self._card.setFixedSize(720, 190)
+        self._card.setMinimumSize(780, 230)
+        self._card.setMaximumWidth(1100)
+        self._card.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self._card.setStyleSheet(f"""
             QFrame#drop-card {{
-                background: qlineargradient(x1:0,y1:0,x2:0,y2:1, stop:0 {BG3}, stop:1 {BG2});
-                border: 1px solid {BORDER};
+                background: qlineargradient(x1:0.5,y1:0.5,x2:1,y2:1, stop:0 #1c0b10, stop:0.6 #0f0a0d, stop:1 #0a0b0e);
+                border: none;
                 border-radius: 20px;
             }}
         """)
-        lay = QHBoxLayout(self._card)
-        lay.setContentsMargins(34, 18, 34, 18)
-        lay.setSpacing(26)
+        lay = QVBoxLayout(self._card)
+        lay.setContentsMargins(40, 18, 40, 20)
+        lay.setSpacing(6)
+        lay.setAlignment(Qt.AlignCenter)
 
         emblem_path = _ASSETS_DIR / "logo_emblem.png"
         if not emblem_path.exists():
             emblem_path = _ASSETS_DIR / "logo_emblem_red.png"
         self._icon_pix_normal = None
-        self._icon_lbl = QLabel("🎧")
+        self._icon_lbl = QLabel("🎵")
         self._icon_lbl.setAlignment(Qt.AlignCenter)
-        self._icon_lbl.setFixedWidth(120)
-        self._icon_lbl.setStyleSheet("font-size: 64px; background: transparent; border: none;")
+        self._icon_lbl.setStyleSheet("font-size: 44px; background: transparent; border: none;")
         if emblem_path.exists():
             pix = QPixmap(str(emblem_path))
             if not pix.isNull():
-                scaled = pix.scaled(110, 110, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                scaled = pix.scaled(70, 70, Qt.KeepAspectRatio, Qt.SmoothTransformation)
                 self._icon_lbl.setPixmap(scaled)
                 self._icon_pix_normal = scaled
         lay.addWidget(self._icon_lbl)
-
-        col = QVBoxLayout()
-        col.setSpacing(6)
-        col.setAlignment(Qt.AlignVCenter)
-        t2 = QLabel("Arrastra tu tema aquí")
-        t2.setStyleSheet(f"font-size: 22px; font-weight: 800; color: {TEXT}; background: transparent; border: none;")
-        col.addWidget(t2)
+        t2 = QLabel("Arrastra aquí tu tema")
+        t2.setAlignment(Qt.AlignCenter)
+        t2.setStyleSheet(f"font-size: 24px; font-weight: 900; color: {TEXT}; background: transparent; border: none;")
+        lay.addWidget(t2)
         sub = QLabel("WAV  ·  MP3  ·  FLAC  ·  AIFF  ·  M4A")
-        sub.setStyleSheet(f"font-size: 11px; color: {TEXT_DIM}; letter-spacing: 3px; background: transparent; border: none; font-weight: 600;")
-        col.addWidget(sub)
-        col.addSpacing(6)
-        row_b = QHBoxLayout()
-        row_b.setSpacing(10)
-        self._btn_open = QPushButton("  Abrir archivo  ")
-        self._btn_open.setFixedHeight(44)
-        self._btn_open.setMinimumWidth(200)
-        self._btn_open.setStyleSheet(f"""
-            QPushButton {{
-                background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 {ACCENT}, stop:1 #a80016);
-                color: white; border: 1px solid #ff4d63; border-radius: 12px;
-                font-size: 14px; font-weight: 800; padding: 0 28px; letter-spacing: 0.5px;
-            }}
-            QPushButton:hover {{
-                background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 {ACCENT_HV}, stop:1 #d6001e);
-                border: 1px solid #ff7588;
-            }}
-            QPushButton:pressed {{ background: #800010; }}
-        """)
+        sub.setAlignment(Qt.AlignCenter)
+        sub.setStyleSheet(f"font-size: 10.5px; color: {TEXT_DIM}; letter-spacing: 3px; background: transparent; border: none; font-weight: 700;")
+        lay.addWidget(sub)
+        o = QLabel("o")
+        o.setAlignment(Qt.AlignCenter)
+        o.setStyleSheet(f"font-size: 11px; color: {TEXT_DIM}; background: transparent; border: none;")
+        lay.addWidget(o)
+        self._btn_open = QPushButton("Elegir archivo…")
+        self._btn_open.setFixedHeight(48)
+        self._btn_open.setMinimumWidth(220)
+        from src.ui import theme5 as _T5
+        self._btn_open.setStyleSheet(_T5.cta_css(12, 14))
         self._btn_open.setCursor(Qt.PointingHandCursor)
         self._btn_open.clicked.connect(self._open_dialog)
-        row_b.addWidget(self._btn_open)
+        lay.addWidget(self._btn_open, alignment=Qt.AlignCenter)
         # «Seguir con …»: el último tema abierto (si sigue existiendo)
         self._btn_continue = QPushButton("")
-        self._btn_continue.setFixedHeight(44)
+        self._btn_continue.setFixedHeight(34)
         self._btn_continue.setCursor(Qt.PointingHandCursor)
-        self._btn_continue.setStyleSheet(f"QPushButton {{ background: {BG4}; color: {TEXT}; border: 1px solid {BORDER}; border-radius: 12px;"
-                                         " font-size: 12px; font-weight: 700; padding: 0 16px; }"
-                                         f"QPushButton:hover {{ border-color: {ACCENT}; }}")
+        self._btn_continue.setStyleSheet(_T5.ghost_css(10, 11.5))
         self._btn_continue.clicked.connect(lambda _=False: self._continue_last())
-        row_b.addWidget(self._btn_continue)
-        row_b.addStretch()
-        col.addLayout(row_b)
-        lay.addLayout(col, 1)
         outer.addWidget(self._card, 0, Qt.AlignCenter)
 
-        # Los 3 pasos
+        # Los 3 pasos (círculos numerados)
         steps = QHBoxLayout()
-        steps.setSpacing(12)
+        steps.setSpacing(30)
         steps.setAlignment(Qt.AlignCenter)
         self._home_steps = []
         for n, head, body in (
-            ("1", "Carga tu tema", "Suéltalo aquí. Lo analizo solo: BPM, tonalidad y estructura."),
-            ("2", "Elige para qué es", "Redes, radio, sello o club: dejo lista la duración, los cortes y los formatos."),
-            ("3", "Exporta", "MP3 (y WAV o FLAC en Plus) y un vídeo animado para redes."),
+            ("1", "Suelta tu tema", "WAV, MP3, FLAC… Lo analizo yo: BPM, tonalidad y estructura."),
+            ("2", "Revisa la previa", "AutoPrevias la monta sola; tú solo la ajustas si quieres."),
+            ("3", "Descarga", "Audio, vídeo animado y carátula, listos para publicar."),
         ):
-            c = QFrame()
-            c.setFixedSize(232, 92)
-            c.setStyleSheet(f"QFrame {{ background: {BG2}; border: 1px solid {BORDER}; border-radius: 14px; }} QLabel {{ background: transparent; border: none; }}")
+            c = QWidget()
+            c.setFixedWidth(250)
+            c.setMinimumHeight(118)
+            c.setStyleSheet("background: transparent;")
             cl = QVBoxLayout(c)
-            cl.setContentsMargins(14, 10, 14, 10)
-            cl.setSpacing(3)
-            h = QLabel(f"{n}  ·  {head}")
-            h.setStyleSheet(f"color: {ACCENT}; font-size: 12.5px; font-weight: 800;")
+            cl.setContentsMargins(0, 0, 0, 0)
+            cl.setSpacing(4)
+            cl.setAlignment(Qt.AlignHCenter)
+            num = QLabel(n)
+            num.setFixedSize(30, 30)
+            num.setAlignment(Qt.AlignCenter)
+            num.setStyleSheet(f"color: white; font-size: 13px; font-weight: 900; border-radius: 15px; background: {ACCENT};")
+            cl.addWidget(num, 0, Qt.AlignHCenter)
+            h = QLabel(head)
+            h.setAlignment(Qt.AlignCenter)
+            h.setStyleSheet(f"color: {TEXT}; font-size: 14px; font-weight: 800; background: transparent; border: none;")
             b = QLabel(body)
             b.setWordWrap(True)
-            b.setStyleSheet(f"color: {TEXT_MID}; font-size: 11px;")
+            b.setAlignment(Qt.AlignCenter)
+            b.setStyleSheet(f"color: {TEXT_MID}; font-size: 11px; background: transparent; border: none;")
             cl.addWidget(h)
             cl.addWidget(b)
-            cl.addStretch()
             steps.addWidget(c)
             self._home_steps.append(c)
         outer.addLayout(steps)
 
+        chips = QHBoxLayout()
+        chips.setSpacing(10)
+        chips.setAlignment(Qt.AlignCenter)
         self._btn_guide = QPushButton("🎓  Guía de 2 minutos")
-        self._btn_guide.setFixedHeight(32)
+        self._btn_guide.setFixedHeight(34)
         self._btn_guide.setCursor(Qt.PointingHandCursor)
-        self._btn_guide.setStyleSheet(f"QPushButton {{ background: transparent; color: {TEXT_MID}; border: 1px solid {BORDER}; border-radius: 16px;"
-                                      " font-size: 11.5px; font-weight: 700; padding: 0 18px; }"
-                                      f"QPushButton:hover {{ color: {TEXT}; border-color: {ACCENT}; }}")
-        outer.addWidget(self._btn_guide, 0, Qt.AlignCenter)
+        self._btn_guide.setStyleSheet(_T5.ghost_css(10, 11.5))
+        chips.addWidget(self._btn_guide)
+        chips.addWidget(self._btn_continue)
+        outer.addLayout(chips)
         self.refresh_continue()
 
     # — «Seguir con…» —
@@ -1453,9 +1449,10 @@ class _VideoCard(QFrame):
         self._set_hover(False)
 
     def _set_hover(self, on: bool):
-        border = "#a855f7" if on else "#4c1d95"
-        bg = "#2a1a4a" if on else "#15121f"
-        self.setStyleSheet(f"QFrame#vcard {{ background: {bg}; border: 1px solid {border}; border-radius: 9px; }}")
+        border = ACCENT if on else BORDER
+        bg = "#1d0f14" if on else "qlineargradient(x1:0,y1:0,x2:0,y2:1, stop:0 #151922, stop:1 #10131a)"
+        self.setStyleSheet(f"QFrame#vcard {{ background: {bg}; border: 1px solid {border}; border-radius: 16px; }}"
+                           " QFrame#vcard QLabel { background: transparent; border: none; }")
 
     def _image_in(self, md) -> str:
         for u in md.urls():
@@ -1493,6 +1490,7 @@ class ResultPanel(QWidget):
     play_requested        = Signal(str)   # path del archivo para reproducir
     bpm_corrected         = Signal(float) # BPM corregido manualmente por el usuario
     status_message        = Signal(str)   # avisos breves para la barra de estado
+    change_destination_requested = Signal()   # v5: «Cambiar destino» (vuelve a la pantalla de elegir destino)
 
     def __init__(self):
         super().__init__()
@@ -1516,6 +1514,8 @@ class ResultPanel(QWidget):
         self._voice_drop_dur_sec  = 0.0   # duración del archivo de voice drop
         self._promo_saved         = None  # formatos del usuario mientras el modo promo está activo
         self._build_ui()
+        from src.ui import v5_layout
+        v5_layout.assemble(self, get_edition() == "plus")       # v5: los pasos ② y ③ con el diseño nuevo
         self._apply_edition_limits()
         # v5: deshacer/rehacer de cortes y efectos. Una «foto» del estado editable cada 300 ms: si cambió y ya no se mueve
         # (el usuario soltó el ratón) se guarda como un paso; así cubre TODAS las formas de editar sin tocar cada una.
@@ -1532,7 +1532,7 @@ class ResultPanel(QWidget):
     def _build_ui(self):
         # v5: asistente de 3 pasos. ① Tu tema (ya analizado) · ② Tu previa · ③ Exportar. Cada paso es un contenedor;
         # el que no toca se oculta (no ocupa sitio). Los widgets conservan sus nombres de siempre.
-        from src.ui.wizard import DestinationCard, WizardStepper
+        from src.ui.wizard import WizardStepper
         shell = QVBoxLayout(self)
         shell.setSpacing(10)
         shell.setContentsMargins(0, 0, 0, 0)
@@ -1553,11 +1553,6 @@ class ResultPanel(QWidget):
         shell.addWidget(self._page3, 1)
         self._wizard_step = 2
         self._studio = False
-
-        # ── 0. DESTINO: «¿Para qué es esta previa?» ────────────────────────
-        self._dest_card = DestinationCard()
-        self._dest_card.chosen.connect(self._apply_destination)
-        root.addWidget(self._dest_card)
 
         # ── 1. WAVEFORM ───────────────────────────────────────────────────
         wave_frame = QFrame()
@@ -2042,12 +2037,12 @@ class ResultPanel(QWidget):
         vlay = QVBoxLayout(self._row_video_title_widget)
         vlay.setContentsMargins(10, 6, 10, 6)
         vlay.setSpacing(5)
-        _lblv = ("color: #c084fc; font-size: 9.5px; font-weight: 700; letter-spacing: 0.8px;"
+        _lblv = ("color: #8c93a4; font-size: 9.5px; font-weight: 800; letter-spacing: 1px;"
                  "background: transparent; border: none;")
 
         # fila 1: título de la tarjeta + formato (3 botones) + color
         r1 = QHBoxLayout(); r1.setSpacing(6)
-        lbl_vopt = QLabel("② 🎬 VÍDEO ANIMADO")
+        lbl_vopt = QLabel("🎬 AJUSTES DEL VÍDEO")
         lbl_vopt.setStyleSheet(_lblv)
         r1.addWidget(lbl_vopt)
         r1.addSpacing(8)
@@ -2059,7 +2054,7 @@ class ResultPanel(QWidget):
         self._aspect_btns = {}
         _fmt_style = (f"QPushButton {{ background:{BG3}; color:{TEXT_MID}; border:1px solid {BORDER}; border-radius:5px; padding:0 9px; font-size:10.5px; font-weight:700; }}"
                       "QPushButton:hover { border-color:#a855f7; }"
-                      "QPushButton:checked { background:#7c3aed; color:#ffffff; border-color:#a855f7; }")
+                      f"QPushButton:checked {{ background:{ACCENT}; color:#ffffff; border-color:{ACCENT}; }}")
         self._aspect_group = QButtonGroup(self)
         for asp, txt, tip in (("9:16", "📱 9:16 Vertical", "Vertical: TikTok, Instagram Reels y YouTube Shorts"),
                               ("1:1", "⏹ 1:1 Cuadrado", "Cuadrado: publicaciones de Instagram y Facebook"),
@@ -2143,7 +2138,7 @@ class ResultPanel(QWidget):
         self._btn_vprev = QPushButton("👁 Vista previa")
         self._btn_vprev.setFixedHeight(24)
         self._btn_vprev.setCursor(Qt.PointingHandCursor)
-        self._btn_vprev.setStyleSheet(_btn("#7c3aed", "#ffffff", "#8b5cf6", radius=5, fs=10.5))
+        self._btn_vprev.setStyleSheet(_btn(ACCENT, "#ffffff", "#ff4d63", radius=5, fs=10.5))
         self._btn_vprev.setToolTip("Mira unos segundos del vídeo (a baja resolución y con sonido) antes de generarlo, con tu título, paleta, formato y banner.")
         self._btn_vprev.clicked.connect(self._open_video_preview)
         r3.addWidget(lbl_vt)
@@ -2394,7 +2389,8 @@ class ResultPanel(QWidget):
     # ── Helpers de UI ─────────────────────────────────────────────────────
 
     def _on_toggle_advanced(self, checked: bool):
-        _anim.reveal(self._tabs, checked, ms=260)
+        _anim.reveal(self._detail_body, checked, ms=260)
+        self._lbl_detail_arrow.setText("▴" if checked else "▾")
         plus = get_edition() == "plus"
         if checked:
             i18n.set_text(self._chk_advanced, "⚙️  Ocultar Personalización" if plus else "✂️  Ocultar cortes")
@@ -2406,6 +2402,7 @@ class ResultPanel(QWidget):
             i18n.set_text(self._lbl_simple_desc, "3 cortes listos · Arrastra en la onda para retocar o pulsa abajo en Generar Previa")
 
     def _apply_generate_style(self, ready: bool):
+        _anim.pulse_glow(self._btn_generate, bool(ready) and self._btn_generate.isEnabled())
         if ready:
             self._btn_generate.setStyleSheet(f"""
                 QPushButton {{
@@ -2534,10 +2531,6 @@ class ResultPanel(QWidget):
         self._plan        = plan
         self._source_path = file_path
         self.hist_reset()
-        self._dest_card.group.setExclusive(False)
-        for _b in self._dest_card.buttons.values():
-            _b.setChecked(False)
-        self._dest_card.group.setExclusive(True)
         self.set_studio(bool(load_cfg().get("always_studio")))
         self.go_step(2, animate=False)
         self._session_cover = cfg.get("cover_path", "") if isinstance(cfg, dict) else ""
@@ -2649,6 +2642,9 @@ class ResultPanel(QWidget):
         if not hasattr(self, "_preset_buttons"):
             return
         for btn, sec in self._preset_buttons:
+            if hasattr(btn, "lbl_title"):                      # v5: tarjeta-selector
+                btn.setChecked(sec == active_sec)
+                continue
             if sec == active_sec:
                 btn.setStyleSheet("""
                     QPushButton {
@@ -2677,7 +2673,7 @@ class ResultPanel(QWidget):
         self._page2.setVisible(n == 2)
         self._page3.setVisible(n == 3)
         if animate:
-            _anim.fade_in(self._page3 if n == 3 else self._page2, 240)
+            _anim.slide_fade_in(self._page3 if n == 3 else self._page2, dx=(46 if n == 3 else -46), ms=300)
 
     # ── v5: deshacer / rehacer ─────────────────────────────────────────────
     def _snapshot(self):
@@ -2771,6 +2767,11 @@ class ResultPanel(QWidget):
         if s["seconds"]:
             self._apply_duration_preset(s["seconds"])
         if key != "custom":
+            if plus and bool(s.get("promo")) != self._chk_promo.isChecked():
+                self._chk_promo.setChecked(bool(s.get("promo")))          # el destino fija el modo promo (y libera los formatos)
+                if s.get("promo") and not self._voice_drop_path:
+                    self.status_message.emit("Modo promo activado: elige tu firma de voz en «Opciones avanzadas» (Voice Drop)")
+                    self._set_adv_open(True)
             if not self._chk_promo.isChecked():
                 if plus:
                     self._chk_wav.setChecked(s["wav"])
@@ -3118,7 +3119,7 @@ class ResultPanel(QWidget):
         act = self._adv_active_names()
         suffix = ("  ·  " + ", ".join(act)) if act else ""
         arrow = "▾" if self._adv_open else "▸"
-        self._btn_adv.setText(f"③ {arrow} " + tr("Opciones avanzadas: efectos, voz, modo promo y firma") + suffix)
+        self._btn_adv.setText(f"{arrow} " + tr("Opciones avanzadas: master, voz y firma completa") + suffix)
 
     # — resumen antes de generar —
     def _update_summary(self):
@@ -3144,7 +3145,7 @@ class ResultPanel(QWidget):
             else:
                 end = tr("firma") if self._combo_vend.currentData() == "brand" else tr("negro")
                 parts.append(f"🎬 {tr('vídeo')} {asp} ({tr('con marca de agua')}, {tr('final')}: {end})")
-        line1 = tr("Se creará: ") + (" · ".join(parts) if parts else tr("nada: marca algún formato"))
+        line1 = (" · ".join(parts) if parts else tr("nada: marca algún formato"))
         pv = self._card_pv._val_lbl.text() if hasattr(self._card_pv, "_val_lbl") else ""
         bits = []
         if pv and pv != "—":
@@ -3153,9 +3154,46 @@ class ResultPanel(QWidget):
         if adv:
             bits.append("🎚 " + ", ".join(adv))
         bits.append("📁 " + (self._lbl_folder_path.text() or "—"))
-        txt = line1 + "\n" + "  ·  ".join(bits)
+        from html import escape
+        txt = (f"<div style='font-size:10px; letter-spacing:1px; color:#6b7285;'>{escape(tr('SE CREARÁ').upper())}</div>"
+               f"<div style='font-size:15px; font-weight:800; color:#eceef2;'>{escape(line1)}</div>"
+               f"<div style='font-size:11px; color:#8c93a4;'>{escape('  ·  '.join(bits))}</div>")
         if txt != self._lbl_summary.text():
             self._lbl_summary.setText(txt)
+        self._refresh_chips()
+
+    def _refresh_chips(self):
+        """Títulos y pastillas del paso ② a partir de los valores que ya calcula la app."""
+        if not hasattr(self, "_chip_bpm"):
+            return
+        v = lambda c: c._val_lbl.text()
+        self._chip_bpm.setText(f"{v(self._card_bpm)} BPM" if v(self._card_bpm) != "—" else "— BPM")
+        self._chip_key.setText(v(self._card_key).replace("  ", " · ") if v(self._card_key) != "—" else "—")
+        self._chip_drops.setText(tr("{n} drops", n=v(self._card_drops)) if v(self._card_drops) != "—" else "— drops")
+        self._chip_dur.setText(v(self._card_dur))
+        self._chip_file.setText(self._source_path and Path(self._source_path).stem or "")
+        pv = v(self._card_pv)
+        if pv and pv != "—":
+            self._s2_title.setText(tr("Tu previa de {t} está lista para revisar", t=pv))
+        if self._source_path:
+            self._s2_sub.setText(tr("AutoPrevias ya ha elegido los mejores momentos de «{n}». Escúchala y, si quieres, cámbiala.",
+                                    n=Path(self._source_path).stem))
+        if hasattr(self, "_lbl_sign_name") and hasattr(self, "_branding_card"):
+            md = self._branding_card.get_metadata()
+            self._lbl_sign_name.setText(md.get("artist") or md.get("label") or "Radical Records")
+            cover = self._branding_card.get_cover_path()
+            if cover and Path(cover).exists():
+                pm = QPixmap(cover)
+                if not pm.isNull():
+                    self._lbl_sign_thumb.setText("")
+                    self._lbl_sign_thumb.setPixmap(pm.scaled(64, 64, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation))
+
+    def _open_signature_editor(self):
+        self._set_adv_open(True)
+        try:
+            self._branding_card.setFocus()
+        except Exception:
+            pass
 
     def _open_video_preview(self):
         """Vista previa rápida del vídeo con los ajustes actuales (título, paleta, formato, banner, carátula)."""
@@ -4415,6 +4453,12 @@ class ResultPanel(QWidget):
         self._btn_end_vinyl.setStyleSheet(on if self._end_mode == "vinyl" else off)
         self._btn_end_orig.setStyleSheet(on if self._end_mode == "original" else off)
         self._spin_end.setEnabled(self._end_mode == "vinyl")
+        for tg, mode in ((getattr(self, "_tg_start", None), self._start_mode), (getattr(self, "_tg_end", None), self._end_mode)):
+            if tg is not None and tg.isChecked() != (mode == "vinyl"):
+                tg.blockSignals(True)
+                tg.setChecked(mode == "vinyl")
+                tg.blockSignals(False)
+                tg.update()
 
     def _set_tempo_mode(self, mode: str):
         self._tempo_mode = mode
@@ -4770,7 +4814,6 @@ class ResultPanel(QWidget):
         self._tabs.setTabVisible(2, plus)
         if not plus:
             self._chk_advanced.setChecked(False)
-            self._tabs.setVisible(False)
             i18n.set_text(self._chk_advanced, "✂️  Ordenar y mover cortes")
 
         # FX (Flanger, Filter, Master) — solo Plus
@@ -5341,6 +5384,21 @@ class MainWindow(QMainWindow):
         scroll.setWidget(self._results)
         self._stack.addWidget(scroll)  # índice 2
 
+        # Página 3 — «¿Para qué es esta previa?» (se enseña tras analizar el tema; se puede saltar)
+        from src.ui.wizard import DestinationPage
+        dscroll = QScrollArea()
+        dscroll.setWidgetResizable(True)
+        dscroll.setFrameShape(QFrame.NoFrame)
+        dscroll.setStyleSheet(scroll.styleSheet())
+        self._dest_page = DestinationPage(get_edition() == "plus")
+        self._dest_page.chosen.connect(self._on_destination_chosen)
+        self._dest_page.skipped.connect(lambda: self._leave_destination(None))
+        self._dest_page.other_track.connect(lambda: self._drop_zone._open_dialog())
+        self._dest_page.guide_requested.connect(lambda: self.start_tour())
+        dscroll.setWidget(self._dest_page)
+        self._stack.addWidget(dscroll)  # índice 3
+        self._results.change_destination_requested.connect(lambda: self._fade_to_page(3))
+
         root.addWidget(self._stack, stretch=1)
 
         # ── PROGRESS FRAME ────────────────────────────────────────────────
@@ -5482,6 +5540,9 @@ class MainWindow(QMainWindow):
         w = self._stack.currentWidget()
         if w is None:
             return
+        if _anim.enabled() and index == 2:
+            _anim.slide_fade_in(w, dx=44, ms=380)       # a resultados se entra deslizando; no se pisa el efecto
+            return
         eff = QGraphicsOpacityEffect(w)
         w.setGraphicsEffect(eff)
         anim = QPropertyAnimation(eff, b"opacity", self)
@@ -5552,8 +5613,11 @@ class MainWindow(QMainWindow):
         self._beat_grid = grid
         self._key_res   = key_res
 
-        # Mostrar la página de resultados (índice 2) con crossfade
-        self._fade_to_page(2)
+        # v5: tras analizar se pregunta «¿Para qué es esta previa?» (salvo en el recorrido, al reabrir un proyecto, en modo
+        # Estudio o si el usuario marcó «No volver a mostrar»); si no, directo a los resultados (índice 2)
+        ask = not (self._tour_demo or self._pending_project is not None or load_cfg().get("always_studio")
+                   or load_cfg().get("skip_destination"))
+        self._fade_to_page(3 if ask else 2)
 
         try:
             self._results.set_beat_times(getattr(grid, "beat_times", []))
@@ -5563,6 +5627,7 @@ class MainWindow(QMainWindow):
                                self._current_file, self._cfg, key_res=key_res)
 
         drops = len(analysis.drops())
+        self._fill_destination_page(self._current_file, bpm, dur, key_res, drops)
         key_str = f"  ·  {key_res.camelot} ({key_res.notation})" if key_res else ""
         self._set_progress(
             100, "✅  {name}  ·  {bpm} BPM{key}  ·  {drops} {word}",
@@ -5579,6 +5644,37 @@ class MainWindow(QMainWindow):
             except Exception:
                 pass
 
+    def _on_destination_chosen(self, key: str):
+        self._leave_destination(key)
+
+    def _leave_destination(self, key):
+        """Sale de la pantalla de destino hacia el paso ② (aplicando el destino elegido, si lo hay)."""
+        if self._dest_page.chk_never.isChecked():
+            try:
+                c = load_cfg()
+                c["skip_destination"] = True
+                save_cfg(c)
+            except Exception:
+                pass
+        self._fade_to_page(2)
+        self._results.go_step(2, animate=False)
+        if key:
+            self._results._apply_destination(key)
+
+    def _fill_destination_page(self, name: str, bpm: float, dur: float, key_res, drops: int):
+        r = self._results
+        wf = getattr(r, "_waveform", None)
+        rms = getattr(wf, "_source_rms", None) if wf is not None else None
+        mins, secs = divmod(int(round(dur)), 60)
+        bits = [f"{mins}:{secs:02d}", f"{bpm:.0f} BPM"]
+        if key_res:
+            bits.append(f"{key_res.camelot}")
+        bits.append(tr("{n} drops detectados", n=drops) if drops != 1 else tr("1 drop detectado"))
+        self._dest_page.set_track(Path(name).stem, " · ".join(bits), rms)
+        # la onda se carga en segundo plano: se vuelve a pintar cuando llega
+        for ms in (600, 1500, 3500):
+            QTimer.singleShot(ms, lambda: self._dest_page.wave.set_envelope(getattr(getattr(r, "_waveform", None), "_source_rms", [])))
+
     def _on_error(self, msg: str):
         self._stop_dots()
         self._analysis_page.stop()
@@ -5587,13 +5683,17 @@ class MainWindow(QMainWindow):
         lines = [ln for ln in msg.strip().splitlines() if ln.strip()]
         short = lines[-1] if lines else msg
         self._set_progress(0, f"❌  {short}")
+        from src.ui.toast import toast
+        retry = self._current_file
+        toast(self, "error", "No se pudo analizar el tema", short,
+              action=(("Reintentar", lambda: self._load_file(retry)) if retry else None))
 
     def _set_progress(self, pct: int, msg: str, **kw):
         """`msg` es el texto fuente en castellano (plantilla si lleva `kw`): se traduce según el idioma
         activo y se recuerda para poder volver a pintarlo al cambiar de idioma."""
         self._progress_src = (msg, kw)
         text = tr(msg, **kw) if kw else i18n.translate(msg)
-        self._progress_bar.setValue(pct)
+        _anim.smooth_progress(self._progress_bar, pct)
         # Guardar el mensaje limpio para la animación de puntos
         self._progress_msg = text.rstrip(".… ")
         self._progress_label.setText(text)
@@ -5739,6 +5839,8 @@ class MainWindow(QMainWindow):
             self._set_progress(100, "✅  Guardado en: {folder}  ·  ({names})", folder=folder, names=names)
             self._record_history(generated, seed)
             self._results._btn_open_folder.setStyleSheet(_btn("#059669", "#ffffff", "#10b981", radius=5, fs=10.5))
+            from src.ui.toast import toast
+            toast(self, "success", "Previa generada", names, action=("Abrir carpeta", self._open_export_folder), seconds=8)
             # F6 — Notificación nativa del SO
             try:
                 from src.notifications import notify
@@ -5792,6 +5894,9 @@ class MainWindow(QMainWindow):
         i18n.set_text(self._results._btn_generate, "▶   GENERAR PREVIA")
         self._results._apply_generate_style(True)
         self._set_progress(0, f"❌  {short}")
+        from src.ui.toast import toast
+        toast(self, "error", "No se pudo generar la previa", short,
+              action=("Reintentar", lambda: self._results._btn_generate.click()))
 
     # ── Drag global (ventana) ─────────────────────────────────────────────
 
@@ -5922,6 +6027,20 @@ class MainWindow(QMainWindow):
         self._act_support.triggered.connect(lambda _=False: self._open_support_mail())
         self._btn_help.setMenu(self._help_menu)
         logo_row.addWidget(self._btn_help)
+
+    def _refresh_menu_texts(self):
+        """Los textos de los menús no los recorre translate_tree: se repintan al cambiar de idioma."""
+        plus = get_edition() == "plus"
+        self._btn_tools.setText(tr("🧰 Herramientas  ▾"))
+        self._btn_help.setText(tr("❓ Ayuda  ▾"))
+        self._act_recents.setText(tr("🕒 Recientes"))
+        lock = lambda t: tr(f"🔒 {t} (Plus)")
+        self._act_batch.setText(tr("📁 Modo Lote") if plus else lock("Modo Lote"))
+        self._act_sign.setText(tr("🖋 Firmar tema entero") if plus else lock("Firmar tema entero"))
+        self._act_watch.setText(tr("👁 Vigilar carpeta") if plus else lock("Vigilar carpeta"))
+        self._act_tour.setText(tr("🎓 Guía de 2 minutos"))
+        self._act_keys.setText(tr("⌨ Atajos de teclado"))
+        self._act_support.setText(tr("✉ Escribir a soporte"))
 
     def _refresh_tools_menu(self):
         """El texto de «Vigilar carpeta» refleja si está activo."""
@@ -6083,13 +6202,16 @@ class MainWindow(QMainWindow):
             save_cfg(c)
         except Exception:
             pass
-        i18n.translate_tree(self)
-        self._btn_lang.setText(code.upper())
-        self._render_update_banner()
-        src = getattr(self, "_progress_src", None)
-        if src is not None:
-            self._set_progress(self._progress_bar.value(), src[0], **src[1])
-        self._results.refresh_language()
+        def _retranslate():
+            i18n.translate_tree(self)
+            self._btn_lang.setText(code.upper())
+            self._render_update_banner()
+            src = getattr(self, "_progress_src", None)
+            if src is not None:
+                self._set_progress(self._progress_bar.value(), src[0], **src[1])
+            self._results.refresh_language()
+            self._refresh_menu_texts()
+        _anim.crossfade_transition(self.centralWidget(), _retranslate)
 
     def _toggle_watch_folder(self):
         if self._watching:
@@ -6310,6 +6432,8 @@ def launch(initial_file: str = ""):
     _log_startup("Iniciando QApplication...")
     app = QApplication.instance() or QApplication(sys.argv)
     app.setStyle("Fusion")
+    _anim.install_button_fx(app)           # brillo al pasar el ratón sobre los botones
+    _anim.install_dialog_fx(app)           # las ventanas aparecen con fundido
 
     # Fuente del sistema nativa (sin avisos de alias)
     family_to_use = ".AppleSystemUIFont" if sys.platform == "darwin" else "Segoe UI"

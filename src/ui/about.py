@@ -125,6 +125,21 @@ class LicenseDialog(QDialog):
         root.addWidget(self._lbl_perf)
         self._refresh_perf_hint()
 
+        # Modo Estudio: para quien ya domina la app, todo en una sola pantalla en vez del asistente de 3 pasos
+        from PySide6.QtWidgets import QCheckBox
+        from src.config import load as _load_cfg, save as _save_cfg
+        self._chk_studio = QCheckBox("Abrir siempre en modo Estudio (todo en una pantalla, sin asistente)")
+        self._chk_studio.setToolTip("El asistente de 3 pasos es lo más fácil para empezar. Si ya conoces la app, el modo Estudio "
+                                    "te enseña cortes, efectos y exportación a la vez. También se cambia con Ctrl/⌘ + E.")
+        self._chk_studio.setChecked(bool(_load_cfg().get("always_studio")))
+
+        def _save_studio(on):
+            c = _load_cfg()
+            c["always_studio"] = bool(on)
+            _save_cfg(c)
+        self._chk_studio.toggled.connect(_save_studio)
+        root.addWidget(self._chk_studio)
+
         root.addWidget(self._separator())
 
         self._lbl_update = QLabel("")

@@ -171,9 +171,10 @@ def build_steps(win) -> list:
         "(formatos, vídeo y GENERAR). Puedes pulsar cualquier paso para ir y volver sin perder nada.",
         lambda: R._stepper, page=2)
     add("destino", "¿Para qué es esta previa?",
-        "Elige un destino —redes, radio, sello o club— y AutoPrevias deja listas la duración, los formatos, el vídeo y, en Plus, "
-        "el arranque y el frenazo de vinilo. Después puedes cambiar lo que quieras.",
-        lambda: R._dest_card, page=2, example="Para TikTok o Reels: «Redes sociales» → 15 s, MP3 y vídeo vertical.")
+        "Tras analizar tu tema, AutoPrevias te pregunta para qué es la previa —redes, radio, sellos, DJ, envío seguro— y deja listos "
+        "la duración, los formatos, el vídeo y, en Plus, el arranque y el frenazo de vinilo. Si cambias de idea, «Cambiar destino» "
+        "vuelve a esa pantalla.",
+        lambda: R._btn_change_dest, page=2, example="Para TikTok o Reels: «Redes sociales» → 15 s, MP3 y vídeo vertical.")
     add("onda", "La forma de onda",
         "Aquí ves la estructura del tema: intro, subida, drop, descanso… AutoPrevias la detecta sola. "
         "Haz clic para escuchar desde ese punto y arrastra los marcadores para retocar dónde se corta.",
@@ -187,7 +188,7 @@ def build_steps(win) -> list:
     add("tarjetas", "Lo que AutoPrevias ha medido",
         "Archivo, BPM, tonalidad (en Camelot, para mezclar en armonía), duración, número de drops y duración estimada de la previa. "
         "Si el BPM no es correcto, haz doble clic en la tarjeta BPM y corrígelo.",
-        lambda: [R._card_file, R._card_bpm, R._card_key, R._card_dur, R._card_drops, R._card_pv], page=2)
+        lambda: R._chips_row, page=2)
     add("duracion", "Duración de la previa",
         "Elige 15 s (teaser), 30 s (promo), 60 s (extendida) o 120 s (club). Los cortes se recalculan al instante "
         "y siempre caen en compás.", lambda: [R._btn_p15, R._btn_p30, R._btn_p60, R._btn_p120], page=2,
@@ -195,27 +196,28 @@ def build_steps(win) -> list:
     if plus:
         add("presets", "Mis presets (Plus)",
             "Guarda tu firma, formatos y estilo de vídeo con un nombre y vuélvelos a aplicar con un clic. "
-            "Los presets son archivos: puedes copiarlos a otro ordenador.", lambda: R._preset_bar, page=2)
+            "Los presets son archivos: puedes copiarlos a otro ordenador.", lambda: R._preset_bar, page=2,
+            before=lambda: R._chk_advanced.setChecked(True), after=lambda: R._chk_advanced.setChecked(False))
     add("simple", "Estructura de previa optimizada",
         "AutoPrevias ya ha calculado 3 cortes con transiciones suaves. Para la mayoría de temas basta con pulsar Generar.",
-        lambda: win._results._simple_box, page=2)
+        lambda: win._results._main_card, page=2)
     if plus:
         add("avanzado", "Personalizar cortes y BPM (Plus)",
-            "Activa esta casilla para abrir tres pestañas: el editor de cortes (cada corte tiene su nombre, «Corte 1», «Corte 2»…; "
+            "Abre «Retocar con más detalle» para ver tres pestañas: el editor de cortes (cada corte tiene su nombre, «Corte 1», «Corte 2»…; "
             "cámbialos de orden con ▲ ▼, elige si la previa empieza al inicio o a mitad del tema y ajusta segundos exactos), la variación "
             "de BPM (acelera ligeramente la previa para que nadie pueda mezclarla con tu tema) y la estructura musical con nivel LUFS.",
-            lambda: [R._chk_advanced, R._tabs], page=2,
+            lambda: R._detail_card, page=2,
             before=lambda: R._chk_advanced.setChecked(True), after=lambda: R._chk_advanced.setChecked(False))
         add("arranque", "Cómo empieza y cómo acaba la previa (Plus)",
             "Elige cómo EMPIEZA la previa (con el efecto de vinilo, de 0 al tempo del tema en los segundos que quieras, o directamente "
             "a los BPM originales) y cómo ACABA (con el frenazo de vinilo hasta parar, o a los BPM originales, sin efecto).",
-            lambda: R._card_startend, page=2,
+            lambda: R._card_startend_simple, page=2,
             example="«De 0 a 128 BPM en 1 s» suena como un disco que arranca; el frenazo final es el disco al pararse.")
     else:
         add("cortes", "Ordena y mueve los cortes",
-            "Con esta casilla ves los cortes de la previa con su nombre («Corte 1», «Corte 2»…). Cámbialos de orden con ▲ ▼, "
+            "En «Retocar con más detalle» ves los cortes de la previa con su nombre («Corte 1», «Corte 2»…). Cámbialos de orden con ▲ ▼, "
             "elige si la previa empieza al inicio o a mitad del tema, o arrastra los cortes sobre la forma de onda.",
-            lambda: [R._chk_advanced, R._tabs], page=2,
+            lambda: R._detail_card, page=2,
             before=lambda: R._chk_advanced.setChecked(True), after=lambda: R._chk_advanced.setChecked(False),
             example="Para que suene primero el drop, sube el corte del drop con ▲.")
     if wave_frame is not None:
@@ -306,7 +308,7 @@ def build_steps(win) -> list:
         optional=True)
     add("nuevo", "Nuevo track",
         "Cuando termines, pulsa «Nuevo track» para volver al inicio y cargar otro tema.",
-        lambda: R._btn_new_track_top, page=2)
+        lambda: R._btn_back_drop, page=2)
     add("fin", "¡Listo! Ya sabes usar AutoPrevias",
         "Arrastra tu primer tema y genera tu previa. Si necesitas ayuda, escribe a radicalrecordsvlc@gmail.com. "
         "Mucha suerte con tus lanzamientos · Radical Records.", None)

@@ -706,8 +706,8 @@ EN_TOUR = {
     "AutoPrevias ya ha calculado 3 cortes con transiciones suaves. Para la mayoría de temas basta con pulsar Generar.":
         "AutoPrevias has already calculated 3 cuts with smooth transitions. For most tracks you just press Generate.",
     "Personalizar cortes y BPM (Plus)": "Customize cuts and BPM (Plus)",
-    "Activa esta casilla para abrir tres pestañas: el editor de cortes (inicio, fin y duración exactos), la variación de BPM (acelera ligeramente la previa para que nadie pueda mezclarla con tu tema) y la estructura musical con nivel LUFS.":
-        "Tick this box to open three tabs: the cut editor (exact start, end and length), the BPM variation (slightly speeds up the preview so nobody can mix it with your track) and the musical structure with LUFS level.",
+    "Abre «Retocar con más detalle» para ver tres pestañas: el editor de cortes (inicio, fin y duración exactos), la variación de BPM (acelera ligeramente la previa para que nadie pueda mezclarla con tu tema) y la estructura musical con nivel LUFS.":
+        "Open “Fine-tune in more detail” to see three tabs: the cut editor (exact start, end and length), the BPM variation (slightly speeds up the preview so nobody can mix it with your track) and the musical structure with LUFS level.",
     "① Nombre y formatos": "① Name and formats",
     "El nombre del archivo ya viene puesto («PREVIA - tu tema»), pero puedes cambiarlo. Marca los formatos que quieres: WAV 24 bit, MP3 320k y FLAC.":
         "The file name is already filled in (“PREVIA - your track”) but you can change it. Tick the formats you want: 24-bit WAV, MP3 320k and FLAC.",
@@ -796,11 +796,11 @@ EN_310 = {
     "✂️  Ocultar cortes": "✂️  Hide cuts",
     "Ordena los cortes con ▲ ▼, elige dónde empieza la previa o arrástralos en la onda.": "Reorder the cuts with ▲ ▼, choose where the preview starts or drag them on the waveform.",
     "Ordena y mueve los cortes": "Order and move the cuts",
-    "Con esta casilla ves los cortes de la previa con su nombre («Corte 1», «Corte 2»…). Cámbialos de orden con ▲ ▼, elige si la previa empieza al inicio o a mitad del tema, o arrastra los cortes sobre la forma de onda.":
-        "With this box you see the preview's cuts with their names (“Cut 1”, “Cut 2”…). Reorder them with ▲ ▼, choose whether the preview starts at the beginning or in the middle of the track, or drag the cuts on the waveform.",
+    "En «Retocar con más detalle» ves los cortes de la previa con su nombre («Corte 1», «Corte 2»…). Cámbialos de orden con ▲ ▼, elige si la previa empieza al inicio o a mitad del tema, o arrastra los cortes sobre la forma de onda.":
+        "In “Fine-tune in more detail” you see the preview's cuts with their names (“Cut 1”, “Cut 2”…). Reorder them with ▲ ▼, choose whether the preview starts at the beginning or in the middle of the track, or drag the cuts on the waveform.",
     "Para que suene primero el drop, sube el corte del drop con ▲.": "To make the drop play first, move the drop's cut up with ▲.",
-    "Activa esta casilla para abrir tres pestañas: el editor de cortes (cada corte tiene su nombre, «Corte 1», «Corte 2»…; cámbialos de orden con ▲ ▼, elige si la previa empieza al inicio o a mitad del tema y ajusta segundos exactos), la variación de BPM (acelera ligeramente la previa para que nadie pueda mezclarla con tu tema) y la estructura musical con nivel LUFS.":
-        "Tick this box to open three tabs: the cut editor (each cut has its name, “Cut 1”, “Cut 2”…; reorder them with ▲ ▼, choose whether the preview starts at the beginning or in the middle of the track and set exact seconds), the BPM variation (slightly speeds up the preview so nobody can mix it with your track) and the musical structure with LUFS level.",
+    "Abre «Retocar con más detalle» para ver tres pestañas: el editor de cortes (cada corte tiene su nombre, «Corte 1», «Corte 2»…; cámbialos de orden con ▲ ▼, elige si la previa empieza al inicio o a mitad del tema y ajusta segundos exactos), la variación de BPM (acelera ligeramente la previa para que nadie pueda mezclarla con tu tema) y la estructura musical con nivel LUFS.":
+        "Open “Fine-tune in more detail” to see three tabs: the cut editor (each cut has its name, “Cut 1”, “Cut 2”…; reorder them with ▲ ▼, choose whether the preview starts at the beginning or in the middle of the track and set exact seconds), the BPM variation (slightly speeds up the preview so nobody can mix it with your track) and the musical structure with LUFS level.",
     # arranque de BPM
     "ARRANQUE:": "START:",
     "🌀 Vinilo: de 0 al tempo": "🌀 Vinyl: from 0 to tempo",
@@ -997,3 +997,63 @@ EN_500B = {
     "Ver Plus": "See Plus", "Carátula cambiada": "Cover changed", "No se pudo usar la imagen": "Couldn't use the image",
 }
 EN.update(EN_500B)
+
+EN.update({
+    "Abrir siempre en modo Estudio (todo en una pantalla, sin asistente)": "Always open in Studio mode (everything on one screen, no wizard)",
+    "El asistente de 3 pasos es lo más fácil para empezar. Si ya conoces la app, el modo Estudio te enseña cortes, efectos y exportación a la vez. También se cambia con Ctrl/⌘ + E.":
+        "The 3-step wizard is the easiest way to start. If you already know the app, Studio mode shows cuts, effects and export at once. You can also switch with Ctrl/⌘ + E.",
+})
+EN.update({
+    "Previa generada": "Preview generated", "Abrir carpeta": "Open folder", "Reintentar": "Try again",
+    "No se pudo generar la previa": "Couldn't generate the preview", "No se pudo analizar el tema": "Couldn't analyse the track",
+})
+EN.update({
+    "{n} drops detectados": "{n} drops detected", "1 drop detectado": "1 drop detected",
+    "Modo promo activado: elige tu firma de voz en «Opciones avanzadas» (Voice Drop)": "Promo mode on: choose your voice tag in “Advanced options” (Voice Drop)",
+})
+EN.update({
+    "Tras analizar tu tema, AutoPrevias te pregunta para qué es la previa —redes, radio, sellos, DJ, envío seguro— y deja listos la duración, los formatos, el vídeo y, en Plus, el arranque y el frenazo de vinilo. Si cambias de idea, «Cambiar destino» vuelve a esa pantalla.":
+        "After analysing your track, AutoPrevias asks what the preview is for — social, radio, labels, DJ, safe sending — and sets the length, formats, video and, in Plus, the vinyl start and stop. If you change your mind, “Change destination” takes you back to that screen.",
+    "🎯  Cambiar destino": "🎯  Change destination", "Volver a elegir para qué es la previa: redes, radio, sello, club…": "Choose again what the preview is for: social, radio, label, club…",
+    "Tu previa está lista para revisar": "Your preview is ready to review", "Tu previa de {t} está lista para revisar": "Your {t} preview is ready to review",
+    "AutoPrevias ya ha elegido los mejores momentos. Escúchala y, si quieres, cámbiala.": "AutoPrevias has already picked the best moments. Listen to it and, if you like, change it.",
+    "AutoPrevias ya ha elegido los mejores momentos de «{n}». Escúchala y, si quieres, cámbiala.": "AutoPrevias has already picked the best moments of “{n}”. Listen to it and, if you like, change it.",
+    "¿Cuánto debe durar?": "How long should it be?", "Cómo suena el principio y el final": "How the start and the end sound",
+    "Arrancar como un disco de vinilo": "Start like a vinyl record", "Empieza lento y coge velocidad": "Starts slow and picks up speed",
+    "Acabar frenando": "End by slowing down", "Como un disco que se para": "Like a record coming to a stop",
+    "Retocar con más detalle": "Fine-tune in more detail", "Opcional": "Optional",
+    "Cortes exactos, orden, variación de BPM… solo si lo necesitas.": "Exact cuts, order, BPM variation… only if you need it.",
+    "Ordenar y mover los cortes… solo si lo necesitas.": "Order and move the cuts… only if you need it.",
+    "15 s": "15 s", "30 s": "30 s", "60 s": "60 s", "2 min": "2 min",
+    "Teaser para redes": "Teaser for social", "Promo para radio": "Promo for radio", "Para sellos y A&R": "For labels and A&R", "Club · recomendado": "Club · recommended",
+    "Siguiente: elegir formatos  →": "Next: choose formats  →",
+    "¿Qué quieres crear?": "What do you want to create?", "Marca lo que necesites. Lo más habitual ya viene elegido.": "Tick what you need. The most common is already chosen.",
+    "Recomendado": "Recommended", "Ligero, para enviar por correo y redes": "Light, to send by email and social",
+    "Máxima calidad para sellos y masters": "Top quality for labels and masters",
+    "Con onda animada y carátula, listo para TikTok, Reels y YouTube": "With animated waveform and cover, ready for TikTok, Reels and YouTube",
+    "Con tu voz repetida para que no se pueda reutilizar": "With your voice repeated so it can't be reused",
+    "Nombre y carpeta": "Name and folder", "Firma y carátula": "Signature and cover", "Artista · sello · carátula puestos": "Artist · label · cover set",
+    "✎  Editar": "✎  Edit", "Variante (seed)": "Variant (seed)", "SE CREARÁ": "WILL CREATE", "SE CREARÁ".title(): "Will create",
+    "Opciones avanzadas: master, voz y firma completa": "Advanced options: master, voice and full signature",
+    "🎬 AJUSTES DEL VÍDEO": "🎬 VIDEO SETTINGS",
+    "¿Para qué es esta previa?": "What is this preview for?",
+    "Elige y listo: AutoPrevias prepara duración, formato, vídeo y firma. Podrás verla y retocarla antes de exportar.": "Pick one and done: AutoPrevias sets the length, format, video and signature. You can review and tweak it before exporting.",
+    "Redes sociales": "Social media", "Radio y promotores": "Radio and promoters", "Sellos y A&R": "Labels and A&R", "DJ y club": "DJ and club",
+    "Envío seguro": "Safe sending", "Lo monto yo": "I'll build it myself",
+    "15 s · Vídeo vertical 9:16 con onda animada y carátula": "15 s · Vertical 9:16 video with animated waveform and cover",
+    "Instagram · TikTok · Shorts": "Instagram · TikTok · Shorts", "30 s · MP3 listo para enviar": "30 s · MP3 ready to send", "Para enviar por correo": "To send by email",
+    "60 s · WAV de alta calidad (Plus) o MP3 320k": "60 s · High-quality WAV (Plus) or MP3 320k", "Para demos y firmas": "For demos and signings",
+    "2 min · FLAC (Plus) con arranque y final de vinilo": "2 min · FLAC (Plus) with vinyl start and stop", "Para pinchar y compartir en set": "To play and share in a set",
+    "MP3 128k con tu voz repetida (Plus)": "MP3 128k with your voice repeated (Plus)", "Nadie puede reutilizarlo sin ti": "Nobody can reuse it without you",
+    "Elige cortes, efectos, formato…": "Choose cuts, effects, format…", "Para quien quiere control total": "For those who want full control",
+    "¿Primera vez?": "First time?", "🎓  Guía de 2 minutos": "🎓  2-minute guide", "No volver a mostrar esta pantalla": "Don't show this screen again",
+    "Saltar este paso  →": "Skip this step  →", "Otro tema": "Another track",
+    "Crea la previa de tu tema en 3 pasos": "Create your track's preview in 3 steps",
+    "Sin conocimientos técnicos: tú eliges el tema y para qué lo quieres; AutoPrevias hace el resto.": "No technical knowledge needed: you pick the track and what it's for; AutoPrevias does the rest.",
+    "Arrastra aquí tu tema": "Drop your track here", "Elegir archivo…": "Choose file…", "Suelta tu tema": "Drop your track",
+    "WAV, MP3, FLAC… Lo analizo yo: BPM, tonalidad y estructura.": "WAV, MP3, FLAC… I analyse it: BPM, key and structure.",
+    "Revisa la previa": "Review the preview", "AutoPrevias la monta sola; tú solo la ajustas si quieres.": "AutoPrevias builds it on its own; you only tweak it if you want.",
+    "Descarga": "Download", "Audio, vídeo animado y carátula, listos para publicar.": "Audio, animated video and cover, ready to publish.",
+    "↻  Seguir con «{n}»": "↻  Continue with “{n}”",
+    "🔒  WAV, FLAC, vídeo sin marca de agua y modo promo: solo en Plus": "🔒  WAV, FLAC, watermark-free video and promo mode: Plus only",
+})

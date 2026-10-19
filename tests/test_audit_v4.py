@@ -326,8 +326,16 @@ def test_tarjeta_de_arranque_y_final_visible_en_plus_y_oculta_en_basic(monkeypat
     p = _panel(monkeypatch, "plus")
     p.show()
     QApplication.processEvents()
+    assert p._card_startend_simple.isVisibleTo(p) and p._tg_start.isVisibleTo(p) and p._tg_end.isVisibleTo(p)   # v5: interruptores a la vista
+    assert not p._card_startend.isVisibleTo(p)                       # los segundos exactos están en «Retocar con más detalle»
+    p._chk_advanced.setChecked(True)
     assert p._card_startend.isVisibleTo(p) and p._btn_end_vinyl.isVisibleTo(p) and p._btn_start_vinyl.isVisibleTo(p)
-    assert not p._tabs.isVisible() or True                           # ya no depende de abrir las pestañas
+    p._set_end_mode("original")
+    assert not p._tg_end.isChecked()                                 # los interruptores siguen al modo
+    p._set_end_mode("vinyl")
+    p._tg_start.setChecked(False)
+    assert p._start_mode == "original"                               # y el interruptor cambia el modo
+    p._tg_start.setChecked(True)
     o = p.get_export_options()
     assert o["start_mode"] == "vinyl" and o["end_mode"] == "vinyl" and o["end_spin_sec"] == 1.0
     p._set_end_mode("original")
