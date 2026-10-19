@@ -34,6 +34,7 @@ class PreviewSegment:
     section: Section
     trimmed_start: float   # tiempo de inicio dentro de la sección (relativo a section.start_time)
     trimmed_end: float     # tiempo de fin dentro de la sección
+    cut_id: int = 0        # número fijo del corte («Corte 1», «Corte 2»…): no cambia al reordenarlos
 
     @property
     def duration(self) -> float:
@@ -132,7 +133,31 @@ def _buildup_start(sections: list, drop_sec: "Section", bar_dur: float, max_bars
 # Lógica de selección
 # ---------------------------------------------------------------------------
 
+def assign_cut_ids(segments) -> None:
+    """Da nombre fijo («Corte N») a los cortes que aún no lo tienen: por orden en la canción, a partir del mayor ya usado.
+    Reordenar los cortes en la previa no cambia sus números."""
+    used = {int(s.cut_id) for s in segments if int(getattr(s, "cut_id", 0)) > 0}
+    nxt = (max(used) if used else 0) + 1
+    for seg in sorted((s for s in segments if int(getattr(s, "cut_id", 0)) <= 0), key=lambda x: x.source_start):
+        seg.cut_id = nxt
+        nxt += 1
+
+
 def build_preview_plan(
+    analysis: StructureAnalysis,
+    stretch_factor: float = AVG_STRETCH_FACTOR,
+    target_min: float = TARGET_MIN_SEC,
+    target_max: float = TARGET_MAX_SEC,
+    target_duration_sec: float | None = None,
+    cfg: dict | None = None,
+) -> PreviewPlan:
+    """Plan de previa con los cortes ya nombrados («Corte 1», «Corte 2»…) por orden en la canción."""
+    plan = _build_preview_plan(analysis, stretch_factor, target_min, target_max, target_duration_sec, cfg)
+    assign_cut_ids(plan.segments)
+    return plan
+
+
+def _build_preview_plan(
     analysis: StructureAnalysis,
     stretch_factor: float = AVG_STRETCH_FACTOR,
     target_min: float = TARGET_MIN_SEC,

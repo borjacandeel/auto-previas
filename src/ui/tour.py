@@ -144,6 +144,10 @@ def build_steps(win) -> list:
         add("vigilar", "Vigilar carpeta (Plus)",
             "Elige una carpeta y cada tema nuevo que caiga en ella se convierte en previa automáticamente.",
             lambda: win._btn_watch)
+        add("firmar_tema", "Firmar tema entero (Plus)",
+            "Abre una ventana aparte para firmar canciones completas, no previas: arrastras el tema, eliges la carátula y las "
+            "etiquetas y se guarda en FLAC o WAV a máxima calidad. Sin masterización ni efectos: el audio queda igual.",
+            lambda: win._btn_sign, example="Ejemplo: tu máster de 24 bits con la portada del EP incrustada, listo para subir.")
     add("licencia", "Licencia, idioma y actualizaciones",
         "Aquí ves tu versión y tu licencia (1 equipo por clave), cambias el idioma, buscas actualizaciones y ajustas el "
         "rendimiento del equipo. La licencia se revalida sola: no tienes que volver a escribirla.", lambda: win._btn_license)
@@ -190,10 +194,25 @@ def build_steps(win) -> list:
         lambda: win._results._simple_box, page=2)
     if plus:
         add("avanzado", "Personalizar cortes y BPM (Plus)",
-            "Activa esta casilla para abrir tres pestañas: el editor de cortes (inicio, fin y duración exactos), la variación "
+            "Activa esta casilla para abrir tres pestañas: el editor de cortes (cada corte tiene su nombre, «Corte 1», «Corte 2»…; "
+            "cámbialos de orden con ▲ ▼, elige si la previa empieza al inicio o a mitad del tema y ajusta segundos exactos), la variación "
             "de BPM (acelera ligeramente la previa para que nadie pueda mezclarla con tu tema) y la estructura musical con nivel LUFS.",
             lambda: [R._chk_advanced, R._tabs], page=2,
             before=lambda: R._chk_advanced.setChecked(True), after=lambda: R._chk_advanced.setChecked(False))
+        add("arranque", "Arranque de la previa (Plus)",
+            "En la pestaña «Variación de BPM» eliges cómo empieza la previa: con el efecto de vinilo (de 0 al tempo del tema en los "
+            "segundos que quieras) o directamente a los BPM originales, sin efecto.",
+            lambda: [R._btn_start_vinyl, R._spin_start, R._btn_start_orig], page=2,
+            before=lambda: (R._chk_advanced.setChecked(True), R._tabs.setCurrentIndex(1)),
+            after=lambda: (R._tabs.setCurrentIndex(0), R._chk_advanced.setChecked(False)),
+            example="«De 0 a 128 BPM en 1 s» suena como un disco que arranca.")
+    else:
+        add("cortes", "Ordena y mueve los cortes",
+            "Con esta casilla ves los cortes de la previa con su nombre («Corte 1», «Corte 2»…). Cámbialos de orden con ▲ ▼, "
+            "elige si la previa empieza al inicio o a mitad del tema, o arrastra los cortes sobre la forma de onda.",
+            lambda: [R._chk_advanced, R._tabs], page=2,
+            before=lambda: R._chk_advanced.setChecked(True), after=lambda: R._chk_advanced.setChecked(False),
+            example="Para que suene primero el drop, sube el corte del drop con ▲.")
     add("formatos", "① Nombre y formatos",
         "El nombre del archivo ya viene puesto («PREVIA - tu tema»), pero puedes cambiarlo. "
         + ("Marca los formatos que quieres: WAV 24 bit, MP3 320k y FLAC." if plus else
@@ -378,6 +397,8 @@ class TourOverlay(QWidget):
         self._fill.setGeometry(0, 0, int(self._bar.width() * (idx + 1) / max(1, total)) or 4, 4)
         self._card.adjustSize()
         QTimer.singleShot(0, self._refill)
+        from src.ui import anim
+        anim.fade_in(self._card, ms=220)
 
     def _refill(self):
         idx, total = self.show_step_idx
@@ -627,7 +648,9 @@ class OnboardingTour(QObject):
             except Exception:
                 pass
         self._active_after = st.after
-        QTimer.singleShot(60, lambda i=idx, d=direction: self._present(i, d))
+        from src.ui import anim
+        wait = 380 if (st.before and anim.enabled()) else 60          # deja terminar el despliegue de paneles
+        QTimer.singleShot(wait, lambda i=idx, d=direction: self._present(i, d))
 
     def _present(self, idx: int, direction: int):
         if self._overlay is None or idx != self._i:

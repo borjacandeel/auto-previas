@@ -566,6 +566,8 @@ EN = {
     "✅ Descargado en «{folder}» y verificado. Se abrirá el instalador y AutoPrevias se cerrará para poder actualizarse.": "✅ Downloaded to “{folder}” and verified. The installer will open and AutoPrevias will close so it can update.",
     "✅ Licencia {plan} activada correctamente.": "✅ {plan} license activated successfully.",
     "✂ CORTE {n} · {icon} {title} ({dur}s)": "✂ CUT {n} · {icon} {title} ({dur}s)",
+    "{o}º · ✂ CORTE {n} · {icon} {title} ({dur}s)": "{o}. ✂ CUT {n} · {icon} {title} ({dur}s)",
+    "{o}º · ✂ Corte {n} · {dur}s": "{o}. ✂ Cut {n} · {dur}s",
     "🎵 Pista Original · {n} Cortes Activos": "🎵 Original Track · {n} Active Cuts",
     "  ✂ CORTE 1s": "  ✂ CUT 1s",
     "✂ Corte {n} ({dur}s) — Arrastra el bloque para desplazarlo": "✂ Cut {n} ({dur}s) — Drag the block to move it",
@@ -774,3 +776,108 @@ EN_TOUR = {
         "Drag in your first track and generate your preview. If you need help, write to radicalrecordsvlc@gmail.com. Good luck with your releases · Radical Records.",
 }
 EN.update(EN_TOUR)
+
+
+# ── v3.10.0: orden y punto de inicio de los cortes, arranque de BPM, firmar tema entero, notificaciones ──────
+EN_310 = {
+    # cortes
+    "ORDEN · CORTE": "ORDER · CUT",
+    "ORDEN": "ORDER",
+    "{o}º · Corte {n}": "{o}. Cut {n}",
+    "LA PREVIA EMPIEZA:": "THE PREVIEW STARTS:",
+    "⏮ Al inicio del tema": "⏮ At the start of the track",
+    "⏺ A mitad del tema": "⏺ In the middle of the track",
+    "El primer corte pasa a empezar al principio de la canción (en el primer compás)": "The first cut moves to the beginning of the song (on the first bar)",
+    "El primer corte pasa a empezar a la mitad de la canción (ajustado a un compás)": "The first cut moves to the middle of the song (snapped to a bar)",
+    "o arrastra el primer corte en la onda · ▲ ▼ cambian el orden": "or drag the first cut on the waveform · ▲ ▼ change the order",
+    "Subir: este corte suena antes en la previa": "Up: this cut plays earlier in the preview",
+    "Bajar: este corte suena después en la previa": "Down: this cut plays later in the preview",
+    "✂️  Ordenar y mover cortes": "✂️  Order and move cuts",
+    "✂️  Ocultar cortes": "✂️  Hide cuts",
+    "Ordena los cortes con ▲ ▼, elige dónde empieza la previa o arrástralos en la onda.": "Reorder the cuts with ▲ ▼, choose where the preview starts or drag them on the waveform.",
+    "Ordena y mueve los cortes": "Order and move the cuts",
+    "Con esta casilla ves los cortes de la previa con su nombre («Corte 1», «Corte 2»…). Cámbialos de orden con ▲ ▼, elige si la previa empieza al inicio o a mitad del tema, o arrastra los cortes sobre la forma de onda.":
+        "With this box you see the preview's cuts with their names (“Cut 1”, “Cut 2”…). Reorder them with ▲ ▼, choose whether the preview starts at the beginning or in the middle of the track, or drag the cuts on the waveform.",
+    "Para que suene primero el drop, sube el corte del drop con ▲.": "To make the drop play first, move the drop's cut up with ▲.",
+    "Activa esta casilla para abrir tres pestañas: el editor de cortes (cada corte tiene su nombre, «Corte 1», «Corte 2»…; cámbialos de orden con ▲ ▼, elige si la previa empieza al inicio o a mitad del tema y ajusta segundos exactos), la variación de BPM (acelera ligeramente la previa para que nadie pueda mezclarla con tu tema) y la estructura musical con nivel LUFS.":
+        "Tick this box to open three tabs: the cut editor (each cut has its name, “Cut 1”, “Cut 2”…; reorder them with ▲ ▼, choose whether the preview starts at the beginning or in the middle of the track and set exact seconds), the BPM variation (slightly speeds up the preview so nobody can mix it with your track) and the musical structure with LUFS level.",
+    # arranque de BPM
+    "ARRANQUE:": "START:",
+    "🌀 Vinilo: de 0 al tempo": "🌀 Vinyl: from 0 to tempo",
+    "▶ BPM originales desde el inicio": "▶ Original BPM from the start",
+    "La previa arranca como un disco que coge velocidad: de 0 BPM al tempo de la canción en los segundos que elijas": "The preview starts like a record picking up speed: from 0 BPM to the song's tempo in the seconds you choose",
+    "La previa empieza ya a los BPM originales, sin efecto de arranque": "The preview starts straight at the original BPM, with no start-up effect",
+    "Segundos que tarda en llegar al tempo original": "Seconds it takes to reach the original tempo",
+    "Arranque de la previa (Plus)": "Preview start (Plus)",
+    "En la pestaña «Variación de BPM» eliges cómo empieza la previa: con el efecto de vinilo (de 0 al tempo del tema en los segundos que quieras) o directamente a los BPM originales, sin efecto.":
+        "In the “BPM variation” tab you choose how the preview starts: with the vinyl effect (from 0 to the track's tempo in the seconds you want) or straight at the original BPM, with no effect.",
+    "«De 0 a 128 BPM en 1 s» suena como un disco que arranca.": "“From 0 to 128 BPM in 1 s” sounds like a record starting up.",
+    # firmar tema entero
+    "🖋 Firmar tema": "🖋 Sign track",
+    "Firmar tema entero": "Sign full track",
+    "🖋 Firmar tema entero": "🖋 Sign full track",
+    "Firmar tema entero (Plus)": "Sign full track (Plus)",
+    "Firma un tema entero (no una previa): solo le mete la carátula y las etiquetas y lo guarda en FLAC o WAV a máxima calidad": "Signs a full track (not a preview): it only adds the cover art and tags and saves it as FLAC or WAV at maximum quality",
+    "Solo se le añade la carátula y las etiquetas. Sin masterización ni efectos: el audio queda exactamente igual y se guarda en FLAC o WAV a máxima calidad.":
+        "Only the cover art and tags are added. No mastering or effects: the audio stays exactly the same and is saved as FLAC or WAV at maximum quality.",
+    "Abre una ventana aparte para firmar canciones completas, no previas: arrastras el tema, eliges la carátula y las etiquetas y se guarda en FLAC o WAV a máxima calidad. Sin masterización ni efectos: el audio queda igual.":
+        "Opens a separate window to sign full songs, not previews: you drag in the track, choose the cover art and tags and it is saved as FLAC or WAV at maximum quality. No mastering or effects: the audio stays the same.",
+    "Ejemplo: tu máster de 24 bits con la portada del EP incrustada, listo para subir.": "Example: your 24-bit master with the EP artwork embedded, ready to upload.",
+    "Arrastra aquí el tema entero (o varios) · o pulsa para elegirlos": "Drag the full track (or several) here · or click to choose them",
+    "WAV · FLAC · AIFF · MP3 · M4A · OGG": "WAV · FLAC · AIFF · MP3 · M4A · OGG",
+    "Vaciar lista": "Clear list",
+    "🖼 Elegir carátula…": "🖼 Choose cover art…",
+    "Quitar carátula": "Remove cover art",
+    "Sin carátula": "No cover art",
+    "Título": "Title", "Artista": "Artist", "Álbum / EP": "Album / EP", "Sello": "Label", "Género": "Genre",
+    "Comentario": "Comment", "Año": "Year", "Formato": "Format",
+    "Vacío = el del archivo": "Empty = the file's own",
+    "El de cada archivo": "Each file's own",
+    "Radical Records": "Radical Records", "Techno": "Techno",
+    "FLAC · sin pérdidas (recomendado)": "FLAC · lossless (recommended)",
+    "WAV · sin comprimir": "WAV · uncompressed",
+    "Se conservan la frecuencia de muestreo y los bits del original (hasta 24 bits). Si el original es MP3/M4A se guarda sin perder nada más, pero no mejora su calidad.":
+        "The original's sample rate and bit depth are kept (up to 24 bits). If the original is an MP3/M4A it is saved without losing anything more, but its quality is not improved.",
+    "se decodificará": "will be decoded",
+    "Elegir temas para firmar": "Choose tracks to sign",
+    "Audio (*.wav *.flac *.aiff *.aif *.mp3 *.m4a *.ogg *.opus *.wma)": "Audio (*.wav *.flac *.aiff *.aif *.mp3 *.m4a *.ogg *.opus *.wma)",
+    "Elegir carátula": "Choose cover art",
+    "Imágenes (*.jpg *.jpeg *.png *.webp)": "Images (*.jpg *.jpeg *.png *.webp)",
+    "Carpeta donde guardar los temas firmados": "Folder where to save the signed tracks",
+    "🖋 Firmar": "🖋 Sign",
+    "🖋 Firmar {n} tema": "🖋 Sign {n} track",
+    "🖋 Firmar {n} temas": "🖋 Sign {n} tracks",
+    "Firmando…": "Signing…",
+    "✅ {n} tema firmado en {dir}": "✅ {n} track signed in {dir}",
+    "✅ {n} temas firmados en {dir}": "✅ {n} tracks signed in {dir}",
+    "⚠ {n} tema(s) son MP3/M4A: se guardan sin perder nada más, pero no ganan calidad.": "⚠ {n} track(s) are MP3/M4A: they are saved without losing anything more, but they do not gain quality.",
+    "⚠ No se pudo firmar: {err}": "⚠ Could not sign: {err}",
+    "✅ {n} tema(s) firmado(s) · pulsa para abrir": "✅ {n} track(s) signed · click to open",
+    # notificaciones
+    "✅ Previa «{track}» generada · pulsa para abrir": "✅ Preview “{track}” ready · click to open",
+    "✅ Lote completado: {n} previas · pulsa para abrir": "✅ Batch finished: {n} previews · click to open",
+    # textos del vídeo que ya existían sin traducir
+    "Cuadrado: publicaciones de Instagram y Facebook": "Square: Instagram and Facebook posts",
+    "Horizontal: YouTube y pantallas": "Horizontal: YouTube and screens",
+    "Vertical: TikTok, Instagram Reels y YouTube Shorts": "Vertical: TikTok, Instagram Reels and YouTube Shorts",
+    "🖥️ 16:9 (YouTube / Horizontal)": "🖥️ 16:9 (YouTube / Horizontal)",
+    "③ ▸ Opciones avanzadas: efectos, voz, modo promo y firma": "③ ▸ Advanced options: effects, voice, promo mode and signature",
+    "③ ▸ Opciones avanzadas: efectos, voz, modo promo y firma  ·  Master LUFS": "③ ▸ Advanced options: effects, voice, promo mode and signature  ·  Master LUFS",
+    "◈  BÁSICA": "◈  BASIC",
+}
+EN.update(EN_310)
+
+EN.update({
+    "Cómo termina el vídeo: con el cierre «Generado por AutoPrevias · Radical Records» y el enlace, con un fundido a negro, con tu propia imagen o sin cierre (Plus). En Basic puedes elegir entre la firma o el fundido a negro.":
+        "How the video ends: with the “Generated by AutoPrevias · Radical Records” closing and the link, a fade to black, your own image or no ending (Plus). In Basic you can choose between the signature or the fade to black.",
+    "Efectos de estudio, Voice Drop, Modo promo antifugas y firma/carátula personalizadas": "Studio effects, Voice Drop, anti-leak promo mode and custom signature/cover art",
+    "Elige un aspecto listo con un clic. Con «Foto…» se usa tu imagen de fondo (o arrástrala sobre esta tarjeta). «Personalizar…» abre todos los ajustes.":
+        "Pick a ready-made look with one click. “Photo…” uses your background image (or drag it onto this card). “Customize…” opens every setting.",
+    "En la edición Basic el vídeo lleva una marca de agua pequeña («Generado por Radical Records · AutoPrevias Basic») y termina con la firma de AutoPrevias o con un fundido a negro, como prefieras. La edición Plus no lleva marca de agua y te deja elegirlo todo: fondo, onda de sonido, textos y final.":
+        "In the Basic edition the video carries a small watermark (“Generated by Radical Records · AutoPrevias Basic”) and ends with the AutoPrevias signature or a fade to black, as you prefer. The Plus edition has no watermark and lets you choose everything: background, sound wave, texts and ending.",
+    "La edición Plus añade vídeo sin marca de agua, con tu propia imagen, onda de sonido a elegir y final a medida. Pulsa para ver cómo conseguirla.":
+        "The Plus edition adds watermark-free video with your own image, a sound wave of your choice and a custom ending. Click to see how to get it.",
+    "Paleta de color neón del vídeo animado Radical Neón (carátula, barras, destellos)": "Neon color palette of the Radical Neon animated video (cover art, bars, flashes)",
+    "Plus: tu imagen de fondo (una por formato), la onda de sonido (barras, línea o círculo), los textos, su posición y un final con tu imagen, con vista previa en vivo.":
+        "Plus: your background image (one per format), the sound wave (bars, line or circle), the texts, their position and an ending with your image, with live preview.",
+})

@@ -356,6 +356,14 @@ class WaveformWidget(QWidget):
             # RMS ya cargado: redibujar para mostrar las regiones
             self._draw_source_view()
 
+    def _cut_n(self, i: int) -> int:
+        """Número fijo del corte (el nombre «Corte N» no cambia al reordenarlos)."""
+        try:
+            n = int(getattr(self._plan_segs[i], "cut_id", 0))
+        except Exception:
+            n = 0
+        return n if n > 0 else i + 1
+
     def update_plan_highlights(self, plan_segments):
         """Actualiza el resaltado visual de los cortes de la previa sin mover las líneas si no es necesario."""
         self._plan_segs = list(plan_segments or [])
@@ -377,7 +385,7 @@ class WaveformWidget(QWidget):
                             f"<div style='color:#ffffff; font-weight:800; font-size:9pt; "
                             f"background:#1b080b; border:1px solid #ff2542; border-radius:4px; "
                             f"padding:2px 7px; letter-spacing:0.3px;'>"
-                            + tr("✂ CORTE {n} · {icon} {title} ({dur}s)", n=i + 1, icon=icon, title=sec_title,
+                            + tr("{o}º · ✂ CORTE {n} · {icon} {title} ({dur}s)", o=i + 1, n=self._cut_n(i), icon=icon, title=sec_title,
                                  dur=f"{dur:.1f}") + "</div>"
                         )
                 self._update_omitted_masks_positions()
@@ -711,14 +719,14 @@ class WaveformWidget(QWidget):
             )
             hl.setZValue(6)
             hl.setCursor(Qt.OpenHandCursor)
-            hl.setToolTip(tr("✂ Corte {n} ({dur}s) — Arrastra el bloque para desplazarlo", n=i + 1, dur=f"{dur:.1f}"))
+            hl.setToolTip(tr("✂ Corte {n} ({dur}s) — Arrastra el bloque para desplazarlo", n=self._cut_n(i), dur=f"{dur:.1f}"))
 
             # Línea de INICIO (Verde esmeralda neón arrastrable)
             line_s = hl.lines[0]
             line_s.setPen(pg.mkPen(color=START_LINE_COLOR, width=2.5))
             line_s.setHoverPen(pg.mkPen(color=(255, 255, 255, 255), width=3.5))
             line_s.setCursor(Qt.SizeHorCursor)
-            line_s.setToolTip(tr("Inicio Corte {n} ({t}s) — Arrastra horizontalmente", n=i + 1, t=f"{s_start:.1f}"))
+            line_s.setToolTip(tr("Inicio Corte {n} ({t}s) — Arrastra horizontalmente", n=self._cut_n(i), t=f"{s_start:.1f}"))
             lbl_s = pg.InfLineLabel(
                 line_s, text=tr(" INICIO "), position=0.92,
                 anchor=(1.0, 0.5),
@@ -730,7 +738,7 @@ class WaveformWidget(QWidget):
             line_e.setPen(pg.mkPen(color=END_LINE_COLOR, width=2.5))
             line_e.setHoverPen(pg.mkPen(color=(255, 255, 255, 255), width=3.5))
             line_e.setCursor(Qt.SizeHorCursor)
-            line_e.setToolTip(tr("Fin Corte {n} ({t}s) — Arrastra horizontalmente", n=i + 1, t=f"{s_end:.1f}"))
+            line_e.setToolTip(tr("Fin Corte {n} ({t}s) — Arrastra horizontalmente", n=self._cut_n(i), t=f"{s_end:.1f}"))
             lbl_e = pg.InfLineLabel(
                 line_e, text=tr(" FIN "), position=0.92,
                 anchor=(0.0, 0.5),
@@ -744,7 +752,7 @@ class WaveformWidget(QWidget):
                     f"<div style='color:#ffffff; font-weight:700; font-size:8.5pt; "
                     f"background:rgba(18, 20, 26, 0.90); border:1px solid #ff2542; "
                     f"border-radius:10px; padding:1px 8px; letter-spacing:0.2px;'>"
-                    + tr("✂ Corte {n} · {dur}s", n=i + 1, dur=f"{dur:.1f}") + "</div>"
+                    + tr("{o}º · ✂ Corte {n} · {dur}s", o=i + 1, n=self._cut_n(i), dur=f"{dur:.1f}") + "</div>"
                 ),
                 anchor=(0.5, 0),
             )
@@ -843,12 +851,12 @@ class WaveformWidget(QWidget):
                 f"<div style='color:#ffffff; font-weight:700; font-size:8.5pt; "
                 f"background:rgba(18, 20, 26, 0.90); border:1px solid #ff2542; "
                 f"border-radius:10px; padding:1px 8px; letter-spacing:0.2px;'>"
-                + tr("✂ Corte {n} · {dur}s", n=idx + 1, dur=f"{dur:.1f}") + "</div>"
+                + tr("{o}º · ✂ Corte {n} · {dur}s", o=idx + 1, n=self._cut_n(idx), dur=f"{dur:.1f}") + "</div>"
             )
 
         # Actualizar texto explicativo en la barra superior
         i18n.set_text(self._hint_lbl, "✂️ Editando Corte {n}: {a}s – {b}s (duración: {d}s)",
-                      n=idx + 1, a=f"{start:.1f}", b=f"{end:.1f}", d=f"{dur:.1f}")
+                      n=self._cut_n(idx), a=f"{start:.1f}", b=f"{end:.1f}", d=f"{dur:.1f}")
 
         # Actualizar máscaras de zonas omitidas en vivo
         self._update_omitted_masks_positions()

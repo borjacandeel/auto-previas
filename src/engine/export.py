@@ -219,47 +219,52 @@ def build_preview_audio(
     # perfectamente suave y continua (sin saltos ni bloques) al tempo original en 1.0 segundo.
     # En el final, desacelera suavemente de tempo original a casi cero en 1.0 segundo.
     SPIN_MIN = 0.08          # velocidad mínima (~8% = arranca casi de cero)
-    SPIN_SEC = 1.0           # duración exacta: 1 segundo
+    SPIN_SEC = 1.0           # duración del frenazo final: 1 segundo
 
-    n_spin = min(int(SPIN_SEC * SR_OUT), assembled.shape[1] // 4)
+    # Arranque (Plus): «vinyl» = el disco arranca de 0 al tempo en N segundos (por defecto 1 s);
+    # «original» = la previa empieza ya a los BPM originales, sin arranque.
+    spin_in_sec = 0.0
+    if str(cfg.get("start_mode", "vinyl")).lower() != "original":
+        spin_in_sec = max(0.2, min(float(cfg.get("start_spin_sec", SPIN_SEC)), 6.0))
+    n_in = min(int(spin_in_sec * SR_OUT), assembled.shape[1] // 4) if spin_in_sec > 0 else 0
+    n_out = min(int(SPIN_SEC * SR_OUT), assembled.shape[1] // 4)
 
-    if n_spin > 0:
+    if n_in > 0:
         # Rampa suave tipo coseno (curva en S sin saltos audibles)
-        phase_up = np.linspace(0.0, np.pi, n_spin, dtype=np.float32)
+        phase_up = np.linspace(0.0, np.pi, n_in, dtype=np.float32)
         ramp_up = SPIN_MIN + (1.0 - SPIN_MIN) * (1.0 - np.cos(phase_up)) / 2.0
-        rate_env[:n_spin] *= ramp_up
+        rate_env[:n_in] *= ramp_up
 
-        phase_dn = np.linspace(0.0, np.pi, n_spin, dtype=np.float32)
+    if n_out > 0:
+        phase_dn = np.linspace(0.0, np.pi, n_out, dtype=np.float32)
         ramp_dn = SPIN_MIN + (1.0 - SPIN_MIN) * (1.0 + np.cos(phase_dn)) / 2.0
-        rate_env[-n_spin:] *= ramp_dn
+        rate_env[-n_out:] *= ramp_dn
 
     speed_mode = cfg.get("speed_mode", "vinyl").lower()
     if speed_mode == "keylock":
         _prog(65, "Aplicando aceleración Keylock (tempo aumentado, tono original conservado)…")
         from src.engine.timestretch import stretch_audio
-        avg_rate = float(np.mean(rate_env[n_spin:-n_spin])) if len(rate_env) > 2 * n_spin else float(np.mean(rate_env))
+        n_total = assembled.shape[1]
+        has_body = n_total > n_in + n_out and (n_in > 0 or n_out > 0)
+        if has_body:
+            avg_rate = float(np.mean(rate_env[n_in:n_total - n_out]))
+        else:
+            avg_rate = float(np.mean(rate_env))
         avg_rate = max(0.85, min(1.35, avg_rate))
 
-        # Spin-up/down: aplicar varispeed vinilo en los tramos de arranque/parada
-        # (sube/baja con pitch natural), y time-stretch sin pitch en el cuerpo central.
-        if n_spin > 0 and assembled.shape[1] > 2 * n_spin:
-            spin_in  = assembled[:, :n_spin]
-            body     = assembled[:, n_spin:-n_spin]
-            spin_out = assembled[:, -n_spin:]
-
-            # Rampa del spin: mismos vectores calculados arriba para rate_env
-            spin_up_env = rate_env[:n_spin]
-            spin_dn_env = rate_env[-n_spin:]
-
-            proc_spin_in  = apply_rate_envelope(spin_in,  spin_up_env)
-            proc_body     = stretch_audio(body, SR_OUT, stretch_factor=avg_rate)
-            proc_spin_out = apply_rate_envelope(spin_out, spin_dn_env)
-
-            L = crossfade(crossfade(proc_spin_in[0], proc_body[0], SR_OUT, 20.0),
-                          proc_spin_out[0], SR_OUT, 20.0)
-            R = crossfade(crossfade(proc_spin_in[1], proc_body[1], SR_OUT, 20.0),
-                          proc_spin_out[1], SR_OUT, 20.0)
-            result = np.stack([L, R])
+        # Arranque/frenazo: varispeed vinilo (sube/baja con pitch natural) y, en el cuerpo central,
+        # time-stretch sin pitch.
+        if has_body:
+            parts = []
+            if n_in > 0:
+                parts.append(apply_rate_envelope(assembled[:, :n_in], rate_env[:n_in]))
+            parts.append(stretch_audio(assembled[:, n_in:n_total - n_out], SR_OUT, stretch_factor=avg_rate))
+            if n_out > 0:
+                parts.append(apply_rate_envelope(assembled[:, n_total - n_out:], rate_env[n_total - n_out:]))
+            result = parts[0]
+            for nxt in parts[1:]:
+                result = np.stack([crossfade(result[0], nxt[0], SR_OUT, 20.0),
+                                   crossfade(result[1], nxt[1], SR_OUT, 20.0)])
         else:
             result = stretch_audio(assembled, SR_OUT, stretch_factor=avg_rate)
     else:
@@ -480,54 +485,9 @@ def export_files(
         _ffmpeg_wav = _get_ffmpeg_wav()
         _stem_wav   = Path(wav_target).stem
         _title_wav  = meta.get("title") or _stem_wav.replace("PREVIA - ", "")
-        _wav_done   = False
-        # Escribir WAV temporal PCM_24 como fuente
-        _tmp_wav_src = str(_get_cache_wav() / f"autoprevias_wav_src_{_os_wav.getpid()}.wav")
-        sf.write(_tmp_wav_src, audio.T, sr, subtype="PCM_24")
-        if _ffmpeg_wav:
-            # Embed metadata (y carátula si existe) vía FFmpeg — WAV soporta ID3v2
-            _cmd_wav = [_ffmpeg_wav, "-y", "-i", _tmp_wav_src]
-            if optimized_cover and Path(optimized_cover).exists():
-                _cmd_wav += ["-i", str(optimized_cover),
-                             "-map", "0:a", "-map", "1:v",
-                             "-codec:a", "copy",
-                             "-codec:v", "mjpeg",
-                             "-disposition:v:0", "attached_pic"]
-            else:
-                _cmd_wav += ["-map", "0:a", "-codec:a", "copy"]
-            _cmd_wav += [
-                "-id3v2_version", "3",
-                "-metadata", f"title={_title_wav}",
-                "-metadata", f"artist={artist}",
-                "-metadata", f"album={album}",
-                "-metadata", f"publisher={label}",
-                "-metadata", f"genre={genre}",
-                "-metadata", f"comment={comment}",
-                "-metadata", f"date={year}",
-            ]
-            if bpm_val:
-                try:
-                    _cmd_wav += ["-metadata", f"TBPM={int(round(float(bpm_val)))}"]
-                except Exception:
-                    pass
-            _kv = meta.get("key") or meta.get("camelot")
-            if _kv:
-                _cmd_wav += ["-metadata", f"TKEY={_kv}"]
-            _cmd_wav.append(wav_target)
-            try:
-                _res_wav = _sp_wav.run(_cmd_wav, stdout=_sp_wav.DEVNULL, stderr=_sp_wav.DEVNULL)
-                if _res_wav.returncode == 0 and Path(wav_target).exists():
-                    _wav_done = True
-            except Exception:
-                pass
-        if not _wav_done:
-            # Fallback: copiar WAV sin metadata
-            import shutil as _shutil_wav
-            _shutil_wav.copy2(_tmp_wav_src, wav_target)
-        try:
-            Path(_tmp_wav_src).unlink(missing_ok=True)
-        except Exception:
-            pass
+        # Escribir WAV PCM_24. La carátula y las etiquetas (ID3 dentro del WAV) se añaden al final de la exportación,
+        # cuando el MP3, el FLAC y el vídeo ya han leído este archivo.
+        sf.write(wav_target, audio.T, sr, subtype="PCM_24")
         generated.append(wav_target)
 
     if "mp3" in paths:
@@ -770,6 +730,19 @@ def export_files(
                 generated.append(video_target)
             except Exception as e:
                 _prog(99, f"⚠ Vídeo social no generado: {e_neon} / {e}")
+
+    # Carátula y etiquetas dentro del WAV (ID3v2.3: Serato, Traktor, Rekordbox, iTunes…). FFmpeg no admite carátula en WAV.
+    if "wav" in paths and Path(paths["wav"]).exists():
+        try:
+            from src.engine.sign import append_id3_to_wav, build_id3v23
+            _title = meta.get("title") or Path(str(paths["wav"])).stem.replace("PREVIA - ", "")
+            _tag = {"title": _title, "artist": artist, "album": album, "publisher": label, "genre": genre,
+                    "comment": comment, "year": year, "bpm": (str(int(round(float(bpm_val)))) if bpm_val else ""),
+                    "key": meta.get("key") or meta.get("camelot") or ""}
+            _jpeg = Path(optimized_cover).read_bytes() if optimized_cover and Path(optimized_cover).exists() else None
+            append_id3_to_wav(str(paths["wav"]), build_id3v23(_tag, _jpeg))
+        except Exception:
+            pass
 
     # Si se creó un WAV temporal y no había WAV de salida de usuario, lo registramos para el reproductor interno
     if temp_wav_for_mp3 and Path(temp_wav_for_mp3).exists():

@@ -56,6 +56,7 @@ from src.analysis.structure import analyze_structure, SectionType
 from src.analysis.segments import build_preview_plan
 from src.engine.export import build_preview_audio, export_files, output_paths
 from src.engine.variations import compute_preview_tempo_curve
+from src.ui import anim as _anim
 from src.engine.video_neon import apply_look, detect_look, match_aspect, normalize_custom
 from src import i18n
 from src.i18n import tr
@@ -302,6 +303,15 @@ def _btn(bg: str, fg: str, bg_hv: str, radius: int = 7,
             color: {TEXT_DIM};
             border: none;
         }}
+    """
+
+def _btn_icon(bg: str, fg: str, bg_hv: str, radius: int = 5, fs: int = 10) -> str:
+    """Botón pequeño de un solo símbolo (▲ ▼ ▶ 📍 ✕): sin relleno lateral para que el símbolo se vea."""
+    return f"""
+        QPushButton {{ background: {bg}; color: {fg}; border: none; border-radius: {radius}px;
+                      font-size: {fs}px; font-weight: 700; padding: 0; }}
+        QPushButton:hover {{ background: {bg_hv}; }}
+        QPushButton:disabled {{ background: {BG3}; color: {TEXT_DIM}; }}
     """
 
 def _input_style() -> str:
@@ -955,8 +965,12 @@ class StatCard(QFrame):
             self._on_edit()
         super().mouseDoubleClickEvent(event)
 
-    def set_value(self, v: str):
-        self._val_lbl.setText(v)
+    def set_value(self, v: str, animate: bool = False):
+        if animate:
+            from src.ui import anim
+            anim.count_up(self._val_lbl.setText, v, owner=self)       # los números «cuentan» hasta su valor
+        else:
+            self._val_lbl.setText(v)
 
     def set_accent(self, color: str):
         self._accent = color
@@ -2049,7 +2063,7 @@ class ResultPanel(QWidget):
         exp_lay.addWidget(self._adv_fx_widget)
         for _chk in (self._chk_fx_flanger, self._chk_fx_filter, self._chk_promo):
             _chk.toggled.connect(lambda on: on and self._set_adv_open(True))
-        self._chk_video.toggled.connect(self._row_video_title_widget.setVisible)
+        self._chk_video.toggled.connect(lambda on: _anim.reveal(self._row_video_title_widget, bool(on)))
         self._chk_video.toggled.connect(lambda _on: self._sync_video_mp3())
         self._combo_voice_pos.currentIndexChanged.connect(
             lambda _: self._update_voice_drop_marker()
@@ -2254,12 +2268,15 @@ class ResultPanel(QWidget):
     # ── Helpers de UI ─────────────────────────────────────────────────────
 
     def _on_toggle_advanced(self, checked: bool):
-        self._tabs.setVisible(checked)
+        _anim.reveal(self._tabs, checked, ms=260)
+        plus = get_edition() == "plus"
         if checked:
-            i18n.set_text(self._chk_advanced, "⚙️  Ocultar Personalización")
-            i18n.set_text(self._lbl_simple_desc, "Ajustes manuales activos: edita la tabla de cortes, curva de tempo o estructura.")
+            i18n.set_text(self._chk_advanced, "⚙️  Ocultar Personalización" if plus else "✂️  Ocultar cortes")
+            i18n.set_text(self._lbl_simple_desc,
+                          "Ajustes manuales activos: edita la tabla de cortes, curva de tempo o estructura." if plus else
+                          "Ordena los cortes con ▲ ▼, elige dónde empieza la previa o arrástralos en la onda.")
         else:
-            i18n.set_text(self._chk_advanced, "⚙️  Personalizar Cortes & BPM")
+            i18n.set_text(self._chk_advanced, "⚙️  Personalizar Cortes & BPM" if plus else "✂️  Ordenar y mover cortes")
             i18n.set_text(self._lbl_simple_desc, "3 cortes listos · Arrastra en la onda para retocar o pulsa abajo en Generar Previa")
 
     def _apply_generate_style(self, ready: bool):
@@ -2398,7 +2415,7 @@ class ResultPanel(QWidget):
         name = Path(file_path).stem
         max_n = 16
         self._card_file.set_value(name[:max_n] + ("…" if len(name) > max_n else ""))
-        self._card_bpm.set_value(f"{bpm:.1f}")
+        self._card_bpm.set_value(f"{bpm:.1f}", animate=True)
         if key_res:
             self._key_str = f"{key_res.camelot} · {key_res.notation}"
             self._card_key.set_value(f"{key_res.camelot}  {key_res.notation}")
@@ -2406,7 +2423,7 @@ class ResultPanel(QWidget):
             self._key_str = ""
             self._card_key.set_value("—")
         self._card_dur.set_value(fmt_time_short(dur))
-        self._card_drops.set_value(str(len(analysis.drops())))
+        self._card_drops.set_value(str(len(analysis.drops())), animate=True)
 
         est = plan.estimated_duration_after_stretch
         ok  = 15 <= est <= 180
@@ -2461,6 +2478,7 @@ class ResultPanel(QWidget):
         self._fill_structure(analysis)
         self._fill_plan(plan)
         self._animate_stat_cards()
+        _anim.stagger_fade_in([self._btn_p15, self._btn_p30, self._btn_p60, self._btn_p120], step_ms=60, ms=240)
 
         # Waveform
         if HAS_WAVEFORM:
@@ -2639,6 +2657,9 @@ class ResultPanel(QWidget):
             "voice_drop_position": voice_pos,
             "voice_drop_time_sec": self._voice_drop_time_sec,
             "key_str": self._key_str,
+            # Arranque de la previa (solo Plus elige; en Basic siempre el efecto de vinilo de 1 s)
+            "start_mode": self._start_mode if get_edition() == "plus" else "vinyl",
+            "start_spin_sec": float(self._spin_start.value()) if get_edition() == "plus" else 1.0,
             **self._promo_options(),
         }
 
@@ -2838,9 +2859,9 @@ class ResultPanel(QWidget):
     def _apply_adv_visibility(self):
         plus = get_edition() == "plus"
         show = plus and self._adv_open
-        self._adv_fx_widget.setVisible(show)
+        _anim.reveal(self._adv_fx_widget, show)
         if hasattr(self, "_branding_card"):
-            self._branding_card.setVisible(show)
+            _anim.reveal(self._branding_card, show)
         self._btn_adv.setVisible(plus)
         act = self._adv_active_names()
         suffix = ("  ·  " + ", ".join(act)) if act else ""
@@ -2979,6 +3000,7 @@ class ResultPanel(QWidget):
                 "voice": {"path": self._voice_drop_path, "position": self._combo_voice_pos.currentData(),
                           "time_sec": self._voice_drop_time_sec},
                 "promo": {"enabled": self._chk_promo.isChecked(), "interval_sec": int(self._spin_promo.value())},
+                "start": {"mode": self._start_mode, "sec": float(self._spin_start.value())},
                 "video": {"palette": self._combo_video_pal.currentData(), "aspect": self._combo_aspect.currentData(),
                           "banner": self._edit_promo.text().strip(), "end": self._combo_vend.currentData(),
                           "custom": self._video_custom if get_edition() == "plus" else None},
@@ -3021,6 +3043,13 @@ class ResultPanel(QWidget):
         sec = st.get("duration_sec")
         if sec in (15, 30, 60, 120):
             self._apply_duration_preset(int(sec))
+        start = st.get("start") or {}
+        if plus and start:
+            self._set_start_mode(start.get("mode", "vinyl"))
+            try:
+                self._spin_start.setValue(float(start.get("sec", 1.0)))
+            except Exception:
+                pass
         voice = st.get("voice") or {}
         if plus and voice:
             vp = voice.get("path") or ""
@@ -3127,6 +3156,7 @@ class ResultPanel(QWidget):
             i18n.set_text(self._lbl_succ_files, "Archivos:  {files}", files="  ·  ".join(file_names))
             i18n.set_text(self._lbl_succ_dir, "📁 Carpeta de guardado:\n{dir}", dir=out_dir)
             self._card_export_success.setVisible(True)
+            _anim.fade_in(self._card_export_success, ms=350)
 
             # Priorizar WAV de usuario (no temp) para el reproductor interno
             prev_file = next((p for p in generated if p.lower().endswith(".wav") and not Path(p).name.startswith("autoprevias_temp_")),
@@ -3287,24 +3317,54 @@ class ResultPanel(QWidget):
 
         lay.addLayout(top_bar)
 
+        # 2b. Dónde empieza la previa (Basic y Plus): al inicio del tema, a mitad, o donde el usuario arrastre el primer corte
+        start_bar = QHBoxLayout()
+        start_bar.setSpacing(5)
+        lbl_st = QLabel("LA PREVIA EMPIEZA:")
+        lbl_st.setStyleSheet(
+            f"color: {TEXT_DIM}; font-size: 9.5px; font-weight: 700; letter-spacing: 0.5px; background: transparent; border: none;"
+        )
+        start_bar.addWidget(lbl_st)
+        self._btn_start_begin = QPushButton("⏮ Al inicio del tema")
+        self._btn_start_begin.setFixedHeight(24)
+        self._btn_start_begin.setStyleSheet(_btn(BG3, TEXT, BG4, radius=5, fs=10))
+        self._btn_start_begin.setCursor(Qt.PointingHandCursor)
+        self._btn_start_begin.setToolTip("El primer corte pasa a empezar al principio de la canción (en el primer compás)")
+        self._btn_start_begin.clicked.connect(self._start_at_beginning)
+        start_bar.addWidget(self._btn_start_begin)
+        self._btn_start_mid = QPushButton("⏺ A mitad del tema")
+        self._btn_start_mid.setFixedHeight(24)
+        self._btn_start_mid.setStyleSheet(_btn(BG3, TEXT, BG4, radius=5, fs=10))
+        self._btn_start_mid.setCursor(Qt.PointingHandCursor)
+        self._btn_start_mid.setToolTip("El primer corte pasa a empezar a la mitad de la canción (ajustado a un compás)")
+        self._btn_start_mid.clicked.connect(self._start_at_middle)
+        start_bar.addWidget(self._btn_start_mid)
+        lbl_free = QLabel("o arrastra el primer corte en la onda · ▲ ▼ cambian el orden")
+        lbl_free.setStyleSheet(f"color: {TEXT_DIM}; font-size: 10px; background: transparent; border: none;")
+        start_bar.addWidget(lbl_free)
+        start_bar.addStretch()
+        lay.addLayout(start_bar)
+
         # 3. Tabla de cortes interactiva
-        self._tbl_cuts = QTableWidget(0, 8)
+        self._tbl_cuts = QTableWidget(0, 9)
         self._tbl_cuts.setHorizontalHeaderLabels([
-            "#", "SECCIÓN", "INICIO (s)", "FIN (s)", "DURACIÓN", "EN PREVIA", "OÍR", "QUITAR"
+            "ORDEN · CORTE", "SECCIÓN", "INICIO (s)", "FIN (s)", "DURACIÓN", "EN PREVIA", "OÍR", "QUITAR", "ORDEN"
         ])
         self._tbl_cuts.verticalHeader().setVisible(False)
         self._tbl_cuts.horizontalHeader().setStretchLastSection(False)
         self._tbl_cuts.horizontalHeader().setSectionResizeMode(0, QHeaderView.Fixed)
-        self._tbl_cuts.setColumnWidth(0, 32)
+        self._tbl_cuts.setColumnWidth(0, 98)
         self._tbl_cuts.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
         self._tbl_cuts.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
         self._tbl_cuts.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
         self._tbl_cuts.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeToContents)
         self._tbl_cuts.horizontalHeader().setSectionResizeMode(5, QHeaderView.Stretch)
         self._tbl_cuts.horizontalHeader().setSectionResizeMode(6, QHeaderView.Fixed)
-        self._tbl_cuts.setColumnWidth(6, 38)
+        self._tbl_cuts.setColumnWidth(6, 44)
         self._tbl_cuts.horizontalHeader().setSectionResizeMode(7, QHeaderView.Fixed)
-        self._tbl_cuts.setColumnWidth(7, 32)
+        self._tbl_cuts.setColumnWidth(7, 60)
+        self._tbl_cuts.horizontalHeader().setSectionResizeMode(8, QHeaderView.Fixed)
+        self._tbl_cuts.setColumnWidth(8, 66)
         self._tbl_cuts.setShowGrid(False)
         self._tbl_cuts.setAlternatingRowColors(True)
         self._tbl_cuts.setStyleSheet(_table_style())
@@ -3384,7 +3444,9 @@ class ResultPanel(QWidget):
             from src.analysis.structure import Section
             from src.analysis.segments import PreviewSegment
             new_sec = Section(type=sec_type, start_time=t_s, end_time=t_e)
-            seg = PreviewSegment(section=new_sec, trimmed_start=0.0, trimmed_end=dur)
+            lbl_n = tbl.cellWidget(r, 0)
+            cid = int(lbl_n.property("cut_id") or 0) if lbl_n is not None else 0
+            seg = PreviewSegment(section=new_sec, trimmed_start=0.0, trimmed_end=dur, cut_id=cid)
             new_segs.append(seg)
 
         from src.analysis.segments import AVG_STRETCH_FACTOR, PreviewPlan
@@ -3427,8 +3489,7 @@ class ResultPanel(QWidget):
         new_seg = PreviewSegment(section=new_sec, trimmed_start=0.0, trimmed_end=end - start)
 
         current_segs = list(self._plan.segments) if self._plan else []
-        current_segs.append(new_seg)
-        current_segs.sort(key=lambda s: s.source_start)
+        current_segs.append(new_seg)                 # al final de la previa; con ▲ ▼ se puede colocar donde se quiera
 
         raw_dur = sum(s.duration for s in current_segs)
         self._plan = PreviewPlan(
@@ -3498,9 +3559,11 @@ class ResultPanel(QWidget):
         if HAS_WAVEFORM:
             self._waveform.update_plan_highlights(self._plan.segments)
 
-    def _fill_plan(self, plan):
+    def _fill_plan(self, plan, animate: bool = True):
         if not hasattr(self, "_tbl_cuts"):
             return
+        from src.analysis.segments import assign_cut_ids
+        assign_cut_ids(plan.segments)
         tbl = self._tbl_cuts
         tbl.setRowCount(0)
         t_pv = 0.0
@@ -3512,10 +3575,11 @@ class ResultPanel(QWidget):
             tbl.setRowHeight(row, 28)
 
             # Col 0: # badge
-            lbl_num = QLabel(f"#{idx + 1}")
+            lbl_num = QLabel(tr("{o}º · Corte {n}", o=idx + 1, n=seg.cut_id))
+            lbl_num.setProperty("cut_id", int(seg.cut_id))
             lbl_num.setAlignment(Qt.AlignCenter)
             lbl_num.setStyleSheet(
-                f"color: {TEXT_DIM}; font-size: 10px; font-weight: 700; background: transparent;"
+                f"color: {TEXT_SUB}; font-size: 10.5px; font-weight: 700; background: transparent;"
             )
             tbl.setCellWidget(row, 0, lbl_num)
 
@@ -3542,7 +3606,7 @@ class ResultPanel(QWidget):
 
             btn_s_now = QPushButton("📍")
             btn_s_now.setFixedSize(22, 22)
-            btn_s_now.setStyleSheet(_btn(BG4, TEXT, BG5, radius=5, fs=10))
+            btn_s_now.setStyleSheet(_btn_icon(BG4, TEXT, BG5))
             btn_s_now.setToolTip("Poner inicio del corte en la posición actual del reproductor")
             btn_s_now.setCursor(Qt.PointingHandCursor)
             def _set_start(sp=spin_s):
@@ -3574,7 +3638,7 @@ class ResultPanel(QWidget):
 
             btn_e_now = QPushButton("📍")
             btn_e_now.setFixedSize(22, 22)
-            btn_e_now.setStyleSheet(_btn(BG4, TEXT, BG5, radius=5, fs=10))
+            btn_e_now.setStyleSheet(_btn_icon(BG4, TEXT, BG5))
             btn_e_now.setToolTip("Poner fin del corte en la posición actual del reproductor")
             btn_e_now.setCursor(Qt.PointingHandCursor)
             def _set_end(sp=spin_e):
@@ -3606,7 +3670,7 @@ class ResultPanel(QWidget):
             # Col 6: OÍR CORTE (▶)
             btn_play = QPushButton("▶")
             btn_play.setFixedSize(26, 22)
-            btn_play.setStyleSheet(_btn(BG4, GREEN, BG5, radius=5, fs=10))
+            btn_play.setStyleSheet(_btn_icon(BG4, GREEN, BG5))
             btn_play.setCursor(Qt.PointingHandCursor)
             btn_play.setToolTip("Escuchar este corte en la pista original")
             def _play_cut(start_t=seg.source_start):
@@ -3623,7 +3687,7 @@ class ResultPanel(QWidget):
             # Col 7: ELIMINAR CORTE (✕)
             btn_del = QPushButton("✕")
             btn_del.setFixedSize(22, 22)
-            btn_del.setStyleSheet(_btn(BG3, RED, BG4, radius=5, fs=10))
+            btn_del.setStyleSheet(_btn_icon(BG3, RED, BG4))
             btn_del.setCursor(Qt.PointingHandCursor)
             btn_del.setToolTip("Eliminar este corte de la previa")
             def _del_cut(target_btn=btn_del):
@@ -3635,13 +3699,120 @@ class ResultPanel(QWidget):
             btn_del.clicked.connect(_del_cut)
             tbl.setCellWidget(row, 7, btn_del)
 
+            # Col 8: ORDEN (▲ ▼): el corte suena antes o después en la previa
+            w_o = QWidget()
+            lay_o = QHBoxLayout(w_o)
+            lay_o.setContentsMargins(2, 1, 2, 1)
+            lay_o.setSpacing(2)
+            for sym, delta, tip in (("▲", -1, "Subir: este corte suena antes en la previa"),
+                                    ("▼", 1, "Bajar: este corte suena después en la previa")):
+                b_o = QPushButton(sym)
+                b_o.setFixedSize(24, 22)
+                b_o.setStyleSheet(_btn_icon(BG4, TEXT, BG5, fs=10))
+                b_o.setCursor(Qt.PointingHandCursor)
+                b_o.setToolTip(tip)
+                b_o.setEnabled(0 <= idx + delta < len(plan.segments))
+                b_o.clicked.connect(lambda _=False, i=idx, d=delta: self._move_cut(i, d))
+                lay_o.addWidget(b_o)
+            tbl.setCellWidget(row, 8, w_o)
+
             t_pv += seg.duration
 
         raw_dur = sum(s.duration for s in plan.segments)
         est = plan.estimated_duration_after_stretch
         i18n.set_text(self._lbl_cuts_summary, "{n} cortes  ·  Total: {raw}s  ·  Previa est: {est}",
                       n=len(plan.segments), raw=f"{raw_dur:.1f}", est=fmt_time_short(est))
-        self._animate_cuts_rows()
+        if animate:
+            self._animate_cuts_rows()
+
+    # ── Orden de los cortes y punto de inicio (Basic y Plus) ─────────────────────
+    def _cut_rows(self) -> list:
+        """Cortes tal como están en la tabla (en el orden en que sonarán): [(inicio, fin, número)]."""
+        out = []
+        tbl = self._tbl_cuts
+        for r in range(tbl.rowCount()):
+            w_s, w_e = tbl.cellWidget(r, 2), tbl.cellWidget(r, 3)
+            sp_s = w_s.findChild(QDoubleSpinBox) if w_s else None
+            sp_e = w_e.findChild(QDoubleSpinBox) if w_e else None
+            lbl = tbl.cellWidget(r, 0)
+            if sp_s and sp_e:
+                out.append((float(sp_s.value()), float(sp_e.value()), int(lbl.property("cut_id") or 0) if lbl else 0))
+        return out
+
+    def _apply_cut_rows(self, rows: list):
+        """Reconstruye la previa con estos cortes (en este orden) y refresca tabla, onda y tempo."""
+        if not self._analysis:
+            return
+        from src.analysis.structure import Section
+        from src.analysis.segments import PreviewSegment, PreviewPlan, AVG_STRETCH_FACTOR
+        segs = []
+        for (t_s, t_e, cid) in rows:
+            sec_type = SectionType.UNKNOWN
+            for sec in self._analysis.sections:
+                if sec.start_time <= (t_s + t_e) / 2.0 <= sec.end_time:
+                    sec_type = sec.type
+                    break
+            segs.append(PreviewSegment(section=Section(type=sec_type, start_time=t_s, end_time=t_e),
+                                       trimmed_start=0.0, trimmed_end=t_e - t_s, cut_id=cid))
+        raw_dur = sum(x.duration for x in segs)
+        self._plan = PreviewPlan(segments=segs, estimated_duration_before_stretch=raw_dur,
+                                 estimated_duration_after_stretch=raw_dur / AVG_STRETCH_FACTOR,
+                                 drop_starts=list(getattr(self._plan, "drop_starts", []) or []))
+        self._fill_plan(self._plan, animate=False)
+        est = self._plan.estimated_duration_after_stretch
+        self._card_pv.set_value(fmt_time_short(est))
+        self._card_pv.set_accent(GREEN if 120 <= est <= 180 else WARN)
+        if HAS_WAVEFORM and self._source_path:
+            self._waveform.update_plan_highlights(self._plan.segments)
+        self._update_tempo_plot()
+
+    def _move_cut(self, idx: int, delta: int):
+        """▲ ▼: cambia el orden en que suenan los cortes (cada corte conserva su nombre «Corte N»)."""
+        rows = self._cut_rows()
+        j = idx + delta
+        if not (0 <= idx < len(rows) and 0 <= j < len(rows)):
+            return
+        rows[idx], rows[j] = rows[j], rows[idx]
+        self._apply_cut_rows(rows)
+
+    def set_beat_times(self, beat_times):
+        """Pulsos de la canción (para ajustar el punto de inicio a un compás)."""
+        try:
+            self._beat_times = [float(x) for x in beat_times]
+        except Exception:
+            self._beat_times = []
+
+    def _snap_to_bar(self, t: float) -> float:
+        bpm = float(self._bpm or 128.0)
+        bar = 4.0 * 60.0 / max(bpm, 1.0)
+        bt = getattr(self, "_beat_times", None)
+        first = bt[0] if bt else 0.0
+        return max(0.0, first + round((t - first) / bar) * bar)
+
+    def _set_first_cut_start(self, t: float):
+        """El primer corte de la previa pasa a empezar en `t` (conserva su duración)."""
+        rows = self._cut_rows()
+        if not rows or not self._analysis:
+            return
+        t_s, t_e, cid = rows[0]
+        dur = max(0.5, t_e - t_s)
+        total = float(self._analysis.duration)
+        new_s = max(0.0, min(float(t), max(0.0, total - dur)))
+        rows[0] = (round(new_s, 1), round(min(total, new_s + dur), 1), cid)
+        self._apply_cut_rows(rows)
+        if self._player is not None:
+            try:
+                self._player.seek(rows[0][0])
+            except Exception:
+                pass
+
+    def _start_at_beginning(self):
+        bt = getattr(self, "_beat_times", None)
+        self._set_first_cut_start(self._snap_to_bar(bt[0]) if bt else 0.0)
+
+    def _start_at_middle(self):
+        if self._analysis:
+            self._set_first_cut_start(self._snap_to_bar(float(self._analysis.duration) / 2.0))
 
     def _animate_cuts_rows(self):
         tbl = self._tbl_cuts
@@ -3778,6 +3949,41 @@ class ResultPanel(QWidget):
 
         lay.addLayout(top_bar)
 
+        # 2b. Arranque de la previa (Plus): BPM originales desde el primer instante, o el efecto de vinilo (de 0 al tempo en N s)
+        start_row = QHBoxLayout()
+        start_row.setSpacing(5)
+        lbl_start = QLabel("ARRANQUE:")
+        lbl_start.setStyleSheet(
+            f"color: {TEXT_DIM}; font-size: 9.5px; font-weight: 700; letter-spacing: 0.5px; background: transparent; border: none;"
+        )
+        start_row.addWidget(lbl_start)
+        self._btn_start_vinyl = QPushButton("🌀 Vinilo: de 0 al tempo")
+        self._btn_start_vinyl.setFixedHeight(24)
+        self._btn_start_vinyl.setCursor(Qt.PointingHandCursor)
+        self._btn_start_vinyl.setToolTip("La previa arranca como un disco que coge velocidad: de 0 BPM al tempo de la canción en los segundos que elijas")
+        self._btn_start_vinyl.clicked.connect(lambda: self._set_start_mode("vinyl"))
+        start_row.addWidget(self._btn_start_vinyl)
+        self._spin_start = QDoubleSpinBox()
+        self._spin_start.setRange(0.5, 6.0)
+        self._spin_start.setDecimals(1)
+        self._spin_start.setSingleStep(0.5)
+        self._spin_start.setValue(1.0)
+        self._spin_start.setSuffix(" s")
+        self._spin_start.setFixedHeight(24)
+        self._spin_start.setStyleSheet(_input_style())
+        self._spin_start.setToolTip("Segundos que tarda en llegar al tempo original")
+        start_row.addWidget(self._spin_start)
+        self._btn_start_orig = QPushButton("▶ BPM originales desde el inicio")
+        self._btn_start_orig.setFixedHeight(24)
+        self._btn_start_orig.setCursor(Qt.PointingHandCursor)
+        self._btn_start_orig.setToolTip("La previa empieza ya a los BPM originales, sin efecto de arranque")
+        self._btn_start_orig.clicked.connect(lambda: self._set_start_mode("original"))
+        start_row.addWidget(self._btn_start_orig)
+        start_row.addStretch()
+        lay.addLayout(start_row)
+        self._start_mode = "vinyl"
+        self._refresh_start_mode_ui()
+
         # 2. Mini gráfico de BPM interactivo
         self._tempo_plot_frame = QFrame()
         self._tempo_plot_frame.setFixedHeight(80)
@@ -3859,6 +4065,17 @@ class ResultPanel(QWidget):
 
         self._update_tempo_mode_ui()
         return tab
+
+    def _set_start_mode(self, mode: str):
+        self._start_mode = "original" if mode == "original" else "vinyl"
+        self._refresh_start_mode_ui()
+
+    def _refresh_start_mode_ui(self):
+        on = f"QPushButton {{ background: {ACCENT}; color: #ffffff; border: 1px solid {ACCENT}; border-radius: 5px; font-size: 10px; font-weight: 800; padding: 0 9px; }}"
+        off = _btn(BG3, TEXT_SUB, BG4, radius=5, fs=10)
+        self._btn_start_vinyl.setStyleSheet(on if self._start_mode == "vinyl" else off)
+        self._btn_start_orig.setStyleSheet(on if self._start_mode == "original" else off)
+        self._spin_start.setEnabled(self._start_mode == "vinyl")
 
     def _set_tempo_mode(self, mode: str):
         self._tempo_mode = mode
@@ -4208,11 +4425,14 @@ class ResultPanel(QWidget):
         for w in (self._btn_voice_drop, self._combo_voice_pos, self._lbl_voice_drop):
             w.setVisible(plus)
 
-        # Editor avanzado de cortes/BPM solo en Plus
-        self._chk_advanced.setVisible(plus)
+        # Cortes: orden, nombres y punto de inicio en Basic y Plus. La variación de BPM y la estructura musical, solo Plus.
+        self._chk_advanced.setVisible(True)
+        self._tabs.setTabVisible(1, plus)
+        self._tabs.setTabVisible(2, plus)
         if not plus:
             self._chk_advanced.setChecked(False)
             self._tabs.setVisible(False)
+            i18n.set_text(self._chk_advanced, "✂️  Ordenar y mover cortes")
 
         # FX (Flanger, Filter, Master) — solo Plus
         for w in (self._chk_fx_flanger, self._chk_fx_filter, self._chk_fx_master):
@@ -4628,6 +4848,14 @@ class MainWindow(QMainWindow):
         self._btn_watch.clicked.connect(self._toggle_watch_folder)
         logo_row.addWidget(self._btn_watch)
 
+        self._btn_sign = QPushButton("🖋 Firmar tema")
+        self._btn_sign.setFixedHeight(22)
+        self._btn_sign.setCursor(Qt.PointingHandCursor)
+        self._btn_sign.setStyleSheet(_btn(BG3, TEXT_MID, BG4, radius=4, fs=10))
+        self._btn_sign.setToolTip("Firma un tema entero (no una previa): solo le mete la carátula y las etiquetas y lo guarda en FLAC o WAV a máxima calidad")
+        self._btn_sign.clicked.connect(self._open_sign_dialog)
+        logo_row.addWidget(self._btn_sign)
+
         self._btn_license = QPushButton("⚙ Licencia")
         self._btn_license.setFixedHeight(22)
         self._btn_license.setCursor(Qt.PointingHandCursor)
@@ -4651,6 +4879,7 @@ class MainWindow(QMainWindow):
         _plus = get_edition() == "plus"
         self._btn_batch_hdr.setVisible(_plus)
         self._btn_watch.setVisible(_plus)
+        self._btn_sign.setVisible(_plus)
 
         logo_col.addLayout(logo_row)
 
@@ -4982,6 +5211,10 @@ class MainWindow(QMainWindow):
         # Mostrar la página de resultados (índice 2) con crossfade
         self._fade_to_page(2)
 
+        try:
+            self._results.set_beat_times(getattr(grid, "beat_times", []))
+        except Exception:
+            pass
         self._results.populate(analysis, plan, bpm, dur,
                                self._current_file, self._cfg, key_res=key_res)
 
@@ -5166,7 +5399,8 @@ class MainWindow(QMainWindow):
             try:
                 from src.notifications import notify
                 track = Path(self._current_file).stem if self._current_file else "Track"
-                notify("AutoPrevias", tr("✅ Previa exportada: {track}", track=track))
+                notify("AutoPrevias", tr("✅ Previa «{track}» generada · pulsa para abrir", track=track),
+                       folder=str(display[0]))
             except Exception:
                 pass
         else:
@@ -5326,6 +5560,21 @@ class MainWindow(QMainWindow):
         self._tour = tour.OnboardingTour(self)
         self._tour.finished.connect(lambda _c: setattr(self, "_tour", None))
         self._tour.start()
+
+    def _open_sign_dialog(self, files=None):
+        """Ventana «Firmar tema entero» (Plus): carátula + etiquetas, sin masterizar, en FLAC o WAV."""
+        if get_edition() != "plus":
+            return
+        from src.ui.sign_track import SignTrackDialog
+        dlg = getattr(self, "_sign_dialog", None)
+        if dlg is None or not dlg.isVisible():
+            dlg = SignTrackDialog(self._cfg, parent=self, files=files if isinstance(files, (list, tuple)) else None)
+            dlg.setAttribute(Qt.WA_DeleteOnClose, True)
+            dlg.destroyed.connect(lambda *_: setattr(self, "_sign_dialog", None))
+            self._sign_dialog = dlg
+        dlg.show()
+        dlg.raise_()
+        dlg.activateWindow()
 
     def _open_license_dialog(self):
         from src.ui.about import LicenseDialog

@@ -650,7 +650,9 @@ class BatchDialog(QDialog):
         # F6 — Notificación nativa
         try:
             from src.notifications import notify
-            notify("AutoPrevias", f"✅ Lote completado: {ok} previas exportadas")
+            _first = next((p for p in all_generated if Path(p).exists()), None)
+            notify("AutoPrevias", tr("✅ Lote completado: {n} previas · pulsa para abrir", n=ok),
+                   folder=str(_first) if _first else None)
         except Exception:
             pass
 
