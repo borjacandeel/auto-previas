@@ -267,6 +267,7 @@ def s_interfaz(ed: str, plus: bool, im: dict) -> str:
               ("Recientes", "historial de previas generadas y pistas abiertas, para reabrir un proyecto."),
               ("Modo Lote", "procesa varias pistas seguidas de forma automática."),
               ("Vigilar Carpeta", "genera previas solas cuando cae un tema nuevo en una carpeta."),
+              ("Firmar tema", "firma un tema entero (no una previa): carátula y etiquetas, en FLAC o WAV a máxima calidad."),
               ("Licencia", "versión, estado de la licencia, idioma y búsqueda de actualizaciones."),
               ("ES / EN", "cambia el idioma de la interfaz (castellano por defecto)."),
               ("Distintivo de edición", "te indica que trabajas con la edición PLUS.")]
@@ -294,6 +295,7 @@ def s_interfaz(ed: str, plus: bool, im: dict) -> str:
               ("Reproductor", "escucha la pista original o la previa generada (A/B)."),
               ("BPM", "tempo detectado; haz doble clic para corregirlo."),
               ("Duración de la previa", "15 s, 30 s, 60 s o 2 min (club)."),
+              ("Ordenar y mover cortes", "pon nombre y orden a los cortes y elige dónde empieza la previa."),
               ("Nombre", "nombre del archivo de la previa."),
               ("Cambiar carpeta", "elige dónde se guardan las previas."),
               ("GENERAR PREVIA", "crea y exporta la previa en MP3 320 kbps.")]
@@ -330,6 +332,7 @@ def s_primera(ed: str, plus: bool, im: dict) -> str:
          ("Abrir carpeta", "abre la carpeta de destino en el Finder / Explorador de archivos."),
          ("Generar otra previa", "vuelve a la pantalla de inicio para cargar otro track.")])}
 {tip("Tras generar, el reproductor cambia solo a la pestaña <b>Previa Generada</b> para que la oigas enseguida. Con la pestaña <b>Pista Original</b> puedes volver a comparar (A/B).")}
+{tip("Al terminar, el sistema te muestra una <b>notificación con el logo de AutoPrevias</b>. Si la pulsas, se abre la carpeta donde se ha guardado la previa.")}
 </section>"""
 
 
@@ -344,6 +347,15 @@ def s_onda(ed: str, plus: bool, im: dict) -> str:
 <li>La leyenda inferior indica el tipo de sección detectada: <b>Intro</b>, <b>Descanso</b>, <b>Subida</b>, <b>Drop</b> y <b>Outro</b>.</li>
 <li>Con los botones <b>−</b> / <b>+</b> y el indicador <b>100%</b> haces zoom a la onda.</li>
 <li>Haz clic en la onda para saltar a cualquier punto de la reproducción.</li>
+</ul>
+<h3>Nombres, orden y punto de inicio de los cortes</h3>
+{fig(im.get('z_cortes_basic' if not plus else 'z_04_editor_cortes',''), 'Editor de cortes: nombres, orden y punto de inicio')}
+<p>Cada corte se crea con su nombre: <b>Corte 1</b>, <b>Corte 2</b>, <b>Corte 3</b>… Ese nombre es fijo, aunque cambies el orden. Activa la casilla
+<b>{'⚙ Personalizar Cortes &amp; BPM' if plus else '✂ Ordenar y mover cortes'}</b> para verlos en una tabla:</p>
+<ul>
+<li><b>▲ ▼</b> cambian el <b>orden</b> en que suenan en la previa (por ejemplo, que el drop suene primero). La primera columna indica el orden («1º · Corte 2»).</li>
+<li><b>«La previa empieza»</b>: <b>⏮ Al inicio del tema</b> lleva el primer corte al principio de la canción y <b>⏺ A mitad del tema</b> lo coloca a la mitad (siempre ajustado a un compás). Para cualquier otro punto, <b>arrastra el primer corte</b> sobre la forma de onda o cambia sus segundos en la tabla.</li>
+<li>Puedes <b>añadir</b> cortes, <b>quitarlos</b> y escuchar cada uno con ▶. Los presets rápidos (<i>Estándar AI</i>, <i>Solo Drops</i>, <i>Intro corta 15 s</i>) recolocan los cortes de golpe.</li>
 </ul>
 <h3>El reproductor</h3>
 {fig(im.get('z_player',''), 'Reproductor con pestañas Pista Original / Previa Generada')}
@@ -456,7 +468,8 @@ def s_plus_editor(im: dict) -> str:
 <p>Además, puedes <b>arrastrar los marcadores</b> verdes (inicio) y rojos (fin) directamente sobre la forma de onda para mover o recortar los fragmentos.</p>
 <ul>
 <li><b>Presets rápidos:</b> <i>Estándar AI</i> (la previa recomendada), <i>Solo Drops</i> (va directa a los drops con máxima energía) e <i>Intro corta 15 s</i>.</li>
-<li>Los botones <b>📍 Aquí</b> toman la posición actual del reproductor como inicio o fin del corte.</li>
+<li>Los botones <b>📍</b> toman la posición actual del reproductor como inicio o fin del corte.</li>
+<li><b>Nombres y orden:</b> cada corte tiene un nombre fijo («Corte 1», «Corte 2»…) y los botones <b>▲ ▼</b> cambian el orden en que suenan. <b>⏮ Al inicio del tema</b> y <b>⏺ A mitad del tema</b> colocan el primer corte donde quieras que empiece la previa (ajustado a un compás); también puedes arrastrarlo sobre la onda. Esta parte también la tiene la edición Basic.</li>
 </ul>
 </section>
 <section>
@@ -465,6 +478,8 @@ def s_plus_editor(im: dict) -> str:
 {legend([("Automático", "micro-variaciones orgánicas de tempo según la seed. Suena natural pero impide mezclar la previa sin permiso."),
          ("Manual (Presets DJ)", "tú decides las subidas de BPM."),
          ("Curva de tempo", "muestra cómo cambia la velocidad a lo largo de la previa.")])}
+<h4>Arranque de la previa</h4>
+<p>En la fila <b>ARRANQUE</b> eliges cómo empieza la previa: con el <b>efecto de vinilo</b> (el disco arranca de 0 BPM hasta el tempo del tema en los segundos que pongas, por defecto 1 s) o con <b>▶ BPM originales desde el inicio</b>, sin efecto. Tu elección se guarda en los presets y en «Reabrir proyecto».</p>
 <p>Es la <b>protección anti-retoque por tempo</b>: al variar ligeramente la velocidad, nadie puede pinchar ni sincronizar la previa con otro tema sin pasar por ti.
 En modo manual dispones de presets: <b>+5 BPM en Drops</b>, <b>+8 % Rampa</b>, <b>±4 BPM Vaivén</b>, <b>+3 BPM Fijo</b> y <b>0 BPM</b>, además de <b>➕ Momento</b> para añadir cambios exactos.</p>
 <h3>Pestaña «Estructura Musical»</h3>
@@ -507,6 +522,17 @@ def s_plus_firma(im: dict) -> str:
 <p>Rellena <b>Artista / DJ</b>, <b>Sello</b>, <b>Álbum</b>, <b>Género</b> y <b>Comentario</b>: se incrustan como metadatos en tus previas. Pulsa o arrastra una
 imagen sobre la <b>carátula</b> para personalizarla (con <b>Restablecer portada</b> vuelves a la de Radical Records). Marca
 <b>«Guardar firma y carátula como predeterminada»</b> para que se carguen solas en la próxima sesión.</p>
+<h3>🖋 Firmar un tema entero</h3>
+{fig(im.get('17_firmar_tema',''), 'Ventana «Firmar tema entero»', 'tiny')}
+<p>El botón <b>🖋 Firmar tema</b> de la cabecera abre una ventana aparte pensada para <b>canciones completas, no previas</b>. Solo le mete la <b>carátula y las etiquetas</b>:
+sin masterización, sin efectos y sin tocar el volumen ni la duración. El audio queda <b>exactamente igual</b>.</p>
+{steps(["<b>Arrastra el tema</b> (o varios) a la ventana, o pulsa la zona para elegirlos.", "Elige la <b>carátula</b> (si guardaste una en «Firma y carátula», aparece sola) y rellena artista, sello, álbum, género y comentario.",
+        "Elige el formato: <b>FLAC</b> (sin pérdidas, recomendado) o <b>WAV</b> (sin comprimir).", "Pulsa <b>🖋 Firmar</b>. Los temas firmados se guardan en la carpeta <b>Firmados</b> (puedes cambiarla) y se muestra una notificación; púlsala para abrir la carpeta."])}
+<ul>
+<li>Se conservan la <b>frecuencia de muestreo</b> y los <b>bits</b> del original (hasta 24 bits).</li>
+<li>Si el original es un MP3 o M4A, se guarda sin perder nada más, pero <b>no gana calidad</b>.</li>
+<li>Nunca se pisa tu archivo original: si ya existe uno con ese nombre, se añade «(2)».</li>
+</ul>
 <h3>Mis presets</h3>
 {fig(im.get('z_presets_guardados',''), 'Barra de presets con un preset guardado', 'mid')}
 <p>Guarda toda tu configuración como un <b>preset con nombre</b> y aplícala con un clic:</p>
@@ -550,7 +576,8 @@ def s_basic_upsell() -> str:
 <p>Si necesitas más control, la <b>edición Plus</b> de AutoPrevias añade:</p>
 <div class="cols">
 <div class="card"><h4>🎚 Más formatos</h4><p>Exportación <b>WAV 24 bit</b> y <b>FLAC</b>, y <b>vídeo animado sin marca de agua</b> (MP4 9:16, 1:1 o 16:9) con tu propia imagen de fondo (una por formato), onda de sonido en barras, línea o círculo y el final a tu elección: firma AutoPrevias, fundido a negro, tu imagen o sin cierre.</p></div>
-<div class="card"><h4>✂ Editor avanzado</h4><p>Edita los cortes a mano, controla la variación de BPM y consulta la estructura musical detallada.</p></div>
+<div class="card"><h4>✂ Editor avanzado</h4><p>Controla la variación de BPM, elige si la previa arranca con el efecto de vinilo o a los BPM originales y consulta la estructura musical detallada.</p></div>
+<div class="card"><h4>🖋 Firmar temas enteros</h4><p>Mete carátula y etiquetas a canciones completas y guárdalas en FLAC o WAV a máxima calidad, sin tocar el audio.</p></div>
 <div class="card"><h4>🎛 Efectos de estudio</h4><p>Flanger, Filter Sweep y Master LUFS (−9 LUFS, nivel de club).</p></div>
 <div class="card"><h4>🎙 Voice Drop</h4><p>Superpón tu firma de voz o jingle en el momento exacto.</p></div>
 <div class="card"><h4>🛡 Modo promo antifugas</h4><p>Firma repetida y MP3 128 kbps para enviar previas sin riesgo de reutilización.</p></div>

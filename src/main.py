@@ -215,6 +215,16 @@ def run_selftest() -> int:
         _host.deleteLater()
         print("  ✓ Recorrido de bienvenida empaquetado y construido sin crash")
 
+        # Firmar tema entero, animaciones y notificaciones con logo: deben empaquetarse y construirse sin crash
+        from src.ui import sign_track as _sg, anim as _anim
+        from src.engine import sign as _sign
+        from src import notifications as _notif
+        _sd = _sg.SignTrackDialog({})
+        assert _sign.build_id3v23({"title": "x"}, None)[:3] == b"ID3"
+        assert _notif.notify_icon_path() is not None, "falta assets/notify_icon.png"
+        _sd.deleteLater()
+        print("  ✓ Firmar tema entero, animaciones y notificaciones (con logo) empaquetados y construidos sin crash")
+
         # Vídeo animado Radical Neón: debe renderizar fotogramas reales en el binario compilado
         from src.engine import video_neon as _vn
         import numpy as _np

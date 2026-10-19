@@ -174,7 +174,7 @@ save(img, "01_bienvenida")
 items = [(rect_of(w._drop_zone._btn_open, w), 1)]
 if EDITION == "plus":
     items += [(rect_of(w._btn_recents, w), 2), (rect_of(w._btn_batch_hdr, w), 3),
-              (rect_of(w._btn_watch, w), 4), (rect_of(w._btn_license, w), 5), (rect_of(w._btn_lang, w), 6)]
+              (rect_of(w._btn_watch, w), 4), (rect_of(w._btn_sign, w), 5), (rect_of(w._btn_license, w), 6), (rect_of(w._btn_lang, w), 7)]
 else:
     items += [(rect_of(w._btn_recents, w), 2), (rect_of(w._btn_license, w), 3), (rect_of(w._btn_lang, w), 4)]
 items.append((rect_of(w._edition_badge, w), len(items) + 1))
@@ -216,8 +216,8 @@ img = grab(w); d = dpr_of(img)
 save(img, "03_cargada")
 
 items = [(rect_of(R._waveform, w), 1), (rect_of(R._player, w), 2), (rect_of(R._card_bpm, w), 3),
-         (rect_of(R._btn_p120, w), 4), (rect_of(R._edit_name, w), 5), (rect_of(R._btn_folder, w), 6),
-         (rect_of(R._btn_generate, w), 7)]
+         (rect_of(R._btn_p120, w), 4), (rect_of(R._chk_advanced, w), 5), (rect_of(R._edit_name, w), 6),
+         (rect_of(R._btn_folder, w), 7), (rect_of(R._btn_generate, w), 8)]
 if EDITION == "plus":
     items = [(rect_of(R._waveform, w), 1), (rect_of(R._player, w), 2), (rect_of(R._card_bpm, w), 3),
              (rect_of(R._btn_p120, w), 4), (rect_of(R._preset_bar, w), 5), (rect_of(R._chk_advanced, w), 6),
@@ -263,7 +263,7 @@ R._set_combo_by_data(R._combo_aspect, "9:16")
 R._chk_video.setChecked(False); pump(30); w.resize(W, H); pump(20)
 
 # ── 4. Editor avanzado (Plus) ─────────────────────────────────────────────
-w.resize(W, 1300 if EDITION == "plus" else H); pump(20)   # ventana alta: se ve el panel completo sin scroll
+w.resize(W, 1300); pump(20)   # ventana alta: se ve el panel completo sin scroll
 if EDITION == "plus":
     R._chk_advanced.setChecked(True); pump(30, 0.02)
     for idx, nm in enumerate(("04_editor_cortes", "05_editor_bpm", "06_estructura")):
@@ -282,7 +282,14 @@ if EDITION == "plus":
             annotate_crop(im, tabs_r, [(rect_of(R._btn_mode_auto, w), 1), (rect_of(R._btn_mode_manual, w), 2),
                                        (rect_of(R._tempo_plot_frame, w), 3)], dpr_of(im), "z_05_editor_bpm_anot")
     R._chk_advanced.setChecked(False); pump(20)
+else:
+    # Basic: ordenar y mover los cortes (solo la pestaña del editor de cortes)
+    R._chk_advanced.setChecked(True); pump(30, 0.02)
+    im = grab(w)
+    save(crop(im, rect_of(R._tabs, w), dpr_of(im), 4), "z_cortes_basic")
+    R._chk_advanced.setChecked(False); pump(20)
 
+if EDITION == "plus":
     # ── 5. Modo promo + Voice Drop ───────────────────────────────────────
     R._set_voice_drop_path(str(tag)); pump(20)
     R._chk_promo.setChecked(True); pump(30, 0.02)
@@ -369,6 +376,10 @@ if EDITION == "plus":
     dlg_shot(SavePresetDialog(["Radical Main", "Set de Verano"], "Radical Main"), "15_guardar_preset")
     from src.ui.video_custom import VideoCustomDialog
     dlg_shot(VideoCustomDialog({"style": "image"}), "16_estilo_video")
+    from src.ui.sign_track import SignTrackDialog
+    _sd = SignTrackDialog({"output_dir": str(HOME / "Music" / "Previas")}, files=[str(track)])
+    _sd.resize(820, 860)
+    dlg_shot(_sd, "17_firmar_tema")
 
 meta["rects"] = meta_rects
 (OUT / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")

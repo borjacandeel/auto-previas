@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v3.9.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v3.10.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -150,6 +150,12 @@ Si Windows muestra la pantalla azul con el mensaje *"Windows protegió su PC"* d
 
 ## ✨ Características Principales
 
+- ✂️ **Cortes con nombre, orden y punto de inicio:**
+  Cada corte tiene su nombre fijo («Corte 1», «Corte 2»…); con ▲ ▼ eliges en qué orden suenan y con «⏮ Al inicio / ⏺ A mitad del tema» (o arrastrando el primer corte) decides dónde empieza la previa. Disponible en Basic y Plus.
+- 🖋 **Firmar temas enteros (Plus):**
+  Una ventana aparte para canciones completas: arrastras el tema, eliges carátula y etiquetas y se guarda en FLAC o WAV a máxima calidad, con el audio idéntico al original (sin masterización ni efectos).
+- 🔔 **Notificaciones con logo que abren la carpeta:**
+  Al terminar una previa, un lote o una firma, el sistema muestra una notificación con el logo de AutoPrevias; al pulsarla se abre la carpeta del archivo.
 - 🎓 **Recorrido de bienvenida (primera vez):**
   Al abrir la app por primera vez, un tutorial guiado y omitible resalta cada parte de la interfaz real con una explicación y un ejemplo (con una pista de ejemplo que no deja rastro). Atajos: → ← Intro Espacio, Esc para salir; se puede repetir desde ⚙ Licencia.
 - 🧠 **Diferenciación Inteligente de Drops vs Descansos (HPSS + Fullness):**
@@ -237,6 +243,10 @@ Cada clave se puede usar en **un solo equipo a la vez**. Si ya está activa en u
 | Aviso de formato de imagen (9:16, 1:1, 16:9) con ejemplos | — | ✅ |
 | Ajuste de Rendimiento (Automático / Ahorro / Máximo) | ✅ | ✅ |
 | Recorrido de bienvenida interactivo (primera vez, omitible) | ✅ | ✅ (con las funciones de Plus) |
+| Cortes con nombre («Corte 1…»), orden con ▲ ▼ y punto de inicio (inicio / mitad / arrastrando) | ✅ | ✅ |
+| Arranque de la previa a elegir: vinilo de 0 al tempo en N s o BPM originales | ❌ | ✅ |
+| 🖋 Firmar temas enteros (carátula + etiquetas, FLAC/WAV a máxima calidad, sin tocar el audio) | ❌ | ✅ |
+| Notificaciones con logo que abren la carpeta al pulsarlas | ✅ | ✅ |
 | Firma vocal / Voice Drop | ❌ | ✅ |
 | Sección de Firma y Carátula (Branding) | ❌ | ✅ |
 | Efectos de estudio (Flanger, Filter Sweep, Master LUFS) | ❌ | ✅ |
@@ -289,7 +299,10 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v3.9.0] — 2026-10-14 (Recorrido de bienvenida)
+#### 🟢 [v3.10.0] — 2026-10-19 (Cortes con nombre y orden, firmar temas enteros, notificaciones con logo)
+- **Cortes con nombre y orden (Basic y Plus):** «Corte 1», «Corte 2»… con **▲ ▼** para ordenarlos y botones para que la previa **empiece al inicio o a mitad del tema** (o donde arrastres el primer corte). **Plus:** arranque de la previa a elegir (**vinilo de 0 al tempo en N segundos** o **BPM originales**) y **🖋 Firmar tema**: ventana para firmar **canciones enteras** con carátula y etiquetas en **FLAC/WAV a máxima calidad**, sin tocar el audio. **Notificaciones con el logo de AutoPrevias** que abren la carpeta al pulsarlas, **más animaciones** y las **previas en WAV ahora llevan carátula y etiquetas**. Detalle en el [CHANGELOG](CHANGELOG.md).
+
+#### [v3.9.0] — 2026-10-14 (Recorrido de bienvenida)
 - **Tutorial interactivo de primer uso:** al instalar y abrir AutoPrevias por primera vez ofrece **«Hacer el recorrido»** u **«Omitir»** (solo esa vez). El recorrido oscurece la ventana y resalta, paso a paso y con ejemplos, toda la app (con una pista de ejemplo, sin guardar nada); se maneja con Siguiente/Atrás o con el teclado y se sale con Esc. En castellano e inglés; se puede repetir desde ⚙ Licencia. Detalle en el [CHANGELOG](CHANGELOG.md).
 
 #### [v3.8.0] — 2026-10-14 (Más rápida y más fluida)

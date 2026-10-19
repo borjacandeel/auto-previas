@@ -3,6 +3,23 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [3.10.0] - 2026-10-19
+
+### Añadido
+- **Orden y nombres de los cortes (Basic y Plus).** Cada corte se crea con su nombre: **Corte 1, Corte 2, Corte 3…** (el nombre no cambia aunque cambies el orden). Con **▲ ▼** decides en qué orden suenan en la previa (por ejemplo, que el drop suene primero). La forma de onda y la tabla muestran el orden y el nombre. La edición **Basic** ahora tiene la casilla **«✂ Ordenar y mover cortes»**.
+- **Dónde empieza la previa (Basic y Plus).** Dos botones, **⏮ Al inicio del tema** y **⏺ A mitad del tema**, colocan el primer corte donde quieras (siempre ajustado a un compás). Y puedes **arrastrar el primer corte** sobre la onda hasta cualquier punto.
+- **Plus: arranque de la previa a tu gusto.** En la pestaña «Variación de BPM», la fila **ARRANQUE** te deja elegir entre el **efecto de vinilo** (el disco arranca de 0 BPM al tempo del tema en los segundos que pongas, por defecto 1 s) o **empezar directamente a los BPM originales**. Se guarda en los presets y en «Reabrir proyecto». Sin tocar nada, la previa suena exactamente igual que antes.
+- **Plus: «🖋 Firmar tema»** — una ventana nueva para firmar **canciones enteras, no previas**. Arrastras el tema (o varios), eliges la carátula y las etiquetas y se guarda en **FLAC o WAV a máxima calidad**: sin masterización, sin efectos, sin cambiar volumen ni duración (el audio queda idéntico, con la misma frecuencia de muestreo y bits que el original, hasta 24 bits). Los temas se guardan en una carpeta «Firmados» y nunca pisan el original.
+- **Más animaciones:** las tarjetas de BPM y de drops cuentan hasta su valor, los botones de duración aparecen en cascada, los paneles de vídeo, opciones avanzadas y cortes se despliegan y pliegan en vez de saltar, la tarjeta de éxito aparece con un fundido, y la ventana de firmar y el recorrido de bienvenida también. Con el ajuste «Ahorro de recursos» se desactivan.
+- El recorrido de bienvenida explica las funciones nuevas (firmar temas, orden de cortes, arranque).
+
+### Cambiado
+- **Las notificaciones salen con el logo de AutoPrevias** (un icono propio con fondo oscuro, que se ve también sobre fondos claros) y, **al pulsarlas, se abre la carpeta donde está la previa**. Texto: «Previa “…” generada · pulsa para abrir». Lo mismo al terminar un lote o al firmar temas.
+
+### Corregido
+- **Las previas en WAV ahora llevan carátula y etiquetas** (artista, sello, BPM, tonalidad…). Antes solo las llevaban el MP3 y el FLAC.
+- Los botones pequeños de la tabla de cortes (▶, 📍, ✕) se veían vacíos; ahora se ven.
+
 ## [3.9.0] - 2026-10-14
 
 ### Añadido
