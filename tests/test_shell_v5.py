@@ -1,5 +1,6 @@
 """v5.0: cabecera con menús, inicio guiado, deshacer/rehacer, atajos y arrastrar-soltar en toda la ventana."""
 import os
+from pathlib import Path
 
 import pytest
 
@@ -104,7 +105,7 @@ def test_inicio_ofrece_seguir_con_el_ultimo_tema(monkeypatch, tmp_path):
     got = []
     dz.file_dropped.connect(got.append)
     dz._btn_continue.click()
-    assert got == [str(f)]
+    assert [Path(x).resolve() for x in got] == [f.resolve()]
     f.unlink()
     dz.refresh_continue()
     assert not dz._btn_continue.isVisible()
@@ -208,7 +209,7 @@ def test_soltar_audio_en_la_ventana_carga_el_tema_solo_al_soltar(monkeypatch, tm
     w.dragEnterEvent(ev)
     assert ev.isAccepted() and cargados == []             # al entrar NO carga (antes sí lo hacía)
     _drop(w, [a])
-    assert cargados == [str(a)]
+    assert [Path(x) for x in cargados] == [a]                      # Qt devuelve barras «/» también en Windows
     _cerrar(w)
 
 
@@ -226,7 +227,7 @@ def test_soltar_una_imagen_es_la_caratula_solo_en_plus(monkeypatch, tmp_path):
         puestas = []
         monkeypatch.setattr(w._results._branding_card._drop_area, "set_cover", puestas.append)
         _drop(w, [img])
-        assert (puestas == [str(img)]) == (ed == "plus")
+        assert ([Path(x) for x in puestas] == [img]) == (ed == "plus")
         _cerrar(w)
 
 
