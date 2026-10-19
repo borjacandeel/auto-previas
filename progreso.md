@@ -79,7 +79,7 @@
 - **Pendientes anotados** (tabla en esta sesión): producción de los 11 vídeos del plan + pruebas del usuario + tareas opcionales.
 
 
-### Resumen de Trabajo — Sesión 60 (2026-10-19): v3.11.0 — efectos manuales arrastrables a la onda (Basic y Plus)
+### Resumen de Trabajo — Sesión 60 (2026-10-19): v4.0.0 (antes 3.10/3.11) — efectos manuales arrastrables a la onda (Basic y Plus)
 
 - **Petición del usuario**: efectos elegidos por él, no detectados; «carril de efectos más profesional: coge el usuario, arrastra al wavetable y ahí, como los cortes, elige la duración y dónde ponerlo»; **también en Basic**; actualizar manuales y recorrido de bienvenida. Propuesta con maquetas en `docs/propuestas/EFECTOS-EN-LA-ONDA.md` (+4 PNG).
 - **Modelo** (`src/engine/fx_events.py`): eventos `{id, type: flanger|filter_up|filter_down, start, end, amount}` en tiempo del tema ORIGINAL; `normalize_events` (tipos válidos, tiempos dentro del tema, 0,5–60 s, máx. 24, intensidad 0,1–1); `apply_event_to_chunk` (flanger = `apply_flanger` con mix=intensidad; filtros = `apply_filter_sweep` HPF 60 Hz→F o F→60 Hz con F=400·(2800/400)^(amt/0,75), 0,75 ≙ 2800 Hz como el antiguo; entrada/salida de 12 ms sin clics); `apply_events_to_blocks` aplica a cada bloque extraído (`build_preview_audio`, paso 1c, antes de las transiciones) solo el solape evento∩bloque → el efecto viaja con su trozo aunque se reordenen los cortes; lo que queda fuera de los cortes no suena. Sin eventos la previa es idéntica bit a bit (test).
@@ -88,7 +88,8 @@
 - **Recorrido**: paso nuevo `efectos_onda` (Basic y Plus; pone un efecto de ejemplo y lo borra al salir); paso `efectos` de Plus reescrito (Master LUFS). Traducciones `EN_311`.
 - **Manuales**: sección «Efectos en la onda» en el capítulo 6, capítulo 9 de Plus reducido a Master LUFS/Voice Drop/Modo promo, leyendas de interfaz, atajo Supr, FAQ; captura `z_efectos` en `capture.py`.
 - **Pruebas**: `tests/test_fx_events.py` (16: normalización, solape por bloque, filtro quita graves, identidad sin efecto/fuera de cortes, viaja con el trozo al invertir cortes, paleta, mover/estirar, inspector, drag&drop con eventos Qt reales, pulsar tarjeta, Basic/Plus, presets vs proyecto); `test_tour.py` ampliado; selftest comprueba motor y carril.
-- **Publicación**: la CI de la v3.10.0 se quedó en cola sin arrancar y se canceló; la **v3.11.0 se publica directamente e incluye todo lo de la 3.10.0** (no existe Release 3.10.0). Run lanzado con `workflow_dispatch tag_name=v3.11.0` sobre el commit de los manuales 3.11.0.
+- **Versión**: el usuario decidió que «la x.10 sea la x.0»: todo (3.10 + efectos) sale como **v4.0.0**; no existen Release 3.10.0 ni 3.11.0. Los runs 70 (3.10.0) y 71 (3.11.0) quedaron cancelados (los Windows murieron por la cancelación, «Compiler terminating», no por código) y el 72 (3.11.0) se canceló antes de empezar.
+- **Publicación (histórico)**: la CI de la v3.10.0 se quedó en cola sin arrancar y se canceló; la **v3.11.0 se publica directamente e incluye todo lo de la 3.10.0** (no existe Release 3.10.0). Run lanzado con `workflow_dispatch tag_name=v3.11.0` sobre el commit de los manuales 3.11.0.
 - **CI (aprendido 2026-10-19)**: al lanzar un run nuevo, la `concurrency` cancela el anterior, pero el job «Publicar GitHub Release» tenía `if: always()` y podía publicar un Release PARCIAL (solo los DMG que ya habían terminado) de un run cancelado. Se añadió `!cancelled()` a su condición. El run 70 (v3.10.0) quedó cancelado con ese job en cola; vigilar que no cree un Release v3.10.0 parcial (si apareciera, borrarlo junto con su tag: nadie lo ha usado).
 - **Entorno**: los tests se ejecutan con `/tmp/claude-0/pyside_venv/bin/python` y `QT_QPA_PLATFORM=offscreen` (no hay `.venv` en el contenedor).
 

@@ -3,21 +3,14 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
-## [3.11.0] - 2026-10-19
+## [4.0.0] - 2026-10-19
+
+> **Versión 4.** Pasamos a la 4.0 en lugar de la 3.10: incluye todo lo preparado como 3.10 (cortes con nombre, firmar temas, arranque de BPM, notificaciones con logo) y los efectos en la onda.
 
 ### Añadido
 - **Efectos en la onda (Basic y Plus).** Debajo de la forma de onda aparecen las tarjetas **🌀 Flanger**, **🌊 Filter Sweep ↗** (sube la tensión quitando graves) y **🌊 Filter Sweep ↘** (los graves vuelven poco a poco). **Arrastra una tarjeta hasta la onda** y suéltala donde quieras que suene (o púlsala para ponerla donde está el cursor de reproducción). El efecto se comporta como un corte: **arrástralo para moverlo, estira sus bordes para elegir la duración** y ajusta el **inicio, la duración y la intensidad** en la fila de ajustes que aparece al seleccionarlo. Mientras arrastras ves el hueco que ocupará y se ajusta solo al pulso más cercano. **Supr** (o clic derecho) borra el seleccionado y **Quitar todos** limpia la onda. Si dos efectos se solapan, se ven en dos filas.
 - El efecto se queda pegado a su trozo del tema: si cambias el orden de los cortes sigue sonando en ese mismo trozo. Lo que queda **fuera de los cortes** se ve apagado y no suena. Los efectos se guardan con el proyecto («Reabrir proyecto») pero no en los presets, porque pertenecen a cada tema.
 - El recorrido de bienvenida tiene un paso nuevo, «Efectos en la onda» (con un efecto de ejemplo), y los manuales PDF Basic y Plus lo explican.
-
-### Cambiado
-- **Ya no hay efectos automáticos:** desaparecen las casillas **Flanger** y **Filter Sweep** que se aplicaban solas 5 segundos antes de cada drop. Ahora tú eliges qué efecto y dónde. En Plus se mantiene **Master LUFS** en las opciones avanzadas. (Flanger y Filter Sweep antes eran solo de Plus; ahora también están en Basic.)
-
-## [3.10.0] - 2026-10-19
-
-> Esta versión no se publicó por separado: sus novedades llegan junto con la 3.11.0.
-
-### Añadido
 - **Orden y nombres de los cortes (Basic y Plus).** Cada corte se crea con su nombre: **Corte 1, Corte 2, Corte 3…** (el nombre no cambia aunque cambies el orden). Con **▲ ▼** decides en qué orden suenan en la previa (por ejemplo, que el drop suene primero). La forma de onda y la tabla muestran el orden y el nombre. La edición **Basic** ahora tiene la casilla **«✂ Ordenar y mover cortes»**.
 - **Dónde empieza la previa (Basic y Plus).** Dos botones, **⏮ Al inicio del tema** y **⏺ A mitad del tema**, colocan el primer corte donde quieras (siempre ajustado a un compás). Y puedes **arrastrar el primer corte** sobre la onda hasta cualquier punto.
 - **Plus: arranque de la previa a tu gusto.** En la pestaña «Variación de BPM», la fila **ARRANQUE** te deja elegir entre el **efecto de vinilo** (el disco arranca de 0 BPM al tempo del tema en los segundos que pongas, por defecto 1 s) o **empezar directamente a los BPM originales**. Se guarda en los presets y en «Reabrir proyecto». Sin tocar nada, la previa suena exactamente igual que antes.
@@ -26,6 +19,7 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 - El recorrido de bienvenida explica las funciones nuevas (firmar temas, orden de cortes, arranque).
 
 ### Cambiado
+- **Ya no hay efectos automáticos:** desaparecen las casillas **Flanger** y **Filter Sweep** que se aplicaban solas 5 segundos antes de cada drop. Ahora tú eliges qué efecto y dónde. En Plus se mantiene **Master LUFS** en las opciones avanzadas. (Flanger y Filter Sweep antes eran solo de Plus; ahora también están en Basic.)
 - **Las notificaciones salen con el logo de AutoPrevias** (el mismo icono de la aplicación) y, **al pulsarlas, se abre la carpeta donde está la previa**. Texto: «Previa “…” generada · pulsa para abrir». Lo mismo al terminar un lote o al firmar temas.
 
 ### Corregido

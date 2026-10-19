@@ -1,2 +1,2 @@
 """Fuente única de verdad de la versión de AutoPrevias."""
-__version__ = "3.11.0"
+__version__ = "4.0.0"

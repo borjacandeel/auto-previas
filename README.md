@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v3.11.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v4.0.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -302,11 +302,9 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v3.11.0] — 2026-10-19 (Efectos arrastrables en la onda, Basic y Plus)
-- **Efectos en la onda:** tarjetas **Flanger**, **Filter Sweep ↗** y **Filter Sweep ↘** que se arrastran hasta la forma de onda; el bloque se mueve y se estira como un corte, con inicio, duración e intensidad ajustables, ajuste al pulso, Supr para borrar y vista apagada si cae fuera de los cortes. Disponible en **Basic y Plus**. Desaparecen los efectos automáticos antes del drop. Paso nuevo en el recorrido de bienvenida y capítulo nuevo en los manuales. Detalle en el [CHANGELOG](CHANGELOG.md).
-
-#### [v3.10.0] — 2026-10-19 (Cortes con nombre y orden, firmar temas enteros, notificaciones con logo)
-- **Cortes con nombre y orden (Basic y Plus):** «Corte 1», «Corte 2»… con **▲ ▼** para ordenarlos y botones para que la previa **empiece al inicio o a mitad del tema** (o donde arrastres el primer corte). **Plus:** arranque de la previa a elegir (**vinilo de 0 al tempo en N segundos** o **BPM originales**) y **🖋 Firmar tema**: ventana para firmar **canciones enteras** con carátula y etiquetas en **FLAC/WAV a máxima calidad**, sin tocar el audio. **Notificaciones con el logo de AutoPrevias** que abren la carpeta al pulsarlas, **más animaciones** y las **previas en WAV ahora llevan carátula y etiquetas**. Detalle en el [CHANGELOG](CHANGELOG.md).
+#### 🟢 [v4.0.0] — 2026-10-19 (Versión 4: efectos en la onda, cortes con nombre y orden, firmar temas enteros)
+- **Efectos en la onda (Basic y Plus):** tarjetas **Flanger**, **Filter Sweep ↗** y **Filter Sweep ↘** que se arrastran hasta la forma de onda; el bloque se mueve y se estira como un corte, con inicio, duración e intensidad ajustables, ajuste al pulso, Supr para borrar y vista apagada si cae fuera de los cortes. Desaparecen los efectos automáticos antes del drop.
+- **Cortes con nombre y orden (Basic y Plus):** «Corte 1», «Corte 2»… con **▲ ▼** para ordenarlos y botones para que la previa **empiece al inicio o a mitad del tema** (o donde arrastres el primer corte). **Plus:** arranque de la previa a elegir (**vinilo de 0 al tempo en N segundos** o **BPM originales**) y **🖋 Firmar tema**: ventana para firmar **canciones enteras** con carátula y etiquetas en **FLAC/WAV a máxima calidad**, sin tocar el audio. **Notificaciones con el logo de AutoPrevias** que abren la carpeta al pulsarlas, **más animaciones** y las **previas en WAV ahora llevan carátula y etiquetas**. Paso nuevo en el recorrido de bienvenida y capítulos nuevos en los manuales. Detalle en el [CHANGELOG](CHANGELOG.md).
 
 #### [v3.9.0] — 2026-10-14 (Recorrido de bienvenida)
 - **Tutorial interactivo de primer uso:** al instalar y abrir AutoPrevias por primera vez ofrece **«Hacer el recorrido»** u **«Omitir»** (solo esa vez). El recorrido oscurece la ventana y resalta, paso a paso y con ejemplos, toda la app (con una pista de ejemplo, sin guardar nada); se maneja con Siguiente/Atrás o con el teclado y se sale con Esc. En castellano e inglés; se puede repetir desde ⚙ Licencia. Detalle en el [CHANGELOG](CHANGELOG.md).
