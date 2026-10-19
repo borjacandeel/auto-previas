@@ -307,13 +307,15 @@ def test_notificacion_con_logo_y_clic_abre_la_carpeta(monkeypatch, tmp_path):
     assert abiertos[-1] == str(tmp_path)
 
 
-def test_icono_de_notificacion_existe_y_es_cuadrado():
+def test_icono_de_notificacion_es_el_icono_de_la_app():
     from PIL import Image
     from src.notifications import notify_icon_path
     p = notify_icon_path()
     assert p is not None and p.exists()
-    im = Image.open(p)
-    assert im.size[0] == im.size[1] and im.mode == "RGBA" and im.getpixel((im.size[0] // 2, 6))[3] == 255   # fondo sólido, no transparente
+    im = Image.open(p).convert("RGBA")
+    assert im.size[0] == im.size[1] and im.size[0] >= 256
+    app = Image.open(Path(__file__).resolve().parents[1] / "assets" / "icon.icns").convert("RGBA").resize(im.size, Image.LANCZOS)
+    assert im.tobytes() == app.tobytes()                 # exactamente el icono de la aplicación
 
 
 def test_sin_bandeja_se_usa_el_metodo_antiguo(monkeypatch):

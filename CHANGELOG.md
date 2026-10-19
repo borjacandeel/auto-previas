@@ -14,7 +14,7 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 - El recorrido de bienvenida explica las funciones nuevas (firmar temas, orden de cortes, arranque).
 
 ### Cambiado
-- **Las notificaciones salen con el logo de AutoPrevias** (un icono propio con fondo oscuro, que se ve también sobre fondos claros) y, **al pulsarlas, se abre la carpeta donde está la previa**. Texto: «Previa “…” generada · pulsa para abrir». Lo mismo al terminar un lote o al firmar temas.
+- **Las notificaciones salen con el logo de AutoPrevias** (el mismo icono de la aplicación) y, **al pulsarlas, se abre la carpeta donde está la previa**. Texto: «Previa “…” generada · pulsa para abrir». Lo mismo al terminar un lote o al firmar temas.
 
 ### Corregido
 - **Las previas en WAV ahora llevan carátula y etiquetas** (artista, sello, BPM, tonalidad…). Antes solo las llevaban el MP3 y el FLAC.

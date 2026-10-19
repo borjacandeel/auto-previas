@@ -21,7 +21,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 HOME = Path(tempfile.mkdtemp(prefix="ap_manual_home_"))
 os.environ.update(QT_QPA_PLATFORM="offscreen", HOME=str(HOME), XDG_CONFIG_HOME=str(HOME / ".config"),
                   XDG_CACHE_HOME=str(HOME / ".cache"), APPDATA=str(HOME / ".config"),
-                  USERPROFILE=str(HOME), QT_SCALE_FACTOR="1.6")
+                  USERPROFILE=str(HOME), QT_SCALE_FACTOR="1.6", AUTOPREVIAS_NO_ANIM="1")   # sin animaciones: las capturas no pillan paneles a medio desplegar
 sys.path.insert(0, str(ROOT))
 
 import numpy as np, soundfile as sf
