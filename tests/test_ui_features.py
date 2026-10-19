@@ -180,31 +180,31 @@ def test_modo_promo_fuerza_mp3_128_y_restaura_formatos(tmp_path, monkeypatch):
 def test_estado_firma_y_estilo_ida_y_vuelta(tmp_path, monkeypatch):
     p = _panel(monkeypatch)
     p._set_voice_drop_path(_wav(tmp_path))
-    p._chk_fx_flanger.setChecked(True); p._chk_video.setChecked(True); p._spin_promo.setValue(35)
+    p._chk_fx_master.setChecked(False); p._chk_video.setChecked(True); p._spin_promo.setValue(35)
     p._branding_card._edit_artist.setText("DJ Test"); p._branding_card._edit_label.setText("Radical")
     state = p.get_state()
     q = _panel(monkeypatch)
     q.apply_state(state)
-    assert q._chk_fx_flanger.isChecked() and q._chk_video.isChecked() and q._spin_promo.value() == 35
+    assert not q._chk_fx_master.isChecked() and q._chk_video.isChecked() and q._spin_promo.value() == 35
     assert q._voice_drop_path == p._voice_drop_path
     assert q._branding_card._edit_artist.text() == "DJ Test" and q._branding_card._edit_label.text() == "Radical"
     # aplicar solo la firma no toca el estilo
     r = _panel(monkeypatch)
     r.apply_state({"signature": {"artist": "Solo Firma"}})
-    assert r._branding_card._edit_artist.text() == "Solo Firma" and not r._chk_fx_flanger.isChecked()
+    assert r._branding_card._edit_artist.text() == "Solo Firma" and r._chk_fx_master.isChecked()
     for x in (p, q, r): x.deleteLater()
 
 
 def test_preset_guardado_y_aplicado_desde_el_panel(monkeypatch):
     p = _panel(monkeypatch)
-    p._chk_fx_filter.setChecked(True)
+    p._chk_fx_master.setChecked(False)
     p._on_preset_save("Mi Estilo", False, True)
     assert presets.list_presets() == ["Mi Estilo"] and p._preset_bar.current_name() == "Mi Estilo"
-    p._chk_fx_filter.setChecked(False)
+    p._chk_fx_master.setChecked(True)
     msgs = []
     p.status_message.connect(msgs.append)
     p._on_preset_apply("Mi Estilo")
-    assert p._chk_fx_filter.isChecked() and any("Mi Estilo" in m and "estilo" in m for m in msgs)
+    assert not p._chk_fx_master.isChecked() and any("Mi Estilo" in m and "estilo" in m for m in msgs)
     p._on_preset_delete("Mi Estilo")
     assert presets.list_presets() == []
     p.deleteLater()
@@ -509,8 +509,8 @@ def test_opciones_avanzadas_plegadas_y_se_abren_solas(monkeypatch):
     assert p._adv_fx_widget.isVisibleTo(p) and p._branding_card.isVisibleTo(p) and "▾" in p._btn_adv.text()
     p._btn_adv.click()
     assert not p._adv_fx_widget.isVisibleTo(p)
-    p._chk_fx_flanger.setChecked(True)                        # activar un efecto abre la sección
-    assert p._adv_fx_widget.isVisibleTo(p) and "Flanger" in p._btn_adv.text()
+    p._chk_promo.setChecked(True)                             # activar una opción avanzada abre la sección
+    assert p._adv_fx_widget.isVisibleTo(p) and "Modo promo" in p._btn_adv.text()
 
 
 def test_resumen_de_lo_que_se_va_a_crear(monkeypatch, tmp_path):
