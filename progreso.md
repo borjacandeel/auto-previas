@@ -79,6 +79,30 @@
 - **Pendientes anotados** (tabla en esta sesión): producción de los 11 vídeos del plan + pruebas del usuario + tareas opcionales.
 
 
+### Resumen de Trabajo — Sesión 62 (2026-10-19): v5.0.0 — rediseño completo (asistente de 3 pasos, destinos, Estudio, inicio y cabecera nuevos)
+
+**Decisión del usuario:** MAJOR confirmado («venga dale dale dale. como 5 porque es tocha tocha»). Plan combinado de las maquetas (`docs/propuestas/rediseno/`): **A** asistente de 3 pasos como camino principal + **D** elegir destino + **C** Estudio + **E** inicio/cabecera. El usuario criticó la primera pasada («has juntado lo de antes pero separado, no le has dado otra estética»): se rehízo el diseño visual de verdad siguiendo las maquetas.
+
+**Arquitectura (todo en `src/ui/`):**
+- `theme5.py`: piezas visuales (`card`, `h1/sub/section_label`, `tag`, `chip`, `Toggle` (interruptor animado), `Tile` (selector con título y descripción), `ClickCard`, `cta_css/ghost_css/checkbox_css`).
+- `wizard.py`: `WizardStepper` (cinta ① ② ③), `DESTINATIONS`/`destination_settings()` (lógica pura de los 6 destinos; Basic nunca recibe WAV/FLAC/promo), `MiniWave`, `DestinationPage` (pantalla «¿Para qué es esta previa?»).
+- `v5_layout.py`: `assemble(R, plus)` recoloca los widgets REALES de `ResultPanel` (mismos nombres de atributo) en el paso ② (`_page2`) y ③ (`_page3`): tarjeta principal (player + chips + onda), tarjetas de duración (`_btn_p15…` ahora son `Tile`), interruptores `_tg_start/_tg_end` (sincronizados con `_start_mode/_end_mode` en `_refresh_start_mode_ui`), «Retocar con más detalle» (`_detail_card/_detail_body`, lo abre `_chk_advanced`, que sigue siendo la fuente de verdad), tarjetas de formato (`_card_f_mp3/_wav/_video/_promo` llevan DENTRO las casillas reales), `_card_name`, `_card_sign`, barra `_gen_bar` con `_lbl_summary` (HTML) y `_btn_generate`. Los StatCard viven ocultos (`_hidden_holder`); los datos se ven en `_chips_row`.
+- `studio.py`: `StudioView` — modo Estudio. Al entrar traslada los widgets reales (player, onda, `_tabs`, casillas de formato, nombre, GENERAR…) con `find_slot()` (anota TODOS los sitios de origen antes de mover) y `leave()` los devuelve a su sitio. Menú lateral: Plus = Cortes, Efectos, Tempo, Firma, Vídeo, Presets; Basic = Cortes y Vídeo. Deshacer/Rehacer en la barra superior.
+- `undo.py`: `History` (pila de «fotos» comparables). `ResultPanel._snapshot()` = (cortes, efectos); `_hist_poll` cada 300 ms guarda un paso cuando el estado cambió y dejó de moverse (cubre todas las formas de editar sin tocar cada una); `undo()/redo()` fuerzan la lectura antes de deshacer; `_hist_restore` usa `_apply_cut_rows` + `set_fx_events`.
+- `shortcuts.py`: lista de atajos y `ShortcutsDialog`. Atajos en `MainWindow.keyPressEvent` (respetan los campos de texto): Ctrl/⌘ + O, G, 2, 3, E, Z, Shift+Z, Y, F1/?.
+- `toast.py` + `anim.py` cableados: filtros globales (`install_button_fx`, `install_dialog_fx`), `slide_fade_in` al entrar en resultados y al cambiar de paso, `smooth_progress`, `pulse_glow` en GENERAR, `crossfade_transition` al cambiar de idioma; avisos de éxito/error con botón (Abrir carpeta / Reintentar).
+- `MainWindow`: stack con página 3 = `DestinationPage` (tras analizar, salvo recorrido, «Reabrir proyecto», `always_studio` o `skip_destination`); `_leave_destination(key)`; `dropEvent` propio (audio en cualquier pantalla, imagen = carátula en Plus; ya no carga en `dragEnter`); cabecera con `_btn_tools/_btn_help` (QMenu) y botones ⚙ y ES a la derecha; los botones viejos (`_btn_recents`, `_btn_batch_hdr`, `_btn_watch`, `_btn_sign`) siguen existiendo ocultos.
+- Config nueva: `always_studio`, `skip_destination`. Ajuste en ⚙ («Abrir siempre en modo Estudio»).
+- Recorrido: pasos nuevos `pasos`, `destino`, `herramientas`, `ayuda`; `Step.wiz` decide el paso del asistente donde se ve (≥ «formatos» = ③); los que dependen de «Retocar con más detalle» lo abren/cierran con `before/after`.
+
+**Bugs encontrados y arreglados al montarlo:** hoja de estilo inválida en el botón de acción de los avisos (`}}` en un string no-f) detectada con un `qInstallMessageHandler`; al sacar widgets de un layout hay que restaurar su visibilidad (`taken` en `assemble`); el destino debe apagar el modo promo ANTES de fijar formatos.
+
+**Tests:** `tests/test_wizard_v5.py` (destinos, pasos, Estudio con reubicación de widgets, página de destino) y `tests/test_shell_v5.py` (historial, menús, inicio, deshacer/rehacer, atajos, drag&drop, avisos) + adaptación de `test_audit_v4`, `test_tour`, `test_v310_features`. Suite: ver sección de pruebas del cierre.
+
+**Manuales:** `scripts/manual/capture.py` reescrito para el flujo nuevo (destino, paso ②, paso ③, «Retocar con más detalle», Estudio) y `build_manual.py` actualizado (interfaz, primera previa, destinos, Estudio, atajos, menús). PDF Basic y Plus regenerados con 5.0.0.
+
+**No incluido en la 5.0.0 (opcional, pendiente):** miniaturas de onda/carátula en Recientes; botón «▶ Oír efecto» antes de generar; carril de tempo dibujado en la línea de tiempo del Estudio (el tempo se edita en la pestaña «Variación de BPM»). El Estudio reutiliza la onda con sus carriles de cortes y efectos y los paneles de siempre, no es un editor nuevo desde cero.
+
 ### Resumen de Trabajo — Sesión 61 (2026-10-19): v4.1.0 — auditoría de cortes/efectos, arranque y FINAL de la previa visibles
 
 - **Estado**: la v4.0.0 YA ESTÁ PUBLICADA (run 73 OK: 4 instaladores + alias, SHA256SUMS y 2 PDF). Estas correcciones van en la **v4.1.0** (MINOR: añade el FINAL elegible).

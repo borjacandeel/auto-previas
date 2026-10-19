@@ -26,8 +26,19 @@ def _aislado(tmp_path, monkeypatch):
 
 
 def _panel(monkeypatch, edition="plus"):
-    from tests.test_audit_v4 import _panel as base
-    return base(monkeypatch, edition)
+    """Panel de resultados con un plan de 4 secciones (como en test_audit_v4) pero con el reproductor REAL."""
+    import src.ui.app as A
+    from src.analysis.segments import build_preview_plan
+    from src.analysis.structure import Section, SectionType, StructureAnalysis
+    monkeypatch.setattr(A, "get_edition", lambda: edition)
+    p = A.ResultPanel()
+    secs = [Section(type=SectionType.INTRO, start_time=0, end_time=30), Section(type=SectionType.DROP, start_time=30, end_time=60),
+            Section(type=SectionType.BREAKDOWN, start_time=60, end_time=90), Section(type=SectionType.DROP, start_time=90, end_time=120)]
+    p._analysis = StructureAnalysis(sections=secs, duration=120.0, bpm=128.0)
+    p._bpm = 128.0
+    p._plan = build_preview_plan(p._analysis)
+    p._fill_plan(p._plan, animate=False)
+    return p
 
 
 def _cerrar(p):
@@ -90,17 +101,56 @@ def test_la_cinta_de_pasos_y_los_botones_de_navegacion(monkeypatch):
     _cerrar(p)
 
 
-def test_modo_estudio_enseña_todo_junto_y_sin_asistente(monkeypatch):
+def test_modo_estudio_junta_todo_en_una_vista_y_devuelve_cada_widget_a_su_sitio(monkeypatch):
     p = _panel(monkeypatch, "plus")
-    p.resize(1100, 800)
+    p.resize(1200, 900)
+    p.show()
+    antes = {n: getattr(p, n).parentWidget() for n in ("_waveform", "_player", "_tabs", "_chk_mp3", "_edit_name", "_btn_generate",
+                                                        "_branding_card", "_preset_bar", "_card_startend")}
+    p.set_studio(True)
+    sv = p._studio_view
+    assert sv.isVisible() and not p._page2.isVisible() and not p._page3.isVisible()
+    assert not p._stepper.isVisible() and not p._btn_next.isVisible()
+    for n in ("_waveform", "_player", "_tabs", "_chk_mp3", "_edit_name", "_btn_generate"):
+        assert sv.isAncestorOf(getattr(p, n)), n                      # los widgets reales viven ahora en el Estudio
+    assert p._waveform.isVisibleTo(p) and p._btn_generate.isVisibleTo(p) and p._chk_wav.isVisibleTo(p)
+    p.go_step(3)                                                       # sin efecto en Estudio
+    assert sv.isVisible() and not p._page3.isVisible()
+    for k in ("cortes", "efectos", "tempo", "firma", "video", "presets"):
+        sv.show_tool(k)                                                # recorre todas las herramientas sin romper nada
+    assert p._chk_video.isChecked()                                    # «Vídeo» lo activa
+    p.set_studio(True)                                                 # repetir no corrompe nada
+    p.set_studio(False)
+    assert not sv.isVisible() and p._stepper.isVisible() and p._page3.isVisible()    # vuelve al paso donde se quedó (③)
+    for n, padre in antes.items():
+        assert getattr(p, n).parentWidget() is padre, n                # cada widget vuelve a su sitio
+    assert p._main_card.layout().indexOf(p._player) < p._main_card.layout().indexOf(p._waveform)
+    _cerrar(p)
+
+
+def test_modo_estudio_en_basic_solo_ofrece_cortes_y_video(monkeypatch):
+    p = _panel(monkeypatch, "basic")
     p.show()
     p.set_studio(True)
-    assert p._page2.isVisible() and p._page3.isVisible()
-    assert not p._stepper.isVisible() and not p._btn_next.isVisible() and not p._btn_back.isVisible()
-    p.go_step(3)                                                             # no rompe nada en Estudio
-    assert p._page2.isVisible() and p._page3.isVisible()
+    assert set(p._studio_view.side_btns) == {"cortes", "video"}
     p.set_studio(False)
-    assert p._stepper.isVisible() and p._page3.isVisible() and not p._page2.isVisible()
+    _cerrar(p)
+
+
+def test_deshacer_y_rehacer_desde_los_botones_del_estudio(monkeypatch):
+    p = _panel(monkeypatch, "plus")
+    p.show()
+    p._hist_poll()
+    p.set_studio(True)
+    p._waveform.set_fx_events([{"id": "q", "type": "flanger", "start": 31.0, "end": 35.0, "amount": 0.7}], emit=True)
+    p._hist_poll(force=True)
+    p._studio_view.refresh()
+    assert p._studio_view.btn_undo.isEnabled()
+    p._studio_view.btn_undo.click()
+    assert p._waveform.fx_events() == []
+    p._studio_view.refresh()
+    assert p._studio_view.btn_redo.isEnabled()
+    p.set_studio(False)
     _cerrar(p)
 
 

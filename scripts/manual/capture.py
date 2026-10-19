@@ -171,22 +171,21 @@ meta = {"edition": EDITION, "version": __version__, "track": TRACK_NAME, "window
 w.resize(W, 820); pump(20)
 img = grab(w); d = dpr_of(img)
 save(img, "01_bienvenida")
-items = [(rect_of(w._drop_zone._btn_open, w), 1)]
-if EDITION == "plus":
-    items += [(rect_of(w._btn_recents, w), 2), (rect_of(w._btn_batch_hdr, w), 3),
-              (rect_of(w._btn_watch, w), 4), (rect_of(w._btn_sign, w), 5), (rect_of(w._btn_license, w), 6), (rect_of(w._btn_lang, w), 7)]
-else:
-    items += [(rect_of(w._btn_recents, w), 2), (rect_of(w._btn_license, w), 3), (rect_of(w._btn_lang, w), 4)]
-items.append((rect_of(w._edition_badge, w), len(items) + 1))
-rec("welcome", open_btn=w._drop_zone._btn_open, drop=w._drop_zone, recents=w._btn_recents, license=w._btn_license)
+items = [(rect_of(w._drop_zone._btn_open, w), 1), (rect_of(w._btn_tools, w), 2), (rect_of(w._btn_help, w), 3),
+         (rect_of(w._btn_license, w), 4), (rect_of(w._btn_lang, w), 5), (rect_of(w._edition_badge, w), 6),
+         (rect_of(w._drop_zone._btn_guide, w), 7)]
+rec("welcome", open_btn=w._drop_zone._btn_open, drop=w._drop_zone, tools=w._btn_tools, license=w._btn_license)
 annotate(img, items, d, "01_bienvenida_anot")
 meta["welcome_items"] = [n for _, n in items]
+# menú «Herramientas» abierto
+w._tools_menu.popup(w._btn_tools.mapToGlobal(w._btn_tools.rect().bottomLeft())); pump(10)
+w._tools_menu.grab().save(str(OUT / "z_menu_herramientas.png")); w._tools_menu.hide(); pump(5)
 
-# ── 1c. Recorrido de bienvenida (paso «Modo Lote» en Plus, «Recientes» en Basic) ──
+# ── 1c. Recorrido de bienvenida (paso «Herramientas») ──
 from src.ui import tour as _tour
 _T = _tour.OnboardingTour(w)
 _T.start(); pump(10, 0.02)
-_T._goto(3 if EDITION == "plus" else 2, +1); pump(30, 0.03)
+_T._goto(2, +1); pump(30, 0.03)
 save(grab(w), "01c_recorrido")
 _T.finish(False); pump(10)
 
@@ -197,7 +196,7 @@ w._analysis_page.update_progress(58, "Detectando secciones y drops…")
 pump(30, 0.02)
 save(grab(w), "02_analisis")
 
-# ── 3. Pista cargada ──────────────────────────────────────────────────────
+# ── 3. Pista cargada: primero «¿Para qué es esta previa?» ────────────────────
 w._stack.setCurrentIndex(0)
 w.resize(W, H); pump(10)
 w._load_file(str(track))
@@ -206,48 +205,36 @@ while time.time() - t0 < 180:
     pump(1, 0.05)
     if getattr(w._results, "_plan", None) is not None:
         break
-pump(60, 0.02)
+pump(80, 0.02)
 R = w._results
-R._set_adv_open(True)      # el manual muestra también las opciones avanzadas (efectos, voz, modo promo y firma)
-R._waveform.parentWidget().setMaximumHeight(380)
-R._waveform.setMaximumHeight(310)   # onda compacta (con la paleta de efectos debajo), como en una ventana normal
-pump(20)
+img = grab(w); d = dpr_of(img)
+save(img, "03a_destino")
+dp = w._dest_page
+annotate(img, [(rect_of(dp.tiles["redes"], w), 1), (rect_of(dp.tiles["sello"], w), 2), (rect_of(dp.btn_skip, w), 3),
+               (rect_of(dp.btn_other, w), 4)], d, "03a_destino_anot")
+w._leave_destination("sello"); pump(60, 0.02)             # «Sellos y A&R»: 60 s
+w.resize(W, 1500 if EDITION == "plus" else 1400); pump(30)
 img = grab(w); d = dpr_of(img)
 save(img, "03_cargada")
 
-items = [(rect_of(R._waveform, w), 1), (rect_of(R._player, w), 2), (rect_of(R._card_bpm, w), 3),
-         (rect_of(R._btn_p120, w), 4), (rect_of(R._chk_advanced, w), 5), (rect_of(R._waveform._fx_palette, w), 6),
-         (rect_of(R._edit_name, w), 7), (rect_of(R._btn_folder, w), 8), (rect_of(R._btn_generate, w), 9)]
+items = [(rect_of(R._waveform, w), 1), (rect_of(R._player, w), 2), (rect_of(R._chips_row, w), 3),
+         (rect_of(R._card_duration, w), 4), (rect_of(R._detail_card, w), 5), (rect_of(R._btn_next, w), 6),
+         (rect_of(R._btn_change_dest, w), 7)]
 if EDITION == "plus":
-    items = [(rect_of(R._waveform, w), 1), (rect_of(R._player, w), 2), (rect_of(R._card_bpm, w), 3),
-             (rect_of(R._btn_p120, w), 4), (rect_of(R._preset_bar, w), 5), (rect_of(R._chk_advanced, w), 6),
-             (rect_of(R._waveform._fx_palette, w), 7), (rect_of(R._card_startend, w), 8),
-             (rect_of(R._edit_name, w), 9), (rect_of(R._chk_fx_master, w), 10), (rect_of(R._btn_voice_drop, w), 11),
-             (rect_of(R._chk_promo, w), 12), (rect_of(R._branding_card, w), 13), (rect_of(R._btn_generate, w), 14)]
-rec("loaded", waveform=R._waveform, player=R._player, bpm=R._card_bpm, key=R._card_key, drops=R._card_drops, pv=R._card_pv,
-    p15=R._btn_p15, p30=R._btn_p30, p60=R._btn_p60, p120=R._btn_p120, name=R._edit_name, generate=R._btn_generate,
-    folder=R._btn_folder, stats_row=R._card_file)
+    items = [(rect_of(R._waveform, w), 1), (rect_of(R._player, w), 2), (rect_of(R._chips_row, w), 3),
+             (rect_of(R._card_duration, w), 4), (rect_of(R._card_startend_simple, w), 5), (rect_of(R._detail_card, w), 6),
+             (rect_of(R._btn_next, w), 7), (rect_of(R._btn_change_dest, w), 8)]
+rec("loaded", waveform=R._waveform, player=R._player, chips=R._chips_row, p15=R._btn_p15, p30=R._btn_p30, p60=R._btn_p60,
+    p120=R._btn_p120, next=R._btn_next, detail=R._detail_card, stats_row=R._chips_row)
 annotate(img, items, d, "03_cargada_anot")
 meta["loaded_items"] = [n for _, n in items]
 
 # recortes por zona
-zones = {
-    "z_waveform": R._waveform, "z_player": R._player,
-    "z_stats": R._card_file.parentWidget() if False else None,
-    "z_presets": R._btn_p15.parentWidget(), "z_export": R._edit_name.parentWidget(),
-}
-for nm, wd in zones.items():
-    if wd is None:
-        continue
+for nm, wd in (("z_waveform", R._waveform), ("z_player", R._player), ("z_stats", R._chips_row),
+               ("z_presets", R._card_duration)):
     save(crop(img, rect_of(wd, w), d, 4), nm)
-stats_rect = rect_of(R._card_file, w).united(rect_of(R._card_pv, w))
-save(crop(img, stats_rect, d, 4), "z_stats")
 if EDITION == "plus":
-    save(crop(img, rect_of(R._branding_card, w), d, 4), "z_firma")
-
-if EDITION == "plus":
-    _im0 = grab(w)
-    save(crop(_im0, rect_of(R._card_startend, w), dpr_of(_im0), 4), "z_startend")
+    save(crop(img, rect_of(R._card_startend_simple, w), d, 4), "z_startend")
 
 # ── 3a. Efectos colocados en la onda (Basic y Plus) ──
 _segs = R._plan.segments
@@ -260,9 +247,24 @@ _im = grab(w)
 save(crop(_im, rect_of(_wv, w).united(rect_of(_wv._fx_inspector, w)), dpr_of(_im), 4), "z_efectos")
 _wv.clear_fx(); pump(20)
 
-# ── 3b. Tarjeta del vídeo (para el manual): formato, look, título, final y vista previa ──
-from PIL import Image as _PImg, ImageDraw as _PDraw
+# ── 3b. Paso ③ «Exportar» ──
+R.go_step(3, animate=False); pump(40, 0.02)
 w.resize(W, 1500); pump(30)
+img = grab(w); d = dpr_of(img)
+save(img, "03b_exportar")
+items = [(rect_of(R._card_f_mp3, w), 1), (rect_of(R._card_f_video, w), 2), (rect_of(R._card_name, w), 3),
+         (rect_of(R._gen_bar, w), 4), (rect_of(R._btn_back, w), 5)]
+if EDITION == "plus":
+    items = [(rect_of(R._card_f_mp3, w), 1), (rect_of(R._card_f_wav, w), 2), (rect_of(R._card_f_video, w), 3),
+             (rect_of(R._card_f_promo, w), 4), (rect_of(R._card_name, w), 5), (rect_of(R._card_sign, w), 6),
+             (rect_of(R._gen_bar, w), 7), (rect_of(R._btn_back, w), 8)]
+annotate(img, items, d, "03b_exportar_anot")
+meta["export_items"] = [n for _, n in items]
+save(crop(img, rect_of(R._card_f_mp3, w).united(rect_of(R._card_f_video, w)), d, 4), "z_export")
+save(crop(img, rect_of(R._card_name, w), d, 4), "z_nombre")
+
+# ── 3c. Tarjeta del vídeo (para el manual): formato, look, título, final y vista previa ──
+from PIL import Image as _PImg, ImageDraw as _PDraw
 R._chk_video.setChecked(True); pump(40, 0.02)
 _im = grab(w); save(crop(_im, rect_of(R._row_video_title_widget, w), dpr_of(_im), 4), "z_video")
 if EDITION == "plus":
@@ -276,53 +278,80 @@ if EDITION == "plus":
     _vc = R._video_custom
     R._video_custom = type(_vc)(_vc, style="neon"); R._sync_look_combo()
 R._set_combo_by_data(R._combo_aspect, "9:16")
-R._chk_video.setChecked(False); pump(30); w.resize(W, H); pump(20)
-
-# ── 4. Editor avanzado (Plus) ─────────────────────────────────────────────
-w.resize(W, 1300); pump(20)   # ventana alta: se ve el panel completo sin scroll
+R._chk_video.setChecked(False); pump(30)
 if EDITION == "plus":
-    R._chk_advanced.setChecked(True); pump(30, 0.02)
+    R._set_adv_open(True); pump(30, 0.02)
+    _im = grab(w)
+    save(crop(_im, rect_of(R._branding_card, w), dpr_of(_im), 4), "z_firma")
+    save(crop(_im, rect_of(R._card_sign, w), dpr_of(_im), 4), "z_firma_tarjeta")
+
+# ── 4. «Retocar con más detalle» (paso ②) ──────────────────────────────────
+R.go_step(2, animate=False); w.resize(W, 1700); pump(30)
+R._chk_advanced.setChecked(True); pump(40, 0.02)
+if EDITION == "plus":
     for idx, nm in enumerate(("04_editor_cortes", "05_editor_bpm", "06_estructura")):
         R._tabs.setCurrentIndex(idx); pump(30, 0.02)
         im = grab(w); save(im, nm)
         tabs_r = rect_of(R._tabs, w)
         if idx == 0:
-            rec("cuts", tabs=R._tabs, add_cut=R._btn_add_cut, tbl=R._tbl_cuts, adv=R._chk_advanced, waveform=R._waveform)
+            rec("cuts", tabs=R._tabs, add_cut=R._btn_add_cut, tbl=R._tbl_cuts, adv=R._detail_card, waveform=R._waveform)
         if idx == 1:
-            rec("bpm", tabs=R._tabs, auto=R._btn_mode_auto, manual=R._btn_mode_manual, plot=R._tempo_plot_frame, adv=R._chk_advanced)
+            rec("bpm", tabs=R._tabs, auto=R._btn_mode_auto, manual=R._btn_mode_manual, plot=R._tempo_plot_frame, adv=R._detail_card)
         save(crop(im, tabs_r, dpr_of(im), 4), "z_" + nm)
         if idx == 0:
+            save(crop(im, rect_of(R._detail_card, w), dpr_of(im), 4), "z_detalle")
             annotate_crop(im, tabs_r, [(rect_of(R._btn_add_cut, w), 1), (rect_of(R._tbl_cuts, w), 2),
                                        (rect_of(R._lbl_cuts_summary, w), 3)], dpr_of(im), "z_04_editor_cortes_anot")
         if idx == 1:
             annotate_crop(im, tabs_r, [(rect_of(R._btn_mode_auto, w), 1), (rect_of(R._btn_mode_manual, w), 2),
                                        (rect_of(R._tempo_plot_frame, w), 3)], dpr_of(im), "z_05_editor_bpm_anot")
-    R._chk_advanced.setChecked(False); pump(20)
+    R._tabs.setCurrentIndex(0)
 else:
-    # Basic: ordenar y mover los cortes (solo la pestaña del editor de cortes)
-    R._chk_advanced.setChecked(True); pump(30, 0.02)
     im = grab(w)
-    save(crop(im, rect_of(R._tabs, w), dpr_of(im), 4), "z_cortes_basic")
-    R._chk_advanced.setChecked(False); pump(20)
+    save(crop(im, rect_of(R._detail_card, w), dpr_of(im), 4), "z_cortes_basic")
+R._chk_advanced.setChecked(False); pump(20); w.resize(W, 1500); pump(20)
 
 if EDITION == "plus":
-    # ── 5. Modo promo + Voice Drop ───────────────────────────────────────
+    # ── 5. Modo promo + Voice Drop (paso ③) ──────────────────────────────
+    R.go_step(3, animate=False); pump(20)
     R._set_voice_drop_path(str(tag)); pump(20)
     R._chk_promo.setChecked(True); pump(30, 0.02)
     im = grab(w); d = dpr_of(im)
     save(im, "07_promo")
-    rec("promo", export=R._edit_name.parentWidget(), promo=R._chk_promo, voice=R._btn_voice_drop, master=R._chk_fx_master,
+    rec("promo", export=R._card_f_mp3, promo=R._chk_promo, voice=R._btn_voice_drop, master=R._chk_fx_master,
         spin=R._spin_promo, name=R._edit_name, generate=R._btn_generate, preset_bar=R._preset_bar)
-    export_r = rect_of(R._edit_name.parentWidget(), w)
+    export_r = rect_of(R._card_f_mp3, w).united(rect_of(R._card_f_promo, w))
     save(crop(im, export_r, d, 4), "z_export_promo")
-    annotate(crop(im, export_r, d, 4), [], d, "z_export_promo_anot")
+    save(crop(im, rect_of(R._adv_fx_widget, w), d, 4), "z_avanzadas")
     R._chk_promo.setChecked(False); pump(10)
 
-    # ── 6. Presets guardados ──────────────────────────────────────────────
+    # ── 6. Presets guardados (dentro de «Retocar con más detalle») ───────
     R._on_preset_save("Radical Main", True, True); pump(20)
     R._on_preset_save("Set de Verano", True, True); pump(20)
+    R.go_step(2, animate=False); R._chk_advanced.setChecked(True); pump(40, 0.02)
     im = grab(w)
-    save(crop(im, rect_of(R._btn_p15.parentWidget(), w), dpr_of(im), 4), "z_presets_guardados")
+    save(crop(im, rect_of(R._preset_bar, w), dpr_of(im), 4), "z_presets_guardados")
+    R._chk_advanced.setChecked(False); pump(20)
+
+# ── 6b. Modo Estudio ───────────────────────────────────────────────────────
+w.resize(W, 1500); pump(20)
+R._waveform._add_fx("flanger", float(R._plan.segments[0].source_start) + 3.0)
+R._waveform._add_fx("filter_up", float(R._plan.segments[-1].source_start) - 9.0)
+R.set_studio(True); pump(60, 0.02)
+_sv = R._studio_view
+im = grab(w); d = dpr_of(im)
+save(im, "18_estudio")
+items = [(rect_of(R._player, w), 1), (rect_of(_sv.btn_undo, w), 2), (rect_of(_sv.btn_redo, w), 3),
+         (rect_of(list(_sv.side_btns.values())[0].parentWidget(), w), 4), (rect_of(R._waveform, w), 5),
+         (rect_of(R._btn_generate, w), 6)]
+annotate(im, items, d, "18_estudio_anot")
+meta["studio_items"] = [n for _, n in items]
+if EDITION == "plus":
+    for k in ("efectos", "video", "firma"):
+        _sv.show_tool(k); pump(40, 0.02)
+        save(grab(w), "18_estudio_" + k)
+R.set_studio(False); R._waveform.clear_fx(); pump(30)
+R.go_step(3, animate=False); pump(20)
 
 # ── 7. Generar una previa real (MP3, y WAV en Plus) ───────────────────────
 R._chk_fx_master.setChecked(EDITION == "plus")

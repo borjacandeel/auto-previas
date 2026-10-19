@@ -228,3 +228,26 @@ def test_soltar_una_imagen_es_la_caratula_solo_en_plus(monkeypatch, tmp_path):
         _drop(w, [img])
         assert (puestas == [str(img)]) == (ed == "plus")
         _cerrar(w)
+
+
+# ── avisos con diseño ────────────────────────────────────────────────────────────────────────────
+def test_los_avisos_tienen_hoja_de_estilo_valida_y_ejecutan_su_accion(monkeypatch):
+    from PySide6.QtCore import qInstallMessageHandler
+    from PySide6.QtWidgets import QMainWindow
+    from src.ui.toast import toast
+    msgs = []
+    qInstallMessageHandler(lambda t, c, m: msgs.append(m))
+    try:
+        win = QMainWindow()
+        win.resize(900, 600)
+        win.show()
+        hecho = []
+        for kind in ("info", "success", "warn", "error"):
+            t = toast(win, kind, f"Aviso {kind}", "detalle", action=("Reintentar", lambda k=kind: hecho.append(k)))
+            QApplication.processEvents()
+            t.findChildren(__import__("PySide6.QtWidgets", fromlist=["QPushButton"]).QPushButton)[0].click()
+        assert hecho == ["info", "success", "warn", "error"]
+    finally:
+        qInstallMessageHandler(None)
+    assert not [m for m in msgs if "parse stylesheet" in m], msgs
+    _cerrar(win)

@@ -41,6 +41,7 @@ def _wrap(layout) -> QWidget:
 
 def assemble(R, edition_plus: bool):
     """Monta los pasos ② y ③ del asistente con los widgets ya creados de `R` (ResultPanel)."""
+    R._studio_plus = edition_plus
     R._v5_old = []
     taken = []
     for lay in (R._page2.layout(), R._page3.layout()):

@@ -1057,3 +1057,7 @@ EN.update({
     "↻  Seguir con «{n}»": "↻  Continue with “{n}”",
     "🔒  WAV, FLAC, vídeo sin marca de agua y modo promo: solo en Plus": "🔒  WAV, FLAC, watermark-free video and promo mode: Plus only",
 })
+EN.update({
+    "↶  Deshacer": "↶  Undo", "↷  Rehacer": "↷  Redo", "Salir del Estudio": "Leave Studio", "Previa: {t}": "Preview: {t}",
+    "Cortes": "Cuts", "Efectos": "Effects", "Tempo": "Tempo", "Firma": "Signature", "Vídeo": "Video", "Presets": "Presets",
+})

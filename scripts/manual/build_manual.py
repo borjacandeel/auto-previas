@@ -166,7 +166,7 @@ def portada(ed: str, im: dict) -> str:
 
 def indice(plus: bool) -> str:
     items = ["Qué es AutoPrevias", "Instalación (macOS y Windows)", "Activar tu licencia", "Recorrido por la interfaz",
-             "Tu primera previa, paso a paso", "Forma de onda, cortes y reproductor",
+             "Tu primera previa, paso a paso", "Forma de onda, cortes, reproductor y modo Estudio",
              "Ajustes de exportación"]
     if plus:
         items += ["Editor avanzado: cortes, BPM y estructura", "Efectos, Voice Drop y Modo promo",
@@ -203,7 +203,7 @@ promotores, sellos, DJs o redes sociales.</p>
 <table><tr><th>Sistema</th><th>Requisito</th></tr>
 <tr><td>macOS</td><td>Mac con chip Apple Silicon (M1, M2, M3, M4) — macOS 12 o superior</td></tr>
 <tr><td>Windows</td><td>Windows 10 u 11 de 64 bits</td></tr>
-<tr><td>Procesador</td><td>Cuantos más núcleos, más rápido analiza y genera vídeo (4 o más recomendados). El ajuste <b>⚙ Licencia → Rendimiento</b> controla cuántos usa.</td></tr>
+<tr><td>Procesador</td><td>Cuantos más núcleos, más rápido analiza y genera vídeo (4 o más recomendados). El ajuste <b>⚙ → Rendimiento</b> controla cuántos usa.</td></tr>
 <tr><td>Memoria y espacio</td><td>8 GB de RAM recomendados · 600 MB de espacio libre</td></tr>
 <tr><td>Internet</td><td>Solo para activar la licencia, la verificación automática (al abrir la app y cada pocas horas; puedes trabajar hasta 14 días sin conexión) y buscar actualizaciones</td></tr></table>
 </section>"""
@@ -250,7 +250,7 @@ al comprar en la tienda de Radical Records (<b>{buy}</b>).</p>
 la app te avisa y no se activa nada: descarga el instalador correcto en la tienda de Radical Records.</p>
 <h3>Una licencia = un equipo</h3>
 <p>Tu clave puede estar activa en <b>un solo ordenador a la vez</b>. Si ya la usas en uno, no se podrá activar en otro hasta que la
-desactives allí (<b>⚙ Licencia → Desactivar licencia en este equipo</b>, que la libera al instante) o pasen 15 días sin que ese equipo
+desactives allí (<b>⚙ → Desactivar licencia en este equipo</b>, que la libera al instante) o pasen 15 días sin que ese equipo
 se conecte. Si un ordenador se avería, escríbenos y la liberamos. El equipo se identifica con un código anónimo: no se envía ningún dato personal.</p>
 <h3>Cómo funciona después</h3>
 <table><tr><th>Situación</th><th>Qué ocurre</th></tr>
@@ -262,71 +262,93 @@ se conecte. Si un ordenador se avería, escríbenos y la liberamos. El equipo se
 
 
 def s_interfaz(ed: str, plus: bool, im: dict) -> str:
+    tools = ("«Recientes», «Modo Lote», «Vigilar carpeta» y «Firmar tema entero»." if plus else
+             "«Recientes»; Lote, Vigilar carpeta y Firmar tema aparecen con candado (🔒): son de Plus.")
+    l1 = [("Elegir archivo", "elige un track desde tu ordenador (también puedes arrastrarlo a cualquier parte de la ventana)."),
+          ("🧰 Herramientas", "menú con " + tools),
+          ("❓ Ayuda", "guía de 2 minutos, atajos de teclado y escribir a soporte."),
+          ("⚙", "versión, licencia, idioma, rendimiento, actualizaciones y «Abrir siempre en modo Estudio»."),
+          ("ES / EN", "cambia el idioma de la interfaz (castellano por defecto)."),
+          ("Distintivo de edición", f"te indica que trabajas con la edición {'PLUS' if plus else 'BÁSICA'}."),
+          ("Guía de 2 minutos", "repite el recorrido guiado por toda la app cuando quieras.")]
+    ldest = [("Redes sociales", "15 s, MP3 y vídeo vertical 9:16."),
+             ("Sellos y A&R (recomendado)", "60 s" + (", WAV de alta calidad" if plus else ", MP3 320k") + " con carátula y etiquetas."),
+             ("Saltar este paso", "va directo a la previa sin aplicar ningún destino."),
+             ("Otro tema", "vuelve a elegir un archivo.")]
     if plus:
-        l1 = [("Abrir archivo", "elige un track desde tu ordenador (también puedes arrastrarlo a la ventana)."),
-              ("Recientes", "historial de previas generadas y pistas abiertas, para reabrir un proyecto."),
-              ("Modo Lote", "procesa varias pistas seguidas de forma automática."),
-              ("Vigilar Carpeta", "genera previas solas cuando cae un tema nuevo en una carpeta."),
-              ("Firmar tema", "firma un tema entero (no una previa): carátula y etiquetas, en FLAC o WAV a máxima calidad."),
-              ("Licencia", "versión, estado de la licencia, idioma y búsqueda de actualizaciones."),
-              ("ES / EN", "cambia el idioma de la interfaz (castellano por defecto)."),
-              ("Distintivo de edición", "te indica que trabajas con la edición PLUS.")]
-    else:
-        l1 = [("Abrir archivo", "elige un track desde tu ordenador (también puedes arrastrarlo a la ventana)."),
-              ("Recientes", "lista de pistas abiertas recientemente para volver a cargarlas con un clic."),
-              ("Licencia", "versión, estado de la licencia, idioma y búsqueda de actualizaciones."),
-              ("ES / EN", "cambia el idioma de la interfaz (castellano por defecto)."),
-              ("Distintivo de edición", "te indica que trabajas con la edición BÁSICA.")]
-    if plus:
-        l2 = [("Forma de onda", "tu track con las secciones coloreadas y los cortes que irán a la previa."),
+        l2 = [("Forma de onda", "tu track con las secciones coloreadas, los cortes y los efectos que arrastres."),
               ("Reproductor", "escucha la pista original o la previa generada (A/B)."),
-              ("BPM", "tempo detectado; haz doble clic para corregirlo."),
-              ("Duración de la previa", "15 s, 30 s, 60 s o 2 min (club)."),
-              ("Mis presets", "guarda y aplica tus propios ajustes de firma y estilo."),
-              ("Personalizar cortes y BPM", "abre el editor avanzado."),
-              ("Efectos en la onda", "arrastra Flanger o Filter Sweep hasta donde quieras que suenen."),
-              ("Cómo empieza y acaba", "arranque y final de la previa: con el efecto de vinilo o a los BPM originales."),
-              ("Nombre y formatos", "nombre del archivo y formatos de salida."),
-              ("Master LUFS", "volumen de club; los efectos Flanger y Filter Sweep se arrastran sobre la onda."),
-              ("Voice Drop", "superpone tu firma de voz o jingle sobre la previa."),
-              ("Modo promo", "firma repetida y MP3 128 kbps para proteger el audio."),
-              ("Firma y carátula", "artista, sello, álbum, género, comentario y portada."),
-              ("GENERAR PREVIA", "crea y exporta la previa.")]
+              ("Datos del tema", "duración, BPM (doble clic para corregirlo), tonalidad y drops."),
+              ("¿Cuánto debe durar?", "15 s, 30 s, 60 s o 2 min."),
+              ("Cómo suena el principio y el final", "interruptores para el arranque y el frenazo de vinilo."),
+              ("Retocar con más detalle", "cortes exactos, orden, variación de BPM, estructura, presets y los segundos del vinilo."),
+              ("Siguiente: elegir formatos", "pasa al paso ③ Exportar."),
+              ("Cambiar destino", "vuelve a la pantalla de destinos.")]
+        l3 = [("MP3 320k", "formato ligero para correo y redes."), ("WAV · FLAC", "máxima calidad para sellos y masters."),
+              ("Vídeo para redes", "vídeo animado con carátula; elige 9:16, 1:1 o 16:9."),
+              ("Modo promo", "tu firma de voz repetida y MP3 128 kbps."),
+              ("Nombre y carpeta", "cómo se llama la previa y dónde se guarda."),
+              ("Firma y carátula", "artista, sello y portada incrustados; «Editar» abre todos los datos."),
+              ("GENERAR PREVIA", "resumen de lo que se creará y botón para exportar."),
+              ("Volver a la previa", "regresa al paso ②.")]
     else:
-        l2 = [("Forma de onda", "tu track con las secciones coloreadas y los cortes que irán a la previa."),
+        l2 = [("Forma de onda", "tu track con las secciones coloreadas, los cortes y los efectos que arrastres."),
               ("Reproductor", "escucha la pista original o la previa generada (A/B)."),
-              ("BPM", "tempo detectado; haz doble clic para corregirlo."),
-              ("Duración de la previa", "15 s, 30 s, 60 s o 2 min (club)."),
-              ("Ordenar y mover cortes", "pon nombre y orden a los cortes y elige dónde empieza la previa."),
-              ("Efectos en la onda", "arrastra Flanger o Filter Sweep hasta donde quieras que suenen."),
-              ("Nombre", "nombre del archivo de la previa."),
-              ("Cambiar carpeta", "elige dónde se guardan las previas."),
-              ("GENERAR PREVIA", "crea y exporta la previa en MP3 320 kbps.")]
+              ("Datos del tema", "duración, BPM (doble clic para corregirlo), tonalidad y drops."),
+              ("¿Cuánto debe durar?", "15 s, 30 s, 60 s o 2 min."),
+              ("Retocar con más detalle", "ordena y mueve los cortes y elige dónde empieza la previa."),
+              ("Siguiente: elegir formatos", "pasa al paso ③ Exportar."),
+              ("Cambiar destino", "vuelve a la pantalla de destinos.")]
+        l3 = [("MP3 320k", "formato ligero con metadatos."),
+              ("Vídeo para redes", "vídeo animado con marca de agua; elige 9:16, 1:1 o 16:9."),
+              ("Nombre y carpeta", "cómo se llama la previa y dónde se guarda."),
+              ("GENERAR PREVIA", "resumen de lo que se creará y botón para exportar."),
+              ("Volver a la previa", "regresa al paso ②.")]
     return f"""
 <section><h1>4. Recorrido por la interfaz</h1>
+<p>AutoPrevias te guía en <b>tres pasos</b>: <b>① Tu tema</b> (cargarlo y analizarlo), <b>② Tu previa</b> (duración, cortes, efectos) y
+<b>③ Exportar</b> (formatos, vídeo y GENERAR). Arriba ves siempre una cinta con los pasos; puedes pulsar cualquiera para ir y volver sin perder nada.</p>
 <h3>Pantalla de inicio</h3>
 {fig(im.get('01_bienvenida_anot',''), 'Pantalla de inicio de AutoPrevias')}
 {legend(l1)}
 <section class="flow" style="break-before:page">
-<h3>Pantalla de trabajo</h3>
-<p>Al cargar un track, AutoPrevias lo analiza (unos segundos) y muestra la pantalla de trabajo, con todo lo necesario para generar tu previa.</p>
-{fig(im.get('03_cargada_anot',''), 'Pantalla de trabajo con una pista analizada')}
+<h3>Elegir el destino</h3>
+<p>Al terminar el análisis, AutoPrevias te pregunta <b>para qué es la previa</b>. Con un clic deja listas la duración, los formatos, el vídeo y, en Plus, el arranque y el frenazo de vinilo.
+Después puedes cambiar lo que quieras. Si no lo necesitas, pulsa <b>Saltar este paso</b> o marca <b>No volver a mostrar esta pantalla</b>.</p>
+{fig(im.get('03a_destino_anot',''), 'Pantalla «¿Para qué es esta previa?»')}
+{legend(ldest)}
+<table><tr><th>Destino</th><th>Qué prepara</th></tr>
+<tr><td><b>📱 Redes sociales</b></td><td>15 s · MP3 y vídeo vertical 9:16</td></tr>
+<tr><td><b>📻 Radio y promotores</b></td><td>30 s · MP3</td></tr>
+<tr><td><b>🏷 Sellos y A&amp;R</b></td><td>60 s · {'WAV 24 bit y MP3' if plus else 'MP3 320k'}</td></tr>
+<tr><td><b>🎧 DJ y club</b></td><td>2 min · {'FLAC y MP3, con arranque y frenazo de vinilo' if plus else 'MP3 320k'}</td></tr>
+<tr><td><b>🛡 Envío seguro</b></td><td>{'30 s · Modo promo (MP3 128k con tu voz repetida; necesita tu firma de voz)' if plus else '🔒 Solo en Plus'}</td></tr>
+<tr><td><b>🎛 Lo monto yo</b></td><td>No cambia nada y abre «Retocar con más detalle»</td></tr></table>
+</section>
+<section class="flow" style="break-before:page">
+<h3>Paso ② · Tu previa</h3>
+{fig(im.get('03_cargada_anot',''), 'Paso ②: la previa lista para revisar')}
 {legend(l2, 'two')}
+</section>
+<section class="flow" style="break-before:page">
+<h3>Paso ③ · Exportar</h3>
+{fig(im.get('03b_exportar_anot',''), 'Paso ③: qué quieres crear')}
+{legend(l3, 'two')}
 </section></section>"""
 
 
 def s_primera(ed: str, plus: bool, im: dict) -> str:
-    extra = (" Si quieres retocar algo, activa <b>Personalizar Cortes &amp; BPM</b> (ver capítulo 8)." if plus else "")
+    extra = (" Si quieres retocar algo, abre <b>Retocar con más detalle</b> (ver capítulo 8)." if plus else "")
     return f"""
 <section><h1>5. Tu primera previa, paso a paso</h1>
-{steps(["<b>Carga el track.</b> Arrástralo a la ventana o pulsa <b>Abrir archivo</b> y elígelo.",
+{steps(["<b>Carga el track.</b> Arrástralo a la ventana o pulsa <b>Elegir archivo…</b> y elígelo.",
         "<b>Espera al análisis.</b> AutoPrevias detecta BPM, tonalidad, drops y secciones. Verás una barra de progreso; suele tardar unos segundos.",
-        "<b>Revisa el resultado.</b> En la forma de onda aparecen coloreados los fragmentos que formarán la previa; las tarjetas muestran archivo, BPM, tonalidad, duración, nº de drops y duración estimada de la previa.",
-        "<b>Elige la duración.</b> Pulsa <b>15 s (Teaser)</b>, <b>30 s (Promo)</b>, <b>60 s (Extended)</b> o <b>120 s / 2 min (Club)</b>, que es la opción por defecto. Los cortes se recalculan al instante." + extra,
+        "<b>Elige para qué es.</b> Pulsa un destino (<b>Redes sociales</b>, <b>Radio</b>, <b>Sellos</b>, <b>DJ y club</b>…) o <b>Saltar este paso</b>.",
+        "<b>Revisa tu previa (paso ②).</b> En la forma de onda aparecen coloreados los fragmentos que formarán la previa; arriba ves BPM, tonalidad, drops y la duración estimada. Si quieres otra duración, pulsa <b>15 s</b>, <b>30 s</b>, <b>60 s</b> o <b>2 min</b>; los cortes se recalculan al instante." + extra,
         "<b>Escúchala (opcional).</b> Con el reproductor puedes oír la pista original y, tras generarla, la previa.",
-        "<b>Ponle nombre y carpeta.</b> El nombre propuesto es <code>PREVIA - nombre del track</code>; puedes cambiarlo. Con <b>Cambiar</b> eliges la carpeta de destino.",
-        "<b>Pulsa GENERAR PREVIA.</b> AutoPrevias construye la previa y la exporta.",
-        "<b>Listo.</b> Aparece la tarjeta de éxito con los archivos creados. Pulsa <b>Abrir carpeta</b> para verlos o <b>Generar otra previa</b> para continuar."])}
+        "<b>Pulsa «Siguiente: elegir formatos».</b> En el paso ③ marca lo que quieres crear (MP3, vídeo para redes…), revisa el nombre y la carpeta.",
+        "<b>Pulsa GENERAR PREVIA.</b> AutoPrevias construye la previa y la exporta; al terminar te avisa con una tarjeta y una notificación.",
+        "<b>Listo.</b> Pulsa <b>Abrir carpeta</b> para ver los archivos o <b>Generar otra previa</b> para continuar."])}
 {fig(im.get('02_analisis',''), 'Durante el análisis aparece una pantalla de progreso', 'mid')}
 </section>
 <section class="flow">
@@ -353,8 +375,8 @@ def s_onda(ed: str, plus: bool, im: dict) -> str:
 </ul>
 <h3>Nombres, orden y punto de inicio de los cortes</h3>
 {fig(im.get('z_cortes_basic' if not plus else 'z_04_editor_cortes',''), 'Editor de cortes: nombres, orden y punto de inicio')}
-<p>Cada corte se crea con su nombre: <b>Corte 1</b>, <b>Corte 2</b>, <b>Corte 3</b>… Ese nombre es fijo, aunque cambies el orden. Activa la casilla
-<b>{'⚙ Personalizar Cortes &amp; BPM' if plus else '✂ Ordenar y mover cortes'}</b> para verlos en una tabla:</p>
+<p>Cada corte se crea con su nombre: <b>Corte 1</b>, <b>Corte 2</b>, <b>Corte 3</b>… Ese nombre es fijo, aunque cambies el orden. Abre
+<b>«Retocar con más detalle»</b> (paso ②) para verlos en una tabla:</p>
 <ul>
 <li><b>▲ ▼</b> cambian el <b>orden</b> en que suenan en la previa (por ejemplo, que el drop suene primero). La primera columna indica el orden («1º · Corte 2»).</li>
 <li><b>«La previa empieza»</b>: <b>⏮ Al inicio del tema</b> lleva el primer corte al principio de la canción y <b>⏺ A mitad del tema</b> lo coloca a la mitad (siempre ajustado a un compás). Para cualquier otro punto, <b>arrastra el primer corte</b> sobre la forma de onda o cambia sus segundos en la tabla.</li>
@@ -362,12 +384,13 @@ def s_onda(ed: str, plus: bool, im: dict) -> str:
 </ul>
 {f"""<h3>Cómo empieza y cómo acaba la previa</h3>
 {fig(im.get('z_startend',''), 'Tarjeta «Cómo empieza y cómo acaba la previa»: arranque y final a tu elección')}
-<p>Justo encima del panel de exportación tienes esta tarjeta, siempre a la vista (no hace falta abrir ninguna pestaña). Elige cada extremo por separado:</p>
-<table><tr><th>Opción</th><th>Qué hace</th></tr>
-<tr><td><b>ARRANQUE · 🌀 Vinilo: de 0 al tempo</b></td><td>La previa arranca como un disco que coge velocidad: de 0 BPM al tempo del tema en los segundos que pongas (por defecto 1 s).</td></tr>
-<tr><td><b>ARRANQUE · ▶ BPM originales desde el inicio</b></td><td>La previa empieza ya a los BPM originales, sin efecto.</td></tr>
-<tr><td><b>FINAL · 🌀 Vinilo: frena hasta parar</b></td><td>La previa acaba como un disco que se para: del tempo a 0 BPM en los segundos que pongas (por defecto 1 s).</td></tr>
-<tr><td><b>FINAL · ⏹ Acabar a los BPM originales</b></td><td>La previa acaba a los BPM originales, sin frenazo (queda solo el fundido final).</td></tr></table>
+<p>En el paso ② tienes estos dos interruptores, siempre a la vista. Cada extremo se elige por separado:</p>
+<table><tr><th>Interruptor</th><th>Qué hace</th></tr>
+<tr><td><b>Arrancar como un disco de vinilo</b> (activado)</td><td>La previa arranca como un disco que coge velocidad: de 0 BPM al tempo del tema en 1 segundo.</td></tr>
+<tr><td><b>Arrancar como un disco de vinilo</b> (apagado)</td><td>La previa empieza ya a los BPM originales, sin efecto.</td></tr>
+<tr><td><b>Acabar frenando</b> (activado)</td><td>La previa acaba como un disco que se para: del tempo a 0 BPM en 1 segundo.</td></tr>
+<tr><td><b>Acabar frenando</b> (apagado)</td><td>La previa acaba a los BPM originales, sin frenazo (queda solo el fundido final).</td></tr></table>
+<p>Para cambiar los <b>segundos</b> del arranque y del frenazo (de 0,5 a 6 s), abre <b>«Retocar con más detalle»</b>.</p>
 <p>Tu elección se guarda en los presets y en «Reabrir proyecto». En Basic la previa siempre arranca y acaba con el efecto de vinilo de 1 s.</p>""" if plus else ""}
 <h3>Efectos en la onda (Flanger y Filter Sweep)</h3>
 {fig(im.get('z_efectos',''), 'Efectos colocados sobre la onda: tarjetas para arrastrar, bloques en la onda y ajustes del efecto elegido')}
@@ -387,17 +410,25 @@ def s_onda(ed: str, plus: bool, im: dict) -> str:
 <li>Botones de retroceso, parada, reproducir/pausa, avance y repetición; vúmetro estéreo (L/R) y volumen.</li>
 <li>Barra de progreso: arrástrala o haz clic para moverte por el tema.</li>
 </ul>
-<h3>Las tarjetas de información</h3>
-{fig(im.get('z_stats',''), 'Tarjetas: archivo, BPM, clave Camelot, duración, drops y previa estimada')}
+<h3>Los datos del tema</h3>
+{fig(im.get('z_stats',''), 'Datos del tema: duración, BPM, clave Camelot y drops')}
 <p><b>BPM</b> y <b>Clave / Camelot</b> te sirven para mezclar y catalogar. Si el BPM detectado no es el correcto (por ejemplo, el doble o la mitad),
-<b>haz doble clic en la tarjeta BPM</b> e introduce el valor real: la previa se recalcula con el nuevo tempo.</p>
-<h3>Los presets de duración</h3>
-{fig(im.get('z_presets',''), 'Presets de duración' + (' y presets guardados' if plus else ''))}
-<table><tr><th>Preset</th><th>Para qué sirve</th></tr>
-<tr><td><b>⚡ 15 s · Teaser</b></td><td>Avance muy corto para redes sociales o historias.</td></tr>
-<tr><td><b>📻 30 s · Promo</b></td><td>Formato clásico de promoción para promotores y radios.</td></tr>
-<tr><td><b>🚀 60 s · Extended</b></td><td>Más recorrido del tema, ideal para sellos y A&amp;R.</td></tr>
-<tr><td><b>🔥 120 s · Club</b></td><td>Previa de dos minutos con intro, subida y drops. <i>Opción por defecto.</i></td></tr></table>
+<b>haz doble clic en la etiqueta BPM</b> e introduce el valor real: la previa se recalcula con el nuevo tempo.</p>
+<h3>La duración de la previa</h3>
+{fig(im.get('z_presets',''), 'Cuatro duraciones para elegir con un clic')}
+<table><tr><th>Opción</th><th>Para qué sirve</th></tr>
+<tr><td><b>15 s · Teaser para redes</b></td><td>Avance muy corto para redes sociales o historias.</td></tr>
+<tr><td><b>30 s · Promo para radio</b></td><td>Formato clásico de promoción para promotores y radios.</td></tr>
+<tr><td><b>60 s · Para sellos y A&amp;R</b></td><td>Más recorrido del tema, ideal para sellos y A&amp;R.</td></tr>
+<tr><td><b>2 min · Club</b></td><td>Previa de dos minutos con intro, subida y drops.</td></tr></table>
+<h3>Modo Estudio (para quien ya domina la app)</h3>
+<p>El asistente es lo más fácil para empezar. Si prefieres verlo todo a la vez, pulsa <b>Ctrl/⌘ + E</b> (o activa <b>⚙ → Abrir siempre en modo Estudio</b>): el asistente se
+sustituye por <b>una sola vista</b> con el reproductor arriba, la forma de onda con sus cortes y efectos en el centro y, abajo, los formatos, el nombre y <b>GENERAR</b>.</p>
+{fig(im.get('18_estudio_anot',''), 'Modo Estudio')}
+{legend([("Reproductor", "con los datos del tema."), ("Deshacer", "deshace el último cambio de cortes o efectos (también Ctrl/⌘ + Z)."),
+         ("Rehacer", "lo vuelve a poner (Ctrl/⌘ + Mayús + Z o Ctrl/⌘ + Y)."), ("Menú de herramientas", "Cortes, Efectos, Tempo, Firma, Vídeo y Presets" if plus else "Cortes y Vídeo"),
+         ("Forma de onda", "con los carriles de cortes y efectos."), ("GENERAR PREVIA", "siempre a mano en la barra de abajo.")])}
+<p>Cada herramienta del menú lateral abre su panel debajo de la onda. Para volver al asistente, pulsa <b>Salir del Estudio</b> o <b>Ctrl/⌘ + E</b>.</p>
 </section>"""
 
 
@@ -413,13 +444,13 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
     banner_txt = " y un <b>texto de banner</b> (por ejemplo, <i>RADICAL RECORDS · PROMO EXCLUSIVA</i>)" if plus else ""
     video_section = (
         "<h3>Vídeo animado Radical Neón</h3>"
-        "<p>Marca <b>🎬 Vídeo animado</b> y se exportará, junto al audio, un MP4 animado al estilo Radical Records: tu <b>carátula</b> con resplandor neón, "
+        "<p>Marca la tarjeta <b>🎬 Vídeo para redes</b> y se exportará, junto al audio, un MP4 animado al estilo Radical Records: tu <b>carátula</b> con resplandor neón, "
         "el título, artista, BPM y tonalidad, un <b>analizador de espectro</b> que baila con la música y destellos que golpean con el bombo, con un golpe "
         "especial cuando entra el drop. Elige el formato —<b>9:16</b> (TikTok / Reels), <b>1:1</b> (Instagram) o <b>16:9</b> (YouTube)—, la <b>paleta de color</b>"
         + banner_txt + ".</p>"
-        "<p>Todo el vídeo está en una sola tarjeta, <b>② Vídeo animado</b>, que aparece al marcar la casilla: elige el <b>formato</b> con los tres botones "
-        "(<b>9:16 Vertical</b>, <b>1:1 Cuadrado</b> o <b>16:9 Horizontal</b>) y el <b>color</b>; después el <b>título</b>, el <b>final</b> y la <b>vista previa</b>.</p>"
-        + fig(im.get('z_video', ''), 'Tarjeta «Vídeo animado»' + (' (edición Plus)' if plus else ' (edición Basic, con las opciones de Plus bloqueadas)')) +
+        "<p>Elige el <b>formato</b> con las tres pastillas de la propia tarjeta (<b>9:16</b>, <b>1:1</b> o <b>16:9</b>); al marcarla aparece debajo la tarjeta "
+        "<b>Ajustes del vídeo</b> con el <b>color</b>, el <b>título</b>, el <b>final</b> y la <b>vista previa</b>.</p>"
+        + fig(im.get('z_video', ''), 'Ajustes del vídeo' + (' (edición Plus)' if plus else ' (edición Basic, con las opciones de Plus bloqueadas)')) +
         "<p>En el campo <b>Título</b> escribes el nombre que sale en el centro del vídeo; si lo dejas vacío se usa el nombre de la pista. Pulsa "
         "<b>👁 Vista previa</b> para ver unos segundos del vídeo (con sonido y a baja resolución) con tus ajustes antes de generarlo. Como el vídeo se hace "
         "a partir de la previa, al marcarlo el <b>MP3 se exporta siempre</b>.</p>"
@@ -457,22 +488,23 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
             "<p>En la tarjeta del vídeo verás esas opciones de Plus <b>bloqueadas con un candado</b> (🔒) para que sepas qué ganas al pasar a Plus; al pulsarlo se abre la página de compra.</p>"
         )
     return f"""
-<section><h1>7. Ajustes de exportación</h1>
-{fig(im.get('z_export',''), 'Panel de exportación' + (' de la edición Plus' if plus else ' de la edición Basic'))}
+<section><h1>7. Ajustes de exportación (paso ③)</h1>
+{fig(im.get('z_export',''), 'Tarjetas de formato' + (' de la edición Plus' if plus else ' de la edición Basic'))}
 <h3>Nombre del archivo</h3>
 <p>Por defecto, <code>PREVIA - nombre del track</code>. Escribe el que prefieras; AutoPrevias añade la extensión según el formato.</p>
 <h3>Formatos de salida</h3>
 <ul>{fmts}</ul>
 {video_section}
-<h3>Lo que verás en el panel</h3>
-<p>El panel de exportación está ordenado en pasos: <b>① Nombre y formatos</b>, <b>② Vídeo animado</b>{' y <b>③ Opciones avanzadas</b> (efectos, Voice Drop, Modo promo y firma/carátula), que viene plegada para que el panel quede limpio y se abre sola en cuanto activas algo de ella' if plus else ''}.
-Justo encima del botón <b>Generar previa</b>, una línea de resumen te dice qué se va a crear (formatos, vídeo, duración de la previa y carpeta de destino) para que no haya sorpresas.</p>
+<h3>Lo que verás en el paso ③</h3>
+<p>El paso ③ se llama <b>¿Qué quieres crear?</b> y muestra los formatos como tarjetas grandes: pulsa una tarjeta (o su casilla) para marcarla. Lo más habitual ya viene marcado.
+Debajo están <b>Nombre y carpeta</b>{' y <b>Firma y carátula</b>' if plus else ''}, y las <b>Opciones avanzadas</b>{' (Master LUFS, Voice Drop y la firma completa)' if plus else ''} plegadas.
+Al final, una barra con el <b>resumen</b> de lo que se va a crear (formatos, vídeo, duración de la previa y carpeta) y el botón <b>GENERAR PREVIA</b>, para que no haya sorpresas.</p>
 
 {'' if plus else tip('La edición Plus añade WAV 24 bit, FLAC, vídeo animado sin marca de agua, con tu propia imagen y el final a tu elección, firma y carátula personalizadas, efectos de estudio y mucho más. Mira el capítulo «Pasar a la edición Plus».')}
 <h3>Carpeta de destino</h3>
-<p>Pulsa <b>Cambiar</b> para elegir dónde se guardan las previas y <b>Abrir</b> para ver esa carpeta en el Finder / Explorador. La carpeta se recuerda para la próxima vez.</p>
-<h3>Seed y «Regenerar con seed»</h3>
-<p>La <b>seed</b> (semilla) controla las pequeñas decisiones aleatorias del motor. Con la <b>misma seed</b> obtienes <b>la misma previa</b>; cambia la seed
+<p>En <b>Nombre y carpeta</b>, pulsa <b>Cambiar</b> para elegir dónde se guardan las previas y <b>Abrir</b> para ver esa carpeta en el Finder / Explorador. La carpeta se recuerda para la próxima vez.</p>
+<h3>Variante (seed) y «Regenerar con seed»</h3>
+<p>Bajo la barra de GENERAR está la <b>variante (seed)</b>. La <b>seed</b> (semilla) controla las pequeñas decisiones aleatorias del motor. Con la <b>misma seed</b> obtienes <b>la misma previa</b>; cambia la seed
 (botón 🎲 para una al azar) y pulsa <b>⟳ Regenerar con seed</b> para obtener otra variación. Así puedes repetir exactamente una previa que te gustó.</p>
 <h3>Qué se guarda dentro del archivo</h3>
 <p>Las previas MP3{' y WAV' if plus else ''} incluyen <b>etiquetas de metadatos</b> (título{', artista, sello, álbum, género, comentario' if plus else ''}) y la <b>carátula</b> de Radical Records.</p>
@@ -482,7 +514,7 @@ Justo encima del botón <b>Generar previa</b>, una línea de resumen te dice qu�
 def s_plus_editor(im: dict) -> str:
     return f"""
 <section><h1>8. Editor avanzado: cortes, BPM y estructura</h1>
-<p><span class="badge plus">PLUS</span> Activa la casilla <b>⚙ Personalizar Cortes &amp; BPM</b> para abrir el editor, con tres pestañas.</p>
+<p><span class="badge plus">PLUS</span> En el paso ②, abre <b>«Retocar con más detalle»</b> (o usa el Estudio, herramienta <b>Cortes</b>) para ver el editor, con tres pestañas.</p>
 <h3>Pestaña «Editor de Cortes»</h3>
 {fig(im.get('z_04_editor_cortes_anot',''), 'Editor de cortes')}
 {legend([("Añadir corte", "crea un fragmento nuevo en la previa."),
@@ -517,6 +549,7 @@ def s_plus_fx(im: dict) -> str:
 <table><tr><th>Opción</th><th>Qué hace</th></tr>
 <tr><td><b>🔊 Master LUFS</b></td><td>Normalización y limitador transparente a <b>−9 LUFS</b> (nivel de club / Beatport).</td></tr></table>
 {tip("Flanger y Filter Sweep ya no son casillas automáticas: se arrastran sobre la forma de onda y eliges tú dónde suenan (capítulo 6, «Efectos en la onda»). Están disponibles en Basic y en Plus.", "tip")}
+<p>El <b>Master LUFS</b>, el <b>Voice Drop</b> y la firma completa están en <b>«Opciones avanzadas»</b> del paso ③ (se abren pulsando el título). El <b>Modo promo</b> es una de las cuatro tarjetas de formato.</p>
 <h3>Voice Drop (tu firma de voz)</h3>
 <p>Superpone tu firma de voz o <i>jingle</i> de DJ sobre la previa.</p>
 {steps(["Pulsa <b>🎙 Voice Drop…</b> y elige tu audio de firma (WAV, MP3…).", "Elige el momento: <b>📍 Pre-Drop</b> (justo antes del primer drop), <b>📍 Intro</b> o <b>🎯 Manual</b>.",
@@ -539,12 +572,12 @@ def s_plus_firma(im: dict) -> str:
 <p><span class="badge plus">PLUS</span></p>
 <h3>Firma y carátula personalizadas</h3>
 {fig(im.get('z_firma',''), 'Tarjeta de firma y carátula')}
-<p>Rellena <b>Artista / DJ</b>, <b>Sello</b>, <b>Álbum</b>, <b>Género</b> y <b>Comentario</b>: se incrustan como metadatos en tus previas. Pulsa o arrastra una
+<p>En el paso ③, la tarjeta <b>Firma y carátula</b> resume tu artista y tu portada; pulsa <b>✎ Editar</b> para abrir todos los datos. Rellena <b>Artista / DJ</b>, <b>Sello</b>, <b>Álbum</b>, <b>Género</b> y <b>Comentario</b>: se incrustan como metadatos en tus previas. Pulsa o arrastra una
 imagen sobre la <b>carátula</b> para personalizarla (con <b>Restablecer portada</b> vuelves a la de Radical Records). Marca
 <b>«Guardar firma y carátula como predeterminada»</b> para que se carguen solas en la próxima sesión.</p>
 <h3>🖋 Firmar un tema entero</h3>
 {fig(im.get('17_firmar_tema',''), 'Ventana «Firmar tema entero»', 'tiny')}
-<p>El botón <b>🖋 Firmar tema</b> de la cabecera abre una ventana aparte pensada para <b>canciones completas, no previas</b>. Solo le mete la <b>carátula y las etiquetas</b>:
+<p>La opción <b>🖋 Firmar tema entero</b> del menú <b>🧰 Herramientas</b> abre una ventana aparte pensada para <b>canciones completas, no previas</b>. Solo le mete la <b>carátula y las etiquetas</b>:
 sin masterización, sin efectos y sin tocar el volumen ni la duración. El audio queda <b>exactamente igual</b>.</p>
 {steps(["<b>Arrastra el tema</b> (o varios) a la ventana, o pulsa la zona para elegirlos.", "Elige la <b>carátula</b> (la que tengas puesta en «Firma y carátula» aparece sola; vale JPG, PNG, WebP o GIF) y rellena artista, sello, álbum, género y comentario. Si no hay ninguna, la ventana te avisa en rojo antes de firmar.",
         "Elige el formato: <b>FLAC</b> (sin pérdidas, recomendado) o <b>WAV</b> (sin comprimir).", "Pulsa <b>🖋 Firmar</b>. Los temas firmados se guardan en la carpeta <b>Firmados</b> (puedes cambiarla) y se muestra una notificación; púlsala para abrir la carpeta."])}
@@ -556,7 +589,7 @@ sin masterización, sin efectos y sin tocar el volumen ni la duración. El audio
 </ul>
 <h3>Mis presets</h3>
 {fig(im.get('z_presets_guardados',''), 'Barra de presets con un preset guardado', 'mid')}
-<p>Guarda toda tu configuración como un <b>preset con nombre</b> y aplícala con un clic:</p>
+<p>Guarda toda tu configuración como un <b>preset con nombre</b> y aplícala con un clic. La barra de presets está dentro de <b>«Retocar con más detalle»</b> (paso ②):</p>
 {steps(["Deja todo como te gusta (formatos, efectos, firma, estilo…).", "Pulsa <b>💾 Guardar…</b>, escribe un nombre (por ejemplo «Radical Main») y elige si el preset incluye la <b>firma</b> y el <b>estilo</b>.",
         "Para usarlo, elígelo en el desplegable <b>Mis presets</b> y pulsa <b>✓ Aplicar</b>.", "Para borrarlo, selecciónalo y pulsa 🗑."])}
 {fig(im.get('15_guardar_preset',''), 'Diálogo para guardar un preset', 'tiny')}
@@ -568,11 +601,12 @@ def s_plus_lote(im: dict) -> str:
     return f"""
 <section><h1>11. Lote, carpeta vigilada y Recientes</h1>
 <p><span class="badge plus">PLUS</span></p>
+<p>Están en el menú <b>🧰 Herramientas</b> de la cabecera.</p>
 <h3>📁 Modo Lote</h3>
 {fig(im.get('14_lote',''), 'Procesamiento por lote', 'mid')}
 <p>Procesa muchas pistas de una vez con los mismos ajustes: añade archivos, revisa la lista y lanza el proceso. AutoPrevias genera una previa por cada track y te muestra el progreso de cada uno.</p>
 <h3>👁 Vigilar Carpeta</h3>
-<p>Elige una carpeta y AutoPrevias <b>genera la previa automáticamente</b> cada vez que cae un tema nuevo en ella (los archivos que ya estaban se ignoran). Es ideal para dejar el ordenador del estudio trabajando. Pulsa de nuevo el botón para desactivarlo.</p>
+<p>Elige una carpeta y AutoPrevias <b>genera la previa automáticamente</b> cada vez que cae un tema nuevo en ella (los archivos que ya estaban se ignoran). Es ideal para dejar el ordenador del estudio trabajando. Vuelve a elegir la opción en el menú para desactivarlo.</p>
 <h3>🕒 Recientes</h3>
 {fig(im.get('13_recientes',''), 'Historial: previas generadas y pistas abiertas', 'mid')}
 <p>Dos pestañas:</p>
@@ -586,7 +620,7 @@ def s_plus_lote(im: dict) -> str:
 def s_basic_recientes(im: dict) -> str:
     return f"""
 <section><h1>8. Historial de pistas recientes</h1>
-<p>El botón <b>🕒 Recientes</b> de la cabecera abre la lista de los últimos tracks que has cargado, para volver a abrirlos con un clic sin buscarlos en el disco.</p>
+<p>La opción <b>🕒 Recientes</b> del menú <b>🧰 Herramientas</b> abre la lista de los últimos tracks que has cargado, para volver a abrirlos con un clic sin buscarlos en el disco.</p>
 {fig(im.get('13_recientes',''), 'Pistas abiertas recientemente', 'mid')}
 </section>"""
 
@@ -626,13 +660,14 @@ def s_updates(ed: str, plus: bool, im: dict, n: int) -> str:
 <li>Son unos 5 minutos: te enseña la pantalla de inicio, carga una <b>pista de ejemplo</b> sintética y recorre todo el panel de resultados (forma de onda, efectos arrastrables, reproductor, duración, formatos, vídeo animado, carpeta y botón Generar).</li>
 <li>Avanza con <b>Siguiente</b> (o las teclas <b>→</b>, <b>Intro</b> o <b>Espacio</b>), vuelve con <b>Atrás</b> (<b>←</b>) y sal cuando quieras con <b>Omitir recorrido</b> o <b>Esc</b>.</li>
 <li>No guarda nada: la pista de ejemplo no aparece en Recientes y tus ajustes quedan como estaban.</li>
-<li>Si quieres repetirlo, pulsa <b>Ver recorrido de bienvenida</b> en la ventana <b>⚙ Licencia</b>.</li>
+<li>Si quieres repetirlo, usa <b>❓ Ayuda → Guía de 2 minutos</b> (o el botón de la pantalla de inicio).</li>
 </ul>
-<h3>Ventana «⚙ Licencia»</h3>
+<h3>Ventana «⚙» (licencia y ajustes)</h3>
 {fig(im.get('11_licencia',''), 'Versión, licencia e idioma', 'tiny')}
 <ul>
 <li>Muestra la <b>versión</b>, la <b>edición</b> y el <b>estado de la licencia</b>: fecha de última verificación y hasta cuándo es válida sin conexión.</li>
 <li><b>Buscar actualizaciones</b> lanza la comprobación al momento.</li>
+<li><b>Abrir siempre en modo Estudio</b> sustituye el asistente por la vista única del Estudio cada vez que cargas un tema.</li>
 <li><b>Rendimiento</b> elige cuántos recursos del equipo usa AutoPrevias al analizar y generar vídeo: <b>Automático</b> (recomendado; se adapta a tu equipo y deja un núcleo libre para que la app siga fluida), <b>Ahorro de recursos</b> (portátil con batería, equipo antiguo u otros programas abiertos) o <b>Máximo rendimiento</b> (todos los núcleos, para terminar antes). Debajo ves cuántos núcleos y cuánta memoria detecta la app.</li>
 <li><b>Desactivar licencia en este equipo</b> libera la clave en el servidor para poder usarla en otro ordenador (necesita conexión).</li>
 <li><b>Idioma</b>: Español (por defecto) o English. También puedes alternarlo con el botón <b>ES / EN</b> de la cabecera; todo se traduce al instante.</li>
@@ -650,7 +685,15 @@ def s_atajos(n: int) -> str:
 <tr><td>{kbd('Inicio')} · {kbd('0')}</td><td>Volver al principio</td></tr>
 <tr><td>{kbd('Esc')}</td><td>Detener</td></tr>
 <tr><td>{kbd('M')}</td><td>Silenciar / activar sonido</td></tr>
-<tr><td>{kbd('Supr')}</td><td>Borrar el efecto seleccionado en la onda</td></tr></table>
+<tr><td>{kbd('Supr')}</td><td>Borrar el efecto seleccionado en la onda</td></tr>
+<tr><td>{kbd('Ctrl/⌘')} + {kbd('O')}</td><td>Abrir un tema</td></tr>
+<tr><td>{kbd('Ctrl/⌘')} + {kbd('G')}</td><td>Generar la previa</td></tr>
+<tr><td>{kbd('Ctrl/⌘')} + {kbd('2')} · {kbd('Ctrl/⌘')} + {kbd('3')}</td><td>Ir al paso ② Tu previa · ③ Exportar</td></tr>
+<tr><td>{kbd('Ctrl/⌘')} + {kbd('E')}</td><td>Cambiar entre el asistente y el modo Estudio</td></tr>
+<tr><td>{kbd('Ctrl/⌘')} + {kbd('Z')}</td><td>Deshacer (cortes y efectos)</td></tr>
+<tr><td>{kbd('Ctrl/⌘')} + {kbd('Mayús')} + {kbd('Z')} · {kbd('Ctrl/⌘')} + {kbd('Y')}</td><td>Rehacer</td></tr>
+<tr><td>{kbd('F1')} · {kbd('?')}</td><td>Ver la ayuda de atajos</td></tr></table>
+<p>También puedes <b>arrastrar un archivo de audio a cualquier parte de la ventana</b> para cargarlo y, en Plus, <b>una imagen</b> para usarla de carátula.</p>
 </section>"""
 
 
@@ -663,9 +706,9 @@ def s_faq(ed: str, plus: bool, n: int) -> str:
 <tr><td>Windows muestra «Windows protegió su PC»</td><td>Pulsa <b>Más información → Ejecutar de todas formas</b>.</td></tr>
 <tr><td>«Clave no válida» al activar</td><td>Comprueba que has copiado la clave completa, sin espacios, y que es de la edición {cap}. Necesitas Internet. Si persiste, escríbenos.</td></tr>
 <tr><td>«Esta clave es de AutoPrevias Basic/Plus y estás usando…»</td><td>Tu clave corresponde a la otra edición. Descarga e instala la edición que compraste; la clave no se queda ligada a ningún equipo.</td></tr>
-<tr><td>El análisis o el vídeo tardan mucho, o el equipo va justo</td><td>Abre <b>⚙ Licencia → Rendimiento</b>. <b>Automático</b> se adapta a tu equipo; <b>Máximo rendimiento</b> usa todos los núcleos para terminar antes; <b>Ahorro de recursos</b> usa pocos si trabajas con otros programas o con batería. Cierra otros programas pesados mientras generas el vídeo.</td></tr>
+<tr><td>El análisis o el vídeo tardan mucho, o el equipo va justo</td><td>Abre <b>⚙ → Rendimiento</b>. <b>Automático</b> se adapta a tu equipo; <b>Máximo rendimiento</b> usa todos los núcleos para terminar antes; <b>Ahorro de recursos</b> usa pocos si trabajas con otros programas o con batería. Cierra otros programas pesados mientras generas el vídeo.</td></tr>
 {"<tr><td>«El formato de la imagen no es correcto»</td><td>Los vídeos son 9:16, 1:1 o 16:9. Cambia la imagen por una con esa proporción (pulsa <b>📐 Ver formatos válidos</b> para ver ejemplos) o elige «Imagen entera con fondo desenfocado».</td></tr>" if plus else ""}
-<tr><td>«Esta licencia ya está activada en otro equipo»</td><td>Tu clave solo puede estar en un ordenador. Desactívala en el otro (<b>⚙ Licencia → Desactivar licencia en este equipo</b>) o escribe a soporte si ese equipo ya no está disponible.</td></tr>
+<tr><td>«Esta licencia ya está activada en otro equipo»</td><td>Tu clave solo puede estar en un ordenador. Desactívala en el otro (<b>⚙ → Desactivar licencia en este equipo</b>) o escribe a soporte si ese equipo ya no está disponible.</td></tr>
 <tr><td>Me dice que necesita conexión para verificar la licencia</td><td>Han pasado más de 14 días sin verificarla: conéctate a Internet y pulsa <b>Reintentar</b>. No hace falta volver a escribir la clave.</td></tr>
 <tr><td>El BPM detectado es el doble o la mitad</td><td>Haz doble clic en la tarjeta <b>BPM</b> y escribe el valor real.</td></tr>
 <tr><td>Un efecto que puse en la onda no suena</td><td>Solo suena dentro de los cortes de la previa. Si el bloque se ve apagado está fuera de ellos: muévelo sobre un corte o amplía el corte.</td></tr>

@@ -317,6 +317,50 @@ def run_selftest() -> int:
             _ww.deleteLater()
         print("  ✓ Efectos manuales (Flanger / Filter Sweep) y carril de la onda operativos")
 
+        # Diseño 5.0: interruptor animado (QPropertyAnimation + Property), pantalla de destino, paso ② / ③, Estudio y avisos
+        from PySide6.QtWidgets import QMainWindow as _QMW
+        from src.ui import anim as _anim5
+        from src.ui.theme5 import Toggle as _Tg, Tile as _Tl
+        from src.ui.wizard import DESTINATIONS as _DEST, DestinationPage as _DP, WizardStepper as _WS, destination_settings as _ds
+        _tg = _Tg()
+        _tg.show()
+        _tg.setChecked(True)
+        _tg.grab()
+        assert _tg.get_pos() in (0.0, 1.0) or 0.0 <= _tg.get_pos() <= 1.0
+        _tg.deleteLater()
+        _tl = _Tl("Título", "Descripción", icon="🎧", tagtext="Tag", big_icon=True)
+        _tl.grab()
+        _tl.deleteLater()
+        _ws = _WS()
+        _ws.set_step(3)
+        _ws.deleteLater()
+        _dp = _DP(plus=True)
+        _dp.set_track("Tema", "2:30 · 128 BPM", [0.1, 0.4, 0.9, 0.2])
+        _dp.grab()
+        _dp.deleteLater()
+        assert len(_DEST) == 6 and _ds("club", True)["flac"] and not _ds("club", False)["flac"]
+        from src.ui.undo import History as _Hist
+        _h = _Hist()
+        _h.reset("a")
+        _h.record("b")
+        assert _h.undo() == "a" and _h.redo() == "b"
+        from src.ui.toast import toast as _toast
+        _mw = _QMW()
+        _mw.resize(700, 500)
+        _mw.show()
+        _toast(_mw, "success", "Prueba", "detalle", action=("Abrir carpeta", lambda: None)).grab()
+        _mw.deleteLater()
+        from src.ui.app import ResultPanel as _RP
+        _rp = _RP()
+        _rp.show()
+        _rp.go_step(3, animate=False)
+        _rp.go_step(2, animate=False)
+        _rp.set_studio(True)
+        _rp.grab()
+        _rp.set_studio(False)
+        _rp.deleteLater()
+        print("  ✓ Diseño 5.0 (pasos, destinos, Estudio, interruptores y avisos) construido sin crash")
+
         try:
             tmp_ctx = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         except TypeError:

@@ -1553,6 +1553,9 @@ class ResultPanel(QWidget):
         shell.addWidget(self._page3, 1)
         self._wizard_step = 2
         self._studio = False
+        self._studio_view = None
+        self._studio_entered = False
+        self._shell = shell
 
         # ── 1. WAVEFORM ───────────────────────────────────────────────────
         wave_frame = QFrame()
@@ -2747,15 +2750,33 @@ class ResultPanel(QWidget):
             self.go_step(n)
 
     def set_studio(self, on: bool):
-        """Modo Estudio (expertos): ② y ③ juntos en una sola página, sin cinta de pasos ni botones de navegación."""
-        self._studio = bool(on)
+        """Modo Estudio (expertos): una sola vista con la onda, los carriles, las herramientas y la exportación, sin asistente."""
+        on = bool(on)
+        self._studio = on
         self._stepper.setVisible(not on)
         self._nav2.setVisible(not on)
         self._nav3.setVisible(not on)
+        if on == self._studio_entered:
+            if not on:
+                self.go_step(self._wizard_step, animate=False)
+            return
         if on:
-            self._page2.setVisible(True)
-            self._page3.setVisible(True)
+            from src.ui.studio import StudioView
+            if self._studio_view is None:
+                self._studio_view = StudioView(self)
+                self._shell.addWidget(self._studio_view, 1)
+            self._page2.setVisible(False)
+            self._page3.setVisible(False)
+            self._studio_view.enter()
+            self._studio_view.setVisible(True)
+            if get_edition() == "plus":
+                self._adv_fx_widget.setVisible(True)
+            self._studio_entered = True
         else:
+            self._studio_view.leave()
+            self._studio_view.setVisible(False)
+            self._studio_entered = False
+            self._apply_adv_visibility()
             self.go_step(self._wizard_step, animate=False)
 
     def _apply_destination(self, key: str):
@@ -3172,6 +3193,8 @@ class ResultPanel(QWidget):
         self._chip_drops.setText(tr("{n} drops", n=v(self._card_drops)) if v(self._card_drops) != "—" else "— drops")
         self._chip_dur.setText(v(self._card_dur))
         self._chip_file.setText(self._source_path and Path(self._source_path).stem or "")
+        if self._studio_entered and self._studio_view is not None:
+            self._studio_view.refresh()
         pv = v(self._card_pv)
         if pv and pv != "—":
             self._s2_title.setText(tr("Tu previa de {t} está lista para revisar", t=pv))
@@ -5149,7 +5172,7 @@ class MainWindow(QMainWindow):
         # ── HEADER ───────────────────────────────────────────────────────
         _log("_build_ui: construyendo header...")
         self._hdr = QFrame()
-        self._hdr.setFixedHeight(72)
+        self._hdr.setFixedHeight(66)
         self._hdr.setObjectName("hdr")
         self._hdr.setStyleSheet(f"""
             QFrame#hdr {{
@@ -5244,26 +5267,29 @@ class MainWindow(QMainWindow):
         self._btn_sign.setVisible(False)          # v5: viven en el menú «Herramientas»
 
         # v5: cabecera simple — «Herramientas ▾» y «Ayuda ▾» agrupan lo que antes eran seis botones sueltos
-        self._build_header_menus(logo_row)
+        self._hdr_btns = QHBoxLayout()
+        self._hdr_btns.setSpacing(8)
+        self._build_header_menus(self._hdr_btns)
 
-        self._btn_license = QPushButton("⚙ Licencia")
-        self._btn_license.setFixedHeight(22)
+        self._btn_license = QPushButton("⚙")
+        self._btn_license.setFixedSize(34, 26)
         self._btn_license.setCursor(Qt.PointingHandCursor)
-        self._btn_license.setStyleSheet(_btn(BG3, TEXT_MID, BG4, radius=4, fs=10))
+        self._btn_license.setStyleSheet(f"QPushButton {{ background: {BG3}; color: {TEXT_SUB}; border: 1px solid {BORDER}; border-radius: 6px; font-size: 13px; font-weight: 700; }}"
+                                        f"QPushButton:hover {{ border-color: {ACCENT}; color: {TEXT}; }}")
         self._btn_license.setToolTip("Versión, licencia, idioma y actualizaciones")
         self._btn_license.clicked.connect(self._open_license_dialog)
-        logo_row.addWidget(self._btn_license)
+        self._hdr_btns.addWidget(self._btn_license)
 
         self._btn_lang = QPushButton(i18n.get_language().upper())
-        self._btn_lang.setFixedSize(34, 22)
+        self._btn_lang.setFixedSize(36, 26)
         self._btn_lang.setCursor(Qt.PointingHandCursor)
         self._btn_lang.setStyleSheet(
-            f"QPushButton {{ background: {BG3}; color: {TEXT_MID}; border: none; border-radius: 4px;"
-            "font-size: 10px; font-weight: 800; padding: 0; }"
-            f"QPushButton:hover {{ background: {BG4}; color: {TEXT}; }}")
+            f"QPushButton {{ background: {BG3}; color: {TEXT_SUB}; border: 1px solid {BORDER}; border-radius: 6px;"
+            "font-size: 11px; font-weight: 800; padding: 0; }"
+            f"QPushButton:hover {{ border-color: {ACCENT}; color: {TEXT}; }}")
         self._btn_lang.setToolTip("Idioma · Language (ES / EN)")
         self._btn_lang.clicked.connect(self._toggle_language)
-        logo_row.addWidget(self._btn_lang)
+        self._hdr_btns.addWidget(self._btn_lang)
 
         # Ocultar features de lote en edición Básica
 
@@ -5277,6 +5303,8 @@ class MainWindow(QMainWindow):
         logo_col.addWidget(sub_lbl)
         hdr_lay.addLayout(logo_col)
         hdr_lay.addStretch()
+        hdr_lay.addLayout(self._hdr_btns)
+        hdr_lay.addSpacing(20)
 
         # Right — banner de Radical Records
         right_col = QVBoxLayout()
@@ -5326,13 +5354,6 @@ class MainWindow(QMainWindow):
             self._badge_shimmer_timer.timeout.connect(self._tick_badge_shimmer)
             self._badge_shimmer_timer.start(60)
 
-        support_lbl = QLabel(f"SOPORTE: {SUPPORT}")
-        support_lbl.setAlignment(Qt.AlignRight)
-        support_lbl.setStyleSheet(
-            f"color: {TEXT_DIM}; font-size: 8px; font-weight: 600; letter-spacing: 0.3px;"
-            "background: transparent; border: none;"
-        )
-        right_col.addWidget(support_lbl)
         hdr_lay.addLayout(right_col)
 
         root.addWidget(self._hdr)

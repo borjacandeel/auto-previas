@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v4.1.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v5.0.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -150,6 +150,10 @@ Si Windows muestra la pantalla azul con el mensaje *"Windows protegió su PC"* d
 
 ## ✨ Características Principales
 
+- 🧭 **Asistente de 3 pasos (v5.0):**
+  **① Tu tema → ② Tu previa → ③ Exportar**, con una cinta de pasos siempre visible. Tras analizar el tema, la pantalla **«¿Para qué es esta previa?»** (Redes sociales, Radio, Sellos y A&R, DJ y club, Envío seguro, Lo monto yo) deja listos duración, formatos, vídeo y arranque/frenazo de vinilo con un clic. El paso ② tiene duración en tarjetas, interruptores de vinilo y «Retocar con más detalle»; el paso ③, tarjetas de formato (MP3, WAV·FLAC, Vídeo para redes, Modo promo), nombre y carpeta, firma y GENERAR.
+- 🖥 **Modo Estudio, deshacer y atajos (v5.0):**
+  Para expertos (**Ctrl/⌘ + E** o «⚙ → Abrir siempre en modo Estudio»): una sola vista con la onda, los carriles de cortes y efectos y un menú lateral de herramientas. **Deshacer/rehacer** de cortes y efectos (Ctrl/⌘ + Z / Mayús + Z / Y), atajos (Ctrl/⌘ + O, G, 2, 3, E; F1 = ayuda), arrastrar y soltar audio o imagen en toda la ventana, avisos con diseño y más animaciones.
 - 🎚 **Arranque y final de la previa a tu elección (Plus):**
   Una tarjeta siempre visible: empezar y acabar con el efecto de vinilo (en los segundos que elijas) o a los BPM originales.
 - 🎛 **Efectos en la onda (Basic y Plus):**
@@ -183,7 +187,7 @@ Si Windows muestra la pantalla azul con el mensaje *"Windows protegió su PC"* d
 - 🧭 **Panel de Exportación Ordenado en Pasos:**
   ① Nombre y formatos, ② Vídeo animado (tarjeta única con botones de formato) y ③ Opciones avanzadas plegables (efectos, Voice Drop, Modo promo y firma, que se abren solas al activarlas), con una línea de **resumen** sobre «Generar previa» que dice qué se va a crear.
 - 🚀 **Rendimiento Adaptado a tu Equipo:**
-  El análisis de la canción y la generación de vídeo usan varios núcleos y son **mucho más rápidos con resultados idénticos** (BPM, secciones, audio y fotogramas exactamente iguales). El ajuste **«⚙ Licencia → Rendimiento»** (Automático / Ahorro de recursos / Máximo rendimiento) se adapta a los núcleos y la memoria del equipo, y la app consume menos en reposo.
+  El análisis de la canción y la generación de vídeo usan varios núcleos y son **mucho más rápidos con resultados idénticos** (BPM, secciones, audio y fotogramas exactamente iguales). El ajuste **«⚙ → Rendimiento»** (Automático / Ahorro de recursos / Máximo rendimiento) se adapta a los núcleos y la memoria del equipo, y la app consume menos en reposo.
 - 💾 **Presets de Firma y de Estilo (Plus):**
   Guarda con nombre tu firma (artista, sello, carátula…) y/o tu estilo (duración, formatos, efectos, voice drop, promo, vídeo) como archivos portables y aplícalos con un clic.
 - 🕒 **Panel de Recientes (Plus):**
@@ -251,6 +255,9 @@ Cada clave se puede usar en **un solo equipo a la vez**. Si ya está activa en u
 | Arranque y FINAL de la previa a elegir: vinilo (de 0 al tempo / frenazo hasta parar) en N s o BPM originales | ❌ | ✅ |
 | 🖋 Firmar temas enteros (carátula + etiquetas, FLAC/WAV a máxima calidad, sin tocar el audio) | ❌ | ✅ |
 | Notificaciones con logo que abren la carpeta al pulsarlas | ✅ | ✅ |
+| Asistente de 3 pasos, pantalla de destinos, atajos de teclado y deshacer/rehacer | ✅ | ✅ |
+| Modo Estudio con menú lateral (Basic: Cortes y Vídeo · Plus: Cortes, Efectos, Tempo, Firma, Vídeo y Presets) | ✅ | ✅ |
+| Destino «Envío seguro» (modo promo en un clic) | 🔒 | ✅ |
 | Firma vocal / Voice Drop | ❌ | ✅ |
 | Sección de Firma y Carátula (Branding) | ❌ | ✅ |
 | Efectos Flanger y Filter Sweep arrastrables a la onda (tú eliges dónde y cuánto dura) | ✅ | ✅ |
@@ -304,7 +311,11 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v4.1.0] — 2026-10-19 (Arranque y final de la previa a tu elección; cortes y efectos corregidos)
+#### 🟢 [v5.0.0] — 2026-10-19 (Versión 5: rediseño completo, más fácil — asistente de 3 pasos, destinos, modo Estudio)
+- **Asistente de 3 pasos** (Tu tema · Tu previa · Exportar) con cinta de pasos; pantalla **«¿Para qué es esta previa?»** con seis destinos; paso ② y ③ con diseño nuevo (tarjetas, interruptores, «Retocar con más detalle», tarjetas de formato).
+- **Modo Estudio** (Ctrl/⌘ + E), **deshacer/rehacer**, **atajos de teclado** (F1 = ayuda), arrastrar y soltar en toda la ventana, **inicio nuevo**, cabecera con menús **Herramientas** y **Ayuda**, **avisos con diseño** y más animaciones. Recorrido y manuales PDF actualizados.
+
+#### [v4.1.0] — 2026-10-19 (Arranque y final de la previa a tu elección; cortes y efectos corregidos)
 - **Plus: arranque y final de la previa a tu elección**, siempre a la vista: efecto de vinilo (de 0 al tempo al empezar, frenazo hasta parar al acabar, en los segundos que elijas) o a los BPM originales. **Botones ▶ ✕ sobre cada corte en la onda**, y arreglados ▶ ✕ 📍 de la tabla de cortes. Pinchar un efecto ya no mueve la onda ni la reproducción.
 - **Firmar tema:** la carátula ahora se incrusta siempre (JPG, PNG, WebP, GIF…), se comprueba en el archivo guardado y la ventana avisa si no hay ninguna; usa la carátula y las etiquetas de «Firma y carátula». En WAV, etiquetas compatibles con Rekordbox, Serato, Música y el Explorador de Windows.
 

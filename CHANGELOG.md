@@ -3,6 +3,31 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [5.0.0] - 2026-10-19
+
+> **Versión 5: AutoPrevias se rediseña entera para que sea más fácil, sobre todo la primera vez.** Los controles y las funciones son los de siempre; cambia cómo se presentan y en qué orden.
+
+### Añadido
+- **Asistente de 3 pasos:** **① Tu tema** (cargarlo y analizarlo), **② Tu previa** (duración, cortes, efectos) y **③ Exportar** (formatos, vídeo y GENERAR). Una cinta de pasos arriba te dice dónde estás y puedes pulsar cualquiera para ir y volver sin perder nada.
+- **Pantalla «¿Para qué es esta previa?»:** tras analizar el tema eliges **Redes sociales**, **Radio y promotores**, **Sellos y A&R** (recomendado), **DJ y club**, **Envío seguro** (Plus) o **Lo monto yo**, y AutoPrevias deja listas la duración, los formatos, el vídeo y, en Plus, el arranque y el frenazo de vinilo. Se puede saltar, se puede apagar con «No volver a mostrar esta pantalla» y desde la previa se vuelve con **Cambiar destino**.
+- **Paso ② con diseño nuevo:** título «Tu previa de 0:57 está lista para revisar», reproductor y onda en una tarjeta, duración en cuatro tarjetas (**15 s · Teaser para redes**, **30 s · Promo para radio**, **60 s · Para sellos y A&R**, **2 min · Club**), **interruptores** para arrancar y acabar como un disco de vinilo (Plus) y una tarjeta plegable **«Retocar con más detalle»** con los cortes exactos, la variación de BPM, la estructura, los presets y los segundos del vinilo.
+- **Paso ③ con diseño nuevo:** «¿Qué quieres crear?» con tarjetas grandes de formato (**MP3**, **WAV · FLAC**, **Vídeo para redes** con sus pastillas 9:16 · 1:1 · 16:9 y **Modo promo**), tarjetas de **Nombre y carpeta** y **Firma y carátula**, y una barra final con el resumen de lo que se creará y el botón **GENERAR PREVIA**.
+- **Modo Estudio** (para quien ya domina la app; **Ctrl/⌘ + E** o «⚙ → Abrir siempre en modo Estudio»): una sola vista con el reproductor, la onda con sus carriles de cortes y efectos, un menú lateral (**Cortes, Efectos, Tempo, Firma, Vídeo, Presets** en Plus; **Cortes y Vídeo** en Basic), los formatos y GENERAR siempre a mano.
+- **Deshacer y rehacer** de cortes y efectos (**Ctrl/⌘ + Z**, **Ctrl/⌘ + Mayús + Z** o **Ctrl/⌘ + Y**, y botones en el Estudio).
+- **Atajos de teclado:** Ctrl/⌘ + O abre un tema, + G genera, + 2 / + 3 cambian de paso, + E alterna el Estudio, F1 o ? muestra la ayuda de atajos (**❓ Ayuda → Atajos de teclado**).
+- **Arrastrar y soltar en toda la ventana:** un audio cargado en cualquier pantalla (varios, en Plus, abren el Modo Lote) y, en Plus, una imagen suelta sobre la ventana se usa de carátula. Antes se cargaba al *entrar* con el ratón; ahora al *soltar*.
+- **Inicio nuevo:** «Crea la previa de tu tema en 3 pasos», una zona grande para soltar el tema, los tres pasos explicados, **Guía de 2 minutos** y **Seguir con «último tema»**.
+- **Cabecera más limpia:** **🧰 Herramientas** (Recientes, Modo Lote, Vigilar carpeta, Firmar tema entero) y **❓ Ayuda** (guía de 2 minutos, atajos, soporte) sustituyen a seis botones sueltos.
+- **Avisos con diseño** (tarjetas que se deslizan, con botón **Abrir carpeta** o **Reintentar**) al terminar una previa y al fallar el análisis o la exportación.
+- **Más animaciones:** brillo al pasar el ratón por los botones, ventanas con fundido, entrada de la pantalla de resultados deslizando, barra de progreso suave, GENERAR que «respira» cuando está listo, cambio de paso deslizando y fundido cruzado al cambiar de idioma. Respetan «Ahorro de recursos» y «reducir movimiento» del sistema.
+
+### Cambiado
+- El **recorrido de bienvenida** y los **manuales PDF** (Basic y Plus) explican el flujo nuevo: pasos, destinos, Estudio, menús y atajos.
+- Los textos de los menús y avisos se traducen también al inglés al cambiar de idioma.
+
+### Corregido
+- Los botones de acción de los avisos con diseño no tenían una hoja de estilo válida (se corrigió antes de publicar y hay un test que lo vigila).
+
 ## [4.1.0] - 2026-10-19
 
 ### Añadido

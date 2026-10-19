@@ -66,7 +66,7 @@ class Toast(QFrame):
             b.setCursor(Qt.PointingHandCursor)
             b.setFixedHeight(24)
             b.setStyleSheet(f"QPushButton {{ background: {col}; color: #0b0c10; border: none; border-radius: 6px;"
-                            " font-size: 11px; font-weight: 800; padding: 0 12px; }}"
+                            " font-size: 11px; font-weight: 800; padding: 0 12px; }"
                             "QPushButton:hover { background: #ffffff; }")
             fn = action[1]
             b.clicked.connect(lambda _=False, f=fn: (self.dismiss(), f()))

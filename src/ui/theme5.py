@@ -5,7 +5,7 @@ Todas son widgets pequeños y reutilizables; no contienen lógica de la aplicaci
 """
 from __future__ import annotations
 
-from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QRectF, Qt, Property, Signal
+from PySide6.QtCore import QEasingCurve, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QPainter
 from PySide6.QtWidgets import (QAbstractButton, QFrame, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QVBoxLayout,
                                QWidget)
@@ -101,21 +101,15 @@ class Toggle(QAbstractButton):
         self.setFixedSize(46, 26)
         self.setCursor(Qt.PointingHandCursor)
         self._pos = 1.0 if on else 0.0
-        self._anim = QPropertyAnimation(self, b"pos_", self)
-        self._anim.setDuration(150)
-        self._anim.setEasingCurve(QEasingCurve.OutCubic)
         self.toggled.connect(self._go)
 
     def _go(self, on: bool):
         from src.ui import anim
+        target = 1.0 if on else 0.0
         if anim.enabled() and self.isVisible():
-            self._anim.stop()
-            self._anim.setStartValue(self._pos)
-            self._anim.setEndValue(1.0 if on else 0.0)
-            self._anim.start()
+            anim.animate_value(self, self._pos, target, 150, self.set_pos, QEasingCurve.OutCubic, key="_tg_anim")
         else:
-            self._pos = 1.0 if on else 0.0
-            self.update()
+            self.set_pos(target)
 
     def get_pos(self):
         return self._pos
@@ -123,7 +117,6 @@ class Toggle(QAbstractButton):
     def set_pos(self, v):
         self._pos = float(v)
         self.update()
-    pos_ = Property(float, get_pos, set_pos)
 
     def sizeHint(self):
         return self.size()
