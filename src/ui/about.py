@@ -6,7 +6,8 @@ from __future__ import annotations
 
 import datetime as _dt
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QRectF, Qt, Signal
+from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (
     QComboBox, QDialog, QFrame, QHBoxLayout, QLabel, QMessageBox, QPushButton, QVBoxLayout,
 )
@@ -42,6 +43,57 @@ def describe_license(local: dict | None, now: float | None = None, grace_days: i
         "valid_until": fmt(until),
         "days_left": max(days_left, 0),
     }
+
+
+class ThemeTile(QPushButton):
+    """Tarjeta de un tema: miniatura de la interfaz con sus colores reales + nombre. Se puede marcar."""
+
+    def __init__(self, theme, parent=None):
+        super().__init__(parent)
+        self.theme = theme
+        self.setCheckable(True)
+        self.setCursor(Qt.PointingHandCursor)
+        self.setFixedSize(138, 104)
+        self.setToolTip(tr(theme.description))
+        self.setStyleSheet("QPushButton { background: transparent; border: none; }")
+
+    def paintEvent(self, _e):
+        from src import themes
+        _themes_mod = themes
+        qc = themes.raw_qcolor                       # los colores de la miniatura ya son los finales: no se pasan por el tema
+        sel = self.isChecked()
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        bg, card, accent, text = (qc(c) for c in self.theme.swatch)
+        frame = QRectF(1.5, 1.5, self.width() - 3, self.height() - 3)
+        p.setPen(qc("#ff1e38" if sel else "#555b6a"))
+        p.setBrush(qc("#00000000"))
+        pen = p.pen()
+        pen.setWidthF(2.4 if sel else 1.2)
+        p.setPen(pen)
+        p.drawRoundedRect(frame, 12, 12)
+        prev = QRectF(9, 9, self.width() - 18, 56)
+        p.setPen(Qt.NoPen)
+        p.setBrush(bg)
+        p.drawRoundedRect(prev, 8, 8)
+        p.setBrush(card)                              # dos tarjetas de ejemplo
+        p.drawRoundedRect(QRectF(15, 28, 52, 30), 5, 5)
+        p.drawRoundedRect(QRectF(72, 28, 52, 30), 5, 5)
+        p.setBrush(accent)                            # botón de acento
+        p.drawRoundedRect(QRectF(15, 15, 34, 8), 4, 4)
+        p.setBrush(text)                              # «texto»
+        p.drawRoundedRect(QRectF(54, 17, 40, 4), 2, 2)
+        p.drawRoundedRect(QRectF(20, 36, 30, 3.5), 1.7, 1.7)
+        p.drawRoundedRect(QRectF(77, 36, 30, 3.5), 1.7, 1.7)
+        p.setBrush(accent)
+        p.drawRoundedRect(QRectF(77, 46, 22, 5), 2.5, 2.5)
+        p.setPen(qc("#eceef2" if _themes_mod.get(_themes_mod.current()).dark else "#1b2030"))
+        f = p.font()
+        f.setPixelSize(12)
+        f.setBold(True)
+        p.setFont(f)
+        p.drawText(QRectF(0, 70, self.width(), 24), Qt.AlignCenter, ("✓ " if sel else "") + tr(self.theme.label))
+        p.end()
 
 
 class LicenseDialog(QDialog):
@@ -101,6 +153,31 @@ class LicenseDialog(QDialog):
         lang_row.addStretch()
         lang_row.addWidget(self._combo_lang)
         root.addLayout(lang_row)
+
+        # Tema de la app: Original, One Dark, Claro (y los que vengan). Se aplica al reiniciar la aplicación.
+        from src import themes as _themes
+        from src.config import load as _lc
+        theme_lbl = QLabel("Tema de la app")
+        theme_lbl.setStyleSheet("font-size: 13px; font-weight: 700;")
+        root.addWidget(theme_lbl)
+        self._theme_saved = str(_lc().get("theme") or _themes.DEFAULT_THEME)
+        self._theme_running = _themes.current()
+        trow = QHBoxLayout()
+        trow.setSpacing(10)
+        self._theme_tiles = {}
+        for key in _themes.theme_keys():
+            tile = ThemeTile(_themes.get(key))
+            tile.setChecked(key == self._theme_saved)
+            tile.clicked.connect(lambda _c=False, k=key: self._on_theme(k))
+            trow.addWidget(tile)
+            self._theme_tiles[key] = tile
+        trow.addStretch()
+        root.addLayout(trow)
+        self._lbl_theme = QLabel("")
+        self._lbl_theme.setWordWrap(True)
+        self._lbl_theme.setStyleSheet(f"font-size: 11px; color: {TEXT2};")
+        root.addWidget(self._lbl_theme)
+        self._refresh_theme_hint()
 
         # Rendimiento: cuántos recursos del equipo usa AutoPrevias al analizar y generar vídeo
         from src import perf
@@ -225,6 +302,40 @@ class LicenseDialog(QDialog):
             self._lbl_state.setStyleSheet(f"font-size: 13px; font-weight: 700; color: {RED};")
             self._lbl_detail.setText("")
             self._btn_remove.setEnabled(False)
+
+    def _refresh_theme_hint(self):
+        from src import themes as _themes
+        if self._theme_saved != self._theme_running:
+            self._lbl_theme.setText(tr("Elegido: {t}. Se aplicará al reiniciar AutoPrevias.", t=tr(_themes.get(self._theme_saved).label)))
+        else:
+            self._lbl_theme.setText(tr("Más temas llegarán en próximas versiones."))
+
+    def _on_theme(self, key: str):
+        """Guarda el tema elegido y ofrece reiniciar para aplicarlo (así toda la interfaz queda coherente)."""
+        from src.config import load as _lc, save as _sc
+        for k, t in self._theme_tiles.items():
+            t.setChecked(k == key)
+            t.update()
+        c = _lc()
+        c["theme"] = key
+        _sc(c)
+        self._theme_saved = key
+        self._refresh_theme_hint()
+        if key == self._theme_running:
+            return
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Question)
+        box.setWindowTitle(tr("Cambiar el tema"))
+        box.setText(tr("Para aplicar el tema hay que reiniciar AutoPrevias."))
+        box.setInformativeText(tr("Si estás generando una previa o un vídeo, espera a que termine antes de reiniciar."))
+        b_now = box.addButton(tr("Reiniciar ahora"), QMessageBox.AcceptRole)
+        box.addButton(tr("Después"), QMessageBox.RejectRole)
+        box.exec()
+        if box.clickedButton() is b_now:
+            from PySide6.QtWidgets import QApplication
+            from src import themes as _t
+            if _t.restart_application():
+                QApplication.quit()
 
     def _refresh_perf_hint(self):
         from src import perf

@@ -145,7 +145,7 @@ def test_recorrido_completo_sin_dejar_rastro(monkeypatch, size):
             continue
         st = T._steps[T._i]
         if st.target is not None:                        # todo paso con objetivo resalta algo (en CI lenta puede tardar)
-            assert _pump(lambda: not T._overlay._hole.isNull(), secs=5), f"sin resaltado: {st.key}"
+            assert _pump(lambda: bool(T._overlay._holes), secs=5), f"sin resaltado: {st.key}"
         else:
             for _ in range(10):
                 QApplication.processEvents()

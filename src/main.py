@@ -636,6 +636,13 @@ def main():
     if "--selftest" in sys.argv:
         sys.exit(run_selftest())
 
+    # Tema elegido en ⚙ Licencia y ajustes (Original / One Dark / Claro): debe instalarse ANTES de importar la interfaz
+    try:
+        from src import themes as _themes
+        _log_startup(f"Tema: {_themes.install_from_config()}")
+    except Exception as _e:
+        _log_startup(f"Tema no aplicado: {_e}")
+
     # Forzar edición vía argumento (útil para launchers y pruebas)
     for _arg in sys.argv[1:]:
         if _arg.startswith("--edition="):

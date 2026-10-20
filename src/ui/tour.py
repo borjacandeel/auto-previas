@@ -111,6 +111,7 @@ class Step:
     example: str = ""                                  # cuadro amarillo con un ejemplo / consejo
     hole_pad: int = 6
     wiz: int = 2                                       # paso del asistente (② Tu previa · ③ Exportar) donde se ve
+    section: str = ""                                  # apartado del recorrido (se muestra en la tarjeta)
 
 
 def _vis(*ws):
@@ -244,13 +245,14 @@ def build_steps(win) -> list:
             "ajusta la intensidad en la fila de abajo. «▶ Oír» te deja escuchar solo ese efecto. Supr borra el seleccionado. Solo suena dentro de los cortes de la previa.",
             lambda: wave_frame._fx_palette, page=2, before=_fx_demo, after=_fx_demo_off,
             example="Un Filter Sweep ↗ de 8 s justo antes del drop sube la tensión.")
-    add("formatos", "① Nombre y formatos",
+    add("formatos", "Nombre y formatos",
         "El nombre del archivo ya viene puesto («PREVIA - tu tema»), pero puedes cambiarlo. "
         + ("Marca los formatos que quieres: WAV 24 bit, MP3 320k y FLAC." if plus else
            "Se exporta MP3 320k (con vídeo siempre se genera también el MP3)."),
-        lambda: _vis(R._edit_name, R._chk_wav, R._chk_mp3, R._chk_flac), page=2,
+        lambda: _vis(*[getattr(R, n, None) for n in ("_card_f_mp3", "_card_f_wav", "_card_name")]) or
+        _vis(R._edit_name, R._chk_wav, R._chk_mp3, R._chk_flac), page=2,
         example="Usa WAV para el promotor, MP3 para las redes y FLAC si quieres calidad sin pérdidas.")
-    add("video", "② Vídeo animado",
+    add("video", "Vídeo animado",
         "Marca esta casilla y aparece la tarjeta del vídeo: AutoPrevias crea un vídeo animado que late con la música, "
         "listo para TikTok, Reels y YouTube. Todo el vídeo se configura en esa tarjeta.", lambda: R._chk_video, page=2,
         before=lambda: R._chk_video.setChecked(True))
@@ -281,7 +283,7 @@ def build_steps(win) -> list:
         "Antes de generar, mira un fragmento real del vídeo con tus ajustes. Si no te convence, cámbialo y vuelve a verlo.",
         lambda: R._btn_vprev, page=2)
     if plus:
-        add("efectos", "③ Master LUFS y Voice Drop (Plus)",
+        add("efectos", "Master LUFS y Voice Drop (Plus)",
             "Master LUFS deja la previa al volumen estándar de las plataformas. Los efectos Flanger y Filter Sweep ya no son "
             "automáticos: los colocas tú arrastrándolos sobre la onda.", lambda: R._adv_fx_widget, page=2,
             before=lambda: R._set_adv_open(True))
@@ -321,7 +323,32 @@ def build_steps(win) -> list:
         seen = seen or st.key == "formatos"
         if seen and st.page == 2 and st.key != "nuevo":
             st.wiz = 3
+    seen = False
+    for st in S:                                       # apartados: lo que ve el usuario arriba de la tarjeta
+        if st.key in ("pasos", "destino"):
+            st.section = "Cómo funciona"
+        elif st.key == "fin":
+            st.section = "Listo"
+        elif st.page == 0:
+            st.section = "Primeros pasos"
+        else:
+            seen = seen or st.key == "formatos"
+            st.section = "③ Exportar" if seen else "② Tu previa"
     return S
+
+
+def section_progress(steps: list, idx: int) -> tuple:
+    """([(apartado, nº de pasos)…], posición del apartado actual, paso dentro del apartado, pasos del apartado)."""
+    order: list = []
+    counts: dict = {}
+    for st in steps:
+        if st.section not in counts:
+            order.append(st.section)
+            counts[st.section] = 0
+        counts[st.section] += 1
+    cur = steps[idx].section
+    within = sum(1 for st in steps[:idx + 1] if st.section == cur)
+    return [(n, counts[n]) for n in order], order.index(cur), within, counts[cur]
 
 
 # ───────────────────────────── capa visual ─────────────────────────────
@@ -338,22 +365,64 @@ def _btn_css(primary: bool) -> str:
             f"QPushButton:disabled {{ color: {TEXT_DIM}; }}")
 
 
+class _SegBar(QWidget):
+    """Barra de progreso por apartados: un segmento por apartado (el ancho es proporcional a sus pasos) que se va llenando."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedHeight(6)
+        self._segs: list = []
+        self._cur = 0
+        self._within = 1
+
+    def set_progress(self, segs: list, cur: int, within: int):
+        self._segs, self._cur, self._within = segs, cur, within
+        self.update()
+
+    def paintEvent(self, _e):
+        if not self._segs:
+            return
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        gap = 4
+        total = sum(n for _, n in self._segs)
+        usable = self.width() - gap * (len(self._segs) - 1)
+        x = 0.0
+        for i, (_name, n) in enumerate(self._segs):
+            w = usable * n / max(1, total)
+            r = QRectF(x, 0, w, self.height())
+            p.setPen(Qt.NoPen)
+            p.setBrush(QColor(BG4))
+            p.drawRoundedRect(r, 3, 3)
+            frac = 1.0 if i < self._cur else (self._within / max(1, n) if i == self._cur else 0.0)
+            if frac > 0:
+                p.setBrush(QColor(ACCENT))
+                p.drawRoundedRect(QRectF(x, 0, max(6.0, w * frac), self.height()), 3, 3)
+            x += w + gap
+        p.end()
+
+
 class TourOverlay(QWidget):
-    """Capa a pantalla completa: oscurece la ventana, deja un «agujero» resaltado y muestra la tarjeta del paso."""
+    """Capa a pantalla completa: oscurece la ventana, deja uno o varios «agujeros» resaltados y muestra la tarjeta del paso."""
     next_clicked = Signal()
     back_clicked = Signal()
     skip_clicked = Signal()
     resized = Signal()
 
-    CARD_W = 420
+    CARD_W = 440
+    MARGIN_X = 20
 
     def __init__(self, win):
         super().__init__(win)
         self._win = win
-        self._hole = QRectF()
+        self._holes: list = []                    # huecos que se dibujan ahora (QRectF)
+        self._hole_from: list = []
+        self._hole_to: list = []
         self._hole_anim = QVariantAnimation(self)
-        self._hole_anim.setDuration(320)
-        self._hole_anim.setEasingCurve(QEasingCurve.OutCubic)
+        self._hole_anim.setDuration(360)
+        self._hole_anim.setStartValue(0.0)
+        self._hole_anim.setEndValue(1.0)
+        self._hole_anim.setEasingCurve(QEasingCurve.InOutCubic)
         self._hole_anim.valueChanged.connect(self._on_hole)
         self.setFocusPolicy(Qt.StrongFocus)
         self.setCursor(Qt.ArrowCursor)
@@ -362,36 +431,44 @@ class TourOverlay(QWidget):
         card = QFrame(self)
         card.setObjectName("tour-card")
         card.setFixedWidth(self.CARD_W)
-        card.setStyleSheet(f"QFrame#tour-card {{ background: {BG2}; border: 2px solid {ACCENT}; border-radius: 14px; }}"
+        card.setStyleSheet(f"QFrame#tour-card {{ background: {BG2}; border: 2px solid {ACCENT}; border-radius: 16px; }}"
                            "QLabel { background: transparent; border: none; }")
         lay = QVBoxLayout(card)
-        lay.setContentsMargins(18, 14, 18, 14)
-        lay.setSpacing(8)
+        lay.setContentsMargins(self.MARGIN_X, 16, self.MARGIN_X, 14)
+        lay.setSpacing(9)
         top = QHBoxLayout()
-        self._lbl_step = QLabel("")
-        self._lbl_step.setStyleSheet(f"color: {GOLD}; font-size: 10.5px; font-weight: 900; letter-spacing: 1.5px;")
-        top.addWidget(self._lbl_step)
+        top.setSpacing(8)
+        self._lbl_section = QLabel("")
+        self._lbl_section.setStyleSheet(f"color: {ACCENT}; background: rgba(255,30,56,.12) !important; border: 1px solid {ACCENT};"
+                                        "border-radius: 9px; font-size: 10px; font-weight: 900; letter-spacing: 1.2px; padding: 2px 9px;")
+        top.addWidget(self._lbl_section)
         top.addStretch()
+        self._lbl_step = QLabel("")
+        self._lbl_step.setStyleSheet(f"color: {TEXT_MID}; font-size: 11px; font-weight: 800; letter-spacing: 0.6px;")
+        top.addWidget(self._lbl_step)
         lay.addLayout(top)
         self._lbl_title = QLabel("")
         self._lbl_title.setWordWrap(True)
-        self._lbl_title.setStyleSheet(f"color: {TEXT}; font-size: 18px; font-weight: 900;")
+        self._lbl_title.setStyleSheet(f"color: {TEXT}; font-size: 19px; font-weight: 900;")
         lay.addWidget(self._lbl_title)
         self._lbl_text = QLabel("")
         self._lbl_text.setWordWrap(True)
         self._lbl_text.setTextFormat(Qt.PlainText)
-        self._lbl_text.setStyleSheet(f"color: {TEXT_MID}; font-size: 13px; line-height: 140%;")
+        self._lbl_text.setStyleSheet(f"color: {TEXT_MID}; font-size: 13px;")
         lay.addWidget(self._lbl_text)
+        # el ejemplo va en su propio marco (con su margen interior), así su altura nunca se calcula mal
+        self._ex_frame = QFrame()
+        self._ex_frame.setObjectName("tour-ex")
+        self._ex_frame.setStyleSheet(f"QFrame#tour-ex {{ background: rgba(255,210,31,.09); border: none; border-left: 4px solid {GOLD};"
+                                     "border-radius: 4px; }")
+        exl = QVBoxLayout(self._ex_frame)
+        exl.setContentsMargins(10, 7, 10, 7)
         self._lbl_ex = QLabel("")
         self._lbl_ex.setWordWrap(True)
-        self._lbl_ex.setStyleSheet(f"color: #ffe58a; font-size: 12.5px; font-weight: 700; background: rgba(255,210,31,.09);"
-                                   f"border-left: 4px solid {GOLD}; padding: 7px 10px; border-radius: 4px;")
-        lay.addWidget(self._lbl_ex)
-        self._bar = QFrame()
-        self._bar.setFixedHeight(4)
-        self._bar.setStyleSheet(f"background: {BG4}; border-radius: 2px;")
-        self._fill = QFrame(self._bar)
-        self._fill.setStyleSheet(f"background: {ACCENT}; border-radius: 2px;")
+        self._lbl_ex.setStyleSheet("color: #ffe58a; font-size: 12.5px; font-weight: 700;")
+        exl.addWidget(self._lbl_ex)
+        lay.addWidget(self._ex_frame)
+        self._bar = _SegBar()
         lay.addWidget(self._bar)
         row = QHBoxLayout()
         row.setSpacing(8)
@@ -414,52 +491,85 @@ class TourOverlay(QWidget):
         row.addWidget(self._btn_next)
         lay.addLayout(row)
         self._card = card
+        self._lay = lay
+        self._last_holes_union = QRectF()
         self.show_step_idx = (0, 1)
         win.installEventFilter(self)
 
     # — datos del paso —
-    def set_content(self, idx: int, total: int, title: str, text: str, example: str, last: bool, first: bool, busy: bool = False):
+    def _fit_card(self):
+        """Mide la tarjeta con el ancho REAL de cada texto (antes se calculaba con el ancho mínimo y los textos salían cortados)."""
+        inner = self.CARD_W - 2 * self.MARGIN_X - 4
+        for lb, pad in ((self._lbl_title, 0), (self._lbl_text, 0), (self._lbl_ex, 20 + 4)):
+            w = inner - pad
+            lb.setFixedWidth(w)
+            lb.setMinimumHeight(0)                       # (si no, heightForWidth devuelve la altura del texto anterior)
+            lb.setMaximumHeight(16777215)
+            lb.setMinimumHeight(lb.heightForWidth(w) if lb.text() else 0)
+        self._lay.invalidate()
+        self._lay.activate()
+        h = self._lay.totalHeightForWidth(self.CARD_W)
+        self._card.setFixedHeight(h)
+
+    def set_content(self, idx: int, total: int, title: str, text: str, example: str, last: bool, first: bool, busy: bool = False,
+                    section: str = "", progress: Optional[tuple] = None):
         self.show_step_idx = (idx, total)
-        self._lbl_step.setText(tr("PASO {n} DE {t}", n=idx + 1, t=total))
+        self._lbl_section.setText(tr(section).upper() if section else "")
+        self._lbl_section.setVisible(bool(section))
+        if progress is not None:
+            segs, cur, within, in_sec = progress
+            self._lbl_step.setText(tr("Paso {a} de {b}  ·  {n}/{t}", a=within, b=in_sec, n=idx + 1, t=total))
+            self._bar.set_progress(segs, cur, within)
+        else:
+            self._lbl_step.setText(tr("PASO {n} DE {t}", n=idx + 1, t=total))
         self._lbl_title.setText(tr(title))
         self._lbl_text.setText(tr(text))
         self._lbl_ex.setText(tr(example) if example else "")
-        self._lbl_ex.setVisible(bool(example))
+        self._ex_frame.setVisible(bool(example))
         self._btn_back.setVisible(not first)
         self._btn_back.setEnabled(not busy)
         self._btn_next.setEnabled(not busy)
         self._btn_skip.setVisible(not last)
         self._btn_next.setText(tr("¡Terminar!") if last else tr("Siguiente →"))
-        self._fill.setGeometry(0, 0, int(self._bar.width() * (idx + 1) / max(1, total)) or 4, 4)
-        self._card.adjustSize()
-        QTimer.singleShot(0, self._refill)
+        self._fit_card()
+        QTimer.singleShot(0, self._fit_card)            # una segunda pasada cuando Qt ya ha asentado las fuentes
         from src.ui import anim
         anim.fade_in(self._card, ms=220)
 
-    def _refill(self):
-        idx, total = self.show_step_idx
-        self._fill.setGeometry(0, 0, max(4, int(self._bar.width() * (idx + 1) / max(1, total))), 4)
+    # — huecos y tarjeta —
+    @staticmethod
+    def _as_rects(rects) -> list:
+        if rects is None:
+            return []
+        if isinstance(rects, (QRect, QRectF)):
+            rects = [rects]
+        return [QRectF(r) for r in rects if r is not None and not QRectF(r).isNull()]
 
-    # — agujero y tarjeta —
-    def go_to(self, rect: Optional[QRect], animate: bool = True):
-        """Mueve el resaltado a `rect` (coordenadas de la ventana; None = sin resaltar) y recoloca la tarjeta."""
-        target = QRectF(rect) if rect is not None and not rect.isNull() else QRectF()
+    def go_to(self, rects, animate: bool = True):
+        """Mueve el resaltado a `rects` (un QRect, una lista de QRect o None = sin resaltar; coordenadas de la ventana) y
+        recoloca la tarjeta. Cada widget tiene su propio hueco (los que están pegados se funden en uno)."""
+        target = self._as_rects(rects)
         self._hole_anim.stop()
-        if animate and not self._hole.isNull() and not target.isNull():
-            self._hole_anim.setStartValue(self._hole)
-            self._hole_anim.setEndValue(target)
+        if animate and self._holes and target and len(self._holes) == len(target):
+            self._hole_from, self._hole_to = list(self._holes), target
             self._hole_anim.start()
         else:
-            self._hole = target
+            self._holes = target
             self.update()
-        self._place_card(target)
+        union = QRectF()
+        for r in target:
+            union = r if union.isNull() else union.united(r)
+        self._last_holes_union = union
+        self._place_card(union)
 
-    def _on_hole(self, v):
-        self._hole = QRectF(v)
+    def _on_hole(self, t):
+        t = float(t)
+        self._holes = [QRectF(a.x() + (b.x() - a.x()) * t, a.y() + (b.y() - a.y()) * t,
+                              a.width() + (b.width() - a.width()) * t, a.height() + (b.height() - a.height()) * t)
+                       for a, b in zip(self._hole_from, self._hole_to)]
         self.update()
 
     def _place_card(self, hole: QRectF):
-        self._card.adjustSize()
         cw, ch = self._card.width(), self._card.height()
         W, H = self.width(), self.height()
         gap = 18
@@ -472,9 +582,13 @@ class TourOverlay(QWidget):
             (hole.right() + gap, hole.center().y() - ch / 2),      # a la derecha
             (hole.left() - cw - gap, hole.center().y() - ch / 2),  # a la izquierda
         ]
-        for x, y in spots:
+        for k, (x, y) in enumerate(spots):
             x = min(max(12, x), W - cw - 12)
+            if k >= 2:                                                  # a un lado: se ajusta en vertical para que quepa
+                y = min(max(12, y), H - ch - 12)
             if 12 <= y and y + ch <= H - 12:
+                if (x + cw > hole.left() - 4 and x < hole.right() + 4 and y + ch > hole.top() - 4 and y < hole.bottom() + 4):
+                    continue                                           # taparía el resaltado
                 self._card.move(int(x), int(y))
                 return
         # no cabe sin tapar: esquina con más sitio
@@ -487,18 +601,19 @@ class TourOverlay(QWidget):
         p.setRenderHint(QPainter.Antialiasing)
         path = QPainterPath()
         path.addRect(QRectF(self.rect()))
-        if not self._hole.isNull():
+        for h in self._holes:
             hole = QPainterPath()
-            hole.addRoundedRect(self._hole, 10, 10)
+            hole.addRoundedRect(h, 12, 12)
             path = path.subtracted(hole)
-        p.fillPath(path, QColor(3, 4, 8, 196))
-        if not self._hole.isNull():
-            for w, a in ((9, 40), (5, 90), (2.5, 255)):
+        from src import themes as _th
+        p.fillPath(path, _th.raw_qcolor("#c8030408"))             # el oscurecido es negro en todos los temas
+        for h in self._holes:
+            for w, a in ((10, 34), (6, 80), (2.5, 255)):
                 pen = QPen(QColor(255, 30, 56, a))
                 pen.setWidthF(w)
                 p.setPen(pen)
                 p.setBrush(Qt.NoBrush)
-                p.drawRoundedRect(self._hole, 10, 10)
+                p.drawRoundedRect(h, 12, 12)
         p.end()
 
     def eventFilter(self, obj, ev):
@@ -697,13 +812,14 @@ class OnboardingTour(QObject):
         if self._overlay is None or idx != self._i:
             return
         st = self._steps[idx]
-        rect = self._target_rect(st)
-        if st.optional and st.target is not None and rect is None:
+        rects = self._target_rects(st)
+        if st.optional and st.target is not None and not rects:
             self._goto(idx + direction, direction)          # el objetivo no existe en esta edición
             return
         total = len(self._steps)
-        self._overlay.set_content(idx, total, st.title, st.text, st.example, last=(idx == total - 1), first=(idx == 0))
-        self._overlay.go_to(rect)
+        self._overlay.set_content(idx, total, st.title, st.text, st.example, last=(idx == total - 1), first=(idx == 0),
+                                  section=st.section, progress=section_progress(self._steps, idx))
+        self._overlay.go_to(rects)
         self._overlay.raise_()
         self._overlay.setFocus()
 
@@ -712,25 +828,46 @@ class OnboardingTour(QObject):
             self._present(self._i, +1)
 
     # — geometría del objetivo —
-    def _target_rect(self, st: Step) -> Optional[QRect]:
+    def _target_rects(self, st: Step) -> list:
+        """Un hueco por cada widget del objetivo (con su margen); los que están casi pegados se funden en uno solo."""
         if st.target is None:
-            return None
+            return []
         try:
             tg = st.target()
         except Exception:
-            return None
+            return []
         ws = [x for x in (tg if isinstance(tg, (list, tuple)) else [tg]) if x is not None and x.isVisible()]
         if not ws:
-            return None
+            return []
         self._scroll_into_view(ws)
         app = self._win
-        union = None
-        for x in ws:
-            r = QRect(x.mapTo(app, QPoint(0, 0)), x.size())
-            union = r if union is None else union.united(r)
         pad = st.hole_pad
-        union = union.adjusted(-pad, -pad, pad, pad).intersected(QRect(0, 0, app.width(), app.height()))
-        return union
+        bounds = QRect(0, 0, app.width(), app.height())
+        rects = [QRect(x.mapTo(app, QPoint(0, 0)), x.size()).adjusted(-pad, -pad, pad, pad).intersected(bounds) for x in ws]
+        merged = True
+        while merged and len(rects) > 1:                  # funde los huecos que casi se tocan (pastillas, filas de botones…)
+            merged = False
+            for i in range(len(rects)):
+                for j in range(i + 1, len(rects)):
+                    near = rects[i].intersects(rects[j])
+                    if near:
+                        rects[i] = rects[i].united(rects[j])
+                        del rects[j]
+                        merged = True
+                        break
+                if merged:
+                    break
+        return rects
+
+    def _target_rect(self, st: Step) -> Optional[QRect]:
+        """Compatibilidad: el rectángulo que engloba todos los huecos."""
+        rects = self._target_rects(st)
+        if not rects:
+            return None
+        u = rects[0]
+        for r in rects[1:]:
+            u = u.united(r)
+        return u
 
     def _scroll_into_view(self, ws):
         """Si el objetivo está dentro de un área con scroll, la desplaza para que quede en la parte alta y deje sitio a la tarjeta."""

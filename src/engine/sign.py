@@ -10,6 +10,7 @@ Solo mete la carátula y las etiquetas (artista, sello…) y guarda el tema en F
 from __future__ import annotations
 
 import os
+import sys
 import subprocess
 import tempfile
 from pathlib import Path
@@ -151,14 +152,133 @@ def make_cover_jpeg(image_path: str, size: int = COVER_SIZE) -> Optional[str]:
         return None
 
 
+def _id3_unsync(n: bytes) -> int:
+    return ((n[0] & 0x7F) << 21) | ((n[1] & 0x7F) << 14) | ((n[2] & 0x7F) << 7) | (n[3] & 0x7F)
+
+
+def _picture_from_id3(tag: bytes) -> Optional[bytes]:
+    """Imagen del primer fotograma APIC de una etiqueta ID3v2.3/2.4 (bytes de la etiqueta completa, con su cabecera)."""
+    import struct
+    if len(tag) < 10 or tag[:3] != b"ID3":
+        return None
+    ver = tag[3]
+    pos, end = 10, min(len(tag), 10 + _id3_unsync(tag[6:10]))
+    while pos + 10 <= end:
+        fid = tag[pos:pos + 4]
+        if not fid.strip(b"\x00"):
+            break
+        size = _id3_unsync(tag[pos + 4:pos + 8]) if ver >= 4 else struct.unpack(">I", tag[pos + 4:pos + 8])[0]
+        body = tag[pos + 10:pos + 10 + size]
+        if fid == b"APIC" and size > 4:
+            enc = body[0]
+            i = body.index(b"\x00", 1) + 1 if b"\x00" in body[1:] else len(body)      # fin del tipo MIME
+            i += 1                                                                    # tipo de imagen
+            if enc in (1, 2):                                                         # descripción UTF-16: termina en doble nulo
+                while i + 1 < len(body) and body[i:i + 2] != b"\x00\x00":
+                    i += 2
+                i += 2
+            else:
+                while i < len(body) and body[i] != 0:
+                    i += 1
+                i += 1
+            return bytes(body[i:]) or None
+        pos += 10 + size
+    return None
+
+
+def read_embedded_cover(path: str) -> Optional[bytes]:
+    """Lee del archivo YA guardado la carátula incrustada (bytes de la imagen) o None. Entiende FLAC (bloque PICTURE, con o
+    sin etiqueta ID3 delante), WAV (trozo «id3 »/«ID3 ») y cualquier archivo con etiqueta ID3 al principio (MP3…)."""
+    import struct
+    try:
+        with open(path, "rb") as f:
+            head = f.read(10)
+            id3_len = 0
+            id3_tag = b""
+            if head[:3] == b"ID3":
+                id3_len = 10 + _id3_unsync(head[6:10])
+                f.seek(0)
+                id3_tag = f.read(id3_len)
+                head = f.read(4)
+                f.seek(id3_len)
+            else:
+                f.seek(0)
+            magic = f.read(4)
+            if magic == b"fLaC":
+                while True:
+                    h = f.read(4)
+                    if len(h) < 4:
+                        break
+                    last, typ, ln = h[0] >> 7, h[0] & 0x7F, int.from_bytes(h[1:4], "big")
+                    if typ == 6:
+                        body = f.read(ln)
+                        o = 4
+                        ml = struct.unpack(">I", body[o:o + 4])[0]
+                        o += 4 + ml
+                        dl = struct.unpack(">I", body[o:o + 4])[0]
+                        o += 4 + dl + 16
+                        n = struct.unpack(">I", body[o:o + 4])[0]
+                        return bytes(body[o + 4:o + 4 + n]) or None
+                    f.seek(ln, os.SEEK_CUR)
+                    if last:
+                        break
+                return _picture_from_id3(id3_tag) if id3_tag else None
+            if magic == b"RIFF":
+                f.seek(id3_len + 12)
+                while True:
+                    h = f.read(8)
+                    if len(h) < 8:
+                        break
+                    cid, ln = h[:4], struct.unpack("<I", h[4:8])[0]
+                    if cid in (b"id3 ", b"ID3 "):
+                        return _picture_from_id3(f.read(ln))
+                    f.seek(ln + (ln & 1), os.SEEK_CUR)
+                return None
+            if id3_tag:
+                return _picture_from_id3(id3_tag)
+    except Exception:
+        return None
+    return None
+
+
 def verify_cover(ffmpeg: str, path: str) -> bool:
-    """Comprueba en el archivo YA guardado que lleva una carátula incrustada (un flujo de imagen)."""
+    """Comprueba en el archivo YA guardado que lleva una carátula incrustada y que es una imagen válida. Primero la lee con
+    el lector propio (y la abre con Pillow); si el formato no lo entiende, recurre a FFmpeg (¿hay un flujo de imagen?)."""
+    img = read_embedded_cover(path)
+    if img:
+        try:
+            from io import BytesIO
+            from PIL import Image
+            with Image.open(BytesIO(img)) as im:
+                im.verify()
+            return True
+        except Exception:
+            return False
     try:
         res = subprocess.run([ffmpeg, "-hide_banner", "-i", path], capture_output=True, timeout=30)
         txt = (res.stderr or b"").decode("utf-8", "ignore")
         return "Video:" in txt
     except Exception:
         return False
+
+
+def prepend_id3_to_flac(flac_path: str, tag: bytes) -> None:
+    """Pone una etiqueta ID3v2 delante del FLAC. No es lo habitual en FLAC, pero libFLAC, FFmpeg, VLC, foobar2000… la saltan sin
+    problema y es lo que hace que el Finder y la Vista rápida de macOS muestren la carátula de un FLAC (con solo el bloque
+    PICTURE de FLAC no la enseñan)."""
+    tmp = flac_path + ".id3tmp"
+    try:
+        with open(flac_path, "rb") as src, open(tmp, "wb") as dst:
+            dst.write(tag)
+            while True:
+                chunk = src.read(1 << 20)
+                if not chunk:
+                    break
+                dst.write(chunk)
+        os.replace(tmp, flac_path)
+    finally:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
 
 
 def _info_chunk(tags: dict) -> bytes:
@@ -202,8 +322,12 @@ def sign_track(
     cover_path: Optional[str] = None,
     metadata: Optional[dict] = None,
     progress_cb: Optional[Callable[[int, str], None]] = None,
+    finder_compat: Optional[bool] = None,
 ) -> dict:
-    """Firma el tema entero. Devuelve {path, format, sr, bits, channels, cover, warnings}."""
+    """Firma el tema entero. Devuelve {path, format, sr, bits, channels, cover, cover_ok, finder, warnings}.
+
+    `finder_compat` (solo FLAC): añade además una etiqueta ID3 delante del archivo para que el Finder y la Vista rápida de
+    macOS enseñen la carátula. Por defecto está activo en macOS."""
     from src.config import get_ffmpeg_path
     fmt = fmt.lower()
     if fmt not in SUPPORTED_FORMATS:
@@ -284,6 +408,16 @@ def sign_track(
             if res.returncode != 0 or not target.exists():
                 target.unlink(missing_ok=True)
                 raise RuntimeError("No se pudo guardar el archivo: " + res.stderr.decode("utf-8", "ignore").strip()[-200:])
+            if finder_compat is None:
+                finder_compat = sys.platform == "darwin"
+            if cover and finder_compat:
+                old = read_source_tags(ffmpeg, src)
+                jpeg = Path(cover).read_bytes()
+                prepend_id3_to_flac(str(target), build_id3v23({
+                    "title": tags["title"] or old.get("title") or Path(src).stem, "artist": tags["artist"] or old.get("artist"),
+                    "album": tags["album"] or old.get("album"), "publisher": tags["publisher"] or old.get("publisher"),
+                    "genre": tags["genre"] or old.get("genre"), "comment": tags["comment"] or old.get("comment"),
+                    "year": tags["date"] or (old.get("date") or "")[:4]}, jpeg))
         else:
             import shutil
             shutil.copyfile(work.name, str(target))                    # mismas muestras, sin recodificar
@@ -309,7 +443,8 @@ def sign_track(
             warnings.append("caratula_no_verificada")
         prog(100, "¡Listo!")
         return {"path": str(target), "format": fmt, "sr": info["sr"], "bits": bits, "channels": info["channels"],
-                "cover": bool(cover), "cover_ok": cover_ok, "warnings": warnings}
+                "cover": bool(cover), "cover_ok": cover_ok, "finder": bool(fmt == "flac" and cover and finder_compat),
+                "warnings": warnings}
     finally:
         for f in tmp_files:
             try:

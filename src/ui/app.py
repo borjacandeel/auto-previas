@@ -483,7 +483,7 @@ def _build_splash_pixmap(pct: int = 0, msg: str = "Iniciando…") -> QPixmap:
     f2.setLetterSpacing(_QFont.AbsoluteSpacing, 2)
     p.setFont(f2)
     p.setPen(QColor(ACCENT))
-    p.drawText(QRect(0, 154, W, 18), Qt.AlignCenter, f"RADICAL RECORDS  ·  STUDIO v{VERSION}")
+    p.drawText(QRect(0, 154, W, 18), Qt.AlignCenter, "RADICAL RECORDS  ·  STUDIO")
 
     # Barra de progreso — fondo
     bx, by, bw, bh = 70, 190, W - 140, 6
@@ -5341,19 +5341,7 @@ class MainWindow(QMainWindow):
         )
         logo_row.addWidget(self._logo_lbl)
 
-        v_badge = QLabel(f"v{VERSION}")
-        v_badge.setStyleSheet("""
-            color: #ffffff;
-            background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
-                stop:0 #ff1e38, stop:1 #990014);
-            font-size: 9px;
-            font-weight: 900;
-            letter-spacing: 1.2px;
-            border: 1px solid #ff4d63;
-            border-radius: 5px;
-            padding: 3px 7px;
-        """)
-        logo_row.addWidget(v_badge)
+        # (la versión ya no se enseña en la cabecera: está en ⚙ Licencia y ajustes)
 
         self._btn_recents = QPushButton("🕒 Recientes")
         self._btn_recents.setFixedHeight(22)

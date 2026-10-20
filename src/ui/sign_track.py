@@ -7,6 +7,7 @@ original, hasta 24 bits). Pensada para firmar temas completos, no previas.
 """
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QThread, Signal
@@ -16,7 +17,7 @@ from PySide6.QtWidgets import (QApplication, QButtonGroup, QDialog, QFileDialog,
                                QVBoxLayout, QWidget)
 
 from src import i18n
-from src.engine.sign import AUDIO_EXTENSIONS, is_lossy, probe, sign_track
+from src.engine.sign import AUDIO_EXTENSIONS, is_lossy, probe, read_embedded_cover, sign_track
 from src.i18n import tr
 from src.ui import anim
 from src.ui.dialog_style import ACCENT, ACCENT2, BG2, BG3, BORDER, DIALOG_QSS, GREEN, RED, TEXT, TEXT2, WARN
@@ -45,10 +46,11 @@ class SignWorker(QThread):
     item_failed = Signal(int, str)
     all_done = Signal(list, list)          # resultados, errores
 
-    def __init__(self, files, out_dir, fmt, cover, metadata, parent=None):
+    def __init__(self, files, out_dir, fmt, cover, metadata, parent=None, finder_compat=None):
         super().__init__(parent)
         self._files, self._out_dir, self._fmt = list(files), out_dir, fmt
         self._cover, self._meta = cover, dict(metadata)
+        self._finder = finder_compat
 
     def run(self):
         results, errors = [], []
@@ -64,7 +66,7 @@ class SignWorker(QThread):
                 self.progress.emit(int((i * 100 + p) / n), f"{name} — {m}")
 
             try:
-                r = sign_track(f, self._out_dir, self._fmt, self._cover, meta, cb)
+                r = sign_track(f, self._out_dir, self._fmt, self._cover, meta, cb, finder_compat=self._finder)
                 results.append(r)
                 self.item_done.emit(i, r)
             except Exception as exc:                          # un tema que falla no para al resto
@@ -195,7 +197,7 @@ class SignTrackDialog(QDialog):
         self._lbl_cover_hint = QLabel("")
         self._lbl_cover_hint.setWordWrap(True)
         self._lbl_cover_hint.setMaximumWidth(168)
-        self._lbl_cover_hint.setStyleSheet(f"color: {WARN}; font-size: 10.5px; font-weight: 600;")
+        self._lbl_cover_hint.setStyleSheet(f"color: {TEXT2}; font-size: 10.5px; font-weight: 600;")
         cov.addWidget(self._lbl_cover_hint)
         cov.addStretch()
         mid.addLayout(cov)
@@ -242,6 +244,16 @@ class SignTrackDialog(QDialog):
             fr.addWidget(rb)
         fr.addStretch()
         root.addLayout(fr)
+        from PySide6.QtWidgets import QCheckBox
+        self._chk_finder = QCheckBox("Que el Finder y la Vista rápida de macOS también enseñen la carátula del FLAC")
+        self._chk_finder.setToolTip(
+            "El FLAC lleva la carátula dentro (bloque PICTURE estándar), pero el Finder y la Vista rápida de macOS solo la enseñan si "
+            "el archivo lleva además una etiqueta ID3. Al activarlo se añade esa etiqueta delante del FLAC: FFmpeg, VLC, foobar2000 y "
+            "los lectores basados en libFLAC la saltan sin problema. Si algún programa raro no abriera el FLAC, desactívalo.")
+        self._chk_finder.setStyleSheet(f"color: {TEXT}; font-size: 11.5px;")
+        self._chk_finder.setChecked(bool(cfg.get("sign_finder_compat", sys.platform == "darwin")))
+        root.addWidget(self._chk_finder)
+        self._rb_flac.toggled.connect(lambda on: self._chk_finder.setVisible(on))
         note = QLabel("Se conservan la frecuencia de muestreo y los bits del original (hasta 24 bits). "
                       "Si el original es MP3/M4A se guarda sin perder nada más, pero no mejora su calidad.")
         note.setWordWrap(True)
@@ -272,10 +284,21 @@ class SignTrackDialog(QDialog):
         self._bar.setStyleSheet(f"QProgressBar {{ background: {BG3}; border: none; border-radius: 5px; }}"
                                 f"QProgressBar::chunk {{ background: {ACCENT}; border-radius: 5px; }}")
         root.addWidget(self._bar)
+        srow = QHBoxLayout()
+        srow.setSpacing(12)
         self._lbl_status = QLabel("")
         self._lbl_status.setWordWrap(True)
         self._lbl_status.setStyleSheet(f"color: {TEXT2}; font-size: 11.5px;")
-        root.addWidget(self._lbl_status)
+        srow.addWidget(self._lbl_status, 1)
+        # prueba visible: la carátula LEÍDA del archivo ya guardado (no la que se eligió)
+        self._lbl_proof = QLabel("")
+        self._lbl_proof.setFixedSize(72, 72)
+        self._lbl_proof.setAlignment(Qt.AlignCenter)
+        self._lbl_proof.setStyleSheet(f"background: {BG3}; border: 1px solid {GREEN}; border-radius: 8px;")
+        self._lbl_proof.setToolTip(tr("Carátula leída del archivo guardado"))
+        self._lbl_proof.setVisible(False)
+        srow.addWidget(self._lbl_proof, 0, Qt.AlignTop)
+        root.addLayout(srow)
 
         brow = QHBoxLayout()
         brow.addStretch()
@@ -378,9 +401,13 @@ class SignTrackDialog(QDialog):
     def _cover_hint(self):
         """Aviso bajo la carátula: si no hay ninguna, el tema se firma sin ella."""
         if not self._cover:
+            self._lbl_cover_hint.setStyleSheet(f"color: {WARN}; font-size: 10.5px; font-weight: 600;")
             self._lbl_cover_hint.setText(tr("⚠ Sin carátula: elige una imagen o el tema se firmará sin ella"))
         else:
-            self._lbl_cover_hint.setText(Path(self._cover).name)
+            self._lbl_cover_hint.setStyleSheet(f"color: {TEXT2}; font-size: 10.5px; font-weight: 600;")
+            name = Path(self._cover).name
+            self._lbl_cover_hint.setText(name if len(name) <= 24 else name[:11] + "…" + name[-11:])
+            self._lbl_cover_hint.setToolTip(name)
 
     def _pick_out(self):
         d = QFileDialog.getExistingDirectory(self, tr("Carpeta donde guardar los temas firmados"), self._out_dir)
@@ -422,14 +449,17 @@ class SignTrackDialog(QDialog):
             c = load()
             c["sign_out_dir"] = self._out_dir
             c["sign_cover_path"] = self._cover
+            c["sign_finder_compat"] = self._chk_finder.isChecked()
             save(c)
         except Exception:
             pass
         self._results = []
         self._bar.setValue(0)
         self._lbl_status.setStyleSheet(f"color: {TEXT2}; font-size: 11.5px;")
+        self._lbl_proof.setVisible(False)
         self._lbl_status.setText(tr("Firmando…"))
-        self._worker = SignWorker(self._files, self._out_dir, self.fmt(), self._cover or None, self.metadata(), self)
+        self._worker = SignWorker(self._files, self._out_dir, self.fmt(), self._cover or None, self.metadata(), self,
+                                  finder_compat=self._chk_finder.isChecked())
         self._worker.progress.connect(lambda p, m: (self._bar.setValue(p), self._lbl_status.setText(m)))
         self._worker.item_done.connect(self._on_item_done)
         self._worker.all_done.connect(self._on_all_done)
@@ -461,6 +491,7 @@ class SignTrackDialog(QDialog):
             else:
                 self._lbl_status.setText(self._lbl_status.text() + "\n" + tr("ℹ Firmado SIN carátula (no elegiste ninguna)"))
             self._lbl_status.setStyleSheet(f"color: {GREEN}; font-size: 12px; font-weight: 700;")
+            self._show_proof(results)
             if self._cover and con != ok:
                 self._lbl_status.setStyleSheet(f"color: {WARN}; font-size: 12px; font-weight: 700;")
             try:
@@ -474,6 +505,19 @@ class SignTrackDialog(QDialog):
             if not results:
                 self._lbl_status.setStyleSheet(f"color: {RED}; font-size: 12px; font-weight: 700;")
         self._refresh()
+
+    def _show_proof(self, results: list):
+        """Enseña, leída del primer archivo guardado, la carátula que lleva dentro: así se ve que está de verdad."""
+        self._lbl_proof.setVisible(False)
+        if not self._cover or not results:
+            return
+        data = read_embedded_cover(results[0]["path"])
+        pm = QPixmap()
+        if data and pm.loadFromData(data):
+            self._lbl_proof.setPixmap(pm.scaled(68, 68, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            self._lbl_proof.setVisible(True)
+            if results[0].get("finder"):
+                self._lbl_status.setText(self._lbl_status.text() + "\n" + tr("🍎 Con etiqueta ID3 para que el Finder y la Vista rápida la enseñen"))
 
     # ── arrastrar a la ventana entera ────────────────────────────────────────────
     def dragEnterEvent(self, e):

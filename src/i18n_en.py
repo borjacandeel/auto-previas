@@ -1086,3 +1086,25 @@ EN.update({
         "Adds a new cut instantly, where the playhead is (or in the first free gap). Then drag it along the waveform to move it and stretch its edges to change its length.",
     "Pon el cursor en un drop que te guste y pulsa «+ Corte».": "Put the playhead on a drop you like and press “+ Cut”.",
 })
+EN.update({
+    "Que el Finder y la Vista rápida de macOS también enseñen la carátula del FLAC": "Let macOS Finder and Quick Look also show the FLAC's cover art",
+    "El FLAC lleva la carátula dentro (bloque PICTURE estándar), pero el Finder y la Vista rápida de macOS solo la enseñan si el archivo lleva además una etiqueta ID3. Al activarlo se añade esa etiqueta delante del FLAC: FFmpeg, VLC, foobar2000 y los lectores basados en libFLAC la saltan sin problema. Si algún programa raro no abriera el FLAC, desactívalo.":
+        "The FLAC carries the cover inside (standard PICTURE block), but macOS Finder and Quick Look only show it if the file also has an ID3 tag. Turning this on adds that tag in front of the FLAC: FFmpeg, VLC, foobar2000 and libFLAC-based players skip it without problems. If some unusual program can't open the FLAC, turn it off.",
+    "Carátula leída del archivo guardado": "Cover art read from the saved file",
+    "🍎 Con etiqueta ID3 para que el Finder y la Vista rápida la enseñen": "🍎 With an ID3 tag so Finder and Quick Look show it",
+})
+EN.update({
+    "Primeros pasos": "Getting started", "Cómo funciona": "How it works", "② Tu previa": "② Your preview", "③ Exportar": "③ Export",
+    "Listo": "Done", "Paso {a} de {b}  ·  {n}/{t}": "Step {a} of {b}  ·  {n}/{t}",
+    "Nombre y formatos": "Name and formats", "Vídeo animado": "Animated video", "Master LUFS y Voice Drop (Plus)": "Master LUFS and Voice Drop (Plus)",
+})
+EN.update({
+    "Tema de la app": "App theme", "Elegido: {t}. Se aplicará al reiniciar AutoPrevias.": "Chosen: {t}. It will apply when AutoPrevias restarts.",
+    "Más temas llegarán en próximas versiones.": "More themes are coming in future versions.", "Cambiar el tema": "Change theme",
+    "Para aplicar el tema hay que reiniciar AutoPrevias.": "AutoPrevias has to restart to apply the theme.",
+    "Si estás generando una previa o un vídeo, espera a que termine antes de reiniciar.": "If you're generating a preview or video, wait for it to finish before restarting.",
+    "Reiniciar ahora": "Restart now", "Después": "Later", "Claro": "Light",
+    "El oscuro de siempre, con acento carmesí.": "The classic dark look, with a crimson accent.",
+    "Gris pizarra suave inspirado en Atom One Dark, con acento azul.": "Soft slate grey inspired by Atom One Dark, with a blue accent.",
+    "Fondo blanco roto para trabajar con mucha luz, con el mismo acento carmesí.": "Off-white background for working in bright light, with the same crimson accent.",
+})

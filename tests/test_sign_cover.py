@@ -176,3 +176,63 @@ def test_la_caratula_elegida_se_recuerda_para_la_proxima_vez(tmp_path):
     _esperar(d)
     assert load().get("sign_cover_path") == cover
     d.deleteLater()
+
+
+# ── v5.3: carátula visible también en el Finder de macOS (FLAC con etiqueta ID3) y prueba leída del archivo ──────────────
+@necesita_ffmpeg
+@pytest.mark.parametrize("finder", [True, False])
+def test_flac_lleva_la_caratula_en_su_bloque_picture_y_con_finder_tambien_en_id3(tmp_path, finder):
+    from src.engine.sign import read_embedded_cover, sign_track
+    src = _wav(tmp_path / "tema.wav", sr=48000, sub="PCM_24")
+    r = sign_track(src, str(tmp_path / "out"), "flac", _imagen(tmp_path, "png_alpha"), {"artist": "DJ", "title": "Gaitas"},
+                   finder_compat=finder)
+    assert r["cover_ok"] and r["finder"] is finder
+    raw = Path(r["path"]).read_bytes()
+    assert (raw[:3] == b"ID3") is finder                                 # con Finder: etiqueta ID3 delante del «fLaC»
+    assert b"fLaC" in raw
+    img = read_embedded_cover(r["path"])
+    assert img and img[:2] == b"\xff\xd8"                                # un JPEG de verdad, leído del archivo guardado
+    with Image.open(__import__("io").BytesIO(img)) as im:
+        assert im.size == (1400, 1400)
+    # el audio sigue siendo legible y de la misma duración aunque lleve la etiqueta delante
+    from src.config import get_ffmpeg_path
+    o = subprocess.run([get_ffmpeg_path(), "-v", "error", "-i", r["path"], "-f", "null", "-"], capture_output=True)
+    assert o.returncode == 0 and not o.stderr
+
+
+@necesita_ffmpeg
+def test_el_lector_propio_entiende_wav_y_no_inventa_caratulas(tmp_path):
+    from src.engine.sign import read_embedded_cover, sign_track
+    r = sign_track(_wav(tmp_path / "a.wav"), str(tmp_path / "o"), "wav", _imagen(tmp_path, "jpg"), {"title": "x"})
+    assert read_embedded_cover(r["path"])[:2] == b"\xff\xd8"
+    sin = sign_track(_wav(tmp_path / "b.wav"), str(tmp_path / "o"), "flac", None, {}, finder_compat=True)
+    assert read_embedded_cover(sin["path"]) is None and sin["finder"] is False
+    assert read_embedded_cover(str(tmp_path / "no_existe.flac")) is None
+
+
+@necesita_ffmpeg
+def test_la_ventana_enseña_la_caratula_leida_del_archivo_firmado(tmp_path):
+    import src.ui.sign_track as S
+    d = S.SignTrackDialog({"sign_finder_compat": True}, None, [_wav(tmp_path / "t.wav")])
+    d._out_dir = str(tmp_path / "out")
+    d._set_cover(_imagen(tmp_path, "jpg"))
+    assert d._chk_finder.isChecked()
+    d._start()
+    _esperar(d)
+    assert d._results[0]["cover_ok"] and d._results[0]["finder"]
+    assert not d._lbl_proof.isHidden() and d._lbl_proof.pixmap() is not None and not d._lbl_proof.pixmap().isNull()
+    assert "Finder" in d._lbl_status.text()
+    from src.config import load
+    assert load().get("sign_finder_compat") is True                       # se recuerda la casilla
+    d.deleteLater()
+
+
+def test_el_nombre_de_la_caratula_no_sale_en_naranja_y_se_acorta(tmp_path):
+    import src.ui.sign_track as S
+    d = S.SignTrackDialog({}, None, [])
+    img = tmp_path / "2F9DF651-EE22-44A5-9D2D-D6A53DA0F633.PNG"
+    Image.new("RGB", (300, 300), (30, 30, 30)).save(img)
+    d._set_cover(str(img))
+    assert len(d._lbl_cover_hint.text()) <= 24 and d._lbl_cover_hint.toolTip() == img.name
+    assert S.WARN not in d._lbl_cover_hint.styleSheet()
+    d.deleteLater()
