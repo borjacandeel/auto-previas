@@ -2204,3 +2204,9 @@ AutoPrevias/
 - **Validación Final en Campo (Confirmado por el Usuario)**:
   * El usuario confirma: *"ya va en windows perfecto con esa version"*.
   * AutoPrevias v1.2.4 arranca instantáneamente como usuario normal (sin privilegios de administrador) tanto en Windows x64 como en Windows ARM64 (Parallels / Snapdragon), eliminando definitivamente cualquier bloqueo de proceso.
+
+
+## Sesión 66 — v5.3.1 (2026-10-20): firma sin duplicar y notificación en Mac
+- **Firma y carátula duplicada** (captura del usuario): el `BrandingCard` completo salía también al abrir «Opciones avanzadas». Ahora `v5_layout` lo deja oculto (`setHidden(True)` tras recolocar), `_apply_adv_visibility` ya no lo revela y `studio.leave()` lo oculta (`enter()` lo muestra). «✎ Editar» → `ResultPanel._open_signature_editor()`: abre un `QDialog` modal (título, subtítulo, la tarjeta, botón «Listo»), y en `finally` devuelve la tarjeta a su layout/posición/visibilidad, refresca chips y resumen. Paso del recorrido «firma» apunta a `R._card_sign` (sin abrir avanzadas). Textos EN añadidos. Manual: se actualizan las frases de «Opciones avanzadas» y «Firma y carátula».
+- **Notificación al terminar la previa** (el usuario: «no sale»): causa probable → con la app en primer plano macOS no presenta el aviso de `QSystemTrayIcon` (y desde v5.2 la app lleva al usuario a la previa terminada). `src/notifications.py::notify` usa osascript (otro proceso) si `_app_is_active()` en darwin; en segundo plano, tray con logo y clic. `_send` también sanea barras invertidas. No verificable en el contenedor → pendiente de prueba en Mac.
+- Tests: `tests/test_sign_card_dialog.py` (2), `test_v310_features.py::test_mac_con_la_app_en_primer_plano_usa_osascript`, `test_ui_features` adaptado.

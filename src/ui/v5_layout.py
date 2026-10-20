@@ -65,6 +65,7 @@ def assemble(R, edition_plus: bool):
     for w, was_hidden in taken:
         if w in keep:
             w.setHidden(was_hidden)
+    R._branding_card.setHidden(True)            # la firma se edita desde la tarjeta «Firma y carátula» (ventana propia)
 
 
 # ───────────────────────────── paso ② Tu previa ─────────────────────────────

@@ -366,3 +366,24 @@ def test_cuenta_animada_termina_en_el_valor_exacto_y_reveal_pliega(monkeypatch):
     assert inner.isVisible()
     assert _espera(lambda: inner.maximumHeight() == 16777215, secs=3)
     _cerrar(host)
+
+
+def test_mac_con_la_app_en_primer_plano_usa_osascript(monkeypatch, tmp_path):
+    """macOS no enseña el aviso de la propia app si está en primer plano: ahí se usa osascript (otro proceso)."""
+    from src import notifications as N
+    enviados, tray = [], []
+    monkeypatch.setattr(N.sys, "platform", "darwin")
+    monkeypatch.setattr(N, "_app_is_active", lambda: True)
+    monkeypatch.setattr(N, "_show_with_tray", lambda *a, **k: tray.append(a) or True)
+    monkeypatch.setattr(N, "_send", lambda t, m, s: enviados.append((t, m)))
+    N.notify("AutoPrevias", "Previa generada", folder=str(tmp_path))
+    import time
+    for _ in range(50):
+        if enviados:
+            break
+        time.sleep(0.02)
+    assert enviados and not tray
+    enviados.clear()
+    monkeypatch.setattr(N, "_app_is_active", lambda: False)          # en segundo plano sí sale con logo y clic
+    N.notify("AutoPrevias", "Previa generada", folder=str(tmp_path))
+    assert tray and not enviados

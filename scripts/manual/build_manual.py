@@ -497,7 +497,7 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
 {video_section}
 <h3>Lo que verás en el paso ③</h3>
 <p>El paso ③ se llama <b>¿Qué quieres crear?</b> y muestra los formatos como tarjetas grandes: pulsa una tarjeta (o su casilla) para marcarla. Lo más habitual ya viene marcado.
-Debajo están <b>Nombre y carpeta</b>{' y <b>Firma y carátula</b>' if plus else ''}, y las <b>Opciones avanzadas</b>{' (Master LUFS, Voice Drop y la firma completa)' if plus else ''} plegadas.
+Debajo están <b>Nombre y carpeta</b>{' y <b>Firma y carátula</b>' if plus else ''}, y las <b>Opciones avanzadas</b>{' (Master LUFS y Voice Drop)' if plus else ''} plegadas.
 Al final, una barra con el <b>resumen</b> de lo que se va a crear (formatos, vídeo, duración de la previa y carpeta) y el botón <b>GENERAR PREVIA</b>, para que no haya sorpresas.</p>
 
 {'' if plus else tip('La edición Plus añade WAV 24 bit, FLAC, vídeo animado sin marca de agua, con tu propia imagen y el final a tu elección, firma y carátula personalizadas, efectos de estudio y mucho más. Mira el capítulo «Pasar a la edición Plus».')}
@@ -549,7 +549,7 @@ def s_plus_fx(im: dict) -> str:
 <table><tr><th>Opción</th><th>Qué hace</th></tr>
 <tr><td><b>🔊 Master LUFS</b></td><td>Normalización y limitador transparente a <b>−9 LUFS</b> (nivel de club / Beatport).</td></tr></table>
 {tip("Flanger y Filter Sweep ya no son casillas automáticas: se arrastran sobre la forma de onda y eliges tú dónde suenan (capítulo 6, «Efectos en la onda»). Están disponibles en Basic y en Plus.", "tip")}
-<p>El <b>Master LUFS</b>, el <b>Voice Drop</b> y la firma completa están en <b>«Opciones avanzadas»</b> del paso ③ (se abren pulsando el título). El <b>Modo promo</b> es una de las cuatro tarjetas de formato.</p>
+<p>El <b>Master LUFS</b> y el <b>Voice Drop</b> están en <b>«Opciones avanzadas»</b> del paso ③ (se abren pulsando el título). El <b>Modo promo</b> es una de las cuatro tarjetas de formato.</p>
 <h3>Voice Drop (tu firma de voz)</h3>
 <p>Superpone tu firma de voz o <i>jingle</i> de DJ sobre la previa.</p>
 {steps(["Pulsa <b>🎙 Voice Drop…</b> y elige tu audio de firma (WAV, MP3…).", "Elige el momento: <b>📍 Pre-Drop</b> (justo antes del primer drop), <b>📍 Intro</b> o <b>🎯 Manual</b>.",
@@ -572,7 +572,7 @@ def s_plus_firma(im: dict) -> str:
 <p><span class="badge plus">PLUS</span></p>
 <h3>Firma y carátula personalizadas</h3>
 {fig(im.get('z_firma',''), 'Tarjeta de firma y carátula')}
-<p>En el paso ③, la tarjeta <b>Firma y carátula</b> resume tu artista y tu portada; pulsa <b>✎ Editar</b> para abrir todos los datos. Rellena <b>Artista / DJ</b>, <b>Sello</b>, <b>Álbum</b>, <b>Género</b> y <b>Comentario</b>: se incrustan como metadatos en tus previas. Pulsa o arrastra una
+<p>En el paso ③, la tarjeta <b>Firma y carátula</b> resume tu artista y tu portada; pulsa <b>✎ Editar</b> y se abre una ventana con todos los datos (la firma ya no se repite en el paso ③). Rellena <b>Artista / DJ</b>, <b>Sello</b>, <b>Álbum</b>, <b>Género</b> y <b>Comentario</b>: se incrustan como metadatos en tus previas. Pulsa o arrastra una
 imagen sobre la <b>carátula</b> para personalizarla (con <b>Restablecer portada</b> vuelves a la de Radical Records). Marca
 <b>«Guardar firma y carátula como predeterminada»</b> para que se carguen solas en la próxima sesión.</p>
 <h3>🖋 Firmar un tema entero</h3>

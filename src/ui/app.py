@@ -3255,8 +3255,6 @@ class ResultPanel(QWidget):
         plus = get_edition() == "plus"
         show = plus and self._adv_open
         _anim.reveal(self._adv_fx_widget, show)
-        if hasattr(self, "_branding_card"):
-            _anim.reveal(self._branding_card, show)
         self._btn_adv.setVisible(plus)
         act = self._adv_active_names()
         suffix = ("  ·  " + ", ".join(act)) if act else ""
@@ -3333,11 +3331,54 @@ class ResultPanel(QWidget):
                     self._lbl_sign_thumb.setPixmap(pm.scaled(64, 64, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation))
 
     def _open_signature_editor(self):
-        self._set_adv_open(True)
+        """«Editar» firma y carátula: la tarjeta completa se abre en una ventana y, al cerrarla, vuelve a su sitio."""
+        if getattr(self, "_sig_dialog", None) is not None:
+            return
+        from PySide6.QtWidgets import QDialog
+        from src.ui import theme5 as T
+        card = self._branding_card
+        home = card.parentWidget()
+        lay = home.layout() if home is not None else None
+        idx = lay.indexOf(card) if lay is not None else -1
+        was_visible = card.isVisibleTo(home) if home is not None else False
+        dlg = QDialog(self)
+        self._sig_dialog = dlg
+        dlg.setWindowTitle(tr("Firma y carátula"))
+        dlg.setModal(True)
+        dlg.setMinimumWidth(560)
+        dlg.setStyleSheet(f"QDialog {{ background: {T.BG}; }}")
+        v = QVBoxLayout(dlg)
+        v.setContentsMargins(20, 18, 20, 16)
+        v.setSpacing(12)
+        v.addWidget(T.h1(tr("Firma y carátula"), 22))
+        v.addWidget(T.sub(tr("Tu artista, sello, género y carátula se incrustan en los archivos y salen en el vídeo.")))
+        v.addWidget(card)
+        card.setVisible(True)
+        row = QHBoxLayout()
+        row.addStretch(1)
+        btn = QPushButton(tr("Listo"))
+        btn.setCursor(Qt.PointingHandCursor)
+        btn.setFixedHeight(36)
+        btn.setMinimumWidth(110)
+        btn.setStyleSheet(T.cta_css(10, 13))
+        btn.clicked.connect(lambda _=False: dlg.accept())
+        row.addWidget(btn)
+        v.addLayout(row)
         try:
-            self._branding_card.setFocus()
-        except Exception:
-            pass
+            dlg.exec()
+        finally:
+            v.removeWidget(card)
+            card.setParent(home)
+            if lay is not None:
+                lay.insertWidget(idx if idx >= 0 else lay.count(), card)
+            card.setVisible(was_visible)
+            self._sig_dialog = None
+            dlg.deleteLater()
+            self._refresh_chips()
+            try:
+                self._update_summary()
+            except Exception:
+                pass
 
     def _open_video_preview(self):
         """Vista previa rápida del vídeo con los ajustes actuales (título, paleta, formato, banner, carátula)."""

@@ -756,6 +756,10 @@ EN_TOUR = {
     "Firma, carátula y datos (Plus)": "Signature, cover art and metadata (Plus)",
     "Tu nombre de artista, sello, género y carátula se incrustan en los archivos y se usan en el vídeo.":
         "Your artist name, label, genre and cover art are embedded in the files and used in the video.",
+    "Tu nombre de artista, sello, género y carátula se incrustan en los archivos y se usan en el vídeo. Pulsa «Editar» para cambiarlos en una ventana.":
+        "Your artist name, label, genre and cover art are embedded in the files and used in the video. Press “Edit” to change them in a window.",
+    "Tu artista, sello, género y carátula se incrustan en los archivos y salen en el vídeo.":
+        "Your artist, label, genre and cover art are embedded in the files and appear in the video.",
     "Carpeta de destino": "Destination folder",
     "Por defecto las previas se guardan en Música/Previas. Cambia la carpeta con «Cambiar» y ábrela con «Abrir».":
         "By default previews are saved in Music/Previas. Change the folder with “Change” and open it with “Open”.",

@@ -214,6 +214,7 @@ class StudioView(QWidget):
         R._row_video_title_widget.setVisible(R._chk_video.isChecked())
         R._card_startend.setVisible(R._studio_plus)
         R._card_startend_simple.setVisible(R._studio_plus)
+        R._branding_card.setVisible(True)
         self.show_tool(self._tool if self._tool in self.side_btns else "cortes")
         self.refresh()
 
@@ -230,6 +231,7 @@ class StudioView(QWidget):
         R._edit_name.setMinimumWidth(0)
         R._card_startend_simple.setVisible(R._studio_plus)
         R._card_startend.setVisible(R._studio_plus)
+        R._branding_card.setVisible(False)       # en el asistente la firma se edita con «Editar» (ventana)
         self._docked = []
 
     # ── interacción ─────────────────────────────────────────────────────────

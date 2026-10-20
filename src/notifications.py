@@ -55,11 +55,23 @@ def notify_icon_path() -> Path | None:
 def notify(title: str, message: str, sound: bool = True, folder: str | None = None) -> None:
     """Muestra una notificación. Con `folder` (carpeta o archivo), al pulsarla se abre esa ubicación."""
     try:
-        if _show_with_tray(title, message, folder):
+        # macOS no enseña los avisos de una app mientras esa app está en primer plano (justo cuando acaba una previa y
+        # la app lleva al usuario a los resultados): ahí se usa el aviso de osascript, que sale de otro proceso.
+        if not (sys.platform == "darwin" and _app_is_active()) and _show_with_tray(title, message, folder):
             return
     except Exception:
         pass
     threading.Thread(target=_send, args=(title, message, sound), daemon=True).start()
+
+
+def _app_is_active() -> bool:
+    try:
+        from PySide6.QtCore import Qt
+        from PySide6.QtWidgets import QApplication
+        app = QApplication.instance()
+        return app is not None and app.applicationState() == Qt.ApplicationActive
+    except Exception:
+        return False
 
 
 # ── Notificación propia de la aplicación (logo + clic) ────────────────────────────────────
@@ -118,8 +130,8 @@ def _on_clicked() -> None:
 # ── Método antiguo (sin logo ni clic) ──────────────────────────────────────────────────────
 
 def _send(title: str, message: str, sound: bool) -> None:
-    title = title.replace('"', "'")
-    message = message.replace('"', "'")
+    title = title.replace("\\", " ").replace('"', "'")
+    message = message.replace("\\", " ").replace('"', "'")
 
     if sys.platform == "darwin":
         sound_clause = "sound name \"default\"" if sound else ""

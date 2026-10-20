@@ -3,6 +3,12 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [5.3.1] - 2026-10-20
+
+### Corregido
+- **Firma y carátula ya no sale dos veces** en el paso ③. Queda solo la tarjeta de la derecha y **«✎ Editar» abre una ventana** con todos los datos (artista, sello, álbum, género, carátula y «guardar como predeterminada»).
+- **La notificación al terminar la previa no salía en Mac.** macOS no enseña el aviso de una app mientras está en primer plano (justo cuando AutoPrevias te lleva a la previa terminada); ahora en ese caso se usa el aviso del sistema, y con la app en segundo plano sigue saliendo con el logo y abriendo la carpeta al pulsarla.
+
 ## [5.3.0] - 2026-10-20
 
 ### Añadido

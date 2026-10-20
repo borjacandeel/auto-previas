@@ -296,9 +296,9 @@ def build_steps(win) -> list:
             "segundos, así no sirve para mezclarla ni para subirla a otras plataformas.", lambda: R._row_promo_widget, page=2,
             before=lambda: R._set_adv_open(True))
         add("firma", "Firma, carátula y datos (Plus)",
-            "Tu nombre de artista, sello, género y carátula se incrustan en los archivos y se usan en el vídeo.",
-            lambda: R._branding_card, page=2,
-            before=lambda: R._set_adv_open(True))
+            "Tu nombre de artista, sello, género y carátula se incrustan en los archivos y se usan en el vídeo. "
+            "Pulsa «Editar» para cambiarlos en una ventana.",
+            lambda: R._card_sign, page=2)
     add("carpeta", "Carpeta de destino",
         "Por defecto las previas se guardan en Música/Previas. Cambia la carpeta con «Cambiar» y ábrela con «Abrir».",
         lambda: [R._lbl_folder_path, R._btn_folder, R._btn_open_folder], page=2)

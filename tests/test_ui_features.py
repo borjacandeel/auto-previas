@@ -508,7 +508,8 @@ def test_opciones_avanzadas_plegadas_y_se_abren_solas(monkeypatch):
     assert not p._adv_fx_widget.isVisibleTo(p) and not p._branding_card.isVisibleTo(p)
     assert p._btn_adv.isVisibleTo(p) and "Opciones avanzadas" in p._btn_adv.text() and "▸" in p._btn_adv.text()
     p._btn_adv.click()
-    assert p._adv_fx_widget.isVisibleTo(p) and p._branding_card.isVisibleTo(p) and "▾" in p._btn_adv.text()
+    # la firma ya no se repite aquí: se edita con «Editar» en la tarjeta «Firma y carátula»
+    assert p._adv_fx_widget.isVisibleTo(p) and not p._branding_card.isVisibleTo(p) and "▾" in p._btn_adv.text()
     p._btn_adv.click()
     assert not p._adv_fx_widget.isVisibleTo(p)
     p._chk_promo.setChecked(True)                             # activar una opción avanzada abre la sección
