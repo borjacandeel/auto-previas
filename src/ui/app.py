@@ -570,6 +570,53 @@ class SplashWindow(QSplashScreen):
 
 # ── Página de análisis en curso ────────────────────────────────────────────────
 
+class _PulseLogo(QWidget):
+    """Logo que «late» con un anillo de luz. Se dibuja con QPainter (escala y brillo sin tocar el tamaño del widget), así el
+    diseño de la pantalla no se recalcula en cada fotograma y la animación va fluida."""
+
+    SIZE = 190
+
+    def __init__(self, pix=None, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(self.SIZE, self.SIZE)
+        self.setAttribute(Qt.WA_TranslucentBackground, True)
+        self._pix = pix
+        self._phase = 0.0
+
+    def set_phase(self, phase: float):
+        self._phase = phase
+        self.update()
+
+    def paintEvent(self, _e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        p.setRenderHint(QPainter.SmoothPixmapTransform)
+        t = (math.sin(self._phase) + 1) / 2
+        c = self.rect().center()
+        # anillos de luz que se abren y se desvanecen
+        for k, r0 in enumerate((58, 74)):
+            tt = (t + k * 0.5) % 1.0
+            col = QColor(ACCENT)
+            col.setAlpha(int(70 * (1 - tt)))
+            p.setPen(QPen(col, 2.0))
+            p.setBrush(Qt.NoBrush)
+            rr = r0 + 22 * tt
+            p.drawEllipse(c, rr, rr)
+        if self._pix is not None:
+            sc = 0.92 + 0.16 * t
+            p.translate(c)
+            p.scale(sc, sc)
+            w, h = self._pix.width(), self._pix.height()
+            p.drawPixmap(-w // 2, -h // 2, self._pix)
+        else:
+            p.setPen(QColor(TEXT))
+            f = p.font()
+            f.setPixelSize(72)
+            p.setFont(f)
+            p.drawText(self.rect(), Qt.AlignCenter, "🎧")
+        p.end()
+
+
 class AnalysisPage(QWidget):
     """Pantalla que se muestra mientras se analiza un archivo: logo animado + progreso."""
 
@@ -582,8 +629,6 @@ class AnalysisPage(QWidget):
         lay.setContentsMargins(40, 40, 40, 40)
 
         # Logo grande animado
-        self._logo_lbl = QLabel()
-        self._logo_lbl.setAlignment(Qt.AlignCenter)
         logo_file = None
         for cand in [_ASSETS_DIR / "logo_emblem.png", _ASSETS_DIR / "logo.png",
                      _ASSETS_DIR / "logo_emblem_red.png"]:
@@ -595,11 +640,7 @@ class AnalysisPage(QWidget):
             pix = QPixmap(logo_file)
             if not pix.isNull():
                 self._logo_pix_orig = pix.scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-                self._logo_lbl.setPixmap(self._logo_pix_orig)
-                self._logo_lbl.setStyleSheet("background: transparent; border: none;")
-        else:
-            self._logo_lbl.setText("🎧")
-            self._logo_lbl.setStyleSheet("font-size: 72px; background: transparent; border: none;")
+        self._logo_lbl = _PulseLogo(self._logo_pix_orig)
         lay.addWidget(self._logo_lbl, alignment=Qt.AlignCenter)
 
         # Nombre del archivo
@@ -648,13 +689,14 @@ class AnalysisPage(QWidget):
         self._pulse_phase = 0.0
         self._scale = 1.0
         self._anim_timer = QTimer(self)
+        self._anim_timer.setTimerType(Qt.PreciseTimer)
         self._anim_timer.timeout.connect(self._tick)
 
     def start(self, filename: str):
         self._file_lbl.setText(filename[:60] + ("…" if len(filename) > 60 else ""))
         i18n.set_text(self._status_lbl, "Preparando análisis…")
         self._bar.setValue(0)
-        self._anim_timer.start(35)
+        self._anim_timer.start(16)            # 60 fps: solo se repinta el logo, el resto de la pantalla no se toca
 
     def stop(self):
         self._anim_timer.stop()
@@ -664,19 +706,8 @@ class AnalysisPage(QWidget):
         i18n.set_text(self._status_lbl, msg)
 
     def _tick(self):
-        self._pulse_phase = (self._pulse_phase + 0.05) % (2 * math.pi)
-        t = (math.sin(self._pulse_phase) + 1) / 2
-
-        if self._logo_pix_orig:
-            # Escalar el logo entre 0.9x y 1.1x
-            scale = 0.90 + 0.20 * t
-            new_size = int(120 * scale)
-            scaled = self._logo_pix_orig.scaled(
-                new_size, new_size,
-                Qt.KeepAspectRatio, Qt.SmoothTransformation
-            )
-            self._logo_lbl.setPixmap(scaled)
-            self._logo_lbl.setFixedSize(new_size, new_size)
+        self._pulse_phase = (self._pulse_phase + 0.045) % (2 * math.pi)
+        self._logo_lbl.set_phase(self._pulse_phase)
 
 
 class GlowFrame(QFrame):
@@ -2683,10 +2714,14 @@ class ResultPanel(QWidget):
         self._stepper.set_step(n)
         if self._studio:
             return
-        self._page2.setVisible(n == 2)
-        self._page3.setVisible(n == 3)
-        if animate:
-            _anim.slide_fade_in(self._page3 if n == 3 else self._page2, dx=(46 if n == 3 else -46), ms=300)
+
+        def _switch():
+            self._page2.setVisible(n == 2)
+            self._page3.setVisible(n == 3)
+        if animate and self.isVisible():
+            _anim.snapshot_transition(self, _switch, direction=(1 if n == 3 else -1), ms=320)   # fotos: estable a 60 fps
+        else:
+            _switch()
 
     # ── ▶ Oír efecto ───────────────────────────────────────────────────────
     def _fx_auditioner(self):
@@ -2791,13 +2826,23 @@ class ResultPanel(QWidget):
         """Modo Estudio (expertos): una sola vista con la onda, los carriles, las herramientas y la exportación, sin asistente."""
         on = bool(on)
         self._studio = on
-        self._stepper.setVisible(not on)
-        self._nav2.setVisible(not on)
-        self._nav3.setVisible(not on)
+
+        def _chrome():
+            self._stepper.setVisible(not on)
+            self._nav2.setVisible(not on)
+            self._nav3.setVisible(not on)
         if on == self._studio_entered:
+            _chrome()
             if not on:
                 self.go_step(self._wizard_step, animate=False)
             return
+        if self.isVisible():
+            _anim.snapshot_transition(self, lambda: (_chrome(), self._apply_studio(on)), direction=(1 if on else -1), ms=340, slide=0)
+        else:
+            _chrome()
+            self._apply_studio(on)
+
+    def _apply_studio(self, on: bool):
         if on:
             from src.ui.studio import StudioView
             if self._studio_view is None:
@@ -5665,13 +5710,19 @@ class MainWindow(QMainWindow):
         self._fade_to_page(self._stack.currentIndex())
 
     def _fade_to_page(self, index: int):
-        """Crossfade suave hacia la página `index` del stack."""
+        """Transición suave hacia la página `index` del stack (a los resultados se entra deslizando)."""
+        if _anim.enabled() and index == 2 and self._stack.currentIndex() != index and self._stack.isVisible():
+            _anim.snapshot_transition(self._stack, lambda: self._stack.setCurrentIndex(index), direction=1, ms=380, slide=44)
+            return
         self._stack.setCurrentIndex(index)
         w = self._stack.currentWidget()
         if w is None:
             return
         if _anim.enabled() and index == 2:
-            _anim.slide_fade_in(w, dx=44, ms=380)       # a resultados se entra deslizando; no se pisa el efecto
+            return
+        if _anim.enabled() and index == 3 and getattr(self, "_dest_page", None) is not None:
+            # «¿Para qué es esta previa?»: las seis tarjetas entran una tras otra (son pequeñas: no pesa)
+            _anim.stagger_fade_in(list(self._dest_page.tiles.values()), step_ms=55, ms=260)
             return
         eff = QGraphicsOpacityEffect(w)
         w.setGraphicsEffect(eff)

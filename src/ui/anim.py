@@ -180,7 +180,7 @@ def pulse_border(widget: QWidget, base_qss: str, hot_qss: str, ms: int = 220) ->
 
 from PySide6.QtCore import QEvent, QObject, QPoint, Qt as _Qt                       # noqa: E402
 from PySide6.QtGui import QColor                                                    # noqa: E402
-from PySide6.QtWidgets import (QAbstractButton, QDialog, QGraphicsDropShadowEffect,  # noqa: E402
+from PySide6.QtWidgets import (QAbstractButton, QApplication, QDialog, QGraphicsDropShadowEffect,  # noqa: E402
                                QProgressBar, QPushButton, QToolButton)
 
 GLOW_COLOR = (255, 30, 56)          # el carmesí de AutoPrevias
@@ -505,3 +505,138 @@ def crossfade_transition(widget: QWidget, change_fn, ms: int = 260) -> None:
         animate_value(ov, 1.0, 0.0, ms, lambda v: eff.setOpacity(v), QEasingCurve.OutCubic, _end, key="_xf_anim")
     except RuntimeError:
         change_fn()
+
+
+# ── transiciones con «fotos» (estables a 60 fps) ────────────────────────────────────────────────
+
+from PySide6.QtCore import QRectF, QEvent as _QEvent                                 # noqa: E402
+from PySide6.QtGui import QPainter                                                    # noqa: E402
+
+
+class _SnapOverlay(QWidget):
+    """Capa OPACA que solo dibuja dos fotos (la pantalla de antes y la de después). Cada fotograma es un par de blits de
+    píxeles: no se vuelve a pintar ningún widget de debajo (la onda, los reproductores…), por eso no da tirones."""
+
+    def __init__(self, parent: QWidget, old, new, dx: int, dy: int = 0):
+        super().__init__(parent)
+        self.setAttribute(_Qt.WA_TransparentForMouseEvents, True)
+        self.setAttribute(_Qt.WA_OpaquePaintEvent, True)
+        self.setAttribute(_Qt.WA_NoSystemBackground, True)
+        self._old, self._new, self._dx, self._dy, self._t = old, new, dx, dy, 0.0
+        self._size = parent.size()
+        self.setGeometry(parent.rect())
+        self.show()
+        self.raise_()
+
+    def set_t(self, t: float):
+        self._t = max(0.0, min(1.0, float(t)))
+        self.update()
+
+    def paintEvent(self, _e):
+        p = QPainter(self)
+        p.drawPixmap(0, 0, self._old)
+        t = self._t
+        p.setOpacity(t)
+        p.drawPixmap(int(self._dx * (1 - t)), int(self._dy * (1 - t)), self._new)
+        p.end()
+
+
+def snapshot_transition(container: QWidget, switch_fn, direction: int = 1, ms: int = 300, slide: int = 30) -> None:
+    """Hace `switch_fn()` (cambiar de paso, de pantalla, entrar al Estudio…) y lo cubre con un fundido + deslizamiento
+    suave hecho con dos fotos del contenedor. Sin animaciones activadas (o con la ventana oculta/diminuta), cambia al instante.
+
+    Cuesta dos capturas al empezar (unos pocos ms) y luego cada fotograma es barato: así se mantienen los 60 fps aunque la
+    pantalla lleve la forma de onda u otros widgets pesados."""
+    if container is None or not enabled() or not container.isVisible() or container.width() < 120 or container.height() < 80 \
+            or container.width() * container.height() > 9_000_000:
+        switch_fn()
+        return
+    prev = getattr(container, "_snap_overlay", None)
+    if prev is not None:                                   # una transición a medias se da por terminada
+        try:
+            prev.hide()
+            prev.deleteLater()
+        except RuntimeError:
+            pass
+        container._snap_overlay = None
+    try:
+        old = container.grab()
+        switch_fn()
+        lay = container.layout()
+        if lay is not None:
+            lay.activate()
+        QApplication.sendPostedEvents(None, _QEvent.LayoutRequest)
+        new = container.grab()
+        if old.isNull() or new.isNull():
+            return
+        ov = _SnapOverlay(container, old, new, dx=int(slide * (1 if direction >= 0 else -1)))
+        container._snap_overlay = ov
+
+        def _end():
+            try:
+                if getattr(container, "_snap_overlay", None) is ov:
+                    container._snap_overlay = None
+                ov.hide()
+                ov.deleteLater()
+            except RuntimeError:
+                pass
+
+        def _frame(t):
+            try:
+                if container.size() != ov._size:               # la ventana cambió de tamaño a mitad: se corta limpio
+                    a = getattr(container, "_snap_anim", None)
+                    if a is not None:
+                        a.stop()
+                    _end()
+                    return
+                ov.set_t(t)
+            except RuntimeError:
+                pass
+        container._snap_anim = animate_value(container, 0.0, 1.0, ms, _frame, QEasingCurve.OutCubic, _end, key="_snap_anim")
+    except RuntimeError:
+        pass
+
+
+def wipe_reveal(widget: QWidget, color, ms: int = 520) -> None:
+    """La onda (u otro dibujo) se «descubre» de izquierda a derecha: una cortina del color del fondo se encoge. Solo la franja
+    que se descubre se vuelve a pintar en cada fotograma."""
+    if widget is None or not enabled() or not widget.isVisible() or widget.width() < 80:
+        return
+    old = getattr(widget, "_wipe_cover", None)
+    if old is not None:
+        try:
+            old.hide()
+            old.deleteLater()
+        except RuntimeError:
+            pass
+    try:
+        cover = QWidget(widget)
+        cover.setAttribute(_Qt.WA_TransparentForMouseEvents, True)
+        cover.setAutoFillBackground(True)
+        pal = cover.palette()
+        pal.setColor(cover.backgroundRole(), QColor(color))
+        cover.setPalette(pal)
+        cover.setGeometry(widget.rect())
+        cover.show()
+        cover.raise_()
+        widget._wipe_cover = cover
+        w = widget.width()
+
+        def _frame(t):
+            try:
+                x = int(w * t)
+                cover.setGeometry(x, 0, max(0, w - x), widget.height())
+            except RuntimeError:
+                pass
+
+        def _end():
+            try:
+                cover.hide()
+                cover.deleteLater()
+                if getattr(widget, "_wipe_cover", None) is cover:
+                    widget._wipe_cover = None
+            except RuntimeError:
+                pass
+        widget._wipe_anim = animate_value(widget, 0.0, 1.0, ms, _frame, QEasingCurve.InOutCubic, _end, key="_wipe_anim")
+    except RuntimeError:
+        pass

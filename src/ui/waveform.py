@@ -424,7 +424,7 @@ class WaveformWidget(QWidget):
                             self._cut_actions[i].setPos((s_start + s_end) / 2.0, CUT_ACT_Y)
                         self._cut_badges[i].setHtml(
                             f"<div style='color:#ffffff; font-weight:800; font-size:9pt; "
-                            f"background:#1b080b; border:1px solid #ff2542; border-radius:4px; "
+                            f"background:rgba(27, 8, 11, 0.94); border:1px solid #ff2542; border-radius:4px; "
                             f"padding:2px 7px; letter-spacing:0.3px;'>"
                             + tr("{o}º · ✂ CORTE {n} · {icon} {title} ({dur}s)", o=i + 1, n=self._cut_n(i), icon=icon, title=sec_title,
                                  dur=f"{dur:.1f}") + "</div>"
@@ -1001,11 +1001,15 @@ class WaveformWidget(QWidget):
         if self._mode != "source" or self._duration <= 0 or not self._fx_enabled:
             return
         lanes = assign_lanes(self._fx_events)
+        new_id = getattr(self, "_fx_new_id", None)
         for ev in self._fx_events:
             it = FxBandItem(self, ev, lane=lanes.get(ev["id"], 0))
             it.selected = ev["id"] == self._fx_selected
             self._plot.addItem(it, ignoreBounds=True)
             self._fx_bands.append(it)
+            if new_id is not None and ev["id"] == new_id:
+                self._fx_new_id = None
+                it.pop_in()
         self._refresh_fx_dim()
 
     def _refresh_fx_dim(self):
@@ -1097,6 +1101,7 @@ class WaveformWidget(QWidget):
                                 "amount": DEFAULT_AMOUNT})
         self._fx_events.sort(key=lambda e: (e["start"], e["id"]))
         self._fx_selected = fid
+        self._fx_new_id = fid                       # el bloque nuevo aparece con un destello
         self._draw_fx_bands()
         self._update_fx_visibility()
         self.fx_changed.emit(self.fx_events())
@@ -1278,6 +1283,16 @@ class WaveformWidget(QWidget):
             # Diferir el dibujado un tick para garantizar que el widget
             # ya está visible y tiene geometría real antes de llamar a reset_zoom()
             QTimer.singleShot(80, self._draw_source_view)
+            QTimer.singleShot(110, self._reveal_wave)
+
+    def _reveal_wave(self):
+        """La forma de onda se «descubre» de izquierda a derecha al cargar el tema (animación barata: solo una cortina)."""
+        try:
+            from src.ui import anim as _a
+            if HAS_PYQTGRAPH and hasattr(self, "_plot") and self._plot.isVisible():
+                _a.wipe_reveal(self._plot.viewport(), self._plot.backgroundBrush().color(), ms=560)
+        except Exception:
+            pass
 
     def _on_preview_loaded(self, rms: np.ndarray, duration: float):
         self._preview_rms = rms

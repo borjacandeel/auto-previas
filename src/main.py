@@ -383,6 +383,19 @@ def run_selftest() -> int:
         _rp.deleteLater()
         print("  ✓ Diseño 5.0 (pasos, destinos, Estudio, interruptores y avisos) construido sin crash")
         print("  ✓ 5.2: «+ Corte», 3 formatos de vídeo a la vez y aviso de previa generada operativos")
+        # 5.3: temas, transiciones con fotos, revelado de la onda y carátula legible del archivo firmado
+        from src import themes as _th
+        assert set(_th.theme_keys()) == {"original", "onedark", "light"}
+        assert _th.transform_hex("#ff1e38", "onedark") != "#ff1e38" and _th.transform_hex("#10131a", "light") != "#10131a"
+        from src.ui import anim as _an53
+        assert callable(_an53.snapshot_transition) and callable(_an53.wipe_reveal)
+        from src.engine.sign import read_embedded_cover as _rec, prepend_id3_to_flac as _pid
+        assert _rec("/no/existe.flac") is None and callable(_pid)
+        from src.ui.about import ThemeTile as _TT
+        _tt = _TT(_th.get("onedark"))
+        _tt.grab()
+        _tt.deleteLater()
+        print("  ✓ 5.3: temas, transiciones, revelado de la onda y lectura de carátulas operativos")
 
         try:
             tmp_ctx = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)

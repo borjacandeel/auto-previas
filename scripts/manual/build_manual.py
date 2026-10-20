@@ -267,7 +267,7 @@ def s_interfaz(ed: str, plus: bool, im: dict) -> str:
     l1 = [("Elegir archivo", "elige un track desde tu ordenador (también puedes arrastrarlo a cualquier parte de la ventana)."),
           ("🧰 Herramientas", "menú con " + tools),
           ("❓ Ayuda", "guía de 2 minutos, atajos de teclado y escribir a soporte."),
-          ("⚙", "versión, licencia, idioma, rendimiento, actualizaciones y «Abrir siempre en modo Estudio»."),
+          ("⚙", "versión, licencia, idioma, tema de la app, rendimiento, actualizaciones y «Abrir siempre en modo Estudio»."),
           ("ES / EN", "cambia el idioma de la interfaz (castellano por defecto)."),
           ("Distintivo de edición", f"te indica que trabajas con la edición {'PLUS' if plus else 'BÁSICA'}."),
           ("Guía de 2 minutos", "repite el recorrido guiado por toda la app cuando quieras.")]
@@ -582,7 +582,8 @@ sin masterización, sin efectos y sin tocar el volumen ni la duración. El audio
 {steps(["<b>Arrastra el tema</b> (o varios) a la ventana, o pulsa la zona para elegirlos.", "Elige la <b>carátula</b> (la que tengas puesta en «Firma y carátula» aparece sola; vale JPG, PNG, WebP o GIF) y rellena artista, sello, álbum, género y comentario. Si no hay ninguna, la ventana te avisa en rojo antes de firmar.",
         "Elige el formato: <b>FLAC</b> (sin pérdidas, recomendado) o <b>WAV</b> (sin comprimir).", "Pulsa <b>🖋 Firmar</b>. Los temas firmados se guardan en la carpeta <b>Firmados</b> (puedes cambiarla) y se muestra una notificación; púlsala para abrir la carpeta."])}
 <ul>
-<li>Al terminar, AutoPrevias <b>comprueba en el archivo guardado que la carátula está dentro</b> y te lo dice («🖼 Carátula incrustada y comprobada»).</li>
+<li>Al terminar, AutoPrevias <b>lee la carátula del propio archivo guardado</b>, comprueba que es una imagen válida y te enseña una <b>miniatura</b> junto al aviso («🖼 Carátula incrustada y comprobada»).</li>
+<li><b>Carátula en el Finder de macOS:</b> el FLAC lleva la carátula dentro, pero el Finder y la Vista rápida de macOS solo la enseñan si el archivo lleva además una etiqueta ID3. La casilla <b>«Que el Finder y la Vista rápida de macOS también enseñen la carátula del FLAC»</b> (activa por defecto en Mac) la añade; FFmpeg, VLC, foobar2000 y los lectores basados en libFLAC la saltan sin problema. Si algún programa no abriera el FLAC, desmárcala.</li>
 <li>Se conservan la <b>frecuencia de muestreo</b> y los <b>bits</b> del original (hasta 24 bits).</li>
 <li>Si el original es un MP3 o M4A, se guarda sin perder nada más, pero <b>no gana calidad</b>.</li>
 <li>Nunca se pisa tu archivo original: si ya existe uno con ese nombre, se añade «(2)».</li>
@@ -658,6 +659,7 @@ def s_updates(ed: str, plus: bool, im: dict, n: int) -> str:
 {fig(im.get('01c_recorrido',''), 'El recorrido oscurece la ventana y resalta cada parte de la app real con una explicación', 'mid')}
 <ul>
 <li>Son unos 5 minutos: te enseña la pantalla de inicio, carga una <b>pista de ejemplo</b> sintética y recorre todo el panel de resultados (forma de onda, efectos arrastrables, reproductor, duración, formatos, vídeo animado, carpeta y botón Generar).</li>
+<li>Cada tarjeta indica el <b>apartado</b> (Primeros pasos, Cómo funciona, ② Tu previa, ③ Exportar) y «<b>Paso x de y</b>», y una barra por apartados enseña cuánto llevas.</li>
 <li>Avanza con <b>Siguiente</b> (o las teclas <b>→</b>, <b>Intro</b> o <b>Espacio</b>), vuelve con <b>Atrás</b> (<b>←</b>) y sal cuando quieras con <b>Omitir recorrido</b> o <b>Esc</b>.</li>
 <li>No guarda nada: la pista de ejemplo no aparece en Recientes y tus ajustes quedan como estaban.</li>
 <li>Si quieres repetirlo, usa <b>❓ Ayuda → Guía de 2 minutos</b> (o el botón de la pantalla de inicio).</li>
@@ -667,6 +669,7 @@ def s_updates(ed: str, plus: bool, im: dict, n: int) -> str:
 <ul>
 <li>Muestra la <b>versión</b>, la <b>edición</b> y el <b>estado de la licencia</b>: fecha de última verificación y hasta cuándo es válida sin conexión.</li>
 <li><b>Buscar actualizaciones</b> lanza la comprobación al momento.</li>
+<li><b>Tema de la app</b>: elige entre <b>Original</b> (el oscuro de siempre, con acento carmesí), <b>One Dark</b> (gris pizarra con acento azul) y <b>Claro</b> (fondo blanco roto para trabajar con mucha luz). Al elegir uno, AutoPrevias ofrece <b>reiniciarse</b> para aplicarlo en toda la interfaz; vendrán más temas.</li>
 <li><b>Abrir siempre en modo Estudio</b> sustituye el asistente por la vista única del Estudio cada vez que cargas un tema.</li>
 <li><b>Rendimiento</b> elige cuántos recursos del equipo usa AutoPrevias al analizar y generar vídeo: <b>Automático</b> (recomendado; se adapta a tu equipo y deja un núcleo libre para que la app siga fluida), <b>Ahorro de recursos</b> (portátil con batería, equipo antiguo u otros programas abiertos) o <b>Máximo rendimiento</b> (todos los núcleos, para terminar antes). Debajo ves cuántos núcleos y cuánta memoria detecta la app.</li>
 <li><b>Desactivar licencia en este equipo</b> libera la clave en el servidor para poder usarla en otro ordenador (necesita conexión).</li>

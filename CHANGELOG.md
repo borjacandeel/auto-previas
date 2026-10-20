@@ -3,6 +3,24 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [5.3.0] - 2026-10-20
+
+### Añadido
+- **Temas de la app (⚙ Licencia y ajustes → «Tema de la app»).** Elige entre **Original** (el oscuro de siempre, con acento carmesí), **One Dark** (gris pizarra con acento azul) y **Claro** (fondo blanco roto, para trabajar con mucha luz). Al elegir uno, AutoPrevias te ofrece **reiniciarse** para aplicarlo en toda la interfaz (cada tema pinta todo: tarjetas, forma de onda, reproductor, recorrido, ventanas…). Está preparado para añadir más temas en el futuro.
+- **Transiciones más fluidas (a 60 fps):** al cambiar de paso (② ↔ ③), al entrar o salir del modo Estudio y al llegar a los resultados, la pantalla se funde y se desliza con dos «fotos» de la interfaz, así no hay tirones aunque la pantalla lleve la forma de onda. Las seis tarjetas de «¿Para qué es esta previa?» entran una tras otra, la forma de onda se **descubre de izquierda a derecha** al cargar el tema, un efecto nuevo aparece con un **destello** y el logo de la pantalla de análisis late con un anillo de luz suave. Respetan «Ahorro de recursos» y «reducir movimiento».
+- **Firmar temas: miniatura de comprobación.** Al terminar, la ventana enseña la carátula **leída del propio archivo guardado** (no la que elegiste), junto al aviso.
+- **Firmar temas: casilla «Que el Finder y la Vista rápida de macOS también enseñen la carátula del FLAC»** (activa por defecto en Mac). El FLAC siempre llevó la carátula dentro, pero el Finder y la Vista rápida de macOS solo la muestran si el archivo lleva además una etiqueta ID3; ahora se añade. Si algún programa raro no abriera el FLAC, se desmarca.
+- **Recorrido de bienvenida:** cada tarjeta indica el **apartado** (Primeros pasos, Cómo funciona, ② Tu previa, ③ Exportar) y «**Paso x de y**», con una barra por apartados.
+
+### Cambiado
+- La **versión** ya no aparece en la cabecera de la aplicación ni en la pantalla de arranque (sigue en ⚙ Licencia y ajustes).
+- El nombre de la carátula en la ventana de firmar ya no sale en naranja (parecía un aviso) y se acorta si es largo.
+- En el recorrido, los pasos «Nombre y formatos», «Vídeo animado» y «Master LUFS y Voice Drop» ya no llevan los números ①②③, que se confundían con los pasos del asistente.
+
+### Corregido
+- **Recorrido: los textos salían cortados** (la tarjeta se medía con el ancho equivocado). Ahora se mide con el ancho real de cada texto y el ejemplo va en su propio marco.
+- **Recorrido: el resaltado abarcaba zonas que no tocaba** (un solo rectángulo que unía widgets lejanos, como en «Nombre y formatos»). Ahora cada elemento tiene su propio hueco y solo se funden los que están pegados.
+
 ## [5.2.0] - 2026-10-20
 
 ### Añadido

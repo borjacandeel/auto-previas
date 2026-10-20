@@ -71,9 +71,20 @@ if HAS_PG:
             self.dim = False                           # fuera de los cortes: no sonará
             self._hover = None
             self._drag = None
+            self._pop = 1.0                            # 0→1 al aparecer un efecto nuevo (se enciende con un destello)
             self.setZValue(9)
             self.setAcceptHoverEvents(True)
             self.setCursor(Qt.OpenHandCursor)
+
+        def pop_in(self, ms: int = 420):
+            """Un efecto recién puesto en la onda aparece con un destello suave."""
+            from src.ui import anim
+
+            def _set(v):
+                self._pop = float(v)
+                self.update()
+            self._pop = 0.0
+            anim.animate_value(self, 0.0, 1.0, ms, _set, key="_pop_anim")
 
         # geometría
         def y0(self) -> float:
@@ -114,8 +125,10 @@ if HAS_PG:
             p.setRenderHint(QPainter.Antialiasing, True)
             col = QColor(*FX_COLORS.get(self.ev["type"], (255, 255, 255)))
             a_fill = 40 if self.dim else (95 if self.ghost else 150)
+            if self._pop < 1.0:                        # destello al aparecer: más opaco y brillante, y se asienta
+                a_fill = int(a_fill * (0.35 + 0.65 * self._pop) + 90 * (1 - self._pop))
             fill = QColor(col)
-            fill.setAlpha(a_fill)
+            fill.setAlpha(min(255, a_fill))
             border = QColor(255, 255, 255, 235) if self.selected else QColor(col.red(), col.green(), col.blue(),
                                                                          110 if self.dim else 255)
             p.setBrush(fill)
