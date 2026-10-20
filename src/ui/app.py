@@ -1581,6 +1581,7 @@ class ResultPanel(QWidget):
             self._waveform.cut_play_requested.connect(self._audition_cut)      # ▶ sobre cada corte de la onda
             self._waveform.cut_remove_requested.connect(self._remove_cut)      # ✕ sobre cada corte de la onda
             self._waveform.voice_drop_moved.connect(self._on_voice_drop_marker_moved)
+            self._waveform.fx_audition_requested.connect(self._audition_fx)      # ▶ Oír el efecto seleccionado
             wave_lay.addWidget(self._waveform)
         else:
             placeholder = QLabel("Instala pyqtgraph para ver la forma de onda")
@@ -2534,6 +2535,8 @@ class ResultPanel(QWidget):
         self._plan        = plan
         self._source_path = file_path
         self.hist_reset()
+        if getattr(self, "_fx_aud", None) is not None:
+            self._fx_aud.release()
         self.set_studio(bool(load_cfg().get("always_studio")))
         self.go_step(2, animate=False)
         self._session_cover = cfg.get("cover_path", "") if isinstance(cfg, dict) else ""
@@ -2677,6 +2680,34 @@ class ResultPanel(QWidget):
         self._page3.setVisible(n == 3)
         if animate:
             _anim.slide_fade_in(self._page3 if n == 3 else self._page2, dx=(46 if n == 3 else -46), ms=300)
+
+    # ── ▶ Oír efecto ───────────────────────────────────────────────────────
+    def _fx_auditioner(self):
+        aud = getattr(self, "_fx_aud", None)
+        if aud is None:
+            from src.ui.fx_audition import FxAuditioner
+            aud = FxAuditioner(self)
+            aud.state_changed.connect(lambda on: self._waveform.set_fx_playing(on) if HAS_WAVEFORM else None)
+            self._fx_aud = aud
+        return aud
+
+    def _audition_fx(self, ev: dict):
+        """▶ Oír: suena SOLO este efecto sobre el tema original (2 s antes y 2 s después). Pulsar otra vez lo para."""
+        aud = self._fx_auditioner()
+        if aud.is_playing():
+            aud.stop()
+            return
+        if not self._source_path:
+            return
+        if self._player is not None and getattr(self._player, "is_playing", lambda: False)():
+            self._player.toggle_play()                     # el reproductor principal se pausa mientras suena el efecto
+        try:
+            ok = aud.play_event(self._source_path, ev)
+        except Exception as ex:
+            self.status_message.emit(tr("⚠ No se pudo preparar el efecto: {err}", err=str(ex)))
+            return
+        if not ok:
+            self.status_message.emit("⚠ No se pudo reproducir el efecto en este equipo")
 
     # ── v5: deshacer / rehacer ─────────────────────────────────────────────
     def _snapshot(self):

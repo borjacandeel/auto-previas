@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v5.0.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v5.1.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -157,7 +157,7 @@ Si Windows muestra la pantalla azul con el mensaje *"Windows protegió su PC"* d
 - 🎚 **Arranque y final de la previa a tu elección (Plus):**
   Una tarjeta siempre visible: empezar y acabar con el efecto de vinilo (en los segundos que elijas) o a los BPM originales.
 - 🎛 **Efectos en la onda (Basic y Plus):**
-  Arrastras **Flanger** o **Filter Sweep ↗/↘** desde las tarjetas bajo la forma de onda hasta donde quieras que suenen; el bloque se mueve y se estira como un corte (inicio, duración e intensidad a tu gusto). Ya no hay efectos automáticos.
+  Arrastras **Flanger** o **Filter Sweep ↗/↘** desde las tarjetas bajo la forma de onda hasta donde quieras que suenen; el bloque se mueve y se estira como un corte (inicio, duración e intensidad a tu gusto) y con **▶ Oír** escuchas solo ese efecto (2 s antes y después) sin generar la previa. Ya no hay efectos automáticos.
 - ✂️ **Cortes con nombre, orden y punto de inicio:**
   Cada corte tiene su nombre fijo («Corte 1», «Corte 2»…); con ▲ ▼ eliges en qué orden suenan y con «⏮ Al inicio / ⏺ A mitad del tema» (o arrastrando el primer corte) decides dónde empieza la previa. Disponible en Basic y Plus.
 - 🖋 **Firmar temas enteros (Plus):**
@@ -260,7 +260,7 @@ Cada clave se puede usar en **un solo equipo a la vez**. Si ya está activa en u
 | Destino «Envío seguro» (modo promo en un clic) | 🔒 | ✅ |
 | Firma vocal / Voice Drop | ❌ | ✅ |
 | Sección de Firma y Carátula (Branding) | ❌ | ✅ |
-| Efectos Flanger y Filter Sweep arrastrables a la onda (tú eliges dónde y cuánto dura) | ✅ | ✅ |
+| Efectos Flanger y Filter Sweep arrastrables a la onda (tú eliges dónde y cuánto dura), con «▶ Oír» para escucharlos sueltos | ✅ | ✅ |
 | Master LUFS (−9 LUFS, nivel de club) | ❌ | ✅ |
 | Corrección manual de BPM | ❌ | ✅ |
 
@@ -311,7 +311,10 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v5.0.0] — 2026-10-19 (Versión 5: rediseño completo, más fácil — asistente de 3 pasos, destinos, modo Estudio)
+#### 🟢 [v5.1.0] — 2026-10-20 (Botón «▶ Oír» para escuchar un efecto suelto)
+- **▶ Oír efecto (Basic y Plus):** al seleccionar un efecto de la onda, un botón escucha solo ese efecto sobre el tema original con 2 s antes y 2 s después (⏹ Parar para detenerlo), sin generar la previa.
+
+#### [v5.0.0] — 2026-10-19 (Versión 5: rediseño completo, más fácil — asistente de 3 pasos, destinos, modo Estudio)
 - **Asistente de 3 pasos** (Tu tema · Tu previa · Exportar) con cinta de pasos; pantalla **«¿Para qué es esta previa?»** con seis destinos; paso ② y ③ con diseño nuevo (tarjetas, interruptores, «Retocar con más detalle», tarjetas de formato).
 - **Modo Estudio** (Ctrl/⌘ + E), **deshacer/rehacer**, **atajos de teclado** (F1 = ayuda), arrastrar y soltar en toda la ventana, **inicio nuevo**, cabecera con menús **Herramientas** y **Ayuda**, **avisos con diseño** y más animaciones. Recorrido y manuales PDF actualizados.
 

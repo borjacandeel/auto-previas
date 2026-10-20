@@ -118,3 +118,43 @@ def apply_events_to_blocks(block_audios: List[np.ndarray], blocks: List[List[flo
             a[:, i0:i1] = apply_event_to_chunk(a[:, i0:i1], sr, ev)
             out[i] = a
     return out
+
+
+def render_effect_preview(source_path: str, ev: dict, pad: float = 2.0):
+    """Prepara la escucha de UN efecto: el trozo del tema original (con `pad` s antes y después) con el efecto aplicado.
+
+    Devuelve (audio estéreo (2, N) float32, frecuencia de muestreo). No toca el resto de la previa."""
+    import soundfile as sf
+    s0, e0 = float(ev["start"]), float(ev["end"])
+    t0 = max(0.0, s0 - pad)
+    audio = None
+    sr = 0
+    try:
+        info = sf.info(source_path)
+        sr = int(info.samplerate)
+        i0 = int(t0 * sr)
+        n = int((e0 + pad) * sr) - i0
+        data, _ = sf.read(source_path, start=i0, frames=max(1, n), dtype="float32", always_2d=True)
+        audio = data.T
+    except Exception:
+        from src.engine.audio_io import load_audio_file
+        y, sr = load_audio_file(source_path, sr=None, mono=False)
+        y = np.asarray(y, dtype=np.float32)
+        if y.ndim == 1:
+            y = y[None, :]
+        audio = y[:, int(t0 * sr):int((e0 + pad) * sr)]
+    if audio.shape[0] == 1:
+        audio = np.vstack([audio, audio])
+    audio = audio[:2].astype(np.float32, copy=True)
+    a = max(0, int(round((s0 - t0) * sr)))
+    b = min(audio.shape[1], a + int(round((e0 - s0) * sr)))
+    if b - a >= int(0.05 * sr):
+        audio[:, a:b] = apply_event_to_chunk(audio[:, a:b], sr, ev)
+    peak = float(np.max(np.abs(audio))) if audio.size else 0.0
+    if peak > 0.98:
+        audio *= 0.98 / peak
+    k = min(int(0.02 * sr), audio.shape[1] // 4)
+    if k > 1:
+        audio[:, :k] *= np.linspace(0.0, 1.0, k, dtype=np.float32)
+        audio[:, -k:] *= np.linspace(1.0, 0.0, k, dtype=np.float32)
+    return audio, sr

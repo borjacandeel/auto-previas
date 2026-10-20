@@ -401,7 +401,7 @@ def s_onda(ed: str, plus: bool, im: dict) -> str:
 <tr><td><b>🌊 Filter Sweep ↘</b></td><td>Barrido hacia abajo: el filtro se abre y los graves vuelven poco a poco.</td></tr></table>
 {steps(["<b>Arrastra</b> una tarjeta hasta la onda y suéltala donde quieras que empiece (o <b>púlsala</b> para ponerla donde está el cursor de reproducción). Mientras arrastras ves el hueco que ocupará y se ajusta solo al pulso más cercano.",
         "<b>Muévelo</b> arrastrando el bloque y <b>estira sus bordes</b> para elegir la duración, igual que haces con los cortes. Si hay dos efectos a la vez, se colocan en dos filas.",
-        "Con el bloque seleccionado, la fila de abajo te deja afinar el <b>inicio</b>, la <b>duración</b> y la <b>intensidad</b>. <b>Quitar</b> (o la tecla " + kbd('Supr') + ", o clic derecho sobre el bloque) lo borra; <b>Quitar todos</b> limpia la onda."])}
+        "Con el bloque seleccionado, la fila de abajo te deja afinar el <b>inicio</b>, la <b>duración</b> y la <b>intensidad</b>. Pulsa <b>▶ Oír</b> para <b>escuchar solo ese efecto</b> sobre el tema original, con 2 segundos antes y 2 después (vuelve a pulsar, ahora <b>⏹ Parar</b>, para detenerlo); así lo compruebas sin generar la previa. <b>Quitar</b> (o la tecla " + kbd('Supr') + ", o clic derecho sobre el bloque) lo borra; <b>Quitar todos</b> limpia la onda."])}
 {tip("El efecto se queda pegado a su trozo del tema: si cambias el orden de los cortes, sigue sonando en ese mismo trozo. Si lo dejas <b>fuera de los cortes</b> verás el bloque apagado y no sonará. Los efectos pertenecen a este tema: no se guardan en los presets, pero sí en «Reabrir proyecto».", "tip")}
 <h3>El reproductor</h3>
 {fig(im.get('z_player',''), 'Reproductor con pestañas Pista Original / Previa Generada')}

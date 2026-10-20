@@ -79,6 +79,15 @@
 - **Pendientes anotados** (tabla en esta sesión): producción de los 11 vídeos del plan + pruebas del usuario + tareas opcionales.
 
 
+### Resumen de Trabajo — Sesión 63 (2026-10-20): v5.1.0 — «▶ Oír efecto»
+
+**Petición del usuario:** meter el botón de oír efecto (uno de los pendientes de la 5.0.0).
+- Motor: `render_effect_preview(source_path, ev, pad=2.0)` en `src/engine/fx_events.py` (lee solo el trozo del original con `soundfile`, con fallback a `load_audio_file`; aplica `apply_event_to_chunk` solo en el tramo del efecto; limita el pico y pone fundidos de 20 ms).
+- Reproductor propio `src/ui/fx_audition.py` (`FxAuditioner`: `QMediaPlayer`+`QAudioOutput` independiente, archivo temporal `fx_audition.wav` que se libera con `setSource(QUrl())` antes de reescribirlo/borrarlo — regla de Windows).
+- UI: botón `btn_play` («▶ Oír» / «⏹ Parar») en `FxInspector` → señal `audition` → `WaveformWidget.fx_audition_requested(dict)` → `ResultPanel._audition_fx` (pausa el reproductor principal, pulsar otra vez para). Se libera al cargar otro tema.
+- Tests `tests/test_fx_audition.py` (render por tipo de efecto, mono/estéreo, efecto al principio, botón, panel con auditioner falso, reproductor real y borrado del temporal), autotest del binario ampliado, tour/EN/manual/README/CHANGELOG al día.
+- Pendiente (opcional): miniaturas de onda y carátula en Recientes; carril de tempo dibujado en el Estudio.
+
 ### Resumen de Trabajo — Sesión 62 (2026-10-19): v5.0.0 — rediseño completo (asistente de 3 pasos, destinos, Estudio, inicio y cabecera nuevos)
 
 **Decisión del usuario:** MAJOR confirmado («venga dale dale dale. como 5 porque es tocha tocha»). Plan combinado de las maquetas (`docs/propuestas/rediseno/`): **A** asistente de 3 pasos como camino principal + **D** elegir destino + **C** Estudio + **E** inicio/cabecera. El usuario criticó la primera pasada («has juntado lo de antes pero separado, no le has dado otra estética»): se rehízo el diseño visual de verdad siguiendo las maquetas.

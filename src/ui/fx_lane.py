@@ -438,6 +438,7 @@ class FxInspector(QFrame):
     """Ajustes del efecto seleccionado: inicio, duración, intensidad y quitar."""
     changed = Signal(float, float, float)          # inicio, fin, intensidad
     removed = Signal()
+    audition = Signal()                            # ▶ Oír el efecto seleccionado
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -483,6 +484,12 @@ class FxInspector(QFrame):
         self.lbl_amt.setMinimumWidth(34)
         lay.addWidget(self.lbl_amt)
         lay.addStretch()
+        self.btn_play = QPushButton(tr("▶ Oír"))
+        self.btn_play.setFixedHeight(24)
+        self.btn_play.setCursor(Qt.PointingHandCursor)
+        self.btn_play.setToolTip(tr("Escucha solo este efecto sobre el tema original, con 2 s antes y 2 s después"))
+        self.btn_play.setStyleSheet(_BTN)
+        lay.addWidget(self.btn_play)
         self.btn_del = QPushButton(tr("🗑 Quitar"))
         self.btn_del.setFixedHeight(24)
         self.btn_del.setCursor(Qt.PointingHandCursor)
@@ -492,19 +499,23 @@ class FxInspector(QFrame):
         self.sp_dur.valueChanged.connect(self._emit)
         self.sl_amt.valueChanged.connect(self._emit)
         self.btn_del.clicked.connect(lambda _=False: self.removed.emit())
+        self.btn_play.clicked.connect(lambda _=False: self.audition.emit())
         self.setFixedHeight(38)
         self.set_idle()
+
+    def set_playing(self, on: bool):
+        self.btn_play.setText(tr("⏹ Parar") if on else tr("▶ Oír"))
 
     def set_idle(self):
         """Sin efecto seleccionado: la fila sigue ahí (para que la onda no salte de tamaño) pero apagada."""
         self._busy = True
         self.lbl_kind.setText(tr("Selecciona un efecto de la onda para ajustarlo"))
-        for w in (self.sp_start, self.sp_dur, self.sl_amt, self.btn_del):
+        for w in (self.sp_start, self.sp_dur, self.sl_amt, self.btn_del, self.btn_play):
             w.setEnabled(False)
         self._busy = False
 
     def show_event(self, ev: dict, duration: float):
-        for w in (self.sp_start, self.sp_dur, self.sl_amt, self.btn_del):
+        for w in (self.sp_start, self.sp_dur, self.sl_amt, self.btn_del, self.btn_play):
             w.setEnabled(True)
         self._busy = True
         self.lbl_kind.setText(f"{FX_ICONS.get(ev['type'], '')} {fx_label(ev['type'])}")

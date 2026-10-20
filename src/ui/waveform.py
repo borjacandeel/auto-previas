@@ -124,6 +124,7 @@ class WaveformWidget(QWidget):
     voice_drop_moved   = Signal(float)  # marcador voice drop arrastrado → segundos
     cut_play_requested   = Signal(int)  # ▶ de un corte en la onda → posición del corte
     cut_remove_requested = Signal(int)  # ✕ de un corte en la onda → posición del corte
+    fx_audition_requested = Signal(dict)  # ▶ Oír: el efecto seleccionado (para escucharlo solo)
     fx_changed         = Signal(list)   # efectos manuales cambiados → [{id, type, start, end, amount}, …]
 
     def __init__(self, parent=None):
@@ -322,6 +323,7 @@ class WaveformWidget(QWidget):
         self._fx_inspector = FxInspector()
         self._fx_inspector.changed.connect(self._on_inspector_changed)
         self._fx_inspector.removed.connect(self._delete_selected_fx)
+        self._fx_inspector.audition.connect(self._on_fx_audition)
         layout.addWidget(self._fx_inspector)
 
         # ── Leyenda de colores inline ──────────────────────────────────────
@@ -971,6 +973,14 @@ class WaveformWidget(QWidget):
             else:
                 self._fx_inspector.set_idle()
         self._plot.setAcceptDrops(show)
+
+    def _on_fx_audition(self):
+        ev = self._fx_event(self._fx_selected)
+        if ev is not None:
+            self.fx_audition_requested.emit(dict(ev))
+
+    def set_fx_playing(self, on: bool):
+        self._fx_inspector.set_playing(bool(on))
 
     def _fx_event(self, fid):
         for e in self._fx_events:

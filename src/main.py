@@ -317,6 +317,18 @@ def run_selftest() -> int:
             _ww.deleteLater()
         print("  ✓ Efectos manuales (Flanger / Filter Sweep) y carril de la onda operativos")
 
+        # 5.1: «▶ Oír efecto» — render del trozo con el efecto + reproductor propio
+        from src.engine.fx_events import render_effect_preview as _rep
+        from src.ui.fx_audition import FxAuditioner as _FA
+        _tmpw = Path(tempfile.mkdtemp()) / "oir.wav"
+        sf.write(str(_tmpw), np.random.RandomState(5).randn(44100 * 10, 2).astype("float32") * 0.1, 44100, subtype="PCM_16")
+        _o, _sr = _rep(str(_tmpw), {"id": 1, "type": "filter_up", "start": 3.0, "end": 6.0, "amount": 0.75})
+        assert _o.shape[0] == 2 and np.isfinite(_o).all() and abs(_o.shape[1] / _sr - 7.0) < 0.1
+        _fa = _FA()
+        _fa.release()
+        _fa.deleteLater()
+        print("  ✓ «Oír efecto» (render + reproductor propio) operativo")
+
         # Diseño 5.0: interruptor animado (QPropertyAnimation + Property), pantalla de destino, paso ② / ③, Estudio y avisos
         from PySide6.QtWidgets import QMainWindow as _QMW
         from src.ui import anim as _anim5

@@ -237,7 +237,7 @@ def build_steps(win) -> list:
         add("efectos_onda", "🎛 Efectos en la onda",
             "Debajo de la onda están Flanger y Filter Sweep. Arrastra uno hasta donde quieras que suene (o púlsalo para ponerlo en el "
             "cursor). El bloque se comporta como un corte: arrástralo para moverlo, estira los bordes para cambiar la duración y "
-            "ajusta la intensidad en la fila de abajo. Supr borra el seleccionado. Solo suena dentro de los cortes de la previa.",
+            "ajusta la intensidad en la fila de abajo. «▶ Oír» te deja escuchar solo ese efecto. Supr borra el seleccionado. Solo suena dentro de los cortes de la previa.",
             lambda: wave_frame._fx_palette, page=2, before=_fx_demo, after=_fx_demo_off,
             example="Un Filter Sweep ↗ de 8 s justo antes del drop sube la tensión.")
     add("formatos", "① Nombre y formatos",

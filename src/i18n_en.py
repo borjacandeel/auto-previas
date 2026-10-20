@@ -890,8 +890,8 @@ EN_311 = {
     "Aplicando los efectos que colocaste en la onda…": "Applying the effects you placed on the waveform…",
     # recorrido
     "🎛 Efectos en la onda": "🎛 Effects on the waveform",
-    "Debajo de la onda están Flanger y Filter Sweep. Arrastra uno hasta donde quieras que suene (o púlsalo para ponerlo en el cursor). El bloque se comporta como un corte: arrástralo para moverlo, estira los bordes para cambiar la duración y ajusta la intensidad en la fila de abajo. Supr borra el seleccionado. Solo suena dentro de los cortes de la previa.":
-        "Under the waveform are Flanger and Filter Sweep. Drag one to where you want it to sound (or click it to place it at the cursor). The block behaves like a cut: drag it to move it, stretch its edges to change the length and set the intensity in the row below. Del removes the selected one. It only sounds inside the cuts of the preview.",
+    "Debajo de la onda están Flanger y Filter Sweep. Arrastra uno hasta donde quieras que suene (o púlsalo para ponerlo en el cursor). El bloque se comporta como un corte: arrástralo para moverlo, estira los bordes para cambiar la duración y ajusta la intensidad en la fila de abajo. «▶ Oír» te deja escuchar solo ese efecto. Supr borra el seleccionado. Solo suena dentro de los cortes de la previa.":
+        "Under the waveform are Flanger and Filter Sweep. Drag one to where you want it to sound (or click it to place it at the cursor). The block behaves like a cut: drag it to move it, stretch its edges to change the length and set the intensity in the row below. “▶ Listen” lets you hear just that effect. Del removes the selected one. It only sounds inside the cuts of the preview.",
     "Un Filter Sweep ↗ de 8 s justo antes del drop sube la tensión.": "An 8 s Filter Sweep ↗ right before the drop builds tension.",
     "③ Master LUFS y Voice Drop (Plus)": "③ Master LUFS and Voice Drop (Plus)",
     "Master LUFS deja la previa al volumen estándar de las plataformas. Los efectos Flanger y Filter Sweep ya no son automáticos: los colocas tú arrastrándolos sobre la onda.":
@@ -1060,4 +1060,10 @@ EN.update({
 EN.update({
     "↶  Deshacer": "↶  Undo", "↷  Rehacer": "↷  Redo", "Salir del Estudio": "Leave Studio", "Previa: {t}": "Preview: {t}",
     "Cortes": "Cuts", "Efectos": "Effects", "Tempo": "Tempo", "Firma": "Signature", "Vídeo": "Video", "Presets": "Presets",
+})
+EN.update({
+    "▶ Oír": "▶ Listen", "⏹ Parar": "⏹ Stop",
+    "Escucha solo este efecto sobre el tema original, con 2 s antes y 2 s después": "Listen to just this effect on the original track, with 2 s before and 2 s after",
+    "⚠ No se pudo preparar el efecto: {err}": "⚠ Couldn't prepare the effect: {err}",
+    "⚠ No se pudo reproducir el efecto en este equipo": "⚠ Couldn't play the effect on this computer",
 })

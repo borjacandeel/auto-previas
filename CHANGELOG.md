@@ -3,6 +3,12 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [5.1.0] - 2026-10-20
+
+### Añadido
+- **«▶ Oír» en los efectos de la onda (Basic y Plus).** Al seleccionar un efecto (Flanger o Filter Sweep) aparece en su fila de ajustes un botón **▶ Oír** que reproduce **solo ese efecto** sobre el tema original, con **2 segundos antes y 2 después**, para comprobar cómo suena sin tener que generar la previa. Mientras suena, el botón pasa a **⏹ Parar** (y el reproductor principal se pausa). Usa el inicio, la duración y la intensidad que tengas puestos en ese momento.
+- El recorrido de bienvenida, el manual PDF (Basic y Plus) y el autotest del programa incluyen el botón nuevo.
+
 ## [5.0.0] - 2026-10-19
 
 > **Versión 5: AutoPrevias se rediseña entera para que sea más fácil, sobre todo la primera vez.** Los controles y las funciones son los de siempre; cambia cómo se presentan y en qué orden.
