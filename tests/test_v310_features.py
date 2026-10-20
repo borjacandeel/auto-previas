@@ -314,7 +314,7 @@ def test_icono_de_notificacion_es_el_icono_de_la_app():
     assert p is not None and p.exists()
     im = Image.open(p).convert("RGBA")
     assert im.size[0] == im.size[1] and im.size[0] >= 256
-    app = Image.open(Path(__file__).resolve().parents[1] / "assets" / "icon.icns").convert("RGBA").resize(im.size, Image.LANCZOS)
+    app = Image.open(Path(__file__).resolve().parents[1] / "assets" / "app_icon_1024.png").convert("RGBA").resize(im.size, Image.LANCZOS)
     assert im.tobytes() == app.tobytes()                 # exactamente el icono de la aplicación
 
 

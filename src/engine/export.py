@@ -353,6 +353,7 @@ def output_paths(
     export_aiff: bool = False,
     export_video: bool = False,
     custom_name: str | None = None,
+    video_aspects: list | None = None,
 ) -> dict:
     base = custom_name.strip() if custom_name and custom_name.strip() \
            else f"PREVIA - {Path(source_path).stem}"
@@ -379,7 +380,16 @@ def output_paths(
     if export_aiff:
         paths["aiff"] = _safe(out, f"{base}.aiff")
     if export_video:
-        paths["video"] = _safe(out, f"{base}.mp4")
+        asps = [a for a in (video_aspects or []) if a in ("9:16", "1:1", "16:9")]
+        if len(asps) > 1:
+            # Varios formatos a la vez: un vídeo por formato, con el formato en el nombre («… 9x16.mp4»).
+            vids = {a: _safe(out, f"{base} {a.replace(':', 'x')}.mp4") for a in asps}
+            paths["videos"] = vids
+            paths["video"] = vids[asps[0]]
+        else:
+            paths["video"] = _safe(out, f"{base}.mp4")
+            if asps:
+                paths["videos"] = {asps[0]: paths["video"]}
 
     return paths
 
@@ -685,7 +695,11 @@ def export_files(
 
     if "video" in paths:
         _prog(90, "Generando vídeo animado Radical Neón (TikTok / Reels / Shorts)…")
-        video_target = str(paths["video"])
+        # Un vídeo por formato elegido (9:16, 1:1, 16:9); con uno solo es el de siempre.
+        _jobs = [(a, str(pth)) for a, pth in (paths.get("videos") or {}).items()]
+        if not _jobs:
+            _jobs = [(str(meta.get("aspect_ratio") or "9:16"), str(paths["video"]))]
+        video_target = _jobs[0][1]
         audio_for_vid = str(paths.get("wav") or temp_wav_for_mp3 or paths.get("mp3"))
         # Título del vídeo: el que elija el autor; si no, el título de las etiquetas; si no, el nombre del archivo sin «PREVIA - »
         track_title = (str(meta.get("video_title") or "").strip() or meta.get("title")
@@ -698,12 +712,10 @@ def export_files(
         common = dict(
             audio_path=audio_for_vid,
             cover_image_path=cover_image_path,
-            output_video_path=video_target,
             title=track_title,
             artist=artist,
             bpm=float(bpm_val or 128.0),
             key_str=str(meta.get("key") or "8A · Am"),
-            aspect_ratio=str(meta.get("aspect_ratio") or "9:16"),
             palette_key=str(meta.get("video_palette") or "crimson"),
             promo_text=str(meta.get("video_promo_text") or ""),
         )
@@ -721,26 +733,33 @@ def export_files(
             _custom = None                                   # Basic: sin imagen propia ni onda a medida
             if _end_mode not in ("brand", "fade"):           # Basic solo elige entre la firma y el fundido a negro
                 _end_mode = "brand"
-        try:
-            from src.engine.video_neon import render_neon_video
-            render_neon_video(
-                **common,
-                kicker="EXCLUSIVE PREVIEW" if _lang == "en" else "PREVIA EXCLUSIVA",
-                progress_cb=lambda p, m: _prog(90 + int(p * 0.09), m),
-                watermark=_basic,
-                end_mode=_end_mode,
-                custom=_custom,
-            )
-            generated.append(video_target)
-        except Exception as e_neon:
-            # Si el motor animado falla (p. ej. falta una fuente o memoria), se usa el vídeo clásico
+        _n = len(_jobs)
+        for _i, (_asp, _target) in enumerate(_jobs):
+            _lo, _span = 90 + 9 * _i / _n, 9 / _n            # el tramo 90-99 % se reparte entre los vídeos
+            _tag = f" {_asp}" if _n > 1 else ""
+            _prog(int(_lo), f"Generando vídeo animado Radical Neón{_tag} (TikTok / Reels / Shorts)…")
             try:
-                from src.engine.video import render_social_video
-                _prog(99, "Vídeo animado no disponible; generando el vídeo clásico…")
-                render_social_video(**common)
-                generated.append(video_target)
-            except Exception as e:
-                _prog(99, f"⚠ Vídeo social no generado: {e_neon} / {e}")
+                from src.engine.video_neon import render_neon_video
+                render_neon_video(
+                    **common,
+                    output_video_path=_target,
+                    aspect_ratio=_asp,
+                    kicker="EXCLUSIVE PREVIEW" if _lang == "en" else "PREVIA EXCLUSIVA",
+                    progress_cb=lambda p, m, _lo=_lo, _span=_span: _prog(int(_lo + p * _span / 100), m),
+                    watermark=_basic,
+                    end_mode=_end_mode,
+                    custom=_custom,
+                )
+                generated.append(_target)
+            except Exception as e_neon:
+                # Si el motor animado falla (p. ej. falta una fuente o memoria), se usa el vídeo clásico
+                try:
+                    from src.engine.video import render_social_video
+                    _prog(99, "Vídeo animado no disponible; generando el vídeo clásico…")
+                    render_social_video(**common, output_video_path=_target, aspect_ratio=_asp)
+                    generated.append(_target)
+                except Exception as e:
+                    _prog(99, f"⚠ Vídeo social no generado: {e_neon} / {e}")
 
     # Carátula y etiquetas dentro del WAV (ID3v2.3: Serato, Traktor, Rekordbox, iTunes…). FFmpeg no admite carátula en WAV.
     if "wav" in paths and Path(paths["wav"]).exists():

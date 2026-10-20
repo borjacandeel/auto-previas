@@ -356,7 +356,7 @@ def s_primera(ed: str, plus: bool, im: dict) -> str:
 {legend([("Tarjeta de éxito", "lista los archivos exportados y la carpeta donde se guardaron."),
          ("Abrir carpeta", "abre la carpeta de destino en el Finder / Explorador de archivos."),
          ("Generar otra previa", "vuelve a la pantalla de inicio para cargar otro track.")])}
-{tip("Tras generar, el reproductor cambia solo a la pestaña <b>Previa Generada</b> para que la oigas enseguida. Con la pestaña <b>Pista Original</b> puedes volver a comparar (A/B).")}
+{tip("Al terminar, AutoPrevias te lleva solo al paso ② con un aviso verde: el reproductor cambia a la pestaña <b>Previa Generada</b> y la onda muestra la previa ya montada, para que la <b>veas y la oigas</b> sin buscarla (con «Volver a Exportar» regresas al paso ③). Con la pestaña <b>Pista Original</b> puedes volver a comparar (A/B).")}
 {tip("Al terminar, el sistema te muestra una <b>notificación con el logo de AutoPrevias</b>. Si la pulsas, se abre la carpeta donde se ha guardado la previa.")}
 </section>"""
 
@@ -380,7 +380,7 @@ def s_onda(ed: str, plus: bool, im: dict) -> str:
 <ul>
 <li><b>▲ ▼</b> cambian el <b>orden</b> en que suenan en la previa (por ejemplo, que el drop suene primero). La primera columna indica el orden («1º · Corte 2»).</li>
 <li><b>«La previa empieza»</b>: <b>⏮ Al inicio del tema</b> lleva el primer corte al principio de la canción y <b>⏺ A mitad del tema</b> lo coloca a la mitad (siempre ajustado a un compás). Para cualquier otro punto, <b>arrastra el primer corte</b> sobre la forma de onda o cambia sus segundos en la tabla.</li>
-<li>Puedes <b>añadir</b> cortes, <b>quitarlos</b> con ✕ y escuchar cada uno con ▶ (suena desde su inicio hasta su final). Los mismos botones <b>▶ ✕</b> están sobre cada corte en la propia onda. Siempre queda al menos un corte. Los presets rápidos (<i>Estándar AI</i>, <i>Solo Drops</i>, <i>Intro corta 15 s</i>) recolocan los cortes de golpe.</li>
+<li>El botón <b>✂ + Corte</b>, justo debajo de la onda, añade un corte nuevo de 16 s <b>con un clic</b>: lo pone donde está el cursor de reproducción (o en el primer hueco libre) y luego lo arrastras y estiras sobre la onda. También puedes <b>añadir</b> cortes desde el editor, <b>quitarlos</b> con ✕ y escuchar cada uno con ▶ (suena desde su inicio hasta su final). Los mismos botones <b>▶ ✕</b> están sobre cada corte en la propia onda. Siempre queda al menos un corte. Los presets rápidos (<i>Estándar AI</i>, <i>Solo Drops</i>, <i>Intro corta 15 s</i>) recolocan los cortes de golpe.</li>
 </ul>
 {f"""<h3>Cómo empieza y cómo acaba la previa</h3>
 {fig(im.get('z_startend',''), 'Tarjeta «Cómo empieza y cómo acaba la previa»: arranque y final a tu elección')}
@@ -448,7 +448,7 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
         "el título, artista, BPM y tonalidad, un <b>analizador de espectro</b> que baila con la música y destellos que golpean con el bombo, con un golpe "
         "especial cuando entra el drop. Elige el formato —<b>9:16</b> (TikTok / Reels), <b>1:1</b> (Instagram) o <b>16:9</b> (YouTube)—, la <b>paleta de color</b>"
         + banner_txt + ".</p>"
-        "<p>Elige el <b>formato</b> con las tres pastillas de la propia tarjeta (<b>9:16</b>, <b>1:1</b> o <b>16:9</b>); al marcarla aparece debajo la tarjeta "
+        "<p>Elige el <b>formato</b> con las tres pastillas de la propia tarjeta (<b>9:16</b>, <b>1:1</b> o <b>16:9</b>): puedes marcar <b>uno, dos o los tres a la vez</b> y se genera <b>un vídeo por cada formato</b> (el nombre lleva el formato, por ejemplo «… 9x16.mp4»); al marcarla aparece debajo la tarjeta "
         "<b>Ajustes del vídeo</b> con el <b>color</b>, el <b>título</b>, el <b>final</b> y la <b>vista previa</b>.</p>"
         + fig(im.get('z_video', ''), 'Ajustes del vídeo' + (' (edición Plus)' if plus else ' (edición Basic, con las opciones de Plus bloqueadas)')) +
         "<p>En el campo <b>Título</b> escribes el nombre que sale en el centro del vídeo; si lo dejas vacío se usa el nombre de la pista. Pulsa "

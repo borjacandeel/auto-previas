@@ -446,7 +446,9 @@ def test_tarjeta_de_video_formato_con_botones_y_looks(monkeypatch, tmp_path):
     p._aspect_btns["16:9"].click()
     assert p._combo_aspect.currentData() == "16:9" and p.get_export_options()["aspect_ratio"] == "16:9"
     p._set_combo_by_data(p._combo_aspect, "1:1")
-    assert p._aspect_btns["1:1"].isChecked() and not p._aspect_btns["16:9"].isChecked()
+    assert p._aspect_btns["1:1"].isChecked() and p._aspect_btns["16:9"].isChecked()      # v5.2: los formatos se suman, no se quitan
+    p._set_aspects(["1:1"])
+    assert p.selected_aspects() == ["1:1"] and not p._aspect_btns["16:9"].isChecked()
     # look: sin imagen pide una; con imagen se aplica y el selector lo refleja
     img = _img_file(tmp_path, "sq.png", (1000, 1000))
     monkeypatch.setattr(p, "_bg_image_from_user", lambda path="": img)
@@ -519,7 +521,7 @@ def test_resumen_de_lo_que_se_va_a_crear(monkeypatch, tmp_path):
     p._update_summary()
     t = p._lbl_summary.text()
     assert "WAV 24b" in t and "MP3 320k" in t and "vídeo" not in t and "📁" in t
-    p._chk_video.setChecked(True); p._set_combo_by_data(p._combo_aspect, "1:1")
+    p._chk_video.setChecked(True); p._set_aspects(["1:1"])
     p._video_custom = vn_norm({"style": "image", "bg": {"default": _img_file(tmp_path, "a.png", (500, 500))}, "wave_style": "circle", "wave_pos": "center"})
     p._sync_look_combo()
     p._chk_fx_master.setChecked(True)

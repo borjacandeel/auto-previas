@@ -3,6 +3,17 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [5.2.0] - 2026-10-20
+
+### Añadido
+- **Botón «✂ + Corte» (Basic y Plus).** Debajo de la onda (y también arriba, en el modo Estudio) hay un botón para **añadir un corte nuevo con un solo clic**: lo coloca donde está el cursor de reproducción —o, si estás al principio, en el primer hueco libre del tema— con 16 segundos, y un aviso te recuerda que ahora puedes arrastrarlo por la onda y estirar sus bordes. Está explicado en el recorrido de bienvenida y en los manuales.
+- **Los tres formatos de vídeo a la vez (Basic y Plus).** Las pastillas **9:16 · 1:1 · 16:9** ya no son excluyentes: marca una, dos o las tres y AutoPrevias genera **un vídeo por cada formato** (con varios, el nombre lleva el formato: «PREVIA - Tema 9x16.mp4», «… 1x1.mp4», «… 16x9.mp4»). Siempre queda al menos un formato marcado. El resumen antes de generar, los presets y «Reabrir proyecto» recuerdan los formatos elegidos.
+- **Icono nuevo de la aplicación:** el cuadrado redondeado granate con el emblema «RR» de Radical Records, en el instalador de Windows, el de macOS, la ventana y las notificaciones.
+
+### Corregido
+- **Al arrastrar un efecto colocado sobre un corte se movía el corte en lugar del efecto.** Ahora el efecto tiene siempre prioridad sobre el corte que hay detrás: lo agarras por el centro y se mueve, o por los bordes y se estira.
+- **Al terminar de generar, la previa no aparecía en AutoPrevias para verla.** Se cargaba en el reproductor y en la onda, pero esos controles están en el paso ② y el usuario seguía en el ③. Ahora, al terminar, AutoPrevias te lleva solo al paso ② con un aviso verde («Previa generada: la estás viendo y oyendo aquí»), con botones para **Abrir carpeta** y **Volver a Exportar**.
+
 ## [5.1.0] - 2026-10-20
 
 ### Añadido

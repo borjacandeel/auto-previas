@@ -370,8 +370,19 @@ def run_selftest() -> int:
         _rp.set_studio(True)
         _rp.grab()
         _rp.set_studio(False)
+        # 5.2: botón «+ Corte», varios formatos de vídeo a la vez y aviso de «previa generada»
+        assert _rp._btn_quick_cut is not None and _rp._banner_ready is not None
+        from src.config import get_assets_dir as _gad5
+        assert (Path(_gad5()) / "app_icon_1024.png").exists(), "falta assets/app_icon_1024.png (icono de la ventana)"
+        _rp._aspect_btns["1:1"].click()
+        _rp._aspect_btns["16:9"].click()
+        assert _rp.selected_aspects() == ["9:16", "1:1", "16:9"]
+        assert _rp.get_export_options()["aspect_ratios"] == ["9:16", "1:1", "16:9"]
+        _rp._banner_ready.setVisible(True)
+        _rp.grab()
         _rp.deleteLater()
         print("  ✓ Diseño 5.0 (pasos, destinos, Estudio, interruptores y avisos) construido sin crash")
+        print("  ✓ 5.2: «+ Corte», 3 formatos de vídeo a la vez y aviso de previa generada operativos")
 
         try:
             tmp_ctx = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)

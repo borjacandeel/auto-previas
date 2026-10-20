@@ -181,6 +181,12 @@ if HAS_PG:
                 self.setCursor(Qt.OpenHandCursor)
                 self.update()
                 return
+            if not self.ghost:
+                # El efecto «reclama» el clic y el arrastre en cuanto el ratón pasa por encima. Sin esto pyqtgraph se los
+                # daba al corte que hay detrás (su región también los pide) y se movía el corte en vez del efecto.
+                ev.acceptDrags(Qt.LeftButton)
+                ev.acceptClicks(Qt.LeftButton)
+                ev.acceptClicks(Qt.RightButton)
             h = self._edge_at(ev.pos().x())
             self._hover = h
             self.setCursor(Qt.SizeHorCursor if h in ("l", "r") else Qt.OpenHandCursor)
@@ -272,6 +278,7 @@ if HAS_PG:
             if ev.isExit():
                 self._hover = None
             else:
+                ev.acceptClicks(Qt.LeftButton)
                 self._hover = self._hit(ev.pos().x())
                 self.setToolTip(tr("Oír este corte") if self._hover == "play" else tr("Quitar este corte de la previa"))
             self.update()

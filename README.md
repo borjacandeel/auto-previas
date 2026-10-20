@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v5.1.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v5.2.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -154,6 +154,8 @@ Si Windows muestra la pantalla azul con el mensaje *"Windows protegió su PC"* d
   **① Tu tema → ② Tu previa → ③ Exportar**, con una cinta de pasos siempre visible. Tras analizar el tema, la pantalla **«¿Para qué es esta previa?»** (Redes sociales, Radio, Sellos y A&R, DJ y club, Envío seguro, Lo monto yo) deja listos duración, formatos, vídeo y arranque/frenazo de vinilo con un clic. El paso ② tiene duración en tarjetas, interruptores de vinilo y «Retocar con más detalle»; el paso ③, tarjetas de formato (MP3, WAV·FLAC, Vídeo para redes, Modo promo), nombre y carpeta, firma y GENERAR.
 - 🖥 **Modo Estudio, deshacer y atajos (v5.0):**
   Para expertos (**Ctrl/⌘ + E** o «⚙ → Abrir siempre en modo Estudio»): una sola vista con la onda, los carriles de cortes y efectos y un menú lateral de herramientas. **Deshacer/rehacer** de cortes y efectos (Ctrl/⌘ + Z / Mayús + Z / Y), atajos (Ctrl/⌘ + O, G, 2, 3, E; F1 = ayuda), arrastrar y soltar audio o imagen en toda la ventana, avisos con diseño y más animaciones.
+- ✂️ **Botón «+ Corte» y los 3 formatos de vídeo a la vez (v5.2):**
+  Un botón bajo la onda añade un corte nuevo con un clic (Basic y Plus). En el paso ③ puedes marcar 9:16, 1:1 y 16:9 a la vez y se genera un vídeo por cada formato. Al terminar de generar, AutoPrevias te lleva a la onda y al reproductor con la previa cargada.
 - 🎚 **Arranque y final de la previa a tu elección (Plus):**
   Una tarjeta siempre visible: empezar y acabar con el efecto de vinilo (en los segundos que elijas) o a los BPM originales.
 - 🎛 **Efectos en la onda (Basic y Plus):**
@@ -260,6 +262,7 @@ Cada clave se puede usar en **un solo equipo a la vez**. Si ya está activa en u
 | Destino «Envío seguro» (modo promo en un clic) | 🔒 | ✅ |
 | Firma vocal / Voice Drop | ❌ | ✅ |
 | Sección de Firma y Carátula (Branding) | ❌ | ✅ |
+| Botón «✂ + Corte» (corte nuevo con un clic) y los tres formatos de vídeo a la vez (un vídeo por formato) | ✅ | ✅ |
 | Efectos Flanger y Filter Sweep arrastrables a la onda (tú eliges dónde y cuánto dura), con «▶ Oír» para escucharlos sueltos | ✅ | ✅ |
 | Master LUFS (−9 LUFS, nivel de club) | ❌ | ✅ |
 | Corrección manual de BPM | ❌ | ✅ |
@@ -311,7 +314,13 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v5.1.0] — 2026-10-20 (Botón «▶ Oír» para escuchar un efecto suelto)
+#### 🟢 [v5.2.0] — 2026-10-20 (Botón «✂ + Corte», los 3 formatos de vídeo a la vez, icono nuevo y arreglos)
+- **✂ + Corte (Basic y Plus):** un botón bajo la onda añade un corte nuevo con un clic (donde está el cursor o en el primer hueco libre).
+- **Los tres formatos de vídeo a la vez (Basic y Plus):** marca 9:16, 1:1 y/o 16:9 y se genera un vídeo por formato («… 9x16.mp4», «… 1x1.mp4», «… 16x9.mp4»).
+- **Icono nuevo** (cuadrado granate con el emblema «RR») en instaladores, ventana y notificaciones.
+- **Arreglos:** al arrastrar un efecto sobre un corte se movía el corte (ahora manda el efecto); y al terminar de generar, la previa ya se ve y se oye en AutoPrevias (te lleva al paso ② con un aviso).
+
+#### [v5.1.0] — 2026-10-20 (Botón «▶ Oír» para escuchar un efecto suelto)
 - **▶ Oír efecto (Basic y Plus):** al seleccionar un efecto de la onda, un botón escucha solo ese efecto sobre el tema original con 2 s antes y 2 s después (⏹ Parar para detenerlo), sin generar la previa.
 
 #### [v5.0.0] — 2026-10-19 (Versión 5: rediseño completo, más fácil — asistente de 3 pasos, destinos, modo Estudio)

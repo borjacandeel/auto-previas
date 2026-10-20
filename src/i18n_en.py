@@ -719,8 +719,8 @@ EN_TOUR = {
     "Marca esta casilla y aparece la tarjeta del vídeo: AutoPrevias crea un vídeo animado que late con la música, listo para TikTok, Reels y YouTube. Todo el vídeo se configura en esa tarjeta.":
         "Tick this box and the video card appears: AutoPrevias creates an animated video that pulses with the music, ready for TikTok, Reels and YouTube. The whole video is set up in that card.",
     "Formato del vídeo": "Video format",
-    "9:16 vertical (TikTok, Reels, Shorts), 1:1 cuadrado (feed de Instagram) o 16:9 horizontal (YouTube). Elige el que vayas a publicar.":
-        "9:16 vertical (TikTok, Reels, Shorts), 1:1 square (Instagram feed) or 16:9 horizontal (YouTube). Choose the one you'll publish.",
+    "9:16 vertical (TikTok, Reels, Shorts), 1:1 cuadrado (feed de Instagram) o 16:9 horizontal (YouTube). Marca uno, dos o los tres a la vez: se genera un vídeo por cada formato marcado.":
+        "9:16 vertical (TikTok, Reels, Shorts), 1:1 square (Instagram feed) or 16:9 horizontal (YouTube). Tick one, two or all three at once: one video is made for each ticked format.",
     "Estilo y colores": "Style and colors",
     "Elige la paleta de colores y, con «Look», cinco aspectos listos para usar: Neón clásico, foto + barras, foto + círculo, foto y título o solo la foto.":
         "Pick the color palette and, with “Look”, five ready-made styles: classic Neon, photo + bars, photo + circle, photo and title, or photo only.",
@@ -1066,4 +1066,23 @@ EN.update({
     "Escucha solo este efecto sobre el tema original, con 2 s antes y 2 s después": "Listen to just this effect on the original track, with 2 s before and 2 s after",
     "⚠ No se pudo preparar el efecto: {err}": "⚠ Couldn't prepare the effect: {err}",
     "⚠ No se pudo reproducir el efecto en este equipo": "⚠ Couldn't play the effect on this computer",
+})
+EN.update({
+    "✅ Previa generada: la estás viendo y oyendo aquí («{name}»).{extra}": "✅ Preview generated: you're seeing and hearing it right here (“{name}”).{extra}",
+    " Los vídeos están en la carpeta.": " The videos are in the folder.",
+    "📂  Abrir carpeta": "📂  Open folder", "③  Volver a Exportar": "③  Back to Export",
+})
+EN.update({
+    "✂  + Corte": "✂  + Cut",
+    "Añade un corte de 16 s donde está el cursor de reproducción (o en el primer hueco libre). Luego arrástralo y estíralo en la onda.":
+        "Adds a 16 s cut where the playhead is (or in the first free gap). Then drag and stretch it on the waveform.",
+    "Corte {n} añadido": "Cut {n} added",
+    "Está en {a}s–{b}s. Arrastra el bloque en la onda para moverlo y sus bordes para cambiar su duración.":
+        "It's at {a}s–{b}s. Drag the block on the waveform to move it and its edges to change its length.",
+})
+EN.update({
+    "✂ + Corte (un clic)": "✂ + Cut (one click)",
+    "Añade un corte nuevo al instante, donde está el cursor de reproducción (o en el primer hueco libre). Luego arrástralo por la onda para moverlo y estira sus bordes para cambiar su duración.":
+        "Adds a new cut instantly, where the playhead is (or in the first free gap). Then drag it along the waveform to move it and stretch its edges to change its length.",
+    "Pon el cursor en un drop que te guste y pulsa «+ Corte».": "Put the playhead on a drop you like and press “+ Cut”.",
 })

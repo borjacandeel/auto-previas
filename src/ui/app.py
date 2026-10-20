@@ -245,6 +245,7 @@ class ExportWorker(QThread):
                 export_aiff=self.cfg.get("export_aiff", False),
                 export_video=self.cfg.get("export_video", False),
                 custom_name=self.cfg.get("custom_name"),
+                video_aspects=self.cfg.get("aspect_ratios") or [self.cfg.get("aspect_ratio", "9:16")],
             )
             metadata = dict(self.cfg.get("metadata") or {})
             if self.beat_grid and hasattr(self.beat_grid, "bpm"):
@@ -1422,6 +1423,7 @@ class BrandingCard(QFrame):
                 c["video_palette"] = parent._combo_video_pal.currentData()
             if hasattr(parent, "_combo_aspect"):
                 c["aspect_ratio"]  = parent._combo_aspect.currentData()
+                c["aspect_ratios"] = parent.selected_aspects()
             if hasattr(parent, "_combo_vend"):
                 c["video_end"]     = parent._combo_vend.currentData()
             if hasattr(parent, "_video_custom"):
@@ -2060,6 +2062,7 @@ class ResultPanel(QWidget):
                       "QPushButton:hover { border-color:#a855f7; }"
                       f"QPushButton:checked {{ background:{ACCENT}; color:#ffffff; border-color:{ACCENT}; }}")
         self._aspect_group = QButtonGroup(self)
+        self._aspect_group.setExclusive(False)         # se pueden marcar los 3 formatos a la vez (un vídeo por formato)
         for asp, txt, tip in (("9:16", "📱 9:16 Vertical", "Vertical: TikTok, Instagram Reels y YouTube Shorts"),
                               ("1:1", "⏹ 1:1 Cuadrado", "Cuadrado: publicaciones de Instagram y Facebook"),
                               ("16:9", "🖥 16:9 Horizontal", "Horizontal: YouTube y pantallas")):
@@ -2071,7 +2074,7 @@ class ResultPanel(QWidget):
             b_.setToolTip(tip)
             self._aspect_group.addButton(b_)
             self._aspect_btns[asp] = b_
-            b_.clicked.connect(lambda _c=False, a=asp: self._set_combo_by_data(self._combo_aspect, a))
+            b_.clicked.connect(lambda _c=False, a=asp: self._on_aspect_clicked(a))
             r1.addWidget(b_)
         self._aspect_btns["9:16"].setChecked(True)
         self._combo_aspect.currentIndexChanged.connect(self._sync_aspect_buttons)
@@ -2537,6 +2540,8 @@ class ResultPanel(QWidget):
         self.hist_reset()
         if getattr(self, "_fx_aud", None) is not None:
             self._fx_aud.release()
+        if hasattr(self, "_banner_ready"):
+            self._banner_ready.setVisible(False)
         self.set_studio(bool(load_cfg().get("always_studio")))
         self.go_step(2, animate=False)
         self._session_cover = cfg.get("cover_path", "") if isinstance(cfg, dict) else ""
@@ -2595,6 +2600,8 @@ class ResultPanel(QWidget):
                 if self._combo_aspect.itemData(i) == persisted_cfg["aspect_ratio"]:
                     self._combo_aspect.setCurrentIndex(i)
                     break
+            if persisted_cfg.get("aspect_ratios"):
+                self._set_aspects(persisted_cfg["aspect_ratios"], persisted_cfg.get("aspect_ratio"))
         # Restaurar estado de FX (los tres checkboxes se persisten entre sesiones)
         if "studio_mastering" in persisted_cfg:
             self._chk_fx_master.setChecked(persisted_cfg["studio_mastering"])
@@ -2831,7 +2838,7 @@ class ResultPanel(QWidget):
                 self._chk_mp3.setChecked(s["mp3"])
             self._chk_video.setChecked(bool(s["video"]))
             if s["video"]:
-                self._set_combo_by_data(self._combo_aspect, s["aspect"])
+                self._set_aspects([s["aspect"]])
             if plus and s["start_mode"]:
                 self._set_start_mode(s["start_mode"])
                 self._set_end_mode(s["end_mode"])
@@ -2956,6 +2963,7 @@ class ResultPanel(QWidget):
             "video_end": self._video_end_for_edition(),
             "video_custom": dict(self._video_custom) if get_edition() == "plus" else None,
             "aspect_ratio": aspect,
+            "aspect_ratios": self.selected_aspects(),
             "voice_drop_enabled": bool(self._voice_drop_path),
             "voice_drop_path": self._voice_drop_path,
             "voice_drop_position": voice_pos,
@@ -3054,10 +3062,47 @@ class ResultPanel(QWidget):
             self._set_combo_by_data(self._combo_vend, "brand")      # sin imagen de final, vuelve a la firma
 
     # — formato, looks, imágenes arrastradas —
+    def selected_aspects(self) -> list:
+        """Formatos de vídeo marcados (en orden 9:16, 1:1, 16:9); el formato principal (el de la vista previa) va siempre incluido."""
+        cur = self._combo_aspect.currentData() or "9:16"
+        out = [a for a, b in self._aspect_btns.items() if b.isChecked() or a == cur]
+        return out or ["9:16"]
+
+    def _on_aspect_clicked(self, asp: str):
+        """Marca/desmarca un formato. Siempre queda al menos uno; el principal pasa a ser el último marcado."""
+        b = self._aspect_btns[asp]
+        marked = [a for a, x in self._aspect_btns.items() if x.isChecked()]
+        if not marked:                                           # no se puede dejar sin ningún formato
+            b.setChecked(True)
+            marked = [asp]
+        if b.isChecked():
+            self._set_combo_by_data(self._combo_aspect, asp)
+        elif self._combo_aspect.currentData() == asp:
+            self._set_combo_by_data(self._combo_aspect, marked[0])
+        self._sync_aspect_buttons()
+        self._refresh_summary_safe()
+
+    def _set_aspects(self, aspects, primary: str | None = None):
+        """Deja marcados exactamente estos formatos (al cargar un destino, un preset o un proyecto)."""
+        asps = [a for a in self._aspect_btns if a in (aspects or [])] or ["9:16"]
+        prim = primary if primary in asps else asps[0]
+        self._combo_aspect.blockSignals(True)
+        self._set_combo_by_data(self._combo_aspect, prim)
+        self._combo_aspect.blockSignals(False)
+        for a, b in self._aspect_btns.items():
+            b.setChecked(a in asps)
+
+    def _refresh_summary_safe(self):
+        try:
+            self._update_summary()
+        except Exception:
+            pass
+
     def _sync_aspect_buttons(self, *_):
+        """Si cambia el formato principal (preset, imagen arrastrada…), queda marcado sin quitar los demás."""
         cur = self._combo_aspect.currentData()
-        for asp, b in self._aspect_btns.items():
-            b.setChecked(asp == cur)
+        if cur in self._aspect_btns:
+            self._aspect_btns[cur].setChecked(True)
 
     def _sync_look_combo(self):
         """Muestra en el selector el look que coincide con los ajustes (o «Personalizado»)."""
@@ -3186,7 +3231,7 @@ class ResultPanel(QWidget):
         if plus and self._chk_flac.isChecked():
             parts.append("FLAC")
         if self._chk_video.isChecked():
-            asp = self._combo_aspect.currentData() or "9:16"
+            asp = " + ".join(self.selected_aspects())
             if plus:
                 look = detect_look(self._video_custom)
                 how = {"neon": tr("plantilla Neón"), "bars": tr("tu imagen + barras"), "circle": tr("tu imagen + círculo"),
@@ -3347,6 +3392,7 @@ class ResultPanel(QWidget):
                 "start": {"mode": self._start_mode, "sec": float(self._spin_start.value())},
                 "end": {"mode": self._end_mode, "sec": float(self._spin_end.value())},
                 "video": {"palette": self._combo_video_pal.currentData(), "aspect": self._combo_aspect.currentData(),
+                          "aspects": self.selected_aspects(),
                           "banner": self._edit_promo.text().strip(), "end": self._combo_vend.currentData(),
                           "custom": self._video_custom if get_edition() == "plus" else None},
             }
@@ -3417,7 +3463,7 @@ class ResultPanel(QWidget):
         vid = st.get("video") or {}
         if vid:
             self._set_combo_by_data(self._combo_video_pal, vid.get("palette"))
-            self._set_combo_by_data(self._combo_aspect, vid.get("aspect"))
+            self._set_aspects(vid.get("aspects") or [vid.get("aspect") or "9:16"], vid.get("aspect"))
             self._edit_promo.setText(vid.get("banner", ""))
             if plus and vid.get("end"):
                 self._set_combo_by_data(self._combo_vend, vid.get("end"))
@@ -3520,8 +3566,23 @@ class ResultPanel(QWidget):
             if self._player:
                 self._player.set_preview_track(prev_file, autoplay=True)
             self.play_requested.emit(prev_file)
+            self._show_generated_preview(Path(prev_file).name, has_vid)
+
+    def _show_generated_preview(self, name: str, has_video: bool):
+        """Al terminar de exportar se lleva al usuario a la onda y al reproductor (paso ②) con la previa ya cargada,
+        para que la VEA y la OIGA en AutoPrevias sin tener que buscarla. En modo Estudio ya está todo a la vista."""
+        if not hasattr(self, "_banner_ready"):
+            return
+        extra = tr(" Los vídeos están en la carpeta.") if has_video else ""
+        i18n.set_text(self._lbl_ready, "✅ Previa generada: la estás viendo y oyendo aquí («{name}»).{extra}", name=name, extra=extra)
+        self._banner_ready.setVisible(True)
+        _anim.fade_in(self._banner_ready, ms=350)
+        if not self._studio and self._wizard_step == 3:
+            self.go_step(2)
 
     def on_export_start(self):
+        if hasattr(self, "_banner_ready"):
+            self._banner_ready.setVisible(False)
         if hasattr(self, "_card_export_success"):
             self._card_export_success.setVisible(False)
         self._btn_generate.setEnabled(False)
@@ -3824,12 +3885,39 @@ class ResultPanel(QWidget):
 
         self._update_tempo_plot()
 
+    def _quick_cut_start(self, track_dur: float, length: float = 16.0) -> float:
+        """Dónde nace un corte nuevo: donde está el cursor de reproducción; si está al principio, en el primer hueco libre."""
+        pos = self._player.get_position_seconds() if self._player else 0.0
+        if pos > 0.5:
+            return min(track_dur - 4.0, max(0.0, round(pos, 1)))
+        taken = [(float(s.source_start), float(s.source_end)) for s in (self._plan.segments if self._plan else [])]
+        cands = sorted({round(float(x.start_time), 1) for x in self._analysis.sections} | {round(e, 1) for _a, e in taken})
+        for c in cands:
+            if c + 8.0 <= track_dur and all(c + length <= a or c >= b for a, b in taken):
+                return c
+        return min(track_dur - 4.0, max(0.0, round(pos, 1)))
+
+    def quick_add_cut(self):
+        """Botón «+ Corte»: añade un corte nuevo al instante y avisa de cómo moverlo."""
+        if not self._analysis:
+            return
+        n_before = len(self._plan.segments) if self._plan else 0
+        self._on_add_cut_clicked()
+        if self._plan and len(self._plan.segments) > n_before:
+            seg = self._plan.segments[-1]
+            try:
+                from src.ui.toast import toast
+                toast(self.window(), "info", tr("Corte {n} añadido", n=len(self._plan.segments)),
+                      tr("Está en {a}s–{b}s. Arrastra el bloque en la onda para moverlo y sus bordes para cambiar su duración.",
+                         a=f"{seg.source_start:.0f}", b=f"{seg.source_end:.0f}"), seconds=5)
+            except Exception:
+                pass
+
     def _on_add_cut_clicked(self):
         if not self._analysis:
             return
         track_dur = self._analysis.duration if self._analysis else 300.0
-        pos = self._player.get_position_seconds() if self._player else 0.0
-        start = min(track_dur - 4.0, max(0.0, round(pos, 1)))
+        start = self._quick_cut_start(track_dur)
         end = min(track_dur, start + 16.0)
 
         sec_type = SectionType.DROP
@@ -5041,7 +5129,9 @@ class MainWindow(QMainWindow):
         self.setAcceptDrops(True)
 
         # Icono de la ventana / aplicación
-        icon_path = _ASSETS_DIR / "logo.png"
+        icon_path = _ASSETS_DIR / "app_icon_1024.png"
+        if not icon_path.exists():
+            icon_path = _ASSETS_DIR / "logo.png"
         if not icon_path.exists():
             icon_path = _ASSETS_DIR / "logo_emblem.png"
         if icon_path.exists():
@@ -5832,11 +5922,13 @@ class MainWindow(QMainWindow):
             # Plus: avisa si la imagen elegida no tiene el formato del vídeo (9:16, 1:1 o 16:9)
             from src.engine.video_neon import image_format_problems
             from src.ui.video_custom import ask_format_mismatch
-            _asp = options.get("aspect_ratio", "9:16")
-            _probs = image_format_problems(options["video_custom"], _asp)
-            if _probs and ask_format_mismatch(self, _probs, _asp) == "change":
-                self._results._open_video_custom()
-                return
+            for _asp in (options.get("aspect_ratios") or [options.get("aspect_ratio", "9:16")]):
+                _probs = image_format_problems(options["video_custom"], _asp)
+                if _probs:
+                    if ask_format_mismatch(self, _probs, _asp) == "change":
+                        self._results._open_video_custom()
+                        return
+                    break                                       # «seguir igualmente»: no se pregunta por cada formato
 
         seed = self._results.get_seed()
         metadata = self._results.get_branding_metadata()

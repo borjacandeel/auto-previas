@@ -179,6 +179,10 @@ def build_steps(win) -> list:
         "Aquí ves la estructura del tema: intro, subida, drop, descanso… AutoPrevias la detecta sola. "
         "Haz clic para escuchar desde ese punto y arrastra los marcadores para retocar dónde se corta.",
         (lambda: wave_frame.parentWidget()) if wave_frame is not None else None, page=2)
+    add("corte_rapido", "✂ + Corte (un clic)",
+        "Añade un corte nuevo al instante, donde está el cursor de reproducción (o en el primer hueco libre). "
+        "Luego arrástralo por la onda para moverlo y estira sus bordes para cambiar su duración.",
+        lambda: R._btn_quick_cut, page=2, example="Pon el cursor en un drop que te guste y pulsa «+ Corte».")
     player = getattr(R, "_player", None)
     if player is not None:
         add("reproductor", "Reproductor",
@@ -252,7 +256,7 @@ def build_steps(win) -> list:
         before=lambda: R._chk_video.setChecked(True))
     add("formato_video", "Formato del vídeo",
         "9:16 vertical (TikTok, Reels, Shorts), 1:1 cuadrado (feed de Instagram) o 16:9 horizontal (YouTube). "
-        "Elige el que vayas a publicar.", lambda: list(R._aspect_btns.values()), page=2)
+        "Marca uno, dos o los tres a la vez: se genera un vídeo por cada formato marcado.", lambda: list(R._aspect_btns.values()), page=2)
     add("paleta", "Estilo y colores",
         ("Elige la paleta de colores y, con «Look», cinco aspectos listos para usar: Neón clásico, foto + barras, "
          "foto + círculo, foto y título o solo la foto." if plus else

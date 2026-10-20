@@ -91,6 +91,27 @@ def _step2(R, plus: bool):
     head.addWidget(R._btn_change_dest, 0, Qt.AlignTop)
     L.addLayout(head)
 
+    # — aviso de «previa generada»: al terminar de exportar se vuelve aquí para VER y OÍR la previa —
+    R._banner_ready = T.card(14, accent=True, name="ready5")
+    bv = QHBoxLayout(R._banner_ready)
+    bv.setContentsMargins(16, 10, 12, 10)
+    bv.setSpacing(10)
+    R._lbl_ready = QLabel("")
+    R._lbl_ready.setWordWrap(True)
+    R._lbl_ready.setStyleSheet(f"color: {T.TEXT}; font-size: 12.5px; font-weight: 700; {T._T}")
+    bv.addWidget(R._lbl_ready, 1)
+    R._btn_ready_folder = QPushButton("📂  Abrir carpeta")
+    R._btn_ready_back = QPushButton("③  Volver a Exportar")
+    for b in (R._btn_ready_folder, R._btn_ready_back):
+        b.setFixedHeight(32)
+        b.setCursor(Qt.PointingHandCursor)
+        b.setStyleSheet(T.ghost_css(16, 11.5))
+        bv.addWidget(b)
+    R._btn_ready_folder.clicked.connect(lambda _=False: R.open_folder_requested.emit())
+    R._btn_ready_back.clicked.connect(lambda _=False: R.go_step(3))
+    R._banner_ready.setVisible(False)
+    L.addWidget(R._banner_ready)
+
     # — tarjeta principal: reproductor + datos + onda —
     main = T.card(18)
     R._main_card = main
@@ -121,7 +142,19 @@ def _step2(R, plus: bool):
         mv.addWidget(wf, 1)
     hint = T.sub("Las zonas marcadas son lo que entra en la previa. Arrastra los bordes verdes y rojos para cambiarlas.", 11.5)
     R._lbl_wave_hint = hint
-    mv.addWidget(hint)
+    hint_row = QHBoxLayout()
+    hint_row.setSpacing(10)
+    hint_row.addWidget(hint, 1)
+    # botón rápido: un corte nuevo con un clic, sin abrir «Retocar con más detalle» (Basic y Plus)
+    R._btn_quick_cut = QPushButton("✂  + Corte")
+    R._btn_quick_cut.setFixedHeight(32)
+    R._btn_quick_cut.setCursor(Qt.PointingHandCursor)
+    R._btn_quick_cut.setStyleSheet(T.ghost_css(16, 12))
+    R._btn_quick_cut.setToolTip("Añade un corte de 16 s donde está el cursor de reproducción (o en el primer hueco libre). "
+                                "Luego arrástralo y estíralo en la onda.")
+    R._btn_quick_cut.clicked.connect(lambda _=False: R.quick_add_cut())
+    hint_row.addWidget(R._btn_quick_cut, 0, Qt.AlignRight)
+    mv.addLayout(hint_row)
     L.addWidget(main)
 
     # — fila: duración + principio y final —
