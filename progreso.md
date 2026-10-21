@@ -2213,3 +2213,6 @@ AutoPrevias/
 
 ## Pendiente futuro (2026-10-21): vídeo propio en bucle
 - Petición del usuario (aparcada): subir un vídeo ya hecho y que la exportación lo repita en bucle sobre la duración de la previa (ej. vídeo 10 s, previa 50 s), con **cortes indefinidos/variados** para que no parezca siempre lo mismo. No se implementa hasta que lo pida. Ideas: trocear el clip en segmentos, barajar con semilla (misma `seed` que la previa), crossfades cortos, respetar formatos 9:16/1:1/16:9, marca de agua en Basic.
+
+## Verificación del usuario (2026-10-21)
+- v5.3.1 probada en Mac por el usuario: notificación OK, «Editar» firma OK, cambio de tema OK, transiciones OK. Sin pendientes de prueba.
