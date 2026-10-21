@@ -137,6 +137,17 @@
       tl.to(c, { x: m.to[0], duration: m.d, ease: "power2.inOut" }, t0 + m.at + 0.2); tl.to(c, { y: m.to[1], duration: m.d, ease: "power1.inOut" }, t0 + m.at + 0.2);
       tl.to(c, { scale: 0.2, opacity: 0, duration: 0.18, ease: "power2.in" }, t0 + m.at + 0.2 + m.d);
     }
+    // «fantasmas» que se arrastran: sc.chips = [{text, from:[x,y], to:[x,y], at, d, bg, fg}] (mismo tiempo que el cursor para que parezca un arrastrar y soltar)
+    (sc.chips || []).forEach((m) => {
+      const c = document.createElement("div"); c.className = "chip dragchip"; c.textContent = m.text;
+      if (m.bg) c.style.background = m.bg; if (m.fg) c.style.color = m.fg;
+      $(".hls", el).appendChild(c);
+      const S = S0 * zoomAt(m.at), sc0 = 1.25 / S;
+      tl.set(c, { x: m.from[0], y: m.from[1], opacity: 0, scale: sc0 * 0.6, xPercent: -50, yPercent: -50 }, t0);
+      tl.to(c, { opacity: 0.95, scale: sc0, duration: 0.15, ease: "back.out(2)" }, t0 + m.at);
+      tl.to(c, { x: m.to[0], duration: m.d, ease: "power2.inOut" }, t0 + m.at + 0.1); tl.to(c, { y: m.to[1], duration: m.d, ease: "power1.inOut" }, t0 + m.at + 0.1);
+      tl.to(c, { scale: sc0 * 0.4, opacity: 0, duration: 0.18, ease: "power2.in" }, t0 + m.at + 0.1 + m.d);
+    });
     if (sc.confetti !== undefined) {
       const conf = $(".conf", el);
       for (let i = 0; i < 46; i++) {
