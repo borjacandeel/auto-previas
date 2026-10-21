@@ -27,8 +27,14 @@
 - Resaltar con recuadro (`hls`) justo lo que se toca y mover la cámara (`cam`) siguiendo al puntero.
 - Regenerar las capturas (`python scripts/manual/capture.py plus`) tras cambios de interfaz para que el vídeo muestre la versión actual.
 
+## 3 bis. Arrastrar y soltar (petición del usuario, 2026-10-21)
+- En las escenas de **cortes** y de **efectos** el espectador debe VER que se arrastran y se sueltan: el cursor lleva un **«fantasma»** (`chips=[dict(text, at, d, **{"from":[x,y]}, to=[x,y], bg, fg)]` en una escena `shot`; mismo `at+0.1` y `d` que el movimiento del cursor) desde el origen hasta el destino, y en el momento de soltar **se cambia a la captura con el resultado**.
+- Capturas reales por estado (script de captura con la app: `R._on_waveform_cuts_changed(cortes)`, `R._on_add_cut_clicked()`, `R._waveform._add_fx(tipo, t)`): `p_cut_0/1/2` (cortes: original → borde estirado → «+ Corte») y `p_fx_1/2` (+ Flanger, + Filter Sweep). Guardarlas en `docs/manual/_work/plus/`.
+- Coordenadas útiles (px de la captura 2240 de ancho, Estudio): fila de efectos y≈809 (Flanger x≈419, Filter Sweep ↗ x≈587), bloques de efecto sobre la onda y≈747, onda y 444–774, botón «+ Corte» (1408, 317), ⚙ (1716, 71).
+
 ## 4. Voz y música
-- **Por defecto SIN voz** (al usuario le gusta más; con voz salen más largos). Ofrecer la versión con voz solo si lo pide. Voces si se usan: Álvaro / Ximena (`edge:es-ES-…Neural`), castellano de España.
+- **El vídeo 3 («Todo en un clic») lleva VOZ** (Álvaro); los vídeos 1 y 2 van SIN voz (decisión del usuario, 2026-10-21).
+- Por defecto SIN voz (con voz salen más largos), salvo el vídeo 3. Voces si se usan: Álvaro / Ximena (`edge:es-ES-…Neural`), castellano de España.
 - Música sintetizada a 128 BPM del kit; efectos sincronizados con las escenas.
 
 ## 5. Flujo de trabajo (técnico)
@@ -46,3 +52,4 @@
 - Las escenas con voz se alargan al tamaño de la locución; sin voz mandan las `dur` del spec.
 - Si hay procesos viejos de `hyperframes render`/`ffmpeg`, matarlos por PID antes de relanzar.
 - Skills de referencia que pasó el usuario (awesome-claude-video-skills): HyperFrames es lo que ya usa el kit; ideas útiles de otros: zoom que sigue al clic (cursorcam), cortes sincronizados con la música (product-launch-motion).
+- El AAC no debe pasar de -1 dBFS: el kit normaliza el pico a 0,70 (si no, el render falla al final con «AAC true peak remained above -1 dBFS»).
