@@ -1,4 +1,4 @@
-"""Presentación oficial 1 · «Tu previa en 30 segundos» (sin voz; el modo con voz se genera sin --no-voice)."""
+"""Presentación oficial 1 · «Tu previa en 30 segundos» (se genera con o sin voz: sin voz con --no-voice)."""
 SPEC = dict(
     tall=True,
     voice="edge:es-ES-AlvaroNeural", lang="es", speed=1.16, groove_from=2.6,
@@ -37,7 +37,8 @@ SPEC = dict(
              cur=[dict(at=0.05, set=[900, 900]), dict(at=0.4, d=0.7, to=[1183, 604]), dict(at=1.25, d=0.8, to=[1273, 604]), dict(at=2.4, d=0.8, to=[1408, 317])],
              clicks=[dict(at=3.25, to=[1408, 317])],
              chips=[dict(text="FIN ↔", at=1.15, d=0.8, **{"from": [1183, 604]}, to=[1273, 604], bg="#ff1f3a", fg="#fff")],
-             hls=[dict(at=0.3, hold=0.8, box=[1150, 450, 70, 320], pad=4), dict(at=3.2, hold=0.8, box=[1340, 290, 150, 52], pad=4), dict(at=3.4, hold=1.4, box=[231, 444, 210, 330], pad=4)]),
+             hls=[dict(at=0.3, hold=0.8, box=[1150, 450, 70, 320], pad=4), dict(at=3.2, hold=0.8, box=[1340, 290, 150, 52], pad=4), dict(at=3.4, hold=1.4, box=[231, 444, 210, 330], pad=4)],
+             vo="Estira y mueve los cortes arrastrándolos, o añade uno nuevo con un clic.", vo_at=0.2),
         dict(type="shot", dur=5.0, steps=3, logo=3.9,
              caps=[dict(at=0.15, until=2.5, num="05", title="Arrastra <em>los efectos</em>", sub="Flanger o Filter Sweep, donde quieras", step=1),
                    dict(at=2.6, until=4.9, num="06", title="Mueve, estira <em>y escucha</em>", sub="Tú decides cuánto dura y dónde suena", step=1)],
@@ -48,7 +49,8 @@ SPEC = dict(
              chips=[dict(text="🌀 Flanger", at=0.45, d=0.9, **{"from": [419, 809]}, to=[944, 747], bg="#a855f7", fg="#fff"),
                     dict(text="🌊 Filter Sweep", at=2.65, d=1.0, **{"from": [587, 809]}, to=[1558, 747], bg="#2f9ccf", fg="#fff")],
              hls=[dict(at=0.3, hold=0.8, box=[359, 786, 125, 52], pad=4), dict(at=1.5, hold=0.9, box=[895, 722, 100, 56], pad=6),
-                  dict(at=2.1, hold=0.6, box=[497, 786, 183, 52], pad=4), dict(at=3.8, hold=1.0, box=[1500, 720, 115, 56], pad=6)]),
+                  dict(at=2.1, hold=0.6, box=[497, 786, 183, 52], pad=4), dict(at=3.8, hold=1.0, box=[1500, 720, 115, 56], pad=6)],
+             vo="Arrastra los efectos a la onda. Tú decides dónde suenan.", vo_at=0.2),
         # 6 · Vídeo animado
         dict(type="cards", dur=3.8, title="Vídeo animado", title_top=1290, title_at=1.2, sub="TikTok · Reels · Shorts · YouTube", sub_at=1.6, sub_top=1500,
              cards=[dict(src="neon_916_crimson", x=285, y=140, w=560, h=996, at=0.15, rot=0), dict(src="neon_11", x=20, y=630, w=480, h=480, at=0.6, rot=-4, **{"from": "left"}),
