@@ -2216,3 +2216,8 @@ AutoPrevias/
 
 ## Verificación del usuario (2026-10-21)
 - v5.3.1 probada en Mac por el usuario: notificación OK, «Editar» firma OK, cambio de tema OK, transiciones OK. Sin pendientes de prueba.
+
+## Revisión de URLs públicas (2026-10-21)
+- Release v5.3.1 pública (no borrador): 4 instaladores + alias estables `AutoPrevias-{Basic,Plus}-{macOS-arm64.dmg,Windows-x64-Setup.exe}`, 2 manuales PDF y `SHA256SUMS.txt`; API `releases/latest` 200 (la usa el actualizador de la app); PDF en `raw.githubusercontent.com` 200.
+- **Enlaces rotos corregidos en README:** apuntaban a `AutoPrevias-macOS-arm64.dmg` / `AutoPrevias-Windows-x64-Setup.exe` (sin edición, 404); ahora hay una fila por edición (Basic/Plus) y plataforma.
+- Payhip (`payhip.com/RADICALRECVLC`, `payhip.com/b/NVkaK`) responde 403 desde el contenedor (protección anti-bots): comprobar en navegador/ventana de incógnito.

@@ -47,10 +47,12 @@ AutoPrevias se distribuye mediante instaladores precompilados y optimizados para
 
 Los siguientes enlaces apuntan **siempre y de forma automática a los instaladores de la última versión estable (Release Latest)** disponible en GitHub:
 
-| Plataforma | Arquitectura | Tipo de Paquete | Enlace de Descarga Directa | Notas de Versión |
+| Plataforma | Edición | Tipo de Paquete | Enlace de Descarga Directa | Notas de Versión |
 | :--- | :--- | :--- | :--- | :--- |
-| 🍏 **macOS** | **Apple Silicon (M1 / M2 / M3 / M4)** | Imagen de disco `.dmg` (Drag-to-Applications) | [⬇️ **Descargar AutoPrevias macOS arm64**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-macOS-arm64.dmg) | [Ver Release Oficial](https://github.com/borjacandeel/auto-previas/releases/latest) |
-| 🪟 **Windows** | **64-bit (x64) y ARM64 (Snapdragon X / Parallels)** | Instalador Asistido Universal `.exe` (Inno Setup) | [⬇️ **Descargar AutoPrevias Windows Setup**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-Windows-x64-Setup.exe) | [Ver Release Oficial](https://github.com/borjacandeel/auto-previas/releases/latest) |
+| 🍏 **macOS** (Apple Silicon M1–M4) | **Basic** | `.dmg` | [⬇️ **AutoPrevias Basic · macOS**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-Basic-macOS-arm64.dmg) | [Ver Release Oficial](https://github.com/borjacandeel/auto-previas/releases/latest) |
+| 🍏 **macOS** (Apple Silicon M1–M4) | **Plus** | `.dmg` | [⬇️ **AutoPrevias Plus · macOS**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-Plus-macOS-arm64.dmg) | [Ver Release Oficial](https://github.com/borjacandeel/auto-previas/releases/latest) |
+| 🪟 **Windows** (64-bit x64 y ARM64) | **Basic** | Instalador `.exe` (Inno Setup) | [⬇️ **AutoPrevias Basic · Windows**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-Basic-Windows-x64-Setup.exe) | [Ver Release Oficial](https://github.com/borjacandeel/auto-previas/releases/latest) |
+| 🪟 **Windows** (64-bit x64 y ARM64) | **Plus** | Instalador `.exe` (Inno Setup) | [⬇️ **AutoPrevias Plus · Windows**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-Plus-Windows-x64-Setup.exe) | [Ver Release Oficial](https://github.com/borjacandeel/auto-previas/releases/latest) |
 
 ---
 
