@@ -1,0 +1,57 @@
+"""Presentación oficial 1 · «Tu previa en 30 segundos» (voz en castellano, Álvaro)."""
+SPEC = dict(
+    voice="edge:es-ES-AlvaroNeural", lang="es", speed=1.16, groove_from=2.6,
+    scenes=[
+        # 1 · Gancho (≤3 s): pregunta directa
+        dict(type="words", dur=2.8, bars=True, top=560, gap=0.42, vo="¿Cansado de hacer tus previas a mano?",
+             lines=[dict(t="¿CANSADO", size=190), dict(t="DE HACER TUS", size=140), dict(t="PREVIAS", size=210), dict(t="A MANO?", cls="red", size=250, big=True)]),
+        # 2 · El dolor: la lista interminable de pasos (sellos que se estampan uno tras otro)
+        dict(type="race", dur=6.4, race_end=5.6, done_at=3.0,
+             stamps=[0.3, 0.8, 1.3, 1.8, 2.3, 2.8, 3.3, 3.8],
+             stamps_def=[
+                 dict(t="Abrir Traktor", x=60, y=330), dict(t="Cargar el tema", x=420, y=400, cls="white"),
+                 dict(t="Grabar", x=70, y=480), dict(t="Meter efectos", x=380, y=550, cls="white"),
+                 dict(t="Acortar", x=80, y=630), dict(t="Guardar", x=400, y=700, cls="white"),
+                 dict(t="Exportar", x=90, y=780), dict(t="Y subirlo…", x=400, y=850)],
+             imgs=[dict(at=1.0, name="01_bienvenida", y=40), dict(at=2.0, name="03_cargada", y=70), dict(at=3.0, name="08_generada", y=430)],
+             vo="Abrir Traktor, cargar, grabar, meter efectos, acortar, guardar, exportar… y subirlo.", vo_at=0.2),
+        # 3 · Giro + bucle abierto
+        dict(type="words", dur=3.0, bars=True, top=560, gap=0.5, vo="Pues con Autoprevias, eso ya está hecho.",
+             lines=[dict(t="PUES CON", size=150), dict(t="AUTOPREVIAS", cls="red", size=150, big=True), dict(t="ESO YA", size=190), dict(t="ESTÁ HECHO", cls="red", size=170, big=True)]),
+        # 4 · Lo más importante, en golpes rápidos
+        dict(type="shot", dur=3.8, steps=3, logo=2.8,
+             caps=[dict(at=0.15, until=1.9, num="01", title="Arrastra <em>tu tema</em>", sub="Y ya está", step=0),
+                   dict(at=1.9, until=3.7, num="02", title="Elige <em>los mejores momentos</em>", sub="Cortes listos, sin tocar nada", step=1)],
+             imgs=[dict(at=0, name="01_bienvenida"), dict(at=1.9, name="03_cargada")],
+             cam=[dict(at=0, d=0, c="welcome.drop", z=1.1), dict(at=1.9, d=0.8, c="loaded.waveform", z=1.5)],
+             cur=[dict(at=0.05, set="welcome.drop"), dict(at=0.3, d=0.8, to="welcome.open_btn"), dict(at=2.1, d=0.9, to="loaded.waveform")],
+             clicks=[dict(at=1.3, to="welcome.open_btn")], hls=[dict(at=1.25, hold=0.6, box="welcome.open_btn", pad=6), dict(at=2.1, hold=1.9, box="loaded.waveform", pad=4)],
+             vo="Arrastra tu tema, y ella elige los mejores momentos.", vo_at=0.2),
+        dict(type="shot", dur=3.8, steps=3, logo=2.8,
+             caps=[dict(at=0.15, until=3.7, num="03", title="Efectos <em>arrastrables</em>", sub="Flanger y Filter Sweep sobre la onda", step=1)],
+             imgs=[dict(at=0, name="03_cargada")],
+             cam=[dict(at=0, d=0, c=[1100, 700], z=1.25), dict(at=0.5, d=0.9, c=[1000, 900], z=1.6)],
+             cur=[dict(at=0.1, set=[260, 950]), dict(at=0.6, d=0.9, to=[1190, 760]), dict(at=2.0, d=0.8, to=[1500, 760])],
+             clicks=[dict(at=1.6, to=[1190, 760])], hls=[dict(at=0.5, hold=1.8, box=[70, 910, 760, 70], pad=4), dict(at=1.55, hold=2.2, box=[740, 580, 480, 330], pad=4)],
+             vo="Corta y mete efectos, arrastrándolos sobre la onda.", vo_at=0.2),
+        dict(type="cards", dur=3.8, title="Vídeo animado", title_top=1290, title_at=1.2, sub="TikTok · Reels · Shorts · YouTube", sub_at=1.6, sub_top=1500,
+             cards=[dict(src="neon_916_crimson", x=285, y=140, w=560, h=996, at=0.15, rot=0), dict(src="neon_11", x=20, y=630, w=480, h=480, at=0.6, rot=-4, **{"from": "left"}),
+                    dict(src="neon_169", x=560, y=720, w=500, h=281, at=1.0, rot=4, **{"from": "right"})],
+             badges=[], vo="Y crea el vídeo animado para tus redes, en tres formatos.", vo_at=0.2),
+        dict(type="antileak", dur=4.2, title="ANTIFUGAS", mark_pos=[0.1, 0.28, 0.46, 0.64, 0.82], marks=[0.7, 1.2, 1.7, 2.2, 2.7], stamp_at=3.3,
+             badges=[dict(at=1.3, t="🛡 ANTIFUGAS", x=90, y=930, bg="#7c3aed"), dict(at=2.1, t="MP3 128 kbps", x=540, y=930, bg="#ff1f3a")],
+             vo="Con el modo promo antifugas, nadie podrá mezclarla.", vo_at=0.2),
+        dict(type="words", dur=3.6, top=470, gap=0.5, vo="Con tu firma y carátula. En MP3, WAV o FLAC, y con vídeo.",
+             lines=[dict(t="MP3 · WAV · FLAC", size=110), dict(t="VÍDEO 9:16 · 1:1", size=110), dict(t="TU FIRMA", size=150), dict(t="Y CARÁTULA", cls="red", size=170, big=True)]),
+        # 5 · Resolución: lista para subir
+        dict(type="shot", dur=3.8, steps=3, logo=2.8,
+             caps=[dict(at=0.15, until=3.7, num="✓", title="<em>Lista</em> para subir", sub="En la carpeta que tú elijas", step=2)],
+             imgs=[dict(at=0, name="08_generada")],
+             cam=[dict(at=0, d=0, c="generated.success", z=1.4), dict(at=0.6, d=0.9, c="generated.waveform", z=1.5)],
+             cur=[dict(at=0.1, set="generated.player"), dict(at=0.6, d=0.9, to="generated.open")],
+             clicks=[dict(at=1.8, to="generated.open")], hls=[dict(at=0.3, hold=1.2, box="generated.success", pad=6), dict(at=1.75, hold=1.6, box="generated.open", pad=6)],
+             confetti=1.9, vo="Y ya está lista para subir.", vo_at=0.3),
+        dict(type="words", dur=2.8, bars=True, top=560, gap=0.45, vo="Tu previa, en treinta segundos.",
+             lines=[dict(t="TU PREVIA", size=200), dict(t="EN 30", cls="red", size=330, big=True), dict(t="SEGUNDOS", size=170)]),
+        dict(type="cta", dur=5.4, click_at=3.3, line1="Tu previa", line2="en 30 segundos.", vo="Autoprevias, de Radical Récords. Consíguelo en Peijip.", vo_at=0.8),
+    ])
