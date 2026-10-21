@@ -2221,3 +2221,8 @@ AutoPrevias/
 - Release v5.3.1 pública (no borrador): 4 instaladores + alias estables `AutoPrevias-{Basic,Plus}-{macOS-arm64.dmg,Windows-x64-Setup.exe}`, 2 manuales PDF y `SHA256SUMS.txt`; API `releases/latest` 200 (la usa el actualizador de la app); PDF en `raw.githubusercontent.com` 200.
 - **Enlaces rotos corregidos en README:** apuntaban a `AutoPrevias-macOS-arm64.dmg` / `AutoPrevias-Windows-x64-Setup.exe` (sin edición, 404); ahora hay una fila por edición (Basic/Plus) y plataforma.
 - Payhip (`payhip.com/RADICALRECVLC`, `payhip.com/b/NVkaK`) responde 403 desde el contenedor (protección anti-bots): comprobar en navegador/ventana de incógnito.
+
+## Sesión 67 — v5.3.2 (2026-10-21): lanzamiento público
+- Productos Payhip públicos con los mismos enlaces (Plus `b/mTjEL`, Basic `b/NVkaK`). `launch_public.py --apply`: `src/links.py` (BASIC_URL/PLUS_URL), versión 5.3.2, CHANGELOG, README (badge), tests OK, PDF Basic/Plus regenerados (enlaces de producto, sin GitHub).
+- Worker verificado (POST con clave falsa → `Clave no válida`, HTTP 200). Sin cambios de Cloudflare.
+- Vídeos de presentación 1, 2 y 3 producidos con el kit (nuevo «fantasma» `chips` para arrastrar y soltar, visor `tall`, margen de volumen AAC). Capturas reales por estado en `docs/manual/_work/plus/p_*.png` (generadas con scripts temporales basados en `scripts/manual/capture.py`).

@@ -3,6 +3,11 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [5.3.2] - 2026-10-21
+
+### Cambiado
+- La tienda de AutoPrevias ya es pública: se actualizan los enlaces de compra de Basic y de Plus en la pantalla de activación, en los manuales PDF y en el cierre de los vídeos.
+
 ## [5.3.1] - 2026-10-20
 
 ### Corregido

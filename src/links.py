@@ -10,8 +10,8 @@ from __future__ import annotations
 import re
 
 STORE_URL = "https://payhip.com/RADICALRECVLC"
-BASIC_URL = "https://payhip.com/RADICALRECVLC"
-PLUS_URL = "https://payhip.com/RADICALRECVLC"
+BASIC_URL = "https://payhip.com/b/NVkaK"
+PLUS_URL = "https://payhip.com/b/mTjEL"
 
 
 def short(url: str) -> str:
