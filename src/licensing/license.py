@@ -313,6 +313,14 @@ def days_left() -> int | None:
     return max(0, int((exp - time.time()) // 86400 + (1 if (exp - time.time()) % 86400 else 0)))
 
 
+def expires_on() -> str:
+    """Fecha de caducidad (AAAA-MM-DD) de una licencia temporal; '' si es permanente o no hay licencia."""
+    import datetime as _dt
+    local = load_local()
+    exp = int(local.get("expires_at") or 0) if local else 0
+    return _dt.datetime.fromtimestamp(exp).strftime("%Y-%m-%d") if exp else ""
+
+
 def reverify_if_due(force: bool = False) -> str:
     """
     Reverificación automática con el servidor (usa la clave guardada: el usuario no la vuelve a escribir).

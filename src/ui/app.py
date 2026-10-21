@@ -5709,18 +5709,25 @@ class MainWindow(QMainWindow):
         self._license_timer.setInterval(30_000)
         self._license_timer.timeout.connect(self._check_license_watch)
         self._license_timer.start()
+        QTimer.singleShot(5000, self._warn_license_expiring)
 
     def _check_license_watch(self):
-        """Si el servidor revocó la licencia (otro equipo, reembolso…), avisa y cierra al terminar de exportar."""
-        from src.licensing.license import revoked_reason
+        """Si el servidor revocó la licencia (otro equipo, reembolso…) o una licencia temporal caducó,
+        avisa y actúa al terminar de exportar."""
+        from src.licensing.license import revoked_reason, check_license, LicenseStatus
         reason = revoked_reason()
-        if not reason:
+        term = (not reason) and check_license()[0] == LicenseStatus.TERM_ENDED
+        if not reason and not term:
+            self._warn_license_expiring()
             return
         worker = getattr(self, "_export_worker", None)
         if worker is not None and worker.isRunning():
             return                                  # no cortar una exportación en curso
         self._license_timer.stop()
         from PySide6.QtWidgets import QApplication, QMessageBox
+        if term:
+            self._license_term_ended()
+            return
         if reason == "in_use":
             msg = ("Esta licencia se ha activado en otro equipo.\nSolo puede estar activa en un equipo a la vez.\n"
                    "AutoPrevias se cerrará.")
@@ -5728,6 +5735,41 @@ class MainWindow(QMainWindow):
             msg = "Tu licencia ya no es válida.\nAutoPrevias se cerrará."
         QMessageBox.critical(self, "AutoPrevias", tr(msg))
         QApplication.quit()
+
+    def _license_term_ended(self):
+        """Licencia de 3 / 12 meses caducada con la app abierta: menú de compra → panel de activación; sin licencia, se cierra."""
+        from PySide6.QtWidgets import QApplication
+        from src.licensing.license import reverify_if_due, check_license, expires_on, LicenseStatus
+        if reverify_if_due(force=True) == "ok" and check_license()[0] != LicenseStatus.TERM_ENDED:
+            self._license_timer.start()             # el servidor dice que sigue vigente (el reloj del equipo iba adelantado)
+            return
+        from src.ui.activate import run_expired_flow
+        got = run_expired_flow(self, edition=get_edition(), expired_on=expires_on())
+        if not got:
+            QApplication.quit()
+            return
+        from src.ui.toast import toast
+        toast(self, "success", "Licencia activada", "Gracias por renovar. ¡A seguir haciendo previas!")
+        self._license_timer.start()
+
+    def _warn_license_expiring(self):
+        """Aviso (una vez al día) cuando a una licencia temporal le quedan 7 días o menos."""
+        from src.licensing.license import days_left
+        n = days_left()
+        if n is None or n > 7 or n <= 0:
+            return
+        import datetime as _dt
+        from src.config import load as _lc, save as _sc
+        today = _dt.date.today().isoformat()
+        cfg = _lc()
+        if cfg.get("term_warned_on") == today:
+            return
+        cfg["term_warned_on"] = today
+        _sc(cfg)
+        from src.ui.toast import toast
+        toast(self, "warn", tr("Tu licencia caduca en {n} días", n=n) if n != 1 else tr("Tu licencia caduca mañana"),
+              "Renueva desde ⚙ Licencia para no perder el acceso.",
+              action=("Renovar", self._open_license_dialog), seconds=12)
 
     # ── Animación de puntos en progreso ──────────────────────────────────
 

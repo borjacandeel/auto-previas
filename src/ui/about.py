@@ -6,13 +6,13 @@ from __future__ import annotations
 
 import datetime as _dt
 
-from PySide6.QtCore import QRectF, Qt, Signal
-from PySide6.QtGui import QPainter
+from PySide6.QtCore import QRectF, Qt, QThread, QUrl, Signal
+from PySide6.QtGui import QDesktopServices, QPainter
 from PySide6.QtWidgets import (
-    QComboBox, QDialog, QFrame, QHBoxLayout, QLabel, QMessageBox, QPushButton, QVBoxLayout,
+    QComboBox, QDialog, QFrame, QHBoxLayout, QLabel, QMessageBox, QPushButton, QVBoxLayout, QWidget,
 )
 
-from src import i18n
+from src import i18n, links
 from src.i18n import tr
 from src.ui.dialog_style import ACCENT, DIALOG_QSS, GREEN, RED, TEXT2, WARN
 
@@ -36,13 +36,31 @@ def describe_license(local: dict | None, now: float | None = None, grace_days: i
     state = "active" if now <= until else "grace_expired"
     if local.get("revoked"):
         state = "revoked"
+    exp = float(local.get("expires_at", 0) or 0)           # licencia temporal (3 / 12 meses…); 0 = permanente
+    if exp and not local.get("revoked") and (local.get("term_ended") or now >= exp):
+        state = "term_ended"
     return {
+        "expires": fmt(exp) if exp else "",
+        "term_days": max(int(-(-(exp - now) // 86400)), 0) if exp else None,
         "state": state,
         "license_id": str(local.get("key_hash", ""))[:8].upper(),
         "verified": fmt(verified_at),
         "valid_until": fmt(until),
         "days_left": max(days_left, 0),
     }
+
+
+class _TermRefresh(QThread):
+    """Pregunta al servidor cuánto le queda a una licencia temporal (sin bloquear la ventana)."""
+    done = Signal()
+
+    def run(self):
+        try:
+            from src.licensing.license import reverify_if_due
+            reverify_if_due(force=True)
+        except Exception:
+            pass
+        self.done.emit()
 
 
 class ThemeTile(QPushButton):
@@ -138,6 +156,21 @@ class LicenseDialog(QDialog):
         self._lbl_detail.setWordWrap(True)
         self._lbl_detail.setStyleSheet(f"font-size: 12px; color: {TEXT2};")
         root.addWidget(self._lbl_detail)
+
+        # Licencia temporal (3 / 12 meses): botones para renovar
+        self._renew_box = QWidget()
+        rl = QHBoxLayout(self._renew_box)
+        rl.setContentsMargins(0, 0, 0, 0)
+        rl.setSpacing(8)
+        self._renew_btns = []
+        for label, url in links.renew_options(self._edition):
+            b = QPushButton(tr("Renovar {d}", d=tr(label)))
+            b.setCursor(Qt.PointingHandCursor)
+            b.clicked.connect(lambda _c=False, u=url: QDesktopServices.openUrl(QUrl(u)))
+            rl.addWidget(b)
+            self._renew_btns.append(b)
+        self._renew_box.setVisible(False)
+        root.addWidget(self._renew_box)
 
         root.addWidget(self._separator())
 
@@ -256,6 +289,25 @@ class LicenseDialog(QDialog):
                           self._lbl_support, self._lbl_update, self._lbl_perf)
         self._refresh()
         i18n.translate_tree(self)
+        self._term_thread = None
+        self._refresh_term_from_server()
+
+    def _refresh_term_from_server(self):
+        """Licencia temporal: se consulta al Worker cuánto le queda y se actualiza lo que se muestra."""
+        from src.config import _get_baked_edition
+        from src.licensing.license import load_local
+        local = load_local() or {}
+        if _get_baked_edition() is None or not local.get("expires_at"):
+            return
+        self._term_thread = _TermRefresh(self)
+        self._term_thread.done.connect(self._refresh)
+        self._term_thread.start()
+
+    def done(self, r):                     # la consulta en curso no debe sobrevivir al diálogo
+        t = getattr(self, "_term_thread", None)
+        if t is not None and t.isRunning():
+            t.wait(9000)
+        super().done(r)
 
     @staticmethod
     def _separator() -> QFrame:
@@ -279,10 +331,20 @@ class LicenseDialog(QDialog):
             return
         from src.licensing.license import GRACE_DAYS, load_local
         info = describe_license(load_local(), grace_days=GRACE_DAYS)
-        if info["state"] == "active":
+        self._renew_box.setVisible(info["expires"] != "")      # solo las licencias temporales se renuevan
+        if info["state"] == "term_ended":
+            self._lbl_state.setText(tr("⚠️ Licencia caducada"))
+            self._lbl_state.setStyleSheet(f"font-size: 13px; font-weight: 700; color: {RED};")
+            self._lbl_detail.setText(tr("ID de licencia: {lid}\nCaducó el {exp}. Renueva para seguir usando AutoPrevias.",
+                                        lid=info["license_id"], exp=info["expires"]))
+        elif info["state"] == "active":
+            n = info["term_days"]
             self._lbl_state.setText(tr("✅ Licencia activa"))
-            self._lbl_state.setStyleSheet(f"font-size: 13px; font-weight: 700; color: {GREEN};")
-            self._lbl_detail.setText(tr(
+            self._lbl_state.setStyleSheet(f"font-size: 13px; font-weight: 700; color: {GREEN if (n is None or n > 7) else WARN};")
+            extra = ""
+            if n is not None:
+                extra = tr("Caduca el {exp} · quedan {n} días", exp=info["expires"], n=n) + "\n"
+            self._lbl_detail.setText(extra + tr(
                 "ID de licencia: {lid}\nÚltima verificación: {ver}\nVálida sin conexión hasta: {until} ({days} días)",
                 lid=info["license_id"], ver=info["verified"], until=info["valid_until"], days=info["days_left"]))
         elif info["state"] == "revoked":

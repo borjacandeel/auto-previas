@@ -601,6 +601,23 @@ def _check_license_on_startup() -> bool:
             if reverify_if_due(force=True) == "ok":
                 status, edition = check_license()
 
+        if status == LicenseStatus.TERM_ENDED:
+            # Licencia temporal (3 / 12 meses) caducada. Antes de bloquear se pregunta al servidor: el reloj del equipo
+            # puede ir adelantado y la fecha de caducidad la manda siempre el servidor.
+            from src.licensing.license import reverify_if_due, expires_on
+            if reverify_if_due(force=True) == "ok":
+                status, edition = check_license()
+            if status == LicenseStatus.TERM_ENDED:
+                from PySide6.QtWidgets import QApplication
+                _app1 = QApplication.instance() or QApplication(sys.argv)
+                from src.ui.activate import run_expired_flow
+                got = run_expired_flow(None, edition=edition, expired_on=expires_on())
+                if got:
+                    set_edition(got)
+                    _start_background_reverify()
+                    return True
+                return False
+
         if status in (LicenseStatus.VALID, LicenseStatus.GRACE):
             set_edition(edition)
             _start_background_reverify()
