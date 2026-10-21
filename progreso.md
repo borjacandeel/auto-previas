@@ -2226,3 +2226,11 @@ AutoPrevias/
 - Productos Payhip públicos con los mismos enlaces (Plus `b/mTjEL`, Basic `b/NVkaK`). `launch_public.py --apply`: `src/links.py` (BASIC_URL/PLUS_URL), versión 5.3.2, CHANGELOG, README (badge), tests OK, PDF Basic/Plus regenerados (enlaces de producto, sin GitHub).
 - Worker verificado (POST con clave falsa → `Clave no válida`, HTTP 200). Sin cambios de Cloudflare.
 - Vídeos de presentación 1, 2 y 3 producidos con el kit (nuevo «fantasma» `chips` para arrastrar y soltar, visor `tall`, margen de volumen AAC). Capturas reales por estado en `docs/manual/_work/plus/p_*.png` (generadas con scripts temporales basados en `scripts/manual/capture.py`).
+
+## Sesión 68 — Memoria del lanzamiento (2026-10-21)
+- **App a la venta:** Basic y Plus públicos en Payhip con los enlaces de siempre (Plus `b/mTjEL`, Basic `b/NVkaK`, tienda `payhip.com/RADICALRECVLC`). v5.3.2 publicada vía CI (run 87, workflow_dispatch `v5.3.2`); verificación de la Release (4 instaladores + alias, `SHA256SUMS.txt`, 2 PDF) pendiente de confirmar al terminar el run.
+- Worker de licencias: sin cambios (mismas `product-secret-key`); comprobado vivo (rechaza claves falsas con HTTP 200 `invalid`).
+- Cupones de cortesía de la discografía en Payhip (100 %, 1 uso, solo Plus). Las claves de licencia no se pueden generar fuera de Payhip.
+- Vídeos de presentación 1 (con/sin voz), 2 y 3 entregados; reglas en `marketing/videos/REGLAS-DE-ORO.md`.
+- Preferencias: castellano ultracorto; en vídeos solo entregar al terminar, sin avisos de progreso.
+- Pendientes: compra de prueba por edición (usuario), `REQUIRE_DEVICE=1` opcional, vídeo propio en bucle (futuro), miniaturas en Recientes y carril de tempo (opcionales).
