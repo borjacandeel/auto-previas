@@ -72,5 +72,5 @@ SPEC = dict(
         dict(type="words", dur=3.0, bars=True, top=560, gap=0.5,
              lines=[dict(t="BASIC", size=200), dict(t="O PLUS", cls="red", size=260, big=True), dict(t="ELIGE", size=170), dict(t="TU EDICIÓN", size=170)],
              vo="Basic o Plus. Elige tu edición."),
-        dict(type="cta", dur=5.4, click_at=3.3, line1="Todo en un clic.", line2="Elige tu edición.", dual=True, vo="Autoprevias, de Radical Récords. Consíguelo en Peijip.", vo_at=0.8),
+        dict(type="cta", dur=5.4, click_at=3.3, line1="Todo en un clic.", line2="", dual=True, vo="Autoprevias, de Radical Récords. Consíguelo en Peijip.", vo_at=0.8),
     ])
