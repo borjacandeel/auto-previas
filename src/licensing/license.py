@@ -100,9 +100,21 @@ MSG_KEY_BASIC_IN_PLUS = ("Esta clave es de AutoPrevias Basic y estás usando Aut
                          "Descarga la edición Basic desde payhip.com/RADICALRECVLC o compra la licencia Plus.")
 MSG_KEY_PLUS_IN_BASIC = ("Esta clave es de AutoPrevias Plus y estás usando AutoPrevias Basic. "
                          "Descarga la edición Plus desde payhip.com/RADICALRECVLC.")
+MSG_TERM_EXPIRED = ("Tu licencia ha caducado. Para seguir usando AutoPrevias compra una licencia nueva en "
+                    "payhip.com/RADICALRECVLC e introduce la clave.")
 MSG_UNAVAILABLE = "El servicio de licencias no está disponible ahora mismo. Inténtalo de nuevo en unos minutos."
 _MESSAGES = {"invalid": MSG_INVALID, "network": MSG_NETWORK, "in_use": MSG_IN_USE,
-             "update_required": MSG_UPDATE, "not_owner": MSG_IN_USE, "unavailable": MSG_UNAVAILABLE}
+             "update_required": MSG_UPDATE, "not_owner": MSG_IN_USE, "unavailable": MSG_UNAVAILABLE,
+             "expired": MSG_TERM_EXPIRED}
+
+
+def _expiry_seconds(value) -> int | None:
+    """Caducidad que manda el Worker (milisegundos desde 1970) → segundos; None = licencia permanente."""
+    try:
+        ms = float(value)
+        return int(ms // 1000) if ms > 0 else None
+    except (TypeError, ValueError):
+        return None
 
 
 def _app_edition() -> str:
@@ -161,8 +173,12 @@ def verify_online(license_key: str, action: str = "activate", device_id: str | N
     if net_error or not isinstance(data, dict):
         return {"success": False, "code": "network", "error": MSG_NETWORK}
     if data.get("success"):
-        return {"success": True, "edition": data.get("edition", "basic"), "raw": data}
+        return {"success": True, "edition": data.get("edition", "basic"), "raw": data,
+                "expires_at": _expiry_seconds(data.get("expires_at"))}
     code = str(data.get("code") or "invalid")
+    if code == "expired":
+        return {"success": False, "code": code, "edition": data.get("edition", ""),
+                "expires_at": _expiry_seconds(data.get("expires_at")), "error": MSG_TERM_EXPIRED}
     if code == "wrong_edition":
         return {"success": False, "code": code, "edition": data.get("edition", ""),
                 "error": _wrong_edition_msg(str(data.get("edition", "")))}
@@ -203,19 +219,22 @@ def _write_local(data: dict) -> None:
     _license_file().write_text(json.dumps(data, indent=2), encoding="utf-8")
 
 
-def save_local(license_key: str, edition: str) -> None:
+def save_local(license_key: str, edition: str, expires_at: int | None = None) -> None:
     """Guarda la licencia verificada en disco, atada a este equipo."""
     from src.licensing.device import get_device_id
     dev = get_device_id()
     now = int(time.time())
-    _write_local({
+    data = {
         "key_hash":    _obfuscate(license_key),
         "key_enc":     _encode_key(license_key, dev),
         "device":      dev,
         "edition":     edition,
         "verified_at": now,
         "last_check":  now,
-    })
+    }
+    if expires_at:
+        data["expires_at"] = int(expires_at)      # licencia temporal (3 / 12 meses…); ausente = permanente
+    _write_local(data)
 
 
 def clear_local() -> None:
@@ -234,6 +253,7 @@ class LicenseStatus:
     EXPIRED    = "expired"     # período de gracia agotado
     UNLICENSED = "unlicensed"  # sin licencia
     REVOKED    = "revoked"     # el servidor indicó que ya no es válida en este equipo
+    TERM_ENDED = "term_ended"  # licencia temporal (3 / 12 meses…) que ya llegó a su fecha de caducidad
 
 
 def check_license() -> tuple[LicenseStatus, str]:
@@ -248,6 +268,9 @@ def check_license() -> tuple[LicenseStatus, str]:
     edition = local.get("edition", "basic")
     if local.get("revoked"):
         return LicenseStatus.REVOKED, edition
+    exp = int(local.get("expires_at") or 0)
+    if local.get("term_ended") or (exp and time.time() >= exp):
+        return LicenseStatus.TERM_ENDED, edition
 
     # licencia copiada desde otro equipo → no vale
     dev = local.get("device")
@@ -276,9 +299,18 @@ def activate(license_key: str) -> tuple[bool, str, str]:
             # Worker antiguo (sin comprobación de edición): se libera la clave y se rechaza
             verify_online(license_key, action="deactivate")
             return False, "", _wrong_edition_msg(edition)
-        save_local(license_key, edition)
+        save_local(license_key, edition, result.get("expires_at"))
         return True, edition, ""
     return False, "", result.get("error", MSG_INVALID)
+
+
+def days_left() -> int | None:
+    """Días que le quedan a una licencia temporal (0 si ya caducó); None si es permanente o no hay licencia."""
+    local = load_local()
+    exp = int(local.get("expires_at") or 0) if local else 0
+    if not exp:
+        return None
+    return max(0, int((exp - time.time()) // 86400 + (1 if (exp - time.time()) % 86400 else 0)))
 
 
 def reverify_if_due(force: bool = False) -> str:
@@ -287,7 +319,7 @@ def reverify_if_due(force: bool = False) -> str:
     Sin force solo actúa si pasaron REVERIFY_INTERVAL desde la última correcta; con force=True siempre
     (arranque). Reintenta mientras no lo logre.
     Pensada para un hilo en segundo plano: no toca la interfaz.
-    Devuelve 'skipped' | 'ok' | 'network' | 'revoked' | 'legacy'.
+    Devuelve 'skipped' | 'ok' | 'network' | 'revoked' | 'expired' | 'legacy'.
     Una negativa explícita del servidor (clave desactivada/reembolsada o licencia en otro equipo)
     deja la licencia marcada como revocada: surte efecto en el siguiente arranque.
     """
@@ -311,9 +343,20 @@ def reverify_if_due(force: bool = False) -> str:
     if res["success"]:
         local.update({"verified_at": now, "last_check": now, "edition": res["edition"]})
         local.pop("revoked", None)
+        local.pop("term_ended", None)
+        if res.get("expires_at"):
+            local["expires_at"] = int(res["expires_at"])
+        else:
+            local.pop("expires_at", None)
         _write_local(local)
         return "ok"
     code = res.get("code")
+    if code == "expired":
+        local["term_ended"] = True
+        if res.get("expires_at"):
+            local["expires_at"] = int(res["expires_at"])
+        _write_local(local)
+        return "expired"
     if code in ("in_use", "invalid", "wrong_edition"):
         local["revoked"] = code
         _write_local(local)

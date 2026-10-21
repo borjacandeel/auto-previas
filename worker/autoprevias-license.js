@@ -6,6 +6,12 @@
  *   PAYHIP_SECRET_BASIC  (secret)   product-secret-key del producto Basic
  *   ADMIN_TOKEN          (secret)   token largo y aleatorio para liberar una licencia a mano (action "reset")
  *   LICENSES             (KV namespace) clave → equipo  [ver worker/README.md]
+ *   PAYHIP_PRODUCTS      (secret, opcional) JSON con productos de duración limitada:
+ *                        [{"secret":"<product-secret-key>","edition":"plus","days":365}, {"secret":"...","edition":"basic","days":90}]
+ *                        `days` admite decimales (1/1440 = 1 minuto, para pruebas). Sin `days` (o 0) = licencia permanente.
+ *   DAYS_PLUS / DAYS_BASIC (variable, opcional) días de duración de los productos de PAYHIP_SECRET_PLUS / PAYHIP_SECRET_BASIC (por defecto permanentes)
+ *   LEGACY_BEFORE        (variable, opcional) fecha ISO: las claves compradas ANTES son permanentes aunque su producto ahora caduque
+ *   OWN_KEYS             (secret, opcional) claves propias permanentes (no son de Payhip, no se cobran): "RR-PLUS-AAAA-BBBB:plus,RR-BAS-CCCC-DDDD:basic"
  *   REQUIRE_DEVICE       (variable, opcional) "1" = rechaza las versiones antiguas de la app sin identificador de equipo
  *   STALE_DAYS           (variable, opcional) días sin verificar tras los que otro equipo puede tomar la licencia (15)
  *
@@ -13,8 +19,9 @@
  *   app_edition ("basic"|"plus"): edición del instalador; si la clave es de otra, responde code "wrong_edition" sin ligarla a ningún equipo
  *   action: "activate" | "verify" | "deactivate" | "reset" (reset requiere cabecera Authorization: Bearer ADMIN_TOKEN)
  * Respuesta (siempre JSON):
- *   { success: true, edition: "basic"|"plus" }
- *   { success: false, code: "invalid"|"unavailable"|"wrong_edition"|"in_use"|"not_owner"|"update_required"|"bad_request"|"unauthorized", error }
+ *   { success: true, edition: "basic"|"plus", expires_at?: <ms epoch> }   (expires_at ausente = permanente)
+ *   { success: false, code: "expired", edition, expires_at }              (la licencia temporal ya caducó)
+ *   { success: false, code: "invalid"|"unavailable"|"wrong_edition"|"expired"|"in_use"|"not_owner"|"update_required"|"bad_request"|"unauthorized", error }
  *
  * Privacidad: en KV solo se guarda el SHA-256 de la clave, el hash del equipo, la plataforma y fechas.
  * Nunca se guarda ni se devuelve el correo del comprador.
@@ -52,11 +59,17 @@ function safeEqual(a, b) {
 async function payhipEdition(key, env) {
   // Cada edición admite varias product-secret-key separadas por comas (p. ej. producto antiguo + producto nuevo al relanzar la tienda)
   const list = (v) => String(v || "").split(",").map((x) => x.trim()).filter(Boolean);
-  const products = [];
-  for (const sec of list(env.PAYHIP_SECRET_PLUS)) products.push(["plus", sec]);
-  for (const sec of list(env.PAYHIP_SECRET_BASIC)) products.push(["basic", sec]);
+  const num = (v) => { const n = parseFloat(v); return Number.isFinite(n) && n > 0 ? n : 0; };
+  const products = [];   // [edition, secret, days]  (days 0 = permanente)
+  for (const sec of list(env.PAYHIP_SECRET_PLUS)) products.push(["plus", sec, num(env.DAYS_PLUS)]);
+  for (const sec of list(env.PAYHIP_SECRET_BASIC)) products.push(["basic", sec, num(env.DAYS_BASIC)]);
+  try {
+    for (const p of JSON.parse(env.PAYHIP_PRODUCTS || "[]")) {
+      if (p && p.secret && (p.edition === "plus" || p.edition === "basic")) products.push([p.edition, String(p.secret), num(p.days)]);
+    }
+  } catch (_) { /* PAYHIP_PRODUCTS mal formado: se ignora, no se rompe el resto */ }
   let unavailable = products.length === 0;
-  for (const [edition, secret] of products) {
+  for (const [edition, secret, days] of products) {
     try {
       const r = await fetch("https://payhip.com/api/v2/license/verify?license_key=" + encodeURIComponent(key), {
         headers: { "product-secret-key": secret, "User-Agent": "AutoPrevias-License-Worker/2.0" },
@@ -66,10 +79,22 @@ async function payhipEdition(key, env) {
         continue;
       }
       const body = await r.json();
-      if (body && !body.error && body.data && body.data.enabled === true) return { edition, unavailable: false };
+      if (body && !body.error && body.data && body.data.enabled === true) {
+        const bought = Date.parse(body.data.date);
+        return { edition, days, boughtAt: Number.isFinite(bought) ? bought : null, unavailable: false };
+      }
     } catch (_) { unavailable = true; /* siguiente producto */ }
   }
-  return { edition: null, unavailable };
+  return { edition: null, days: 0, boughtAt: null, unavailable };
+}
+
+/** Claves propias permanentes (OWN_KEYS = "CLAVE:plus,CLAVE:basic"). */
+function ownEdition(key, env) {
+  for (const item of String(env.OWN_KEYS || "").split(",")) {
+    const [k, ed] = item.split(":").map((x) => (x || "").trim());
+    if (k && k.toUpperCase() === key && (ed === "plus" || ed === "basic")) return ed;
+  }
+  return null;
 }
 
 export default {
@@ -94,7 +119,9 @@ export default {
     }
 
     // — Comprobación con Payhip (clave real, activa y de qué edición) —
-    const { edition, unavailable } = await payhipEdition(key, env);
+    const own = ownEdition(key, env);
+    const found = own ? { edition: own, days: 0, boughtAt: null, unavailable: false } : await payhipEdition(key, env);
+    const { edition, unavailable } = found;
     if (!edition) {
       if (unavailable) return fail("unavailable", "Servicio de licencias temporalmente no disponible; inténtalo más tarde", 503);
       return fail("invalid", "Clave no válida");
@@ -112,6 +139,27 @@ export default {
       return json({ success: true, edition, legacy: true });
     }
     if (!DEVICE_RE.test(device)) return fail("bad_request", "Identificador de equipo no válido", 400);
+
+    // — Caducidad (solo licencias temporales): se cuenta desde la primera activación y NO se reinicia al desactivar/reactivar —
+    let expiresAt = null;
+    if (found.days > 0 && (action === "activate" || action === "verify")) {
+      const legacyBefore = Date.parse(env.LEGACY_BEFORE || "");
+      const legacy = Number.isFinite(legacyBefore) && found.boughtAt !== null && found.boughtAt < legacyBefore;
+      if (!legacy) {
+        const startKey = "start:" + (await sha256Hex(key));
+        let start = await env.LICENSES.get(startKey, "json");
+        if (!start && action === "activate") {
+          start = { at: now, days: found.days };
+          try { await env.LICENSES.put(startKey, JSON.stringify(start)); }
+          catch (_) { return fail("unavailable", "Servicio de licencias temporalmente no disponible; inténtalo más tarde", 503); }
+        }
+        if (start) {
+          expiresAt = start.at + found.days * DAY;
+          if (now >= expiresAt) return json({ success: false, code: "expired", edition, expires_at: expiresAt, error: "La licencia ha caducado" });
+        }
+      }
+    }
+    const withExp = (o) => (expiresAt ? { ...o, expires_at: expiresAt } : o);
 
     const bound = await env.LICENSES.get(kvKey, "json");
     const staleMs = (parseInt(env.STALE_DAYS, 10) || 15) * DAY;
@@ -146,7 +194,7 @@ export default {
           if (!mine) return fail("unavailable", "Servicio de licencias temporalmente no disponible; inténtalo más tarde", 503);
         }
       }
-      return json({ success: true, edition });
+      return json(withExp({ success: true, edition }));
     }
     return fail("in_use", "Esta licencia ya está activada en otro equipo");
   },
