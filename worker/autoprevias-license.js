@@ -144,7 +144,12 @@ export default {
     let expiresAt = null;
     if (found.days > 0 && (action === "activate" || action === "verify")) {
       const legacyBefore = Date.parse(env.LEGACY_BEFORE || "");
-      const legacy = Number.isFinite(legacyBefore) && found.boughtAt !== null && found.boughtAt < legacyBefore;
+      // Permanente si Payhip dice que se compró antes del corte; si no da la fecha, vale la 1.ª activación que ya teníamos guardada
+      let legacy = Number.isFinite(legacyBefore) && found.boughtAt !== null && found.boughtAt < legacyBefore;
+      if (!legacy && Number.isFinite(legacyBefore) && found.boughtAt === null) {
+        const prev = await env.LICENSES.get(kvKey, "json");
+        legacy = !!(prev && prev.activated_at && prev.activated_at < legacyBefore);
+      }
       if (!legacy) {
         const startKey = "start:" + (await sha256Hex(key));
         let start = await env.LICENSES.get(startKey, "json");

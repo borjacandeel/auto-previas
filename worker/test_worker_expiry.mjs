@@ -93,3 +93,16 @@ test("PAYHIP_PRODUCTS mal formado no rompe el resto", async () => {
   const env = makeEnv({ PAYHIP_PRODUCTS: "{no es json" });
   assert.equal((await call(env, { action: "activate", license_key: KEY, device_id: DEV_A })).success, true);
 });
+
+test("si Payhip no da la fecha, una licencia ya activada antes del corte sigue permanente", async () => {
+  const env = makeEnv({ LEGACY_BEFORE: "2026-11-01T00:00:00Z" });
+  const kvKey = "lic:" + [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(KEY)))].map((b) => b.toString(16).padStart(2, "0")).join("");
+  await env.LICENSES.put(kvKey, JSON.stringify({ device: DEV_A, edition: "plus", activated_at: Date.parse("2026-10-20T10:00:00Z"), last_seen: clock }));
+  bought = NaN;   // fecha ilegible → Payhip sin fecha utilizable
+  const globalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({ error: false, data: { enabled: true, license_key: KEY, uses: 1 } }), { status: 200 });
+  try {
+    const r = await call(env, { action: "verify", license_key: KEY, device_id: DEV_A });
+    assert.deepEqual(r, { success: true, edition: "plus" });
+  } finally { globalThis.fetch = globalFetch; }
+});
