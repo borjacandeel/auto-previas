@@ -601,7 +601,7 @@ def make_audio(spec: dict, scenes: list, dur: float, vo: list, out: Path):
     mix /= max(1e-6, np.abs(mix).max() / 0.55)
     mix = mix + voice * 1.0
     mix = np.tanh(mix * 1.1) / np.tanh(1.1)
-    mix /= max(1e-6, np.abs(mix).max() / 0.85)
+    mix /= max(1e-6, np.abs(mix).max() / 0.70)   # margen: el AAC no debe pasar de -1 dBFS (true peak)
     fade = np.minimum(1, (dur - np.arange(s.N) / SR) / 0.9)
     mix *= fade[:, None]
     wav = out.with_suffix(".wav")
