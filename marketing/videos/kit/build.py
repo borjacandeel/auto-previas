@@ -710,10 +710,12 @@ def build(vid: str, render=True, voice=True):
     # groove
     W_, H_ = STAGE["W"], STAGE["H"]
     spec_out = dict(bpm=BPM, dur=total, seed=spec.get("seed", 2026), groove=[spec["groove_from"], total - 0.9], W=W_, H=H_,
-                    vp=dict(w=1040, h=940) if land else dict(w=1000, h=1060),
+                    vp=dict(w=1040, h=940) if land else (dict(w=1040, h=1250) if spec.get('tall') else dict(w=1000, h=1060)),
                     cta=dict(buy=[515, 772] if LK.BASIC_URL != LK.PLUS_URL else [960, 772], start=[1500, 1000]) if land else None,
                     scenes=[{k: v for k, v in sc.items() if k not in ("vo",)} for sc in scenes])
     css = (HERE / "scenes.css").read_text() + ((HERE / "scenes_h.css").read_text() if land else "")
+    if spec.get("tall") and not land:      # visor del programa más grande (más legible); barra de pasos y marca más abajo
+        css += (".vp{left:20px;top:500px;width:1040px;height:1250px}.stepper{top:1790px}.stlbl{top:1830px}.logomini{top:1830px}\n")
     js = (HERE / "runtime.js").read_text()
     mb = (PROMO / "compositions" / "components" / "motion-blur.html").read_text()
     i0 = mb.index("<script>"); j0 = mb.index("</script>", i0) + len("</script>")
