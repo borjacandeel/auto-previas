@@ -13,8 +13,8 @@ import re
 STORE_URL = "https://payhip.com/RADICALRECVLC"
 BASIC_URL = "https://payhip.com/b/NVkaK"
 PLUS_URL = "https://payhip.com/b/mTjEL"
-BASIC_12M_URL = ""      # PENDIENTE: enlace del producto Basic de 12 meses
-PLUS_12M_URL = ""       # PENDIENTE: enlace del producto Plus de 12 meses
+BASIC_12M_URL = "https://payhip.com/b/ZCn0b"
+PLUS_12M_URL = "https://payhip.com/b/kY8ZW"
 
 
 def short(url: str) -> str:
