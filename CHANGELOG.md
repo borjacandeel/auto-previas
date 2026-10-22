@@ -3,6 +3,11 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [6.0.1] - 2026-10-22
+
+### Corregido
+- Arreglo de la v6.0.0 en Mac: la ventana de licencia fallaba en una instalación sin licencia activada y el instalador no llegaba a publicarse. Esta versión incluye todo lo de la 6.0.0 (licencias de 3 y 12 meses) ya corregido.
+
 ## [6.0.0] - 2026-10-22
 
 ### Añadido

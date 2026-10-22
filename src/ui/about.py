@@ -27,7 +27,8 @@ def describe_license(local: dict | None, now: float | None = None, grace_days: i
     import time as _time
 
     if not local:
-        return {"state": "none", "license_id": "", "verified": "", "valid_until": "", "days_left": 0}
+        return {"state": "none", "license_id": "", "verified": "", "valid_until": "", "days_left": 0,
+                "expires": "", "term_days": None}
     now = _time.time() if now is None else now
     verified_at = float(local.get("verified_at", 0) or 0)
     until = verified_at + grace_days * 86400

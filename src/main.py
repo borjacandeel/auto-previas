@@ -277,6 +277,15 @@ def run_selftest() -> int:
         _act.ActivationDialog(reason="in_use").deleteLater()
         print("  ✓ Identificador de equipo y cifrado local de clave operativos")
 
+        # Licencias temporales (3 / 12 meses): menú de caducada, panel de activación tras caducar y resumen sin licencia
+        from src.ui.about import describe_license as _dl
+        _info = _dl(None)
+        assert _info["expires"] == "" and _info["term_days"] is None
+        _act.ExpiredDialog(edition="plus", expired_on="2026-01-01").deleteLater()
+        _act.ActivationDialog(reason="term_ended").deleteLater()
+        assert _lic.LicenseStatus.TERM_ENDED == "term_ended" and _lic.days_left() is None
+        print("  ✓ Licencias de 3 y 12 meses: menú de caducada y panel de activación construidos sin crash")
+
         # Funciones 3.1: idioma, presets, historial, licencia y modo promo (panel de resultados real)
         from src import i18n as _i18n, presets as _pre
         from src.engine.effects import promo_tag_times

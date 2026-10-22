@@ -153,3 +153,14 @@ def test_precios_en_los_botones_de_compra(app):
     assert links.price_text("plus", 12, "en") == "€149.99"
     d = activate.ExpiredDialog(edition="basic")
     assert [b.text() for b in d._buy_buttons] == ["Comprar licencia de 3 meses · 22,45 €", "Comprar licencia de 12 meses · 74,99 €"]
+
+
+def test_dialogo_licencia_sin_licencia_guardada_no_rompe(app, monkeypatch):
+    """Es lo que construye el selftest del binario compilado (instalación sin licencia): no debe fallar."""
+    import src.config as C
+    monkeypatch.setattr(C, "_get_baked_edition", lambda: "plus")
+    monkeypatch.setattr(about.LicenseDialog, "_refresh_term_from_server", lambda self: None)
+    assert L.load_local() is None
+    d = about.LicenseDialog("6.0.0", "plus")
+    assert d._renew_box.isHidden()
+    assert about.describe_license(None)["expires"] == "" and about.describe_license(None)["term_days"] is None
