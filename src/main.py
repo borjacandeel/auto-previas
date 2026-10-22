@@ -277,6 +277,11 @@ def run_selftest() -> int:
         _act.ActivationDialog(reason="in_use").deleteLater()
         print("  ✓ Identificador de equipo y cifrado local de clave operativos")
 
+        # Plan B de conexión con el servidor de licencias: los certificados que lleva la app deben empaquetarse y cargar
+        assert _lic._CA_BUNDLE.exists(), "falta assets/cacert.pem en el binario"
+        assert len(_lic._make_ssl_context(bundled=True).get_ca_certs()) > 100
+        print("  ✓ Certificados de la app para la conexión de licencias empaquetados y cargados")
+
         # Licencias temporales (3 / 12 meses): menú de caducada, panel de activación tras caducar y resumen sin licencia
         from src.ui.about import describe_license as _dl
         _info = _dl(None)

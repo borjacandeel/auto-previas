@@ -611,6 +611,8 @@ EN = {
     "✅ Previa exportada: {track}": "✅ Preview exported: {track}",
     'Comprar licencia de {d} · {p}': 'Buy a {d} license · {p}',
     'Renovar {d} · {p}': 'Renew {d} · {p}',
+    "No se pudo verificar la conexión segura con el servidor de licencias (certificados del equipo). Actualiza Windows o escribe a radicalrecordsvlc@gmail.com.": "The secure connection to the license server could not be verified (your computer's certificates). Update Windows or write to radicalrecordsvlc@gmail.com.",
+    "No se encontró el servidor de licencias. Comprueba tu conexión a Internet, la VPN o el DNS (prueba con otra red).": "The license server was not found. Check your Internet connection, VPN or DNS (try another network).",
     # ── Licencias temporales (3 / 12 meses) ───────────────────────────────────────
     'Tu licencia anterior ha caducado.\nIntroduce la clave de tu nueva licencia para continuar.': 'Your previous license has expired.\nEnter the key of your new license to continue.',
     'Comprar licencia:': 'Buy a license:',

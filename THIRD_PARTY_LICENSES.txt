@@ -64,3 +64,11 @@ desarrolladas por terceros. A continuación se detallan las licencias correspond
 - Sitio web: https://rsms.me/inter/
 - Licencia: SIL Open Font License 1.1 (texto en assets/fonts/Inter-LICENSE-OFL.txt).
 - Uso: Textos del vídeo animado Radical Neón.
+
+--------------------------------------------------------------------------------
+Mozilla CA certificate bundle (assets/cacert.pem)
+--------------------------------------------------------------------------------
+Lista de certificados raíz de Mozilla (según la distribución "certifi"), licencia MPL-2.0
+(https://www.mozilla.org/MPL/2.0/). AutoPrevias la usa solo como plan B para verificar la conexión segura
+con el servidor de licencias cuando el almacén de certificados del sistema no reconoce al servidor.
+

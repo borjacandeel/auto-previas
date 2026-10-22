@@ -61,12 +61,21 @@ def _obfuscate(key: str) -> str:
 
 # ── Verificación online ────────────────────────────────────────────────────────
 
-def _make_ssl_context():
+_CA_BUNDLE = Path(__file__).resolve().parent.parent.parent / "assets" / "cacert.pem"
+
+
+def _make_ssl_context(bundled: bool = False):
     """Contexto SSL por defecto; en macOS añade el bundle del sistema si existe.
 
+    Con `bundled=True` verifica contra los certificados raíz que lleva la propia app (`assets/cacert.pem`): es el
+    plan B para equipos Windows sin los certificados raíz al día, donde el almacén del sistema rechaza el servidor.
     No importar certifi: su módulo compilado con Nuitka provoca un segfault.
     """
     import ssl, os
+    if bundled:
+        if not (_CA_BUNDLE.exists() and _CA_BUNDLE.stat().st_size > 0):
+            raise FileNotFoundError(str(_CA_BUNDLE))
+        return ssl.create_default_context(cafile=str(_CA_BUNDLE))
     ctx = ssl.create_default_context()
     for path in ("/etc/ssl/cert.pem", "/usr/local/etc/openssl@3/cert.pem",
                  "/usr/local/etc/openssl/cert.pem"):
@@ -80,12 +89,12 @@ def _make_ssl_context():
 
 
 def _ssl_log(msg: str) -> None:
-    """Log rápido de errores SSL a /tmp para diagnóstico."""
+    """Log de errores de conexión de la licencia (carpeta temporal del sistema: %TEMP% en Windows)."""
     try:
-        import os, traceback
-        log = os.path.join(os.environ.get("TMPDIR", "/tmp"), "autoprevias_ssl.log")
+        import os, tempfile, time as _t
+        log = os.path.join(tempfile.gettempdir(), "autoprevias_ssl.log")
         with open(log, "a", encoding="utf-8") as f:
-            f.write(msg + "\n")
+            f.write(f"[{_t.strftime('%Y-%m-%d %H:%M:%S')}] {msg}\n")
     except Exception:
         pass
 
@@ -102,6 +111,10 @@ MSG_KEY_PLUS_IN_BASIC = ("Esta clave es de AutoPrevias Plus y estás usando Auto
                          "Descarga la edición Plus desde payhip.com/RADICALRECVLC.")
 MSG_TERM_EXPIRED = ("Tu licencia ha caducado. Para seguir usando AutoPrevias compra una licencia nueva en "
                     "payhip.com/RADICALRECVLC e introduce la clave.")
+MSG_NET_CERT = ("No se pudo verificar la conexión segura con el servidor de licencias (certificados del equipo). "
+                "Actualiza Windows o escribe a radicalrecordsvlc@gmail.com.")
+MSG_NET_DNS = ("No se encontró el servidor de licencias. Comprueba tu conexión a Internet, la VPN o el DNS "
+               "(prueba con otra red).")
 MSG_UNAVAILABLE = "El servicio de licencias no está disponible ahora mismo. Inténtalo de nuevo en unos minutos."
 _MESSAGES = {"invalid": MSG_INVALID, "network": MSG_NETWORK, "in_use": MSG_IN_USE,
              "update_required": MSG_UPDATE, "not_owner": MSG_IN_USE, "unavailable": MSG_UNAVAILABLE,
@@ -130,28 +143,93 @@ def _wrong_edition_msg(key_edition: str) -> str:
     return MSG_KEY_PLUS_IN_BASIC if key_edition == "plus" else MSG_KEY_BASIC_IN_PLUS
 
 
+# Motivo del último fallo de conexión (para enseñarlo al usuario y dejarlo en el log): "" si no hubo fallo
+_LAST_NET_ERROR = ""
+
+
+def _is_cert_error(exc: BaseException) -> bool:
+    """¿El fallo es de certificados (el equipo no se fía del servidor)? Distingue «sin conexión» de «certificados»."""
+    import ssl
+    cur: BaseException | None = exc
+    for _ in range(4):
+        if isinstance(cur, ssl.SSLCertVerificationError):
+            return True
+        if isinstance(cur, ssl.SSLError) and "CERTIFICATE" in str(cur).upper():
+            return True
+        cur = getattr(cur, "reason", None) or getattr(cur, "__cause__", None)
+        if not isinstance(cur, BaseException):
+            break
+    return False
+
+
+def _describe_net_error(exc: BaseException) -> str:
+    """Motivo corto del fallo, sin datos personales."""
+    if _is_cert_error(exc):
+        return "certificado"
+    import socket
+    cur: BaseException | None = exc
+    for _ in range(4):
+        if isinstance(cur, socket.gaierror):
+            return "dns"
+        if isinstance(cur, (socket.timeout, TimeoutError)):
+            return "tiempo"
+        if isinstance(cur, ConnectionRefusedError):
+            return "rechazada"
+        cur = getattr(cur, "reason", None) or getattr(cur, "__cause__", None)
+        if not isinstance(cur, BaseException):
+            break
+    return "red"
+
+
+def _post(payload: dict, context) -> dict:
+    req = urllib.request.Request(
+        _worker_url(),
+        data=json.dumps(payload).encode(),
+        # Cloudflare bloquea (403, error 1010) el User-Agent por defecto de urllib
+        headers={"Content-Type": "application/json",
+                 "User-Agent": "AutoPrevias-License/1.0",
+                 "Accept": "application/json"},
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=8, context=context) as resp:
+        return json.loads(resp.read().decode())
+
+
 def _request(payload: dict) -> tuple[dict | None, bool]:
-    """POST al Worker. Devuelve (datos | None, error_de_red)."""
+    """POST al Worker. Devuelve (datos | None, error_de_red).
+
+    Si el equipo no se fía del certificado del servidor (Windows sin los certificados raíz al día), reintenta una vez
+    con los certificados que lleva la app. El motivo del último fallo queda en `_LAST_NET_ERROR` y en el log.
+    """
+    global _LAST_NET_ERROR
+    _LAST_NET_ERROR = ""
     try:
-        req = urllib.request.Request(
-            _worker_url(),
-            data=json.dumps(payload).encode(),
-            # Cloudflare bloquea (403, error 1010) el User-Agent por defecto de urllib
-            headers={"Content-Type": "application/json",
-                     "User-Agent": "AutoPrevias-License/1.0",
-                     "Accept": "application/json"},
-            method="POST",
-        )
-        with urllib.request.urlopen(req, timeout=8, context=_make_ssl_context()) as resp:
-            return json.loads(resp.read().decode()), False
+        return _post(payload, _make_ssl_context()), False
     except urllib.error.HTTPError as exc:
         try:
             return json.loads(exc.read().decode()), False       # el Worker responde JSON también en errores
         except Exception:
+            _LAST_NET_ERROR = f"http {exc.code}"
             _ssl_log(f"license HTTP {exc.code}")
+            return None, True
     except Exception as exc:
-        import traceback
-        _ssl_log(f"license request error [{type(exc).__name__}]: {exc}\n{traceback.format_exc()}")
+        kind = _describe_net_error(exc)
+        _ssl_log(f"license request error [{kind}] [{type(exc).__name__}]: {exc}")
+        if kind == "certificado":
+            try:
+                data = _post(payload, _make_ssl_context(bundled=True))
+                _ssl_log("license: conexión correcta con los certificados incluidos en la app")
+                return data, False
+            except urllib.error.HTTPError as exc2:
+                try:
+                    return json.loads(exc2.read().decode()), False
+                except Exception:
+                    _LAST_NET_ERROR = f"http {exc2.code}"
+                    return None, True
+            except Exception as exc2:
+                _ssl_log(f"license request error con certificados incluidos [{_describe_net_error(exc2)}] "
+                         f"[{type(exc2).__name__}]: {exc2}")
+        _LAST_NET_ERROR = kind
     return None, True
 
 
@@ -171,7 +249,8 @@ def verify_online(license_key: str, action: str = "activate", device_id: str | N
         payload["app_edition"] = app_ed
     data, net_error = _request(payload)
     if net_error or not isinstance(data, dict):
-        return {"success": False, "code": "network", "error": MSG_NETWORK}
+        msg = {"certificado": MSG_NET_CERT, "dns": MSG_NET_DNS}.get(_LAST_NET_ERROR, MSG_NETWORK)
+        return {"success": False, "code": "network", "error": msg}
     if data.get("success"):
         return {"success": True, "edition": data.get("edition", "basic"), "raw": data,
                 "expires_at": _expiry_seconds(data.get("expires_at"))}

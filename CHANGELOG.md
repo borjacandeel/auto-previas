@@ -3,6 +3,13 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [6.0.3] - 2026-10-22
+
+### Corregido
+- **Activar la licencia en algunos Windows daba «No se pudo conectar con el servidor de licencias».** En equipos cuyo Windows no tiene los certificados de seguridad al día, el sistema rechazaba la conexión con nuestro servidor. Ahora AutoPrevias lleva sus propios certificados y los usa como plan B, así que activa y verifica la licencia también en esos equipos.
+- **El aviso ahora explica el motivo:** distingue entre «sin conexión», «servidor no encontrado (VPN o DNS)» y «problema de certificados del equipo», con lo que hacer en cada caso.
+- En Windows el registro de errores de conexión no se guardaba; ahora queda en `%TEMP%\autoprevias_ssl.log` para poder ayudarte si hace falta.
+
 ## [6.0.2] - 2026-10-22
 
 ### Cambiado
