@@ -3,6 +3,14 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [6.0.2] - 2026-10-22
+
+### Cambiado
+- **Se retira «Vigilar carpeta» (Plus).** Esta función miraba una carpeta y cargaba sola los temas que caían en ella; al volver a abrir AutoPrevias volvía a cargar un tema sin que lo pidieras, y en algún ordenador Windows la aplicación se cerraba al hacerlo. Ya no existe: desaparece del menú **🧰 Herramientas** y la app deja de leer esa carpeta. Para procesar muchos temas sigue disponible **📁 Modo Lote**.
+
+### Corregido
+- La app se cerraba al abrirse en equipos donde estaba activada «Vigilar carpeta» con un tema que fallaba al cargarse: ya no se carga ningún tema por su cuenta al arrancar.
+
 ## [6.0.1] - 2026-10-22
 
 ### Corregido

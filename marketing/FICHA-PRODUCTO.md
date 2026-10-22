@@ -78,7 +78,7 @@ Incluye **todo lo de Basic** y además:
 | Master LUFS y corrección de BPM | — | ✅ |
 | Modo promo antifugas y Voice Drop | — | ✅ |
 | Firma y carátula, firmar temas enteros | — | ✅ |
-| Lote, carpeta vigilada, historial, presets | — | ✅ |
+| Lote, historial, presets | — | ✅ |
 
 ---
 

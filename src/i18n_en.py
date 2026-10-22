@@ -17,8 +17,6 @@ EN = {
     "Ver y cargar archivos de audio procesados recientemente": "View recently generated previews and opened tracks",
     "📁 Modo Lote": "📁 Batch Mode",
     "Procesar múltiples pistas en lote automáticamente": "Process multiple tracks automatically in a batch",
-    "👁️ Vigilar Carpeta": "👁️ Watch Folder",
-    "Vigilar una carpeta y generar previas automáticamente cuando caiga un nuevo tema": "Watch a folder and generate previews automatically when a new track arrives",
     "Listo — arrastra un track o pulsa Abrir archivo": "Ready — drag a track in or press Open file",
     "Arrastra un track para comenzar": "Drag a track to get started",
     "Generando previa": "Generating preview",
@@ -195,10 +193,9 @@ EN = {
     "🛡️  Modo Automático activo: El motor aplica micro-variaciones matemáticas orgánicas según la semilla (Seed). La música suena natural al oído, pero resulta imposible de pinchar o mezclar en reproductores DJ. Para acelerar en los Drops o crear tus propias subidas, pulsa en 'Manual'.": "🛡️  Automatic mode active: The engine applies organic mathematical micro-variations according to the seed. The music sounds natural to the ear but is impossible to mix on DJ players. To speed up on the Drops or create your own rises, press 'Manual'.",
     "🎛️  Modo Manual activo: Elige cualquiera de los Presets DJ ('+5 BPM en Drops', 'Rampa Final') o añade momentos en la tabla para acelerar (+BPM) o ralentizar (-BPM) tramos de la previa.": "🎛️  Manual mode active: Choose any of the DJ Presets ('+5 BPM on Drops', 'Final Ramp') or add moments in the table to speed up (+BPM) or slow down (-BPM) parts of the preview.",
 
-    # ── Historial / reciente / vigilar ────────────────────────────────────────────
+    # ── Historial / reciente ────────────────────────────────────────────
     "No hay archivos recientes": "No recent files",
     "🗑️ Borrar historial": "🗑️ Clear history",
-    "👁️ Carpeta vigilada desactivada.": "👁️ Watched folder disabled.",
 
     # ── Modo lote ─────────────────────────────────────────────────────────────────
     "AutoPrevias — Procesamiento por Lote de Estudio (Batch Engine)": "AutoPrevias — Studio Batch Processing (Batch Engine)",
@@ -595,14 +592,11 @@ EN = {
     "<h3>¡Procesamiento por lote finalizado con éxito!</h3><p>✓ <b>{ok}</b> pistas procesadas correctamente.<br>✓ <b>{total}</b> archivos generados en total (incluyendo <b>{vids}</b> vídeos MP4 9:16 para redes).<br>✗ <b>{err}</b> errores.</p><hr><p><b>📁 Archivos guardados en:</b><br>{dirs}</p>": "<h3>Batch processing finished successfully!</h3><p>✓ <b>{ok}</b> tracks processed correctly.<br>✓ <b>{total}</b> files generated in total (including <b>{vids}</b> 9:16 MP4 videos for social media).<br>✗ <b>{err}</b> errors.</p><hr><p><b>📁 Files saved in:</b><br>{dirs}</p>",
     "📂 Abrir Carpeta en Finder / Explorador": "📂 Open Folder in Finder / Explorer",
     "❌ Error abriendo Modo Lote: {err}": "❌ Error opening Batch Mode: {err}",
-    "👁️ Vigilando: {name} (escanea nuevos audios cada 4s)": "👁️ Watching: {name} (scans for new audio every 4s)",
-    "👁️ Detectado nuevo tema en carpeta vigilada: {name}": "👁️ New track detected in watched folder: {name}",
     "Selecciona un tema de audio": "Select an audio track",
     "Seleccionar carátula para la previa": "Select cover art for the preview",
     "Seleccionar track para nueva previa": "Select a track for a new preview",
     "Seleccionar firma de voz / Voice Drop / Jingle": "Select voice signature / Voice Drop / Jingle",
     "Carpeta donde guardar las previas": "Folder where previews are saved",
-    "Seleccionar carpeta para vigilar (Watch Folder)": "Select a folder to watch (Watch Folder)",
     "Seleccionar pistas de audio": "Select audio tracks",
     "Seleccionar carpeta con pistas": "Select folder with tracks",
     "Seleccionar carpeta destino para el lote": "Select destination folder for the batch",
@@ -690,7 +684,6 @@ EN_TOUR = {
     "Procesa muchas pistas de una vez: las añades a la lista, eliges ajustes y AutoPrevias genera todas las previas sola.":
         "Process many tracks at once: add them to the list, pick your settings and AutoPrevias generates all the previews on its own.",
     "Ejemplo: 20 temas del EP → 20 previas mientras tomas un café.": "Example: 20 tracks from the EP → 20 previews while you have a coffee.",
-    "Vigilar carpeta (Plus)": "Watch Folder (Plus)",
     "Elige una carpeta y cada tema nuevo que caiga en ella se convierte en previa automáticamente.":
         "Pick a folder and every new track that lands in it automatically becomes a preview.",
     "Licencia, idioma y actualizaciones": "License, language and updates",
@@ -997,18 +990,18 @@ EN.update(EN_500)
 
 EN_500B = {
     "🧰 Herramientas": "🧰 Tools",
-    "Todo lo que no es «hacer una previa» está aquí: «Recientes» guarda tus últimas previas (con «Reabrir proyecto» vuelves a los mismos ajustes y la misma semilla), «Modo Lote» procesa muchas pistas de una vez, «Vigilar carpeta» convierte en previa cada tema nuevo que caiga en una carpeta y «Firmar tema entero» incrusta carátula y etiquetas en canciones completas (FLAC/WAV, sin masterizar).":
-        "Everything that isn't “making a preview” is here: “Recents” keeps your latest previews (with “Reopen project” you get the same settings and seed back), “Batch mode” processes many tracks at once, “Watch folder” turns every new track dropped in a folder into a preview and “Sign full track” embeds cover and tags into complete songs (FLAC/WAV, no mastering).",
-    "Todo lo que no es «hacer una previa» está aquí: «Recientes» guarda tus últimas previas (con «Reabrir proyecto» vuelves a los mismos ajustes y la misma semilla). Lote, Vigilar carpeta y Firmar tema aparecen con candado: son de Plus.":
-        "Everything that isn't “making a preview” is here: “Recents” keeps your latest previews (with “Reopen project” you get the same settings and seed back). Batch, Watch folder and Sign track show a lock: they are Plus.",
+    "Todo lo que no es «hacer una previa» está aquí: «Recientes» guarda tus últimas previas (con «Reabrir proyecto» vuelves a los mismos ajustes y la misma semilla), «Modo Lote» procesa muchas pistas de una vez y «Firmar tema entero» incrusta carátula y etiquetas en canciones completas (FLAC/WAV, sin masterizar).":
+        "Everything that isn't “making a preview” is here: “Recents” keeps your latest previews (with “Reopen project” you get the same settings and seed back), “Batch mode” processes many tracks at once and “Sign full track” embeds cover and tags into complete songs (FLAC/WAV, no mastering).",
+    "Todo lo que no es «hacer una previa» está aquí: «Recientes» guarda tus últimas previas (con «Reabrir proyecto» vuelves a los mismos ajustes y la misma semilla). Lote y Firmar tema aparecen con candado: son de Plus.":
+        "Everything that isn't “making a preview” is here: “Recents” keeps your latest previews (with “Reopen project” you get the same settings and seed back). Batch and Sign track show a lock: they are Plus.",
     "Ejemplo: 20 temas del EP → 20 previas con Modo Lote mientras tomas un café.": "Example: 20 EP tracks → 20 previews with Batch mode while you have a coffee.",
     "❓ Ayuda": "❓ Help",
     "Aquí repites esta guía de 2 minutos cuando quieras, ves todos los atajos de teclado (también con F1) y escribes a soporte.":
         "Here you can repeat this 2-minute guide whenever you like, see all the keyboard shortcuts (also with F1) and write to support.",
     "🧰 Herramientas  ▾": "🧰 Tools  ▾", "❓ Ayuda  ▾": "❓ Help  ▾",
-    "🕒 Recientes": "🕒 Recents", "📁 Modo Lote": "📁 Batch mode", "👁 Vigilar carpeta": "👁 Watch folder",
+    "🕒 Recientes": "🕒 Recents", "📁 Modo Lote": "📁 Batch mode",
     "🖋 Firmar tema entero": "🖋 Sign full track", "🔒 Modo Lote (Plus)": "🔒 Batch mode (Plus)",
-    "🔒 Vigilar carpeta (Plus)": "🔒 Watch folder (Plus)", "🔒 Firmar tema entero (Plus)": "🔒 Sign full track (Plus)",
+    "🔒 Firmar tema entero (Plus)": "🔒 Sign full track (Plus)",
     "🎓 Guía de 2 minutos": "🎓 2-minute guide", "⌨ Atajos de teclado": "⌨ Keyboard shortcuts", "✉ Escribir a soporte": "✉ Write to support",
     "Atajos de teclado": "Keyboard shortcuts", "Cerrar": "Close",
     "Reproducir / pausa": "Play / pause", "Saltar 5 segundos": "Skip 5 seconds", "Volver al principio": "Back to the start",

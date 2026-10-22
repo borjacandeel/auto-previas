@@ -139,10 +139,10 @@ def build_steps(win) -> list:
     add("herramientas", "🧰 Herramientas",
         "Todo lo que no es «hacer una previa» está aquí: «Recientes» guarda tus últimas previas (con «Reabrir proyecto» vuelves a los mismos "
         "ajustes y la misma semilla)"
-        + (", «Modo Lote» procesa muchas pistas de una vez, «Vigilar carpeta» convierte en previa cada tema nuevo que caiga en una carpeta y "
+        + (", «Modo Lote» procesa muchas pistas de una vez y "
            "«Firmar tema entero» incrusta carátula y etiquetas en canciones completas (FLAC/WAV, sin masterizar)."
            if plus else
-           ". Lote, Vigilar carpeta y Firmar tema aparecen con candado: son de Plus."),
+           ". Lote y Firmar tema aparecen con candado: son de Plus."),
         lambda: win._btn_tools,
         example=("Ejemplo: 20 temas del EP → 20 previas con Modo Lote mientras tomas un café." if plus else ""))
     add("ayuda", "❓ Ayuda",

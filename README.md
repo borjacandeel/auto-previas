@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v6.0.1-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v6.0.2-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -63,7 +63,7 @@ Manual profesional de **Radical Records** con capturas de pantalla reales y la e
 | Edición | Manual | Contenido |
 | :--- | :--- | :--- |
 | **Basic** | [⬇️ **AutoPrevias-Manual-Basic.pdf**](https://github.com/borjacandeel/auto-previas/raw/main/docs/manual/AutoPrevias-Manual-Basic.pdf) | Instalación, activación, interfaz, primera previa, exportación MP3 320k, actualizaciones, atajos y solución de problemas |
-| **Plus** | [⬇️ **AutoPrevias-Manual-Plus.pdf**](https://github.com/borjacandeel/auto-previas/raw/main/docs/manual/AutoPrevias-Manual-Plus.pdf) | Todo lo anterior + editor de cortes y BPM, Master LUFS, Voice Drop, modo promo, firma y carátula, presets, historial, lote y carpeta vigilada |
+| **Plus** | [⬇️ **AutoPrevias-Manual-Plus.pdf**](https://github.com/borjacandeel/auto-previas/raw/main/docs/manual/AutoPrevias-Manual-Plus.pdf) | Todo lo anterior + editor de cortes y BPM, Master LUFS, Voice Drop, modo promo, firma y carátula, presets, historial y lote |
 
 Además, cada Release publica ambos PDF junto a los instaladores.
 
@@ -249,7 +249,7 @@ Cada clave se puede usar en **un solo equipo a la vez**. Si ya está activa en u
 | Análisis automático de BPM y clave | ✅ | ✅ |
 | Pistas abiertas recientemente | ✅ | ✅ |
 | Interfaz Español / English y actualizaciones automáticas | ✅ | ✅ |
-| Procesamiento por lote (Batch) y carpeta vigilada | ❌ | ✅ |
+| Procesamiento por lote (Batch) | ❌ | ✅ |
 | Historial de previas generadas y «Reabrir proyecto» | ❌ | ✅ |
 | Presets de firma y de estilo | ❌ | ✅ |
 | Modo promo antifugas | ❌ | ✅ |
@@ -324,7 +324,10 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v6.0.1] — 2026-10-22 (Arreglo de la 6.0.0: ventana de licencia sin licencia activada)
+#### 🟢 [v6.0.2] — 2026-10-22 (Se retira «Vigilar carpeta»)
+- Se elimina **Vigilar carpeta** (Plus): al abrir la app cargaba un tema de la carpeta sin que se pidiera y en algún equipo Windows la app se cerraba. Quien la tuviera activada queda sin ella; **Lote** sigue disponible.
+
+#### [v6.0.1] — 2026-10-22 (Arreglo de la 6.0.0: ventana de licencia sin licencia activada)
 - Corrige un fallo de la v6.0.0 en Mac que impedía publicarla. Incluye las licencias de 3 y 12 meses.
 
 #### [v6.0.0] — 2026-10-22 (Licencias de 3 y 12 meses: días restantes, renovar y menú de licencia caducada)

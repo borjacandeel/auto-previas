@@ -5244,16 +5244,6 @@ class MainWindow(QMainWindow):
         self._dot_timer    = QTimer(self)
         self._dot_timer.timeout.connect(self._tick_dots)
 
-        # Watch Folder (Apartado 4: 1)
-        self._watching = False
-        self._watched_folder = self._cfg.get("watch_folder_path", "")
-        self._watched_processed = set()
-        self._watch_timer = QTimer(self)
-        self._watch_timer.setInterval(4000)
-        self._watch_timer.timeout.connect(self._scan_watch_folder)
-        if self._cfg.get("watch_folder_enabled", False) and self._watched_folder:
-            self._watching = True
-            self._watch_timer.start()
 
         _log_startup("MainWindow: aplicando paleta y estilos de color...")
         self._apply_palette()
@@ -5444,14 +5434,6 @@ class MainWindow(QMainWindow):
         self._btn_batch_hdr.setToolTip("Procesar múltiples pistas en lote automáticamente")
         self._btn_batch_hdr.clicked.connect(lambda: self._open_batch_dialog())
         self._btn_batch_hdr.setVisible(False)          # v5: viven en el menú «Herramientas»
-
-        self._btn_watch = QPushButton("👁️ Vigilar Carpeta")
-        self._btn_watch.setFixedHeight(22)
-        self._btn_watch.setCursor(Qt.PointingHandCursor)
-        self._update_watch_button_style()
-        self._btn_watch.setToolTip("Vigilar una carpeta y generar previas automáticamente cuando caiga un nuevo tema")
-        self._btn_watch.clicked.connect(self._toggle_watch_folder)
-        self._btn_watch.setVisible(False)          # v5: viven en el menú «Herramientas»
 
         self._btn_sign = QPushButton("🖋 Firmar tema")
         self._btn_sign.setFixedHeight(22)
@@ -6256,23 +6238,20 @@ class MainWindow(QMainWindow):
         self._btn_tools.setFixedHeight(26)
         self._btn_tools.setCursor(Qt.PointingHandCursor)
         self._btn_tools.setStyleSheet(btn_css)
-        self._btn_tools.setToolTip("Recientes, Modo Lote, Vigilar carpeta y Firmar tema entero")
+        self._btn_tools.setToolTip("Recientes, Modo Lote y Firmar tema entero")
         self._tools_menu = QMenu(self._btn_tools)
         self._tools_menu.setStyleSheet(menu_css)
         self._act_recents = self._tools_menu.addAction("🕒 Recientes")
         self._act_recents.triggered.connect(lambda _=False: self._open_history_dialog())
         self._tools_menu.addSeparator()
         self._act_batch = self._tools_menu.addAction("📁 Modo Lote" if plus else _lock("Modo Lote"))
-        self._act_watch = self._tools_menu.addAction("👁 Vigilar carpeta" if plus else _lock("Vigilar carpeta"))
         self._act_sign = self._tools_menu.addAction("🖋 Firmar tema entero" if plus else _lock("Firmar tema entero"))
         if plus:
             self._act_batch.triggered.connect(lambda _=False: self._open_batch_dialog())
-            self._act_watch.triggered.connect(lambda _=False: self._toggle_watch_folder())
             self._act_sign.triggered.connect(lambda _=False: self._open_sign_dialog())
         else:
-            for a in (self._act_batch, self._act_watch, self._act_sign):
+            for a in (self._act_batch, self._act_sign):
                 a.triggered.connect(lambda _=False: self._results._open_plus_page())
-        self._tools_menu.aboutToShow.connect(self._refresh_tools_menu)
         self._btn_tools.setMenu(self._tools_menu)
         logo_row.addWidget(self._btn_tools)
 
@@ -6303,19 +6282,9 @@ class MainWindow(QMainWindow):
         lock = lambda t: tr(f"🔒 {t} (Plus)")
         self._act_batch.setText(tr("📁 Modo Lote") if plus else lock("Modo Lote"))
         self._act_sign.setText(tr("🖋 Firmar tema entero") if plus else lock("Firmar tema entero"))
-        self._act_watch.setText(tr("👁 Vigilar carpeta") if plus else lock("Vigilar carpeta"))
         self._act_tour.setText(tr("🎓 Guía de 2 minutos"))
         self._act_keys.setText(tr("⌨ Atajos de teclado"))
         self._act_support.setText(tr("✉ Escribir a soporte"))
-
-    def _refresh_tools_menu(self):
-        """El texto de «Vigilar carpeta» refleja si está activo."""
-        if get_edition() != "plus":
-            return
-        if self._watching and self._watched_folder:
-            self._act_watch.setText(tr("👁 Dejar de vigilar «{n}»", n=Path(self._watched_folder).name))
-        else:
-            self._act_watch.setText(tr("👁 Vigilar carpeta"))
 
     def _open_support_mail(self):
         try:
@@ -6328,31 +6297,6 @@ class MainWindow(QMainWindow):
     def _show_shortcuts(self):
         from src.ui.shortcuts import ShortcutsDialog
         ShortcutsDialog(self).exec()
-
-    def _update_watch_button_style(self):
-        if not hasattr(self, "_btn_watch"):
-            return
-        if self._watching and self._watched_folder:
-            f_name = Path(self._watched_folder).name
-            short_n = f_name if len(f_name) <= 12 else f_name[:10] + "…"
-            self._btn_watch.setText(f"👁️ {short_n}")
-            self._btn_watch.setStyleSheet("""
-                QPushButton {
-                    background: #0d2818;
-                    color: #00ff88;
-                    border: 1px solid #00ff88;
-                    border-radius: 4px;
-                    font-size: 10px;
-                    font-weight: 700;
-                    padding: 0 6px;
-                }
-                QPushButton:hover {
-                    background: #143d24;
-                }
-            """)
-        else:
-            i18n.set_text(self._btn_watch, "👁️ Vigilar Carpeta")
-            self._btn_watch.setStyleSheet(_btn(BG3, TEXT_MID, BG4, radius=4, fs=10))
 
     def _open_history_dialog(self):
         from src.ui.history_dialog import HistoryDialog
@@ -6479,76 +6423,6 @@ class MainWindow(QMainWindow):
             self._refresh_menu_texts()
         _anim.crossfade_transition(self.centralWidget(), _retranslate)
 
-    def _toggle_watch_folder(self):
-        if self._watching:
-            self._watching = False
-            self._watch_timer.stop()
-            self._cfg["watch_folder_enabled"] = False
-            from src.config import save as save_cfg
-            save_cfg(self._cfg)
-            self._update_watch_button_style()
-            self._set_progress(0, "👁️ Carpeta vigilada desactivada.")
-            return
-
-        folder = QFileDialog.getExistingDirectory(
-            self, tr("Seleccionar carpeta para vigilar (Watch Folder)"),
-            self._watched_folder or str(Path.home())
-        )
-        if not folder:
-            return
-
-        self._watched_folder = folder
-        self._cfg["watch_folder_path"] = folder
-        self._cfg["watch_folder_enabled"] = True
-        from src.config import save as save_cfg
-        save_cfg(self._cfg)
-
-        # Sembrar los existentes para no procesar todo de golpe al activar
-        self._watched_processed.clear()
-        p_dir = Path(folder)
-        for ext in AUDIO_EXTS:
-            for f in p_dir.glob(f"*{ext}"):
-                self._watched_processed.add(str(f.resolve()))
-            for f in p_dir.glob(f"*{ext.upper()}"):
-                self._watched_processed.add(str(f.resolve()))
-
-        self._watching = True
-        self._watch_timer.start()
-        self._update_watch_button_style()
-        self._set_progress(0, "👁️ Vigilando: {name} (escanea nuevos audios cada 4s)", name=Path(folder).name)
-
-    def _scan_watch_folder(self):
-        if not self._watching or not self._watched_folder:
-            return
-        p_dir = Path(self._watched_folder)
-        if not p_dir.is_dir():
-            return
-
-        # Si ya hay un análisis o exportación en curso, esperar
-        if (self._worker and self._worker.isRunning()) or (self._export_worker and self._export_worker.isRunning()):
-            return
-
-        new_files = []
-        _seen_in_scan = set()
-        for f in p_dir.glob("*"):
-            if f.suffix.lower() not in AUDIO_EXTS:
-                continue
-            rf = str(f.resolve())
-            if rf in self._watched_processed or rf in _seen_in_scan:
-                continue
-            _seen_in_scan.add(rf)
-            try:
-                if f.stat().st_size > 10000:
-                    new_files.append(f)
-            except Exception:
-                pass
-
-        if new_files:
-            target = new_files[0]
-            self._watched_processed.add(str(target.resolve()))
-            self._set_progress(0, "👁️ Detectado nuevo tema en carpeta vigilada: {name}", name=target.name)
-            self._load_file(str(target))
-
     def keyPressEvent(self, e):
         # Atajos de reproducción para DJs cuando no se está editando un campo de texto
         focus = QApplication.focusWidget()
@@ -6629,8 +6503,6 @@ class MainWindow(QMainWindow):
         super().closeEvent(event)
 
     def _cleanup_threads(self):
-        if hasattr(self, "_watch_timer") and self._watch_timer.isActive():
-            self._watch_timer.stop()
         for worker_name in ["_worker", "_export_worker"]:
             w = getattr(self, worker_name, None)
             if w and w.isRunning():

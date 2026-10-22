@@ -41,8 +41,6 @@ _DEFAULTS = {
     "voice_drop_position": "predrop",  # "predrop" o "intro"
     "voice_drop_volume_db": -1.5,
     # Automatización y lote v2.0
-    "watch_folder_enabled": False,
-    "watch_folder_path": "",
     "recent_files": [],
     "onboarding_done": False,   # recorrido de bienvenida: se ofrece solo la primera vez
     "skip_destination": False,  # v5: no enseñar la pantalla «¿Para qué es esta previa?»
@@ -207,6 +205,10 @@ def get_ffmpeg_path() -> str | None:
     return None
 
 
+# Ajustes de funciones retiradas: se descartan al cargar para que no queden en el archivo del usuario
+_OBSOLETE_KEYS = ("watch_folder_enabled", "watch_folder_path")
+
+
 def load() -> dict:
     cfg_file = get_config_path()
     if cfg_file.exists():
@@ -215,6 +217,8 @@ def load() -> dict:
                 data = json.load(f)
             for k, v in _DEFAULTS.items():
                 data.setdefault(k, v)
+            for k in _OBSOLETE_KEYS:      # ajustes de funciones que ya no existen (p. ej. «Vigilar carpeta», retirada en la 6.0.2)
+                data.pop(k, None)
             return data
         except Exception as e:
             # JSON corrupto: hacer backup antes de devolver defaults

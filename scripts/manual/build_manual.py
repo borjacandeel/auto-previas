@@ -170,7 +170,7 @@ def indice(plus: bool) -> str:
              "Ajustes de exportación"]
     if plus:
         items += ["Editor avanzado: cortes, BPM y estructura", "Efectos, Voice Drop y Modo promo",
-                  "Firma, carátula y presets propios", "Lote, carpeta vigilada y Recientes"]
+                  "Firma, carátula y presets propios", "Lote y Recientes"]
     else:
         items += ["Historial de pistas recientes", "Pasar a la edición Plus"]
     items += ["Actualizaciones, licencia e idioma", "Atajos de teclado", "Solución de problemas", "Soporte y licencias de terceros"]
@@ -182,7 +182,7 @@ def s_intro(ed: str, plus: bool) -> str:
     inc = ("Exportación en <b>MP3 320 kbps</b> con metadatos, análisis de BPM y tonalidad, previas de 15/30/60/120 s, "
            "<b>vídeo animado Radical Neón</b> (con marca de agua), forma de onda con cortes ajustables, <b>efectos Flanger y Filter Sweep</b> que colocas tú sobre la onda, reproductor A/B y actualizaciones automáticas." if not plus else
            "Todo lo de Basic y además: exportación <b>WAV 24 bit / FLAC / MP3</b>, editor avanzado de cortes y BPM, efectos en la onda y Master LUFS, "
-           "<b>Voice Drop</b>, <b>Modo promo antifugas</b>, firma y carátula, presets propios, historial, lote, carpeta vigilada y vídeo animado Radical Neón <b>sin marca de agua</b>, con tu propia imagen, onda de sonido y final a tu elección.")
+           "<b>Voice Drop</b>, <b>Modo promo antifugas</b>, firma y carátula, presets propios, historial, lote y vídeo animado Radical Neón <b>sin marca de agua</b>, con tu propia imagen, onda de sonido y final a tu elección.")
     return f"""
 <section><h1>1. Qué es AutoPrevias</h1>
 <p><b>AutoPrevias</b> es la herramienta de <b>Radical Records</b> para crear <b>previas profesionales</b> de tus temas. Arrastras un track, la
@@ -267,8 +267,8 @@ se conecte. Si un ordenador se avería, escríbenos y la liberamos. El equipo se
 
 
 def s_interfaz(ed: str, plus: bool, im: dict) -> str:
-    tools = ("«Recientes», «Modo Lote», «Vigilar carpeta» y «Firmar tema entero»." if plus else
-             "«Recientes»; Lote, Vigilar carpeta y Firmar tema aparecen con candado (🔒): son de Plus.")
+    tools = ("«Recientes», «Modo Lote» y «Firmar tema entero»." if plus else
+             "«Recientes»; Lote y Firmar tema aparecen con candado (🔒): son de Plus.")
     l1 = [("Elegir archivo", "elige un track desde tu ordenador (también puedes arrastrarlo a cualquier parte de la ventana)."),
           ("🧰 Herramientas", "menú con " + tools),
           ("❓ Ayuda", "guía de 2 minutos, atajos de teclado y escribir a soporte."),
@@ -605,14 +605,12 @@ sin masterización, sin efectos y sin tocar el volumen ni la duración. El audio
 
 def s_plus_lote(im: dict) -> str:
     return f"""
-<section><h1>11. Lote, carpeta vigilada y Recientes</h1>
+<section><h1>11. Lote y Recientes</h1>
 <p><span class="badge plus">PLUS</span></p>
 <p>Están en el menú <b>🧰 Herramientas</b> de la cabecera.</p>
 <h3>📁 Modo Lote</h3>
 {fig(im.get('14_lote',''), 'Procesamiento por lote', 'mid')}
 <p>Procesa muchas pistas de una vez con los mismos ajustes: añade archivos, revisa la lista y lanza el proceso. AutoPrevias genera una previa por cada track y te muestra el progreso de cada uno.</p>
-<h3>👁 Vigilar Carpeta</h3>
-<p>Elige una carpeta y AutoPrevias <b>genera la previa automáticamente</b> cada vez que cae un tema nuevo en ella (los archivos que ya estaban se ignoran). Es ideal para dejar el ordenador del estudio trabajando. Vuelve a elegir la opción en el menú para desactivarlo.</p>
 <h3>🕒 Recientes</h3>
 {fig(im.get('13_recientes',''), 'Historial: previas generadas y pistas abiertas', 'mid')}
 <p>Dos pestañas:</p>
@@ -644,7 +642,7 @@ def s_basic_upsell() -> str:
 <div class="card"><h4>🛡 Modo promo antifugas</h4><p>Firma repetida y MP3 128 kbps para enviar previas sin riesgo de reutilización.</p></div>
 <div class="card"><h4>🏷 Firma y carátula</h4><p>Artista, sello, álbum, género, comentario y portada propia en los metadatos.</p></div>
 <div class="card"><h4>💾 Presets y historial</h4><p>Guarda tus ajustes con nombre y reabre cualquier previa con los mismos parámetros.</p></div>
-<div class="card"><h4>📁 Lote y carpeta vigilada</h4><p>Procesa decenas de tracks seguidos o deja que AutoPrevias trabaje solo.</p></div>
+<div class="card"><h4>📁 Lote</h4><p>Procesa decenas de tracks seguidos con los mismos ajustes.</p></div>
 </div>
 {tip("Para pasar a Plus, compra la licencia Plus en la tienda de Radical Records ({L.short(L.PLUS_URL)}), descarga el instalador <b>Plus</b> y actívalo con la nueva clave. Puedes tener Basic y Plus instalados a la vez.", "tip")}
 </section>"""
