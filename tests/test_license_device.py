@@ -272,7 +272,8 @@ def test_vigilancia_cierra_la_app_si_el_servidor_revoca(monkeypatch):
     monkeypatch.setattr(QApplication, "quit", staticmethod(lambda: cerrada.append(1)))
     monkeypatch.setattr(QMessageBox, "critical", staticmethod(lambda *a, **k: avisos.append(a[2])))
     parado = []
-    falso = SimpleNamespace(_export_worker=None, _license_timer=SimpleNamespace(stop=lambda: parado.append(1)))
+    falso = SimpleNamespace(_export_worker=None, _license_timer=SimpleNamespace(stop=lambda: parado.append(1)),
+                            _warn_license_expiring=lambda: None)
     MainWindow._check_license_watch(falso)                      # sin revocación: no hace nada
     assert not cerrada
     L.save_local(KEY, "plus"); d = L.load_local(); d["revoked"] = "in_use"; L._write_local(d)
@@ -280,6 +281,7 @@ def test_vigilancia_cierra_la_app_si_el_servidor_revoca(monkeypatch):
     assert cerrada and parado and "otro equipo" in avisos[0]
     # una exportación en curso no se corta
     cerrada.clear()
-    corriendo = SimpleNamespace(_export_worker=SimpleNamespace(isRunning=lambda: True), _license_timer=falso._license_timer)
+    corriendo = SimpleNamespace(_export_worker=SimpleNamespace(isRunning=lambda: True), _license_timer=falso._license_timer,
+                                _warn_license_expiring=lambda: None)
     MainWindow._check_license_watch(corriendo)
     assert not cerrada

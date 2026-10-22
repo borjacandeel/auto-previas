@@ -17,6 +17,22 @@ BASIC_12M_URL = "https://payhip.com/b/ZCn0b"
 PLUS_12M_URL = "https://payhip.com/b/kY8ZW"
 
 
+# Precios (€) de cada licencia: se muestran en el menú de licencia caducada y en los botones «Renovar».
+# Si cambian en Payhip, se cambian aquí (un único sitio).
+PRICES = {
+    ("plus", 3): 44.95, ("plus", 12): 149.99,
+    ("basic", 3): 22.45, ("basic", 12): 74.99,
+}
+
+
+def price_text(edition: str, months: int, lang: str = "es") -> str:
+    """Precio de la licencia («44,95 €» en castellano, «€44.95» en inglés); '' si no está definido."""
+    v = PRICES.get(("plus" if str(edition).lower() == "plus" else "basic", int(months)))
+    if v is None:
+        return ""
+    return f"€{v:.2f}" if lang == "en" else f"{v:.2f}".replace(".", ",") + " €"
+
+
 def short(url: str) -> str:
     """Enlace sin «https://» para mostrarlo en pantalla y en los vídeos."""
     return re.sub(r"^https?://", "", url.strip()).rstrip("/")

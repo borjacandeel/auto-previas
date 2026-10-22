@@ -3,6 +3,18 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [6.0.0] - 2026-10-22
+
+### Añadido
+- **Licencias de 3 y de 12 meses.** Además de la licencia que ya conocías, ahora se puede comprar una licencia de **3 meses** o de **12 meses** (en Basic y en Plus). Cuenta desde el día que activas la clave, no desde el de la compra. No hay cobros automáticos: cuando caduca, decides si compras otra.
+- **La app te dice cuánto te queda.** En **⚙ Licencia y ajustes** ves «Caduca el … · quedan X días» (lo consulta al servidor) y los botones **Renovar 3 meses / Renovar 12 meses**. Cuando quedan 7 días o menos, AutoPrevias te avisa una vez al día.
+- **Menú «Tu licencia ha caducado».** Al caducar, la app te enseña un menú para comprar una licencia nueva (3 o 12 meses) y, con tu clave nueva, te lleva de vuelta a la pantalla de activación. Si te pilla con la app abierta, espera a que termines de exportar antes de avisarte. Los botones de compra y de renovar muestran el **precio** de cada licencia.
+
+### Cambiado
+- Los productos de AutoPrevias Basic y Plus de la tienda pasan a ser de **3 meses**, y se añaden los de **12 meses**.
+- **Quien ya tenía una licencia activa la conserva para siempre:** las compras anteriores a este cambio no caducan.
+- Una licencia caducada se desactiva sola en ese equipo y la clave deja de valer.
+
 ## [5.3.2] - 2026-10-21
 
 ### Cambiado

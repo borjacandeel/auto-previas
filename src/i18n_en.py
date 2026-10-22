@@ -615,6 +615,8 @@ EN = {
     "✅  {name}  ·  {bpm} BPM{key}  ·  {drops} {word}": "✅  {name}  ·  {bpm} BPM{key}  ·  {drops} {word}",
     "✅  Guardado en: {folder}  ·  ({names})": "✅  Saved to: {folder}  ·  ({names})",
     "✅ Previa exportada: {track}": "✅ Preview exported: {track}",
+    'Comprar licencia de {d} · {p}': 'Buy a {d} license · {p}',
+    'Renovar {d} · {p}': 'Renew {d} · {p}',
     # ── Licencias temporales (3 / 12 meses) ───────────────────────────────────────
     'Tu licencia anterior ha caducado.\nIntroduce la clave de tu nueva licencia para continuar.': 'Your previous license has expired.\nEnter the key of your new license to continue.',
     'Comprar licencia:': 'Buy a license:',

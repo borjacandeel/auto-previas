@@ -62,3 +62,18 @@ curl -s -X POST https://autoprevias-license.radicalrecordsvlc.workers.dev \
 
 ## Pruebas
 `node --test worker/test_worker.mjs` (también se ejecuta desde `pytest`, test `test_worker_js`).
+
+
+## Licencias temporales (3 / 12 meses) — v6.0
+
+Variables opcionales del Worker (todas como *Secret* o *Text* en Cloudflare → Settings → Variables and Secrets):
+
+| Nombre | Para qué |
+| :--- | :--- |
+| `PAYHIP_PRODUCTS` | JSON `[{"secret":"<product-secret-key>","edition":"plus","days":365}, …]`: un producto por duración y edición. `days` admite decimales (1/1440 = 1 minuto, para pruebas). |
+| `DAYS_PLUS` / `DAYS_BASIC` | Duración (días) de los productos de `PAYHIP_SECRET_PLUS` / `PAYHIP_SECRET_BASIC` (los de 3 meses = `90`). Sin ellas, esos productos son permanentes. |
+| `LEGACY_BEFORE` | Fecha ISO (UTC). Las claves compradas **antes** son permanentes aunque su producto ahora caduque (usa la fecha de compra de Payhip y, si no la da, la 1.ª activación guardada). |
+| `OWN_KEYS` | Claves propias permanentes sin pasar por Payhip: `RR-PLUS-AAAA-BBBB:plus,RR-BAS-CCCC-DDDD:basic`. |
+
+La caducidad cuenta desde la **primera activación** y se guarda en KV (`start:<hash>`); desactivar y reactivar no la reinicia. Respuestas: `{success:true, edition, expires_at}` (ms; ausente = permanente) o `{success:false, code:"expired", edition, expires_at}`.
+Pruebas: `node --test worker/test_worker.mjs worker/test_worker_expiry.mjs`.

@@ -145,3 +145,11 @@ def test_dialogo_licencia_caducada(app, monkeypatch):
     d = about.LicenseDialog("5.9.9", "basic")
     assert "caducada" in d._lbl_state.text().lower()
     assert not d._renew_box.isHidden()
+
+
+def test_precios_en_los_botones_de_compra(app):
+    assert links.price_text("plus", 3) == "44,95 €" and links.price_text("plus", 12) == "149,99 €"
+    assert links.price_text("basic", 3) == "22,45 €" and links.price_text("basic", 12) == "74,99 €"
+    assert links.price_text("plus", 12, "en") == "€149.99"
+    d = activate.ExpiredDialog(edition="basic")
+    assert [b.text() for b in d._buy_buttons] == ["Comprar licencia de 3 meses · 22,45 €", "Comprar licencia de 12 meses · 74,99 €"]

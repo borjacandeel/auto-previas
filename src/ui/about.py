@@ -164,7 +164,8 @@ class LicenseDialog(QDialog):
         rl.setSpacing(8)
         self._renew_btns = []
         for label, url in links.renew_options(self._edition):
-            b = QPushButton(tr("Renovar {d}", d=tr(label)))
+            price = links.price_text(self._edition, 12 if label.startswith("12") else 3, i18n.get_language())
+            b = QPushButton(tr("Renovar {d} · {p}", d=tr(label), p=price) if price else tr("Renovar {d}", d=tr(label)))
             b.setCursor(Qt.PointingHandCursor)
             b.clicked.connect(lambda _c=False, u=url: QDesktopServices.openUrl(QUrl(u)))
             rl.addWidget(b)

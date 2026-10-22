@@ -248,6 +248,11 @@ al comprar en la tienda de Radical Records (<b>{buy}</b>).</p>
 <h3>Cada clave es de su edición</h3>
 <p>La clave de <b>Basic</b> solo activa AutoPrevias Basic y la de <b>Plus</b> solo activa AutoPrevias Plus. Si usas un instalador que no corresponde a tu compra,
 la app te avisa y no se activa nada: descarga el instalador correcto en la tienda de Radical Records.</p>
+<h3>Licencias de 3 y de 12 meses</h3>
+<p>Cada edición se vende en <b>3 meses</b> y en <b>12 meses</b>. La licencia cuenta desde el día en que <b>activas la clave</b> y no hay cobros automáticos:
+cuando caduca decides si compras otra. En <b>⚙</b> ves <b>«Caduca el … · quedan X días»</b> y los botones <b>Renovar</b>; cuando quedan 7 días o menos AutoPrevias te avisa una vez al día.
+Al caducar, la clave deja de valer en ese equipo y aparece el menú <b>«Tu licencia ha caducado»</b>: compra una licencia nueva en Payhip ({buy}), pulsa <b>Ya tengo una clave nueva</b> y actívala
+en la pantalla de activación. Las licencias compradas antes de la versión 6 son permanentes.</p>
 <h3>Una licencia = un equipo</h3>
 <p>Tu clave puede estar activa en <b>un solo ordenador a la vez</b>. Si ya la usas en uno, no se podrá activar en otro hasta que la
 desactives allí (<b>⚙ → Desactivar licencia en este equipo</b>, que la libera al instante) o pasen 15 días sin que ese equipo
@@ -672,6 +677,7 @@ def s_updates(ed: str, plus: bool, im: dict, n: int) -> str:
 <li><b>Tema de la app</b>: elige entre <b>Original</b> (el oscuro de siempre, con acento carmesí), <b>One Dark</b> (gris pizarra con acento azul) y <b>Claro</b> (fondo blanco roto para trabajar con mucha luz). Al elegir uno, AutoPrevias ofrece <b>reiniciarse</b> para aplicarlo en toda la interfaz; vendrán más temas.</li>
 <li><b>Abrir siempre en modo Estudio</b> sustituye el asistente por la vista única del Estudio cada vez que cargas un tema.</li>
 <li><b>Rendimiento</b> elige cuántos recursos del equipo usa AutoPrevias al analizar y generar vídeo: <b>Automático</b> (recomendado; se adapta a tu equipo y deja un núcleo libre para que la app siga fluida), <b>Ahorro de recursos</b> (portátil con batería, equipo antiguo u otros programas abiertos) o <b>Máximo rendimiento</b> (todos los núcleos, para terminar antes). Debajo ves cuántos núcleos y cuánta memoria detecta la app.</li>
+<li>Si tu licencia es de 3 o 12 meses, ves <b>cuándo caduca y cuántos días quedan</b> y los botones <b>Renovar</b>.</li>
 <li><b>Desactivar licencia en este equipo</b> libera la clave en el servidor para poder usarla en otro ordenador (necesita conexión).</li>
 <li><b>Idioma</b>: Español (por defecto) o English. También puedes alternarlo con el botón <b>ES / EN</b> de la cabecera; todo se traduce al instante.</li>
 </ul>
@@ -712,6 +718,7 @@ def s_faq(ed: str, plus: bool, n: int) -> str:
 <tr><td>El análisis o el vídeo tardan mucho, o el equipo va justo</td><td>Abre <b>⚙ → Rendimiento</b>. <b>Automático</b> se adapta a tu equipo; <b>Máximo rendimiento</b> usa todos los núcleos para terminar antes; <b>Ahorro de recursos</b> usa pocos si trabajas con otros programas o con batería. Cierra otros programas pesados mientras generas el vídeo.</td></tr>
 {"<tr><td>«El formato de la imagen no es correcto»</td><td>Los vídeos son 9:16, 1:1 o 16:9. Cambia la imagen por una con esa proporción (pulsa <b>📐 Ver formatos válidos</b> para ver ejemplos) o elige «Imagen entera con fondo desenfocado».</td></tr>" if plus else ""}
 <tr><td>«Esta licencia ya está activada en otro equipo»</td><td>Tu clave solo puede estar en un ordenador. Desactívala en el otro (<b>⚙ → Desactivar licencia en este equipo</b>) o escribe a soporte si ese equipo ya no está disponible.</td></tr>
+<tr><td>«Tu licencia ha caducado»</td><td>Tu licencia de 3 o 12 meses llegó a su fecha. Compra otra en Payhip desde el propio menú, pulsa <b>Ya tengo una clave nueva</b> e introdúcela.</td></tr>
 <tr><td>Me dice que necesita conexión para verificar la licencia</td><td>Han pasado más de 14 días sin verificarla: conéctate a Internet y pulsa <b>Reintentar</b>. No hace falta volver a escribir la clave.</td></tr>
 <tr><td>El BPM detectado es el doble o la mitad</td><td>Haz doble clic en la tarjeta <b>BPM</b> y escribe el valor real.</td></tr>
 <tr><td>Un efecto que puse en la onda no suena</td><td>Solo suena dentro de los cortes de la previa. Si el bloque se ve apagado está fuera de ellos: muévelo sobre un corte o amplía el corte.</td></tr>

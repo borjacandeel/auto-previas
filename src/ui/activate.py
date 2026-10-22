@@ -46,6 +46,14 @@ def _buy_short() -> str:
     return links.short(_buy_url())
 
 
+def _edition_now() -> str:
+    try:
+        from src.config import get_edition
+        return get_edition()
+    except Exception:
+        return "basic"
+
+
 def _renew_options() -> list:
     """[(duración, enlace)] para comprar/renovar la licencia de la edición instalada."""
     try:
@@ -310,7 +318,10 @@ class ExpiredDialog(QDialog):
         opts = _renew_options() if not edition else links.renew_options(edition)
         self._buy_buttons = []
         for label, url in opts:
-            b = QPushButton(tr("Comprar licencia de {d}", d=tr(label)))
+            months = 12 if label.startswith("12") else 3
+            price = links.price_text(edition or _edition_now(), months, i18n.get_language())
+            b = QPushButton(tr("Comprar licencia de {d} · {p}", d=tr(label), p=price) if price
+                            else tr("Comprar licencia de {d}", d=tr(label)))
             b.setObjectName("buy")
             b.setFixedHeight(46)
             b.setCursor(Qt.PointingHandCursor)

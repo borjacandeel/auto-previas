@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v5.3.2-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v6.0.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -219,6 +219,10 @@ AutoPrevias se distribuye en dos ediciones (**Basic** y **Plus**), protegidas po
 4. Introduce la clave y pulsa **Activar licencia** — la app se conecta a los servidores de verificación de forma segura y desbloquea la edición correspondiente en segundos.
 5. A partir de ese momento la app arranca directamente y se verifica sola, sin pedir la clave de nuevo.
 
+### Licencias de 3 y de 12 meses (v6.0)
+
+La tienda ofrece cada edición (Basic y Plus) en **3 meses** y en **12 meses**. La licencia cuenta desde el día en que activas la clave (no desde la compra) y **no hay cobros automáticos**: al caducar, la clave deja de valer en ese equipo, la app muestra el menú **«Tu licencia ha caducado»** con los enlaces para comprar otra (3 o 12 meses) y vuelve a la pantalla de activación para introducir la clave nueva. En **⚙ Licencia y ajustes** ves «Caduca el … · quedan X días» (consultado al servidor) y los botones **Renovar**; con 7 días o menos la app avisa una vez al día. **Las licencias compradas antes de la v6.0 son permanentes.**
+
 ### Cada clave es de su edición
 
 La clave de **Basic** solo activa AutoPrevias Basic y la de **Plus** solo activa AutoPrevias Plus: si usas el instalador que no corresponde, la app lo indica con claridad y la clave no queda ligada a ningún equipo. Además, una caída puntual del servicio de licencias nunca invalida una licencia buena: la app reintenta sola más tarde.
@@ -235,6 +239,7 @@ Cada clave se puede usar en **un solo equipo a la vez**. Si ya está activa en u
 | **Sin conexión a Internet** | La app sigue funcionando con normalidad hasta **14 días** desde la última verificación correcta (período de gracia). |
 | **Gracia expirada** | Al abrir, AutoPrevias se verifica sola; si no hay conexión te pide conectarte (Reintentar / Salir), no la clave. |
 | **Licencia revocada o en otro equipo** | Te avisa y se cierra (sin cortar una exportación en curso). |
+| **Licencia de 3 / 12 meses caducada** | Menú de compra de una licencia nueva y vuelta al panel de activación (sin cortar una exportación en curso). |
 
 ### Diferencias entre ediciones
 
@@ -319,7 +324,12 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v5.3.1] — 2026-10-20 (Firma y carátula sin duplicar, con «Editar» en ventana; notificación de previa terminada en Mac)
+#### 🟢 [v6.0.0] — 2026-10-22 (Licencias de 3 y 12 meses: días restantes, renovar y menú de licencia caducada)
+- Licencias de **3 y 12 meses** (Basic y Plus), sin cobros automáticos; cuentan desde la activación. Las compras anteriores siguen siendo permanentes.
+- ⚙ Licencia: «Caduca el … · quedan X días», botones **Renovar** y aviso diario con 7 días o menos.
+- Al caducar: menú **«Tu licencia ha caducado»** con enlaces de compra (3 / 12 meses) y vuelta al panel de activación.
+
+#### [v5.3.1] — 2026-10-20 (Firma y carátula sin duplicar, con «Editar» en ventana; notificación de previa terminada en Mac)
 - **Firma y carátula** ya no aparece dos veces en el paso ③: queda la tarjeta de la derecha y «✎ Editar» abre una ventana con todos los datos.
 - **Notificación al terminar la previa en Mac:** con la app en primer plano se usa el aviso del sistema (macOS no enseña los de la propia app); en segundo plano sale con el logo y abre la carpeta al pulsarla.
 
