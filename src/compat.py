@@ -47,6 +47,31 @@ if sys.platform == "win32":
             if str(d) not in cur_path:
                 os.environ["PATH"] = f"{d};{cur_path}"
 
+def _silence_console_windows() -> bool:
+    """Windows: la app es gráfica, así que cada FFmpeg (o cualquier programa de consola) que lanza abriría una
+    ventana negra un instante. Se añade CREATE_NO_WINDOW por defecto a todo subprocess.Popen sin flags propios."""
+    if sys.platform != "win32":
+        return False
+    import subprocess
+    if getattr(subprocess.Popen, "_ap_no_window", False):
+        return True
+    _orig_init = subprocess.Popen.__init__
+
+    def _init(self, *args, **kwargs):
+        if not kwargs.get("creationflags"):
+            kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+        _orig_init(self, *args, **kwargs)
+
+    subprocess.Popen.__init__ = _init
+    subprocess.Popen._ap_no_window = True
+    return True
+
+
+try:
+    _silence_console_windows()
+except Exception:
+    pass
+
 # Registrar rutas de plugins de Qt (multimedia, platforms, styles) en standalone
 try:
     from PySide6.QtCore import Qt, QCoreApplication
