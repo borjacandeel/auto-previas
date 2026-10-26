@@ -271,6 +271,8 @@ def _load_tag(drop_file_path: str, sr: int, volume_db: float) -> np.ndarray:
     tag_audio, _ = load_audio_file(drop_file_path, sr=sr, mono=False, dtype=np.float32)
     if tag_audio.ndim == 1:
         tag_audio = np.stack([tag_audio, tag_audio])
+    elif tag_audio.shape[0] == 1:
+        tag_audio = np.repeat(tag_audio, 2, axis=0)
     return tag_audio * (10.0 ** (volume_db / 20.0))
 
 

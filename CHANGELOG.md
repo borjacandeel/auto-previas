@@ -3,6 +3,23 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [6.0.4] - 2026-10-26
+
+### Corregido
+- **Windows: ya no aparece una ventana negra** un instante cada vez que la app usa FFmpeg (al exportar, firmar o hacer vídeos).
+- **El botón «Abrir carpeta» y el clic en el aviso de «Previa lista» ahora seleccionan el archivo** en el Explorador de Windows aunque la ruta tenga espacios.
+- **Nombres de previa con caracteres no permitidos** (por ejemplo `:` `?` `/` o nombres como «CON»): la app los adapta sola en lugar de fallar al guardar.
+- **Archivos de audio mono:** ya se pueden usar para generar previas (antes daban error); la firma de voz mono suena ahora en los dos altavoces.
+- **WAV con carátula grande o metadatos de otros programas** (Pro Tools, Ableton…): AutoPrevias ya no los «repara» por error ni modifica tu archivo original.
+- **Cerrar la ventana del Lote o de la activación mientras trabajan** ya no puede cerrar toda la aplicación.
+- **Vista previa del vídeo y «Oír efecto»:** ya no fallan en Windows al repetirlas seguidas (archivos temporales bloqueados).
+- **FLAC y AIFF de máxima calidad** salen siempre a 24 bits (antes podían salir a 16 bits al exportar solo ese formato).
+- **Actualizaciones en Windows con certificados antiguos:** la comprobación de nuevas versiones también usa los certificados de la app como plan B.
+- **Licencia:** el guardado es más seguro (no se corrompe si se cierra a mitad) y desactivar la licencia mientras se verifica ya no la «resucita». Si el disco impide guardarla, la app lo explica en vez de quedarse en «Verificando…».
+- **Errores inesperados en Windows:** como mucho se muestran dos avisos por sesión (antes podía salir una avalancha).
+- **Mac:** al cambiar de tema y reiniciar, la app se abre de forma normal (con su icono y avisos).
+- Mejoras menores: nombres de presets seguros en Windows, caracteres especiales en los avisos, tildes en el vídeo clásico.
+
 ## [6.0.3] - 2026-10-22
 
 ### Corregido

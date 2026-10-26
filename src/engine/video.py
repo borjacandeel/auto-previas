@@ -545,7 +545,7 @@ def render_social_video(
             cmd,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
-            text=True,
+            text=True, encoding="utf-8", errors="replace",
         )
         _, err = proc.communicate()
         if proc.returncode != 0:

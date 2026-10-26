@@ -146,7 +146,11 @@ def make_cover_jpeg(image_path: str, size: int = COVER_SIZE) -> Optional[str]:
             square.paste(im, ((size - im.width) // 2, (size - im.height) // 2))
             tmp = tempfile.NamedTemporaryFile(prefix="autoprevias_cover_", suffix=".jpg", delete=False)
             tmp.close()
-            square.save(tmp.name, "JPEG", quality=92, optimize=True, subsampling=0)
+            try:
+                square.save(tmp.name, "JPEG", quality=92, optimize=True, subsampling=0)
+            except Exception:
+                Path(tmp.name).unlink(missing_ok=True)
+                raise
             return tmp.name
     except Exception:
         return None

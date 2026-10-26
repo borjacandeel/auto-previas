@@ -97,6 +97,17 @@ def repair_wav_header_if_needed(path: str) -> bool:
 
             align = fmt_info.get("align", 4) or 4
 
+            # Cabecera sana: el chunk «data» declarado acaba justo en el final del archivo o antes de otro chunk
+            # con un nombre ASCII válido (iXML, ID3, bext… sean cuales sean). En ese caso NO se toca el archivo.
+            declared_end = data_start + declared_data_size + (declared_data_size % 2)
+            if declared_data_size > 0 and declared_end <= file_size:
+                if declared_end >= file_size - 1:
+                    return False
+                f.seek(declared_end)
+                nxt = f.read(8)
+                if len(nxt) == 8 and all(0x20 <= c < 0x7F for c in nxt[:4]):
+                    return False
+
             # Buscar chunks trailers posteriores al audio en los últimos 512 KB
             scan_len = min(file_size - data_start, 512 * 1024)
             if scan_len <= 0:
@@ -212,6 +223,11 @@ def load_audio_file(
 
     # Asegurar tipo de datos
     y = np.asarray(y, dtype=dtype)
+    if not mono and y.ndim == 2:
+        if y.shape[0] == 1:                       # archivo mono → estéreo (el resto del motor espera 2 canales)
+            y = np.repeat(y, 2, axis=0)
+        elif y.shape[0] > 2:
+            y = y[:2]
 
     # 5. Comprobar que el audio tenga una longitud viable
     sample_count = len(y) if y.ndim == 1 else y.shape[-1]

@@ -127,15 +127,24 @@ class VideoPreviewDialog(QDialog):
             self._restart()
             self._timer.start(self._interval)
 
-    def closeEvent(self, e):
+    def _cleanup(self):
         self._timer.stop()
         try:
             if self._player is not None:
                 self._player.stop()
+                self._player.setSource(QUrl())          # Windows no borra archivos abiertos
             if self._worker.isRunning():
                 self._worker.wait(8000)
             if self._clip:
                 Path(self._clip).unlink(missing_ok=True)
+                self._clip = ""
         except Exception:
             pass
+
+    def done(self, r):                                  # Esc / Cerrar / aceptar: no pasan por closeEvent
+        self._cleanup()
+        super().done(r)
+
+    def closeEvent(self, e):
+        self._cleanup()
         super().closeEvent(e)

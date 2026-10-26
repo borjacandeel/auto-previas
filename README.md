@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v6.0.3-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v6.0.4-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -324,7 +324,10 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v6.0.3] — 2026-10-22 (Activación de licencia en Windows con certificados antiguos)
+#### 🟢 [v6.0.4] — 2026-10-26 (Revisión de errores de Windows y macOS)
+- Sin ventana negra de FFmpeg en Windows; «Abrir carpeta» selecciona el archivo; nombres de previa con caracteres no permitidos se adaptan solos; audio mono compatible; WAV con carátula grande ya no se «repara» por error; cerrar Lote/activación en marcha ya no cierra la app; FLAC/AIFF siempre a 24 bits; actualizador y licencia más robustos.
+
+#### [v6.0.3] — 2026-10-22 (Activación de licencia en Windows con certificados antiguos)
 - Corrige «No se pudo conectar con el servidor de licencias» en Windows sin los certificados de seguridad al día: la app lleva sus propios certificados como plan B. El aviso ahora indica el motivo (sin conexión, DNS/VPN o certificados).
 
 #### [v6.0.2] — 2026-10-22 (Se retira «Vigilar carpeta»)

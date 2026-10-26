@@ -34,7 +34,8 @@ def reveal_in_os(path_or_dir: str) -> bool:
         if sys.platform == "darwin":
             subprocess.Popen(["open", "-R", str(p)] if p.is_file() else ["open", str(p)])
         elif sys.platform == "win32":
-            subprocess.Popen(["explorer", f"/select,{p}"] if p.is_file() else ["explorer", str(p)])
+            # Cadena completa: con lista, Python entrecomilla todo «/select,ruta con espacios» y el Explorador lo ignora.
+            subprocess.Popen(f'explorer /select,"{p}"' if p.is_file() else f'explorer "{p}"')
         else:
             subprocess.Popen(["xdg-open", str(p if p.is_dir() else p.parent)])
         return True
@@ -132,6 +133,9 @@ def _on_clicked() -> None:
 def _send(title: str, message: str, sound: bool) -> None:
     title = title.replace("\\", " ").replace('"', "'")
     message = message.replace("\\", " ").replace('"', "'")
+    if sys.platform == "win32":                       # en PowerShell «$» y «`» dentro de comillas dobles se interpretan
+        title = title.replace("$", " ").replace("`", "'")
+        message = message.replace("$", " ").replace("`", "'")
 
     if sys.platform == "darwin":
         sound_clause = "sound name \"default\"" if sound else ""

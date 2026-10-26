@@ -372,7 +372,7 @@ jobs:
   # ── Publicar release con los 4 instaladores ────────────────────────────────
   publish-release:
     name: Publicar GitHub Release
-    if: always() && !cancelled() && (needs.build-macos-arm64.result == 'success' || needs.build-windows-x64.result == 'success')
+    if: always() && !cancelled() && (needs.build-macos-arm64.result == 'success' && needs.build-windows-x64.result == 'success')
     needs: [build-macos-arm64, build-windows-x64]
     runs-on: ubuntu-latest
     steps:
@@ -410,7 +410,7 @@ jobs:
             TAG_NAME="$INPUT_TAG"
           fi
           CLEAN_VER="${TAG_NAME#v}"
-          awk "/## \[?$CLEAN_VER\]?/{flag=1; next} /## \[?[0-9]/{flag=0} flag" CHANGELOG.md > release_notes.md || true
+          awk -v ver="$CLEAN_VER" 'BEGIN{gsub(/\./,"\\.",ver)} $0 ~ "^## \\[?" ver "\\]?( |$)"{flag=1; next} /^## \[?[0-9]/{flag=0} flag' CHANGELOG.md > release_notes.md || true
           if [ ! -s release_notes.md ]; then
             echo "Release $TAG_NAME de AutoPrevias para Radical Records." > release_notes.md
           fi

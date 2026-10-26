@@ -1103,7 +1103,8 @@ def render_preview(
     if start_sec is None or start_sec < 0:
         start_sec = total * 0.30
     start_sec = max(0.0, min(float(start_sec), max(0.0, total - seconds)))
-    clip = Path(tempfile.gettempdir()) / f"autoprevias_vprev_{os.getpid()}.wav"
+    import uuid
+    clip = Path(tempfile.gettempdir()) / f"autoprevias_vprev_{os.getpid()}_{uuid.uuid4().hex[:8]}.wav"
     subprocess.run([ffmpeg, "-y", "-v", "error", "-ss", f"{start_sec:.3f}", "-t", f"{seconds:.3f}", "-i", str(audio_path),
                     "-ac", "2", "-ar", "44100", str(clip)], check=True, capture_output=True)
     _prog(20, "Analizando el ritmo…")

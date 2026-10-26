@@ -122,8 +122,8 @@ def test_el_reproductor_propio_toca_un_efecto_real_y_libera_el_archivo(tmp_path)
         pytest.skip("sin QtMultimedia")
     ev = {"id": 1, "type": "flanger", "start": 5.0, "end": 8.0, "amount": 0.75}
     assert aud.play_event(path, ev) is True
-    assert (tmp_path / "aud" / "fx_audition.wav").exists()
+    assert len(list((tmp_path / "aud").glob("fx_audition_*.wav"))) == 1
     aud.release()
-    assert aud.play_event(path, ev) is True                       # reescribir tras liberar no falla
+    assert not list((tmp_path / "aud").glob("fx_audition_*.wav"))  # al liberar se borra (Windows)
+    assert aud.play_event(path, ev) is True                       # reproducir otra vez no falla
     aud.release()
-    (tmp_path / "aud" / "fx_audition.wav").unlink()               # y se puede borrar (Windows)

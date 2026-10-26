@@ -344,6 +344,18 @@ def build_preview_audio(
 
 # ── nombre de archivo ───────────────────────────────────────────────────────
 
+_WIN_RESERVED = {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}
+
+
+def safe_filename(name: str, default: str = "PREVIA") -> str:
+    """Nombre válido en Windows y macOS: sin \\ / : * ? " < > |, sin controles, sin punto/espacio final y sin nombres reservados."""
+    out = "".join(" " if (ord(c) < 32 or c in '\\/:*?"<>|') else c for c in str(name or ""))
+    out = " ".join(out.split()).strip(" .")
+    if out.split(".")[0].upper() in _WIN_RESERVED:
+        out = f"{out}_"
+    return out[:150].strip(" .") or default
+
+
 def output_paths(
     source_path: str,
     out_dir: str,
@@ -355,8 +367,8 @@ def output_paths(
     custom_name: str | None = None,
     video_aspects: list | None = None,
 ) -> dict:
-    base = custom_name.strip() if custom_name and custom_name.strip() \
-           else f"PREVIA - {Path(source_path).stem}"
+    base = safe_filename(custom_name) if custom_name and custom_name.strip() \
+           else safe_filename(f"PREVIA - {Path(source_path).stem}")
     paths = {}
 
     def _safe(directory: Path, filename: str) -> Path:
@@ -484,6 +496,7 @@ def export_files(
 
     generated = []
     temp_wav_for_mp3: str | None = None
+    lossless_tmp: str | None = None
 
     meta = metadata or {}
     artist  = meta.get("artist") or "Radical Records"
@@ -527,7 +540,7 @@ def export_files(
         src_wav = str(paths["wav"]) if "wav" in paths and Path(paths["wav"]).exists() else None
         if not src_wav:
             temp_wav_for_mp3 = str(get_cache_dir() / f"autoprevias_temp_{os.getpid()}.wav")
-            sf.write(temp_wav_for_mp3, audio.T, sr, subtype="PCM_16")
+            sf.write(temp_wav_for_mp3, audio.T, sr, subtype="PCM_24")
             src_wav = temp_wav_for_mp3
 
         stem_name = Path(mp3_target).stem
@@ -609,7 +622,7 @@ def export_files(
             try:
                 from pedalboard.io import AudioFile
                 with AudioFile(mp3_target, "w", samplerate=sr,
-                                num_channels=2, quality=kbps) as f:
+                                num_channels=2, quality=f"{kbps}k") as f:
                     f.write(audio)
                 generated.append(mp3_target)
             except Exception as e:
@@ -624,7 +637,8 @@ def export_files(
         _flac_src = (str(paths["wav"]) if "wav" in paths and Path(paths["wav"]).exists() else None) or temp_wav_for_mp3
         if not _flac_src:
             _flac_src = str(_get_cache() / f"autoprevias_lossless_{_os.getpid()}.wav")
-            sf.write(_flac_src, audio.T, sr, subtype="PCM_16")
+            sf.write(_flac_src, audio.T, sr, subtype="PCM_24")
+            lossless_tmp = _flac_src
 
         def _meta_flags():
             flags = [
@@ -778,6 +792,12 @@ def export_files(
     if temp_wav_for_mp3 and Path(temp_wav_for_mp3).exists():
         # Insertar al inicio para que el reproductor interno y la waveform utilicen el WAV sin latencia ni advertencias
         generated.insert(0, temp_wav_for_mp3)
+
+    if lossless_tmp:
+        try:
+            Path(lossless_tmp).unlink(missing_ok=True)
+        except OSError:
+            pass
 
     _prog(100, "¡Exportación completada!")
     return generated

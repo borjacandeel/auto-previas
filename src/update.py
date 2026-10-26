@@ -34,8 +34,8 @@ class UpdateChecker(QThread):
             if info and is_newer(info.version, self._current):
                 if self._ignore_skipped or info.version != get_skipped_version():
                     self.update_available.emit(info)
-        except Exception:
-            pass
+        except Exception as e:
+            log_update_error(f"Comprobación de versión fallida: {type(e).__name__}: {e}")
         finally:
             self.check_done.emit()
 

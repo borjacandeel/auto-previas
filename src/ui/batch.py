@@ -498,30 +498,26 @@ class BatchDialog(QDialog):
             from src.config import get_output_dir
             self._reveal_paths([str(get_output_dir("", self._cfg))])
 
+    def done(self, r):
+        """Cerrar el diálogo (X, Esc) con un lote en marcha: destruir el hilo en ejecución cerraría toda la app."""
+        w = self._worker
+        if w is not None and w.isRunning():
+            w.cancel()
+            w.requestInterruption()
+            w.wait(5000)
+            if w.isRunning():
+                w.setParent(None)
+                keep = getattr(BatchDialog, "_orphans", [])
+                keep.append(w)
+                BatchDialog._orphans = keep
+                w.finished.connect(lambda *_a, x=w: keep.remove(x) if x in keep else None)
+        super().done(r)
+
     def _reveal_paths(self, paths: list):
         if not paths:
             return
-        target = paths[0]
-        p = Path(target)
-        try:
-            import subprocess, sys
-            if not p.exists():
-                p = p.parent
-            if sys.platform == "darwin":
-                if p.is_file():
-                    subprocess.run(["open", "-R", str(p)])
-                else:
-                    subprocess.run(["open", str(p)])
-            elif sys.platform == "win32":
-                if p.is_file():
-                    subprocess.run(["explorer", f"/select,{p}"])
-                else:
-                    subprocess.run(["explorer", str(p)])
-            else:
-                target_str = str(p if p.is_dir() else p.parent)
-                subprocess.run(["xdg-open", target_str])
-        except Exception:
-            pass
+        from src.notifications import reveal_in_os
+        reveal_in_os(str(paths[0]))
 
     def _on_table_double_clicked(self, row: int, col: int):
         if hasattr(self, "_generated_map") and row in self._generated_map:

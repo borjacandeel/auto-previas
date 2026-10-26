@@ -5981,26 +5981,8 @@ class MainWindow(QMainWindow):
 
     def _reveal_in_os(self, path_or_dir: str):
         """Abre la ruta o selecciona el archivo en Finder / Explorador de archivos."""
-        try:
-            import subprocess
-            p = Path(path_or_dir)
-            if not p.exists():
-                p = p.parent
-            if sys.platform == "darwin":
-                if p.is_file():
-                    subprocess.run(["open", "-R", str(p)])
-                else:
-                    subprocess.run(["open", str(p)])
-            elif sys.platform == "win32":
-                if p.is_file():
-                    subprocess.run(["explorer", f"/select,{p}"])
-                else:
-                    subprocess.run(["explorer", str(p)])
-            else:
-                target = str(p if p.is_dir() else p.parent)
-                subprocess.run(["xdg-open", target])
-        except Exception:
-            pass
+        from src.notifications import reveal_in_os
+        reveal_in_os(path_or_dir)
 
     def _generate(self):
         plan = self._results._plan or self._plan
@@ -6066,7 +6048,13 @@ class MainWindow(QMainWindow):
             except RuntimeError:
                 pass
             self._export_worker.requestInterruption()
-            self._export_worker.wait(2000)
+            if not self._export_worker.wait(2000):
+                # Sigue vivo: se guarda la referencia hasta que acabe (destruir un QThread en marcha cierra la app)
+                old = self._export_worker
+                keep = getattr(self, "_old_export_workers", [])
+                keep.append(old)
+                self._old_export_workers = keep
+                old.finished.connect(lambda *_a, w=old: keep.remove(w) if w in keep else None)
 
         self._export_worker = ExportWorker(
             self._current_file, plan, self._beat_grid, cfg, seed=seed
@@ -6549,7 +6537,7 @@ def _save_hw_cache():
             specs["ram_gb"] = round(psutil.virtual_memory().total / 1e9, 1)
         except Exception:
             pass
-        cache_file.write_text(json.dumps(specs, indent=2, ensure_ascii=False))
+        cache_file.write_text(json.dumps(specs, indent=2, ensure_ascii=False), encoding="utf-8")
     except Exception:
         pass
 

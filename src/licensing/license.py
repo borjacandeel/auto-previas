@@ -17,6 +17,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import os
 import sys
 import time
 import urllib.error
@@ -295,7 +296,18 @@ def _decode_key(blob: str, device_id: str) -> str:
 
 
 def _write_local(data: dict) -> None:
-    _license_file().write_text(json.dumps(data, indent=2), encoding="utf-8")
+    """Escritura atómica: un cierre o corte de luz a mitad no deja el JSON roto (y la licencia perdida)."""
+    f = _license_file()
+    tmp = f.with_name(f.name + ".tmp")
+    tmp.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    try:
+        os.replace(tmp, f)
+    except OSError:
+        f.write_text(json.dumps(data, indent=2), encoding="utf-8")      # p. ej. antivirus con el archivo abierto
+        try:
+            tmp.unlink()
+        except OSError:
+            pass
 
 
 def save_local(license_key: str, edition: str, expires_at: int | None = None) -> None:
@@ -425,6 +437,11 @@ def reverify_if_due(force: bool = False) -> str:
     if not key:
         return "legacy"
     res = verify_online(key, action="verify", device_id=dev)
+    # La red tarda segundos: si mientras tanto el usuario desactivó la licencia (o cambió de clave), no se «resucita» el archivo
+    fresh = load_local()
+    if fresh is None or fresh.get("key_enc") != blob:
+        return "skipped"
+    local = fresh
     if res["success"] and _app_edition() and res["edition"] != _app_edition():
         res = {"success": False, "code": "wrong_edition"}
     if res["success"]:

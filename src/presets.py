@@ -16,6 +16,7 @@ from pathlib import Path
 
 _VERSION = 1
 _COVER_SUFFIX = "_cover"
+_WIN_RESERVED = {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}
 
 
 def presets_dir() -> Path:
@@ -29,7 +30,10 @@ def slugify(name: str) -> str:
     """Nombre de archivo seguro (conserva letras con tilde); '' si no queda nada."""
     s = re.sub(r"[^\w\- ]+", "_", (name or "").strip(), flags=re.UNICODE)
     s = re.sub(r"\s+", " ", s).strip(" ._")
-    return s[:60]
+    s = s[:60]
+    if s.upper() in _WIN_RESERVED:                   # CON.json, NUL.json… son dispositivos en Windows
+        s += "_"
+    return s
 
 
 def _file(name: str, base: Path | None = None) -> Path:
@@ -102,6 +106,8 @@ def load_preset(name: str, base: Path | None = None) -> dict | None:
 
 def _delete_cover(name: str, base: Path) -> None:
     for c in base.glob(f"{slugify(name)}{_COVER_SUFFIX}.*"):
+        if c.suffix.lower() not in (".jpg", ".jpeg", ".png", ".webp"):
+            continue                                 # «foo_cover.json» es otro preset, no la carátula de «foo»
         try:
             c.unlink()
         except Exception:

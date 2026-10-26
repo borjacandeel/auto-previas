@@ -366,6 +366,11 @@ def restart_application() -> bool:
     """Vuelve a abrir la aplicación (para aplicar un tema nuevo). Devuelve True si se lanzó el nuevo proceso."""
     import subprocess
     try:
+        exe = str(sys.executable)
+        if sys.platform == "darwin" and ".app/Contents/MacOS" in exe:
+            # En macOS la nueva instancia debe abrirse con LaunchServices (foco, Dock y notificaciones del paquete .app)
+            subprocess.Popen(["open", "-n", exe.split(".app/Contents/MacOS")[0] + ".app"])
+            return True
         args = [sys.executable] + ([] if getattr(sys, "frozen", False) else sys.argv)
         if getattr(sys, "frozen", False):
             args += [a for a in sys.argv[1:] if a not in ("--restarted",)]

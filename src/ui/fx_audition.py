@@ -46,7 +46,8 @@ class FxAuditioner(QObject):
             from src.config import get_cache_dir
             self._tmp_dir = Path(get_cache_dir())
         self._tmp_dir.mkdir(parents=True, exist_ok=True)
-        return self._tmp_dir / "fx_audition.wav"
+        import uuid
+        return self._tmp_dir / f"fx_audition_{uuid.uuid4().hex[:8]}.wav"
 
     def play_event(self, source_path: str, ev: dict) -> bool:
         """Renderiza el efecto y lo reproduce. False si no se pudo (sin reproductor o sin audio)."""
@@ -57,7 +58,13 @@ class FxAuditioner(QObject):
         if self._player is None or audio.shape[1] < int(0.1 * sr):
             return False
         out = self._path()
-        self._player.setSource(QUrl())                         # libera el archivo antes de reescribirlo
+        self._player.setSource(QUrl())                         # libera el archivo anterior (Windows lo mantiene abierto)
+        old, self._last = getattr(self, "_last", None), out
+        if old is not None:
+            try:
+                Path(old).unlink(missing_ok=True)
+            except OSError:
+                pass
         sf.write(str(out), audio.T, sr, subtype="PCM_16")
         self._player.setSource(QUrl.fromLocalFile(str(out)))
         self._player.play()
@@ -79,6 +86,13 @@ class FxAuditioner(QObject):
                 self._player.setSource(QUrl())
             except Exception:
                 pass
+        last = getattr(self, "_last", None)
+        if last is not None:
+            try:
+                Path(last).unlink(missing_ok=True)
+            except OSError:
+                pass
+            self._last = None
 
     def _on_state(self, state):
         self._set(state == QMediaPlayer.PlaybackState.PlayingState)

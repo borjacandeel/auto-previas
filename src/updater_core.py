@@ -94,11 +94,13 @@ def sha256_file(path: str | Path) -> str:
     return h.hexdigest()
 
 
-def make_ssl_context():
-    """Reutiliza el contexto SSL de la capa de licencias (bundle del sistema en macOS)."""
+def make_ssl_context(bundled: bool = False):
+    """Reutiliza el contexto SSL de la capa de licencias (bundle del sistema en macOS).
+
+    Con `bundled=True` usa los certificados raíz de la app (plan B para Windows con certificados antiguos)."""
     try:
         from src.licensing.license import _make_ssl_context
-        return _make_ssl_context()
+        return _make_ssl_context(bundled=bundled)
     except Exception:
         import ssl
         return ssl.create_default_context()
@@ -109,7 +111,17 @@ def open_url(url: str, timeout: int = 15):
         "User-Agent": USER_AGENT,
         "Accept": "application/vnd.github+json, application/octet-stream",
     })
-    return urllib.request.urlopen(req, timeout=timeout, context=make_ssl_context())
+    try:
+        return urllib.request.urlopen(req, timeout=timeout, context=make_ssl_context())
+    except Exception as e:
+        try:
+            from src.licensing.license import _is_cert_error
+            if not _is_cert_error(e):
+                raise
+        except ImportError:
+            raise e
+        log_update_error(f"Certificados del sistema rechazados ({type(e).__name__}); se reintenta con los de la app")
+        return urllib.request.urlopen(req, timeout=timeout, context=make_ssl_context(bundled=True))
 
 
 def fetch_latest_release() -> ReleaseInfo | None:

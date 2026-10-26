@@ -74,7 +74,9 @@ if sys.platform == "win32":
 def _global_exception_handler(exc_type, exc_value, exc_tb):
     err_text = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
     _log_startup(f"FATAL UNHANDLED EXCEPTION:\n{err_text}")
-    if sys.platform == "win32":
+    # Un error repetido (un temporizador, un repintado) no debe abrir una avalancha de ventanas: máx. 2 avisos por sesión
+    _global_exception_handler.shown = getattr(_global_exception_handler, "shown", 0) + 1
+    if sys.platform == "win32" and _global_exception_handler.shown <= 2:
         try:
             import ctypes
             ctypes.windll.user32.MessageBoxW(
@@ -659,6 +661,7 @@ def _check_license_on_startup() -> bool:
 
         if activated_edition:
             set_edition(activated_edition[0])
+            _start_background_reverify()
             return True
 
         return False

@@ -71,8 +71,11 @@ class _ActivateWorker(QThread):
         self._key = key
 
     def run(self):
-        from src.licensing.license import activate
-        ok, edition, err = activate(self._key)
+        try:
+            from src.licensing.license import activate
+            ok, edition, err = activate(self._key)
+        except Exception as e:        # p. ej. disco bloqueado al guardar: el botón no puede quedarse en «Verificando…»
+            ok, edition, err = False, "", f"No se pudo guardar la licencia en este equipo ({type(e).__name__}). Comprueba los permisos de tu carpeta de usuario o el antivirus y vuelve a intentarlo."
         self.done.emit(ok, edition, err)
 
 
@@ -241,6 +244,21 @@ class ActivationDialog(QDialog):
         self._worker = _ActivateWorker(key)
         self._worker.done.connect(self._on_done)
         self._worker.start()
+
+    def done(self, r):
+        """Cerrar con la verificación en marcha: un QThread destruido en ejecución cierra toda la app."""
+        w = self._worker
+        if w is not None and w.isRunning():
+            try:
+                w.done.disconnect()
+            except (RuntimeError, TypeError):
+                pass
+            w.setParent(None)
+            keep = getattr(ActivationDialog, "_orphans", [])
+            keep.append(w)
+            ActivationDialog._orphans = keep
+            w.finished.connect(lambda *_a, x=w: keep.remove(x) if x in keep else None)
+        super().done(r)
 
     def _on_done(self, ok: bool, edition: str, error: str):
         self._btn.setEnabled(True)
