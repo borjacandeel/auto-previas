@@ -1,0 +1,46 @@
+"""Vídeo nuevo 1 · «Tu logo en cada vídeo» (marca de agua propia, edición Plus). Sin voz."""
+SPEC = dict(
+    tall=True,
+    voice="edge:es-ES-AlvaroNeural", lang="es", speed=1.16, groove_from=2.6,
+    scenes=[
+        # 1 · Gancho
+        dict(type="words", dur=2.8, bars=True, top=560, gap=0.42,
+             lines=[dict(t="¿TU LOGO", size=200), dict(t="EN CADA", size=190), dict(t="VÍDEO?", cls="red", size=300, big=True)]),
+        # 2 · Elegir el logo
+        dict(type="shot", dur=3.8, steps=3, logo=2.9,
+             caps=[dict(at=0.15, until=1.7, num="01", title="Elige <em>tu logo</em>", sub="PNG o JPG, el que quieras", step=1),
+                   dict(at=1.8, until=3.7, num="✓", title="Ya <em>está en el vídeo</em>", sub="Se ve de principio a fin", step=1)],
+             imgs=[dict(at=0, name="p_logo_0"), dict(at=1.75, name="p_logo_1")],
+             cam=[dict(at=0, d=0, c=[600, 1100], z=1.7), dict(at=1.8, d=0.8, c=[1120, 330], z=2.1)],
+             cur=[dict(at=0.05, set=[700, 900]), dict(at=0.35, d=0.9, to=[99, 1142]), dict(at=2.0, d=0.8, to=[1209, 87])],
+             clicks=[dict(at=1.5, to=[99, 1142])],
+             hls=[dict(at=0.3, hold=1.2, box=[22, 1118, 160, 52], pad=4), dict(at=1.85, hold=1.7, box=[1150, 60, 120, 55], pad=6)]),
+        # 3 · Arrastrar donde quieras
+        dict(type="shot", dur=4.6, steps=3, logo=3.7,
+             caps=[dict(at=0.15, until=2.7, num="02", title="Arrástralo <em>donde quieras</em>", sub="Sobre la vista previa", step=1),
+                   dict(at=2.8, until=4.5, num="03", title="Rueda del ratón: <em>tamaño</em>", sub="Más grande o más pequeño", step=1)],
+             imgs=[dict(at=0, name="p_logo_1"), dict(at=2.6, name="p_logo_2")],
+             cam=[dict(at=0, d=0, c=[1120, 320], z=2.3)],
+             cur=[dict(at=0.05, set=[900, 700]), dict(at=0.4, d=0.8, to=[1209, 87]), dict(at=1.6, d=1.0, to=[1036, 472]), dict(at=3.2, d=0.7, to=[1120, 300])],
+             clicks=[dict(at=1.3, to=[1209, 87])],
+             chips=[dict(text="DJ NOVA", at=1.5, d=1.1, **{"from": [1209, 87]}, to=[1036, 472], bg="#ff1f3a", fg="#fff")],
+             hls=[dict(at=0.3, hold=1.2, box=[1150, 60, 120, 55], pad=6), dict(at=2.65, hold=1.8, box=[965, 420, 150, 105], pad=6)]),
+        # 4 · Voltear, girar, opacidad
+        dict(type="shot", dur=4.6, steps=3, logo=3.7,
+             caps=[dict(at=0.15, until=2.3, num="04", title="<em>Voltea</em> y gira", sub="Efecto espejo, boca abajo, 90°…", step=1),
+                   dict(at=2.4, until=4.5, num="05", title="Bájale <em>la opacidad</em>", sub="Como marca de agua discreta", step=1)],
+             imgs=[dict(at=0, name="p_logo_2"), dict(at=2.2, name="p_logo_3")],
+             cam=[dict(at=0, d=0, c=[500, 1230], z=1.6), dict(at=2.3, d=0.8, c=[1120, 320], z=2.3)],
+             cur=[dict(at=0.05, set=[900, 1000]), dict(at=0.4, d=0.9, to=[130, 1312]), dict(at=2.5, d=0.8, to=[500, 1262])],
+             clicks=[dict(at=1.9, to=[130, 1312])],
+             hls=[dict(at=0.3, hold=1.5, box=[30, 1285, 760, 55], pad=4), dict(at=2.4, hold=1.8, box=[1000, 230, 240, 160], pad=6)]),
+        # 5 · Los tres formatos
+        dict(type="cards", dur=3.8, title="En los 3 formatos", title_top=1290, title_at=1.2, sub="TikTok · Reels · Shorts · YouTube", sub_at=1.6, sub_top=1500,
+             cards=[dict(src="logo_916", x=285, y=140, w=560, h=996, at=0.15, rot=0), dict(src="logo_11", x=20, y=630, w=480, h=480, at=0.6, rot=-4, **{"from": "left"}),
+                    dict(src="logo_169", x=560, y=720, w=500, h=281, at=1.0, rot=4, **{"from": "right"})], badges=[]),
+        # 6 · Mensaje
+        dict(type="words", dur=2.8, bars=True, top=560, gap=0.45,
+             lines=[dict(t="DE PRINCIPIO", size=150), dict(t="A FIN", cls="red", size=300, big=True), dict(t="TU MARCA", size=190)]),
+        # 7 · Cierre
+        dict(type="cta", dur=5.0, click_at=3.3, line1="Tu logo,", line2="en cada vídeo.", buy_lbl="CONSIGUE PLUS EN", tag="Función de la edición Plus · macOS · Windows"),
+    ])
