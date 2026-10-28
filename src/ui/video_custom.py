@@ -7,14 +7,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import QRectF, QSize, QThread, QTimer, Qt, Signal
-from PySide6.QtGui import QColor, QFont, QImage, QLinearGradient, QPainter, QPen, QPixmap
+from PySide6.QtCore import QPointF, QRectF, QSize, QThread, QTimer, Qt, Signal
+from PySide6.QtGui import QColor, QFont, QImage, QLinearGradient, QPainter, QPen, QPixmap, QTransform
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDialog, QFileDialog, QFormLayout, QFrame, QGridLayout, QHBoxLayout, QLabel,
-    QLineEdit, QMessageBox, QPushButton, QVBoxLayout, QWidget,
+    QApplication, QLineEdit, QMessageBox, QPushButton, QSlider, QVBoxLayout, QWidget,
 )
 
-from src.engine.video_neon import ASPECTS, describe_ratio, image_size, match_aspect, normalize_custom
+from src.engine.video_neon import (
+    ASPECTS, LOGO_DEFAULTS, describe_ratio, image_size, match_aspect, normalize_custom, normalize_logo,
+)
 from src.i18n import tr
 from src.ui.dialog_style import DIALOG_QSS, GREEN, TEXT2, WARN
 
@@ -227,6 +229,99 @@ def _title(text: str) -> QLabel:
     return lb
 
 
+class _LogoPreview(QLabel):
+    """Vista previa del vídeo con la marca de agua dibujada encima: se arrastra con el ratón y la rueda cambia el tamaño.
+
+    El logo se pinta con Qt (instantáneo, sin esperar al render); usa la misma geometría que el motor
+    (`render_logo`/`_paste_logo`): centro en fracciones del fotograma y ancho como fracción del lado corto."""
+    changed = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.logo: dict = {}
+        self._img: QImage | None = None
+        self._img_path = ""
+        self._drag = False
+        self.setMouseTracking(False)
+
+    def set_logo(self, lg: dict):
+        self.logo = lg or {}
+        p = self.logo.get("path", "")
+        if p != self._img_path:
+            self._img_path = p
+            self._img = QImage(p) if p else None
+            if self._img is not None and self._img.isNull():
+                self._img = None
+        self.update()
+
+    def _frame_rect(self) -> QRectF:
+        pm = self.pixmap()
+        if pm is None or pm.isNull():
+            return QRectF()
+        s = pm.deviceIndependentSize()
+        return QRectF((self.width() - s.width()) / 2, (self.height() - s.height()) / 2, s.width(), s.height())
+
+    def paintEvent(self, e):
+        super().paintEvent(e)
+        fr = self._frame_rect()
+        if self._img is None or not self.logo or fr.isEmpty():
+            return
+        lg = self.logo
+        w = max(4.0, min(fr.width(), fr.height()) * float(lg["size"]))
+        h = w * self._img.height() / max(1, self._img.width())
+        p = QPainter(self)
+        p.setRenderHint(QPainter.SmoothPixmapTransform)
+        p.setRenderHint(QPainter.Antialiasing)
+        p.setClipRect(fr)
+        p.setOpacity(float(lg["opacity"]))
+        p.translate(fr.left() + lg["x"] * fr.width(), fr.top() + lg["y"] * fr.height())
+        p.rotate(float(lg["rotate"]))
+        p.scale(-1.0 if lg["flip_h"] else 1.0, -1.0 if lg["flip_v"] else 1.0)
+        p.drawImage(QRectF(-w / 2, -h / 2, w, h), self._img)
+        p.end()
+        q = QPainter(self)                             # marco de ayuda (sin rotar) para ver dónde está el logo
+        q.setClipRect(fr)
+        q.setPen(QPen(QColor(255, 62, 85, 150), 1, Qt.DashLine))
+        cx, cy = fr.left() + lg["x"] * fr.width(), fr.top() + lg["y"] * fr.height()
+        t = QTransform().translate(cx, cy).rotate(float(lg["rotate"]))
+        q.setTransform(t)
+        q.drawRect(QRectF(-w / 2, -h / 2, w, h))
+        q.end()
+
+    def _set_from_pos(self, pos: QPointF):
+        fr = self._frame_rect()
+        if fr.isEmpty() or not self.logo:
+            return
+        self.logo["x"] = min(1.25, max(-0.25, (pos.x() - fr.left()) / fr.width()))
+        self.logo["y"] = min(1.25, max(-0.25, (pos.y() - fr.top()) / fr.height()))
+        self.update()
+        self.changed.emit()
+
+    def mousePressEvent(self, e):
+        if self._img is not None and self.logo and e.button() == Qt.LeftButton:
+            self._drag = True
+            self.setCursor(Qt.ClosedHandCursor)
+            self._set_from_pos(e.position())
+
+    def mouseMoveEvent(self, e):
+        if self._drag:
+            self._set_from_pos(e.position())
+
+    def mouseReleaseEvent(self, e):
+        if self._drag:
+            self._drag = False
+            self.setCursor(Qt.ArrowCursor)
+
+    def wheelEvent(self, e):
+        if self._img is None or not self.logo:
+            return super().wheelEvent(e)
+        step = 0.01 if e.angleDelta().y() > 0 else -0.01
+        self.logo["size"] = min(1.5, max(0.03, float(self.logo["size"]) + step))
+        self.update()
+        self.changed.emit()
+        e.accept()
+
+
 class _PreviewWorker(QThread):
     """Dibuja un fotograma de ejemplo con los ajustes actuales (en segundo plano para no congelar la ventana)."""
     done = Signal(int, object)
@@ -274,9 +369,30 @@ class VideoCustomDialog(QDialog):
         self._prev_aspect = (sample or {}).get("aspect") if (sample or {}).get("aspect") in ASPECTS else "9:16"
 
         outer = QHBoxLayout(self)
-        root = QVBoxLayout()
+        # Los ajustes van en una zona con desplazamiento (la ventana es larga y en portátiles pequeños no cabe entera);
+        # «Cancelar / Guardar» quedan siempre a la vista debajo y la vista previa a la derecha.
+        from PySide6.QtWidgets import QScrollArea
+        left_w = QWidget()
+        root = QVBoxLayout(left_w)
         root.setSpacing(10)
-        outer.addLayout(root, 1)
+        root.setContentsMargins(0, 0, 8, 0)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setStyleSheet("QScrollArea { background: transparent; border: none; }"
+                             "QScrollBar:vertical { background: transparent; width: 10px; margin: 0; }"
+                             "QScrollBar::handle:vertical { background: #2a2f3d; border-radius: 5px; min-height: 30px; }"
+                             "QScrollBar::handle:vertical:hover { background: #3b4254; }"
+                             "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }"
+                             "QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; }")
+        scroll.viewport().setAutoFillBackground(False)
+        left_w.setObjectName("leftPane")
+        left_w.setStyleSheet("#leftPane { background: transparent; }")
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setWidget(left_w)
+        left_col = QVBoxLayout()
+        left_col.addWidget(scroll, 1)
+        outer.addLayout(left_col, 1)
 
         # — estilo —
         head = QHBoxLayout()
@@ -343,6 +459,69 @@ class VideoCustomDialog(QDialog):
         root.addWidget(self._opt_box)
         root.addWidget(_sep())
 
+        # — marca de agua propia —
+        root.addWidget(_title("Tu marca de agua (logo)"))
+        self._logo: dict = normalize_logo(c.get("logo"))
+        lrow = QHBoxLayout()
+        self._logo_btn = QPushButton(tr("Elegir logo…"))
+        self._logo_btn.setToolTip(tr("PNG (mejor con fondo transparente) o JPG. Se verá de principio a fin del vídeo."))
+        self._logo_btn.clicked.connect(self._pick_logo)
+        self._logo_lbl = QLabel()
+        self._logo_lbl.setStyleSheet(f"color:{TEXT2}; font-size:11px;")
+        self._logo_clear = QPushButton(tr("Quitar"))
+        self._logo_clear.clicked.connect(lambda _c=False: self._set_logo_path(""))
+        lrow.addWidget(self._logo_btn)
+        lrow.addWidget(self._logo_lbl, stretch=1)
+        lrow.addWidget(self._logo_clear)
+        root.addLayout(lrow)
+        self._logo_box = QWidget()
+        lf = QFormLayout(self._logo_box)
+        lf.setContentsMargins(0, 0, 0, 0)
+
+        def _slider(lo, hi, val):
+            s = QSlider(Qt.Horizontal)
+            s.setRange(lo, hi)
+            s.setValue(int(val))
+            s.valueChanged.connect(self._logo_from_controls)
+            return s
+        self._lg_size = _slider(3, 150, round(self._logo.get("size", LOGO_DEFAULTS["size"]) * 100))
+        self._lg_op = _slider(10, 100, round(self._logo.get("opacity", 1.0) * 100))
+        self._lg_rot = _slider(-180, 180, round(self._logo.get("rotate", 0.0)))
+        self._lg_size_v, self._lg_op_v, self._lg_rot_v = QLabel(), QLabel(), QLabel()
+        for lb in (self._lg_size_v, self._lg_op_v, self._lg_rot_v):
+            lb.setFixedWidth(46)
+            lb.setStyleSheet(f"color:{TEXT2}; font-size:11px;")
+        for text, sl, vl in ((tr("Tamaño"), self._lg_size, self._lg_size_v), (tr("Opacidad"), self._lg_op, self._lg_op_v),
+                             (tr("Giro"), self._lg_rot, self._lg_rot_v)):
+            rw = QWidget(); rl = QHBoxLayout(rw); rl.setContentsMargins(0, 0, 0, 0)
+            rl.addWidget(sl, 1); rl.addWidget(vl)
+            lf.addRow(QLabel(text), rw)
+        brow = QHBoxLayout()
+        self._lg_fh = QPushButton(tr("↔ Voltear"))
+        self._lg_fh.setCheckable(True)
+        self._lg_fh.setToolTip(tr("Voltear el logo en horizontal (efecto espejo)"))
+        self._lg_fv = QPushButton(tr("↕ Voltear"))
+        self._lg_fv.setCheckable(True)
+        self._lg_fv.setToolTip(tr("Voltear el logo en vertical (boca abajo)"))
+        self._lg_r90 = QPushButton(tr("⟳ 90°"))
+        self._lg_r90.setToolTip(tr("Girar el logo 90°"))
+        self._lg_pos = _combo((("Posición rápida…", ""), ("Arriba a la derecha", "tr"), ("Arriba a la izquierda", "tl"),
+                               ("Abajo a la derecha", "br"), ("Abajo a la izquierda", "bl"), ("Centro", "c")), "")
+        self._lg_fh.clicked.connect(self._logo_from_controls)
+        self._lg_fv.clicked.connect(self._logo_from_controls)
+        self._lg_r90.clicked.connect(self._rotate90)
+        self._lg_pos.activated.connect(self._quick_pos)
+        for b in (self._lg_fh, self._lg_fv, self._lg_r90, self._lg_pos):
+            brow.addWidget(b)
+        bw = QWidget(); bw.setLayout(brow); brow.setContentsMargins(0, 0, 0, 0)
+        lf.addRow(bw)
+        lh = QLabel(tr("Arrastra el logo en la vista previa para colocarlo donde quieras; con la rueda del ratón cambias su tamaño."))
+        lh.setWordWrap(True)
+        lh.setStyleSheet(f"color:{TEXT2}; font-size:10.5px;")
+        lf.addRow(lh)
+        root.addWidget(self._logo_box)
+        root.addWidget(_sep())
+
         # — final con imagen —
         root.addWidget(_title("Final con tu imagen"))
         fe = QFormLayout()
@@ -368,7 +547,12 @@ class VideoCustomDialog(QDialog):
         b_ok.clicked.connect(self._accept)
         row.addWidget(b_cancel)
         row.addWidget(b_ok)
-        root.addLayout(row)
+        left_col.addLayout(row)
+        try:
+            avail = (self.screen() or QApplication.primaryScreen()).availableGeometry().height()
+            self.resize(self.sizeHint().width(), min(self.sizeHint().height(), int(avail * 0.9)))
+        except Exception:
+            pass
 
         for sig in (self._style.currentIndexChanged, self._wave.toggled, self._only.toggled,
                     self._chk_title.toggled, self._chk_artist.toggled, self._chk_chips.toggled, self._chk_kicker.toggled,
@@ -379,7 +563,84 @@ class VideoCustomDialog(QDialog):
             self._build_preview_panel(outer)
         for pk in list(self._bg.values()) + [self._end_img]:
             pk.changed = self._sync              # al cambiar una imagen se actualiza la vista previa
+        self._refresh_logo_ui()
         self._sync()
+
+    # — marca de agua propia —
+    def _pick_logo(self):
+        start = str(Path(self._logo["path"]).parent) if self._logo.get("path") else ""
+        while True:
+            p, _ = QFileDialog.getOpenFileName(self, tr("Elegir logo"), start, tr("Imágenes (*.png *.jpg *.jpeg *.webp *.bmp)"))
+            if not p:
+                return
+            if image_size(p) is None:
+                QMessageBox.warning(self, tr("Elegir logo"), tr("No se ha podido abrir esa imagen. Prueba con un PNG o JPG."))
+                continue
+            self._set_logo_path(p)
+            return
+
+    def _set_logo_path(self, p: str):
+        if not p:
+            self._logo = {}
+        else:
+            keep = dict(self._logo) if self._logo else dict(LOGO_DEFAULTS)
+            keep["path"] = p
+            self._logo = normalize_logo(keep)
+        self._refresh_logo_ui()
+        self._schedule_preview()
+
+    def _refresh_logo_ui(self):
+        """Pone los controles al día con `self._logo` (sin disparar cambios en cadena) y repinta el logo de la vista previa."""
+        lg = self._logo
+        has = bool(lg)
+        self._logo_lbl.setText(Path(lg["path"]).name if has else tr("(ninguno)"))
+        self._logo_clear.setVisible(has)
+        self._logo_box.setEnabled(has)
+        for w in (self._lg_size, self._lg_op, self._lg_rot, self._lg_fh, self._lg_fv):
+            w.blockSignals(True)
+        if has:
+            self._lg_size.setValue(round(lg["size"] * 100))
+            self._lg_op.setValue(round(lg["opacity"] * 100))
+            self._lg_rot.setValue(round(lg["rotate"]))
+            self._lg_fh.setChecked(lg["flip_h"])
+            self._lg_fv.setChecked(lg["flip_v"])
+        for w in (self._lg_size, self._lg_op, self._lg_rot, self._lg_fh, self._lg_fv):
+            w.blockSignals(False)
+        self._lg_size_v.setText(f"{self._lg_size.value()} %")
+        self._lg_op_v.setText(f"{self._lg_op.value()} %")
+        self._lg_rot_v.setText(f"{self._lg_rot.value()}°")
+        if hasattr(self, "_prev_lbl"):
+            self._prev_lbl.set_logo(self._logo)
+
+    def _logo_from_controls(self, *_):
+        if not self._logo:
+            return
+        self._logo.update({"size": self._lg_size.value() / 100.0, "opacity": self._lg_op.value() / 100.0,
+                           "rotate": float(self._lg_rot.value()), "flip_h": self._lg_fh.isChecked(),
+                           "flip_v": self._lg_fv.isChecked()})
+        self._logo = normalize_logo(self._logo)
+        self._refresh_logo_ui()
+
+    def _rotate90(self, *_):
+        if self._logo:
+            self._logo["rotate"] = float(self._logo["rotate"]) + 90.0
+            self._logo = normalize_logo(self._logo)
+            self._refresh_logo_ui()
+
+    def _quick_pos(self, *_):
+        key = self._lg_pos.currentData()
+        if self._logo and key:
+            half = self._logo["size"] / 2 + 0.04
+            x = {"tr": 1 - half, "br": 1 - half, "tl": half, "bl": half, "c": 0.5}[key]
+            y = {"tr": 0.08 + half / 2, "tl": 0.08 + half / 2, "br": 0.92 - half / 2, "bl": 0.92 - half / 2, "c": 0.5}[key]
+            self._logo.update({"x": x, "y": y})
+            self._refresh_logo_ui()
+        self._lg_pos.setCurrentIndex(0)
+
+    def _logo_dragged(self):
+        """El usuario arrastró el logo (o usó la rueda) en la vista previa: el widget ya modificó `self._logo` (mismo dict)."""
+        self._logo = normalize_logo(self._prev_lbl.logo)
+        self._refresh_logo_ui()
 
     # — vista previa en vivo —
     def _build_preview_panel(self, outer: QHBoxLayout):
@@ -388,7 +649,9 @@ class VideoCustomDialog(QDialog):
         cap = QLabel(tr("Vista previa"))
         cap.setStyleSheet("font-size:13px; font-weight:800; color:#ff3e55;")
         col.addWidget(cap)
-        self._prev_lbl = QLabel(tr("Preparando…"))
+        self._prev_lbl = _LogoPreview()
+        self._prev_lbl.setText(tr("Preparando…"))
+        self._prev_lbl.changed.connect(self._logo_dragged)
         self._prev_lbl.setAlignment(Qt.AlignCenter)
         self._prev_lbl.setFixedSize(300, 340)
         self._prev_lbl.setWordWrap(True)
@@ -431,6 +694,7 @@ class VideoCustomDialog(QDialog):
             self._pending = True
             return
         c = self._collect()
+        c["logo"] = {}                                    # el logo se dibuja encima con Qt (instantáneo, arrastrable)
         if c["style"] == "image" and not any(w.path() for w in self._bg.values()):
             self._prev_lbl.setPixmap(QPixmap())
             self._prev_lbl.setText(tr("Elige una imagen de fondo para ver la vista previa."))
@@ -445,6 +709,7 @@ class VideoCustomDialog(QDialog):
             self._prev_lbl.setText("")
             self._prev_lbl.setPixmap(QPixmap.fromImage(result).scaled(self._prev_lbl.size() - QSize(8, 8),
                                                                       Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            self._prev_lbl.set_logo(self._logo)
         else:
             self._prev_lbl.setText(tr("No se pudo dibujar la vista previa."))
         if self._pending:
@@ -509,6 +774,7 @@ class VideoCustomDialog(QDialog):
             "texts_pos": self._texts_pos.currentData(),
             "end_image": self._end_img.path(),
             "end_text": self._end_txt.text(),
+            "logo": dict(self._logo),
         })
 
     def result_custom(self) -> dict:

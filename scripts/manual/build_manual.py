@@ -477,6 +477,10 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
             "(9:16, 1:1 y 16:9) o una sola para todos, y elegir si se <b>recorta</b> para rellenar la pantalla o se muestra <b>entera sobre un fondo desenfocado</b>.</li>"
             "<li><b>Onda de sonido:</b> mostrarla o no; en <b>barras</b>, <b>línea</b> o <b>círculo</b>; abajo, en el centro o arriba; con los colores de la paleta Neón o en blanco.</li>"
             "<li><b>Textos:</b> elige cuáles se ven (título, artista, BPM y tonalidad, etiqueta «Previa exclusiva»), arriba, en el centro o abajo. Con <b>Solo la foto</b> se muestra únicamente tu imagen, sin textos, onda ni banner.</li>"
+            "<li><b>Tu marca de agua (logo):</b> pulsa <b>Elegir logo…</b> y escoge un <b>PNG</b> (mejor con fondo transparente) o un <b>JPG</b>. Se ve <b>de principio a fin</b> del vídeo. "
+            "Arrástralo con el ratón sobre la <b>vista previa</b> para colocarlo donde quieras y usa la <b>rueda del ratón</b> para cambiar su tamaño. "
+            "También puedes ajustar el <b>tamaño</b>, la <b>opacidad</b> y el <b>giro</b>, <b>voltearlo</b> en horizontal o en vertical, girarlo 90° o usar la <b>posición rápida</b> (esquinas y centro). "
+            "Se aplica a los tres formatos y se guarda en tus presets.</li>"
             "<li><b>Formato de la imagen:</b> los vídeos son <b>9:16, 1:1 o 16:9</b>. Si eliges una imagen con otra proporción, AutoPrevias te avisa de que el formato no es correcto y te muestra ejemplos de los tres formatos (botón <b>📐 Ver formatos válidos</b>); puedes cambiarla o usarla igualmente. Junto a cada imagen ves si el formato es correcto y si la resolución es baja.</li>"
             "<li><b>Final con tu imagen:</b> elige la imagen y un texto opcional; después selecciona «Final: mi imagen» en el selector de final.</li></ul>"
             "<p>La <b>👁 Vista previa</b> muestra el resultado con tus ajustes. Los ajustes se recuerdan y se guardan también en tus presets de estilo.</p>"
@@ -489,7 +493,7 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
             "<p>En la edición <b>Basic</b> el vídeo lleva siempre una <b>marca de agua pequeña y translúcida</b> en la esquina inferior derecha "
             "(«Generado por Radical Records · AutoPrevias Basic»), que no se puede quitar. Con el selector <b>Final</b> eliges cómo termina: "
             "con el cierre «Generado por AutoPrevias · Radical Records» y el enlace de compra, o con un <b>fundido a negro</b>. "
-            "La edición <b>Plus</b> elimina la marca de agua y te deja personalizar el vídeo con tu propia imagen, la onda de sonido y el final.</p>"
+            "La edición <b>Plus</b> elimina la marca de agua y te deja personalizar el vídeo con tu propia imagen, tu propio logo, la onda de sonido y el final.</p>"
             "<p>En la tarjeta del vídeo verás esas opciones de Plus <b>bloqueadas con un candado</b> (🔒) para que sepas qué ganas al pasar a Plus; al pulsarlo se abre la página de compra.</p>"
         )
     return f"""
@@ -634,7 +638,7 @@ def s_basic_upsell() -> str:
 <section><h1>9. Pasar a la edición Plus</h1>
 <p>Si necesitas más control, la <b>edición Plus</b> de AutoPrevias añade:</p>
 <div class="cols">
-<div class="card"><h4>🎚 Más formatos</h4><p>Exportación <b>WAV 24 bit</b> y <b>FLAC</b>, y <b>vídeo animado sin marca de agua</b> (MP4 9:16, 1:1 o 16:9) con tu propia imagen de fondo (una por formato), onda de sonido en barras, línea o círculo y el final a tu elección: firma AutoPrevias, fundido a negro, tu imagen o sin cierre.</p></div>
+<div class="card"><h4>🎚 Más formatos</h4><p>Exportación <b>WAV 24 bit</b> y <b>FLAC</b>, y <b>vídeo animado sin marca de agua</b> (MP4 9:16, 1:1 o 16:9) con tu propia imagen de fondo (una por formato), tu <b>marca de agua (logo)</b> colocada donde quieras, onda de sonido en barras, línea o círculo y el final a tu elección: firma AutoPrevias, fundido a negro, tu imagen o sin cierre.</p></div>
 <div class="card"><h4>✂ Editor avanzado</h4><p>Controla la variación de BPM, elige si la previa arranca con el efecto de vinilo o a los BPM originales y consulta la estructura musical detallada.</p></div>
 <div class="card"><h4>🖋 Firmar temas enteros</h4><p>Mete carátula y etiquetas a canciones completas y guárdalas en FLAC o WAV a máxima calidad, sin tocar el audio.</p></div>
 <div class="card"><h4>🔊 Master LUFS</h4><p>Nivel de club (−9 LUFS) con limitador transparente. Los efectos Flanger y Filter Sweep ya los tienes también en Basic.</p></div>

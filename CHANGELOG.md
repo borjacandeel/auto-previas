@@ -3,6 +3,15 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [6.1.0] - 2026-10-28
+
+### Añadido
+- **Tu propia marca de agua en el vídeo (Plus).** En **⚙ Personalizar…** del vídeo, nueva sección **«Tu marca de agua (logo)»**: elige un **PNG** (mejor con fondo transparente) o un **JPG** y se ve **de principio a fin** del vídeo. **Arrástralo con el ratón** sobre la vista previa para colocarlo donde quieras y usa la **rueda del ratón** para cambiar su tamaño. También puedes ajustar el **tamaño**, la **opacidad** y el **giro**, **voltearlo** en horizontal o en vertical, girarlo 90° y usar la **posición rápida** (esquinas y centro). Sirve para los tres formatos (9:16, 1:1 y 16:9), se recuerda y se guarda en tus presets.
+- La ventana de ajustes del vídeo ahora se desplaza si tu pantalla es pequeña, con «Cancelar» y «Guardar» siempre a la vista.
+
+### Cambiado
+- **La imagen del vídeo ya no se mueve de lado a lado.** Antes la carátula temblaba con cada golpe de bombo, la foto de fondo se deslizaba despacio hacia los lados y en los drops se desplazaban franjas de la imagen. Ahora la carátula solo hace el **efecto de empuje** (crece un poco con el kick y vuelve) y la foto de fondo conserva su zoom lento, siempre centrada.
+
 ## [6.0.4] - 2026-10-26
 
 ### Corregido

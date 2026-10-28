@@ -165,7 +165,7 @@ def test_el_zoom_lento_mueve_la_imagen(tmp_path):
     p = tmp_path / "g.png"; Image.fromarray(np.stack([grad, grad[::-1], grad], -1), "RGB").save(p)
     r = vn._Renderer(_analysis(), None, "T", "A", 128.0, "8A", "9:16", "crimson", "", "X", 1.0,
                      custom={"style": "image", "bg": {"default": str(p)}, "wave": False, "texts": False})
-    a, b = np.asarray(r.frame(0, 1.0), np.int16)[:1800], np.asarray(r.frame(29, 9.0), np.int16)[:1800]
+    a, b = np.asarray(r.frame(0, 0.0), np.int16)[:1800], np.asarray(r.frame(29, 1.0), np.int16)[:1800]   # zoom lento: 0 → 7 %
     assert np.abs(a - b).mean() > 0.5
 
 

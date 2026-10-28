@@ -271,7 +271,7 @@ def build_steps(win) -> list:
             example="Título: MIDNIGHT GROOVE · Banner: RADICAL RECORDS · PROMO EXCLUSIVA")
         add("personalizar", "Personalizar el vídeo (Plus)",
             "Aquí eliges todo: tu imagen de fondo para cada formato, la onda de sonido (barras, línea o círculo, su posición y color), "
-            "qué textos salen y dónde, y el final del vídeo. Tiene vista previa en vivo.", lambda: R._btn_vcustom, page=2)
+            "qué textos salen y dónde, tu propia marca de agua (logo) que colocas donde quieras, y el final del vídeo. Tiene vista previa en vivo.", lambda: R._btn_vcustom, page=2)
         add("imagen", "Tu propia imagen de fondo",
             "Arrastra una foto sobre la tarjeta para usarla de fondo. Debe ser 9:16, 1:1 o 16:9: si no lo es, la app te avisa y te "
             "enseña ejemplos de formatos válidos.", lambda: R._lbl_vdrop, page=2)

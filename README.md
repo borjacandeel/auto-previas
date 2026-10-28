@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v6.0.4-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v6.1.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -189,7 +189,7 @@ Si Windows muestra la pantalla azul con el mensaje *"Windows protegió su PC"* d
 - 🛡️ **Modo Promo Antifugas (Plus):**
   Repite tu firma de voz cada pocos segundos sobre toda la previa y la exporta solo en MP3 128 kbps con la marca «PROMO — NO DISTRIBUIR», para que el audio no se pueda reutilizar sin tu firma.
 - 🎬 **Vídeo Animado «Radical Neón» para Redes (Basic y Plus):**
-  MP4 en **9:16, 1:1 y 16:9** con tu carátula, analizador de espectro y destellos al ritmo del bombo, con **vista previa** antes de generar y título propio. **Basic** lleva una marca de agua pequeña y elige el final (firma con enlace o fundido a negro). **Plus** no lleva marca de agua y personaliza todo: **tu propia imagen de fondo** (una por formato, que puedes arrastrar sobre la tarjeta), **looks de un clic** (Neón clásico, foto + barras, foto + círculo, foto y título, solo la foto), **onda de sonido** en barras, línea o círculo con su posición, qué textos se ven, y un **final con tu imagen**. Avisa si la imagen no tiene el formato del vídeo y enseña ejemplos; la ventana «Personalizar…» tiene vista previa en vivo.
+  MP4 en **9:16, 1:1 y 16:9** con tu carátula, analizador de espectro y destellos al ritmo del bombo, con **vista previa** antes de generar y título propio. **Basic** lleva una marca de agua pequeña y elige el final (firma con enlace o fundido a negro). **Plus** no lleva marca de agua y personaliza todo: **tu propia imagen de fondo** (una por formato, que puedes arrastrar sobre la tarjeta), **looks de un clic** (Neón clásico, foto + barras, foto + círculo, foto y título, solo la foto), **onda de sonido** en barras, línea o círculo con su posición, qué textos se ven, **tu propia marca de agua (logo)** colocada donde quieras (se arrastra, se redimensiona, se gira y se voltea) y un **final con tu imagen**. Avisa si la imagen no tiene el formato del vídeo y enseña ejemplos; la ventana «Personalizar…» tiene vista previa en vivo.
 - 🧭 **Panel de Exportación Ordenado en Pasos:**
   ① Nombre y formatos, ② Vídeo animado (tarjeta única con botones de formato) y ③ Opciones avanzadas plegables (efectos, Voice Drop, Modo promo y firma, que se abren solas al activarlas), con una línea de **resumen** sobre «Generar previa» que dice qué se va a crear.
 - 🚀 **Rendimiento Adaptado a tu Equipo:**
@@ -259,6 +259,7 @@ Cada clave se puede usar en **un solo equipo a la vez**. Si ya está activa en u
 | Final del vídeo a elegir | ✅ firma con enlace o fundido a negro | ✅ firma, fundido a negro, sin cierre o **tu imagen** |
 | Vídeo con tu propia imagen de fondo (una por formato), looks de un clic y vista previa en vivo | 🔒 | ✅ |
 | Onda de sonido del vídeo (barras, línea, círculo), posición y textos a elegir, «solo la foto» | 🔒 | ✅ |
+| Tu propia marca de agua (logo PNG/JPG) en el vídeo: posición libre, tamaño, giro, volteo y opacidad | 🔒 | ✅ |
 | Aviso de formato de imagen (9:16, 1:1, 16:9) con ejemplos | — | ✅ |
 | Ajuste de Rendimiento (Automático / Ahorro / Máximo) | ✅ | ✅ |
 | Recorrido de bienvenida interactivo (primera vez, omitible) | ✅ | ✅ (con las funciones de Plus) |
@@ -324,7 +325,10 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v6.0.4] — 2026-10-26 (Revisión de errores de Windows y macOS)
+#### 🟢 [v6.1.0] — 2026-10-28 (Tu marca de agua en el vídeo y sin movimiento lateral)
+- **Plus:** marca de agua propia (PNG/JPG) de principio a fin: se arrastra sobre la vista previa, se redimensiona (rueda del ratón), se gira, se voltea y se le baja la opacidad. La imagen del vídeo ya no se mueve de lado a lado: la carátula solo hace el empuje del kick.
+
+#### [v6.0.4] — 2026-10-26 (Revisión de errores de Windows y macOS)
 - Sin ventana negra de FFmpeg en Windows; «Abrir carpeta» selecciona el archivo; nombres de previa con caracteres no permitidos se adaptan solos; audio mono compatible; WAV con carátula grande ya no se «repara» por error; cerrar Lote/activación en marcha ya no cierra la app; FLAC/AIFF siempre a 24 bits; actualizador y licencia más robustos.
 
 #### [v6.0.3] — 2026-10-22 (Activación de licencia en Windows con certificados antiguos)

@@ -55,7 +55,11 @@ CUSTOM_DEFAULTS = {
     "texts_pos": "top",       # "top" | "center" | "bottom"
     "end_image": "",          # imagen del final (modo de final «image»)
     "end_text": "",
+    "logo": {},               # marca de agua propia (Plus): ver LOGO_DEFAULTS
 }
+# Marca de agua propia: PNG/JPG colocada donde quiera el autor, de principio a fin del vídeo.
+# x, y = centro del logo como fracción del fotograma (0..1); size = ancho como fracción del lado corto del vídeo.
+LOGO_DEFAULTS = {"path": "", "x": 0.86, "y": 0.10, "size": 0.20, "rotate": 0.0, "flip_h": False, "flip_v": False, "opacity": 1.0}
 _CHOICES = {"style": ("neon", "image"), "fit": ("crop", "blur"), "wave_style": ("bars", "line", "circle"),
             "wave_pos": ("top", "center", "bottom"), "wave_color": ("palette", "white"), "texts_pos": ("top", "center", "bottom")}
 
@@ -80,7 +84,53 @@ def normalize_custom(c: Optional[dict]) -> dict:
     out["texts"] = any(out[k] for k in ("title", "artist", "chips", "kicker"))
     out["bg"] = {str(k): str(v) for k, v in (out["bg"] or {}).items() if v}
     out["end_image"], out["end_text"] = str(out["end_image"] or ""), str(out["end_text"] or "").strip()[:80]
+    out["logo"] = normalize_logo(out.get("logo"))
     return out
+
+
+def normalize_logo(lg: Optional[dict]) -> dict:
+    """Completa y limita los ajustes de la marca de agua propia. Sin ruta válida → {} (no hay marca de agua)."""
+    if not isinstance(lg, dict) or not lg.get("path"):
+        return {}
+    out = dict(LOGO_DEFAULTS)
+    out.update({k: lg[k] for k in LOGO_DEFAULTS if k in lg and lg[k] is not None})
+
+    def _f(v, lo, hi, d):
+        try:
+            v = float(v)
+        except (TypeError, ValueError):
+            return d
+        return d if v != v else min(hi, max(lo, v))
+    out["path"] = str(out["path"])
+    out["x"], out["y"] = _f(out["x"], -0.25, 1.25, 0.86), _f(out["y"], -0.25, 1.25, 0.10)
+    out["size"] = _f(out["size"], 0.03, 1.5, 0.20)
+    out["rotate"] = ((_f(out["rotate"], -3600, 3600, 0.0) + 180.0) % 360.0) - 180.0
+    out["opacity"] = _f(out["opacity"], 0.1, 1.0, 1.0)
+    out["flip_h"], out["flip_v"] = bool(out["flip_h"]), bool(out["flip_v"])
+    return out
+
+
+def render_logo(lg: dict, short_side: int) -> Optional[Image.Image]:
+    """Capa RGBA de la marca de agua ya volteada, a escala, girada y con su opacidad. None si no se puede leer."""
+    lg = normalize_logo(lg)
+    if not lg or not Path(lg["path"]).is_file():
+        return None
+    try:
+        im = Image.open(lg["path"]).convert("RGBA")
+    except Exception:
+        return None
+    if lg["flip_h"]:
+        im = im.transpose(Image.FLIP_LEFT_RIGHT)
+    if lg["flip_v"]:
+        im = im.transpose(Image.FLIP_TOP_BOTTOM)
+    w = max(6, int(round(short_side * lg["size"])))
+    h = max(2, int(round(w * im.height / max(1, im.width))))
+    im = im.resize((w, h), Image.LANCZOS)
+    if abs(lg["rotate"]) > 0.05:
+        im = im.rotate(-lg["rotate"], resample=Image.BICUBIC, expand=True)     # el ángulo positivo gira en sentido horario
+    if lg["opacity"] < 0.999:
+        im.putalpha(im.getchannel("A").point(lambda v: int(v * lg["opacity"])))
+    return im
 
 
 ASPECT_VALUES = {a: w / h for a, (w, h) in ASPECTS.items()}
@@ -517,6 +567,7 @@ class _Renderer:
         if self.img_mode:
             self._setup_image_mode()
         self.wm_layer = self._watermark_layer() if self.watermark else None
+        self.logo_layer = render_logo(self.custom["logo"], min(W, H)) if self.custom["logo"] else None   # solo Plus
         self.spark = {k: _glow_sprite(r, self.F if k == "hot" else self.P) for k, r in (("sm", 7), ("md", 12), ("hot", 18))}
         rng = np.random.default_rng(11)
         self.parts = [(rng.uniform(0, W), rng.uniform(0, H), rng.uniform(40, 150), rng.uniform(0.4, 1.0), rng.uniform(0, 6.28))
@@ -651,7 +702,7 @@ class _Renderer:
                 s = self.spark[kind]
                 base.paste(s, (int(x) - s.width // 2, int(y) - s.height // 2), s)
 
-        # carátula: late con el bombo, tiembla en los golpes fuertes
+        # carátula: solo «empuja» (crece) con el bombo; nunca se desplaza de lado a lado ni tiembla
         sc = 1 + 0.050 * kick + 0.012 * en + 0.035 * flash
         cs = int(L.cover * sc)
         cov = self.cover.resize((cs, cs), Image.BILINEAR)
@@ -659,15 +710,8 @@ class _Renderer:
         frm = self._frame_levels[lvl]
         fs = frm.width
         cx, cy = L.cover_xy[0] + L.cover // 2, L.cover_xy[1] + L.cover // 2
-        sh = 9 * kick
-        ox, oy = int(rng.uniform(-sh, sh)), int(rng.uniform(-sh, sh))
-        base.paste(frm, (cx - fs // 2 + ox, cy - fs // 2 + oy), frm)
-        if glitch:                                        # separación RGB de la carátula en el drop
-            r, g, b = cov.convert("RGB").split()
-            off = int(14 * (1 - since / 0.30)) + 2
-            cov_rgb = Image.merge("RGB", (ImageChops.offset(r, off, 0), g, ImageChops.offset(b, -off, 0)))
-            cov = Image.merge("RGBA", (*cov_rgb.split(), cov.getchannel("A")))
-        base.paste(cov, (cx - cs // 2 + ox, cy - cs // 2 + oy), cov)
+        base.paste(frm, (cx - fs // 2, cy - fs // 2), frm)
+        base.paste(cov, (cx - cs // 2, cy - cs // 2), cov)
 
         # textos: entrada con golpe
         self._draw_texts(base, t, kick, flash, glitch, since)
@@ -686,11 +730,6 @@ class _Renderer:
         # destello, rayas, grano, glitch de bandas
         if flash > 0.02:
             base = Image.blend(base, Image.new("RGB", (W, H), self.F), min(0.55, flash * 0.6))
-        if glitch:
-            for _ in range(5):
-                y0 = int(rng.uniform(0, H - 60)); h = int(rng.uniform(10, 50)); dx = int(rng.uniform(-70, 70))
-                strip = base.crop((0, y0, W, y0 + h))
-                base.paste(ImageChops.offset(strip, dx, 0), (0, y0))
 
         # barra de progreso
         d = ImageDraw.Draw(base)
@@ -718,6 +757,26 @@ class _Renderer:
                 out_len = 1.6
                 if t > an.duration - out_len:
                     base = Image.blend(base, Image.new("RGB", (W, H), (0, 0, 0)), min(1.0, (t - (an.duration - out_len)) / out_len))
+        return self._paste_logo(base, t)
+
+    def _paste_logo(self, base: Image.Image, t: float) -> Image.Image:
+        """Marca de agua propia (Plus): visible de principio a fin; se funde con la entrada y con el fundido a negro final."""
+        lg = self.logo_layer
+        if lg is None:
+            return base
+        L, an = self.L, self.an
+        f = 1.0
+        if t < 0.35:
+            f = max(0.0, t / 0.35)
+        if self.end_mode == "fade" and an.duration > 8 and t > an.duration - 1.6:
+            f = min(f, max(0.0, 1.0 - (t - (an.duration - 1.6)) / 1.6))
+        if f <= 0.01:
+            return base
+        if f < 0.999:
+            lg = lg.copy()
+            lg.putalpha(lg.getchannel("A").point(lambda v: int(v * f)))
+        c = self.custom["logo"]
+        base.paste(lg, (int(c["x"] * L.W - lg.width / 2), int(c["y"] * L.H - lg.height / 2)), lg)
         return base
 
     # — modo «imagen propia» (Plus) —
@@ -887,8 +946,7 @@ class _Renderer:
         z = 1.0 + 0.07 * prog + 0.012 * kick + 0.012 * flash
         # el zoom 1.0 enseña el lienzo entero menos el margen (1/1.12 del tamaño ampliado)
         cw, ch = (self.kb_w / 1.12) / z, (self.kb_h / 1.12) / z
-        cx = self.kb_w / 2 + 0.018 * self.kb_w * math.sin(t * 0.35)
-        cy = self.kb_h / 2 + 0.012 * self.kb_h * math.cos(t * 0.27)
+        cx, cy = self.kb_w / 2, self.kb_h / 2              # centrada fija: solo zoom, sin deslizarse de lado a lado
         box = (cx - cw / 2, cy - ch / 2, cx + cw / 2, cy + ch / 2)
         base = self.kb.resize((W, H), Image.BILINEAR, box=box)
         only = self.custom["only_photo"]
