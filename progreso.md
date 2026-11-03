@@ -2284,3 +2284,11 @@ AutoPrevias/
 - Plan pedido (sin implementar): modo DEMO de 7 días bloqueado por equipo (ver respuesta del chat).
 - Tests: 470 OK (tests de recorrido y de looks adaptados).
 
+## Sesión 77 — v6.3.0: AutoPrevias Demo (app aparte, 7 días gratis) (2026-11-04)
+- Petición del usuario: «una app aparte» con demo de 7 días, muy limitada, que el programa elija cortes, gratis, que a los 7 días se bloquee y obligue a comprar, ligada al equipo y sin poder reiniciarla borrando.
+- **Edición `demo`** (tercer valor de `BAKED_EDITION`; `config.py`, `main.py --edition=`). CI: matriz `edition: [basic, plus, demo]` en macOS y Windows (instaladores `AutoPrevias-Demo-<v>-macOS-arm64.dmg` / `…-Windows-x64-Setup.exe` + alias `AutoPrevias-Demo-macOS-arm64.dmg` y `AutoPrevias-Demo-Windows-x64-Setup.exe`); Inno Setup con AppId propio (`D3A0E5B1-…`) para convivir con Basic/Plus.
+- **`src/licensing/demo.py`:** `check_demo(now, online)` → `DemoState(status active|expired|tampered|clock, days_left)`. Inicio guardado en 3–4 ubicaciones (datos de la app, carpeta compartida del sistema — `/Users/Shared`, `%PROGRAMDATA%` — y registro `HKCU\Software\RadicalRecords\AutoPrevias` en Windows) con sello HMAC ligado al hash del equipo; se usa el inicio MÁS ANTIGUO, se restauran las copias borradas, copias manipuladas/de otro equipo = bloqueado, reloj atrasado >1 h = bloqueado. `server_start()` consulta al Worker (`action:"demo"` → KV `demo:<hash>`, `DEMO_DAYS` opcional; **hay que desplegar el Worker** para que el servidor recuerde el primer arranque; sin desplegar, la app funciona solo con el almacén local).
+- **App:** `main._check_demo_on_startup` (si no vale → `DemoEndedDialog` y no arranca; nunca falla en abierto; hilo de sincronización cada 6 h), `MainWindow._check_demo_watch` (cada 30 s: banner «quedan N días»; al acabar, pantalla de compra y cierre), `ResultPanel._apply_demo_limits` (solo MP3 128k, sin vídeo/WAV/FLAC, sin «Retocar», sin «+ Corte», sin efectos, solo 60 s), «⚙ Licencia» muestra la demo, EN, selftest.
+- **Límite honesto:** si alguien borra TODAS las copias locales y no hay conexión al servidor, la demo se reinicia; con el Worker desplegado y red, el servidor lo impide por equipo.
+- Tests: `tests/test_demo.py` (9). Pendiente del usuario: desplegar el Worker (`worker/autoprevias-license.js`) y decidir dónde publicar el instalador Demo.
+

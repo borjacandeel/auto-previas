@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v6.2.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v6.3.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -53,6 +53,8 @@ Los siguientes enlaces apuntan **siempre y de forma automática a los instalador
 | 🍏 **macOS** (Apple Silicon M1–M4) | **Plus** | `.dmg` | [⬇️ **AutoPrevias Plus · macOS**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-Plus-macOS-arm64.dmg) | [Ver Release Oficial](https://github.com/borjacandeel/auto-previas/releases/latest) |
 | 🪟 **Windows** (64-bit x64 y ARM64) | **Basic** | Instalador `.exe` (Inno Setup) | [⬇️ **AutoPrevias Basic · Windows**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-Basic-Windows-x64-Setup.exe) | [Ver Release Oficial](https://github.com/borjacandeel/auto-previas/releases/latest) |
 | 🪟 **Windows** (64-bit x64 y ARM64) | **Plus** | Instalador `.exe` (Inno Setup) | [⬇️ **AutoPrevias Plus · Windows**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-Plus-Windows-x64-Setup.exe) | [Ver Release Oficial](https://github.com/borjacandeel/auto-previas/releases/latest) |
+| 🍏 **macOS** (Apple Silicon M1–M4) | **Demo (gratis, 7 días)** | `.dmg` | [⬇️ **AutoPrevias Demo · macOS**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-Demo-macOS-arm64.dmg) | [Ver Release Oficial](https://github.com/borjacandeel/auto-previas/releases/latest) |
+| 🪟 **Windows** (64-bit x64 y ARM64) | **Demo (gratis, 7 días)** | Instalador `.exe` (Inno Setup) | [⬇️ **AutoPrevias Demo · Windows**](https://github.com/borjacandeel/auto-previas/releases/latest/download/AutoPrevias-Demo-Windows-x64-Setup.exe) | [Ver Release Oficial](https://github.com/borjacandeel/auto-previas/releases/latest) |
 
 ---
 
@@ -325,7 +327,10 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v6.2.0] — 2026-11-03 (Más directo y más simple)
+#### 🟢 [v6.3.0] — 2026-11-04 (AutoPrevias Demo gratuita)
+- Nueva app aparte **AutoPrevias Demo** (macOS y Windows): 7 días gratis, AutoPrevias elige los cortes, previa de 60 s en MP3 128k, sin vídeo ni edición; pasados los 7 días se bloquea y ofrece comprar. La cuenta atrás va ligada al equipo y no se reinicia borrando carpetas.
+
+#### [v6.2.0] — 2026-11-03 (Más directo y más simple)
 - Sin pantalla de destinos (directo a crear la previa), sin plantillas de 15/30 s, botón «✂ + Corte» muy visible, carpeta de previas fija (Música/Previas) con botón arriba, selector de imagen por formato para el vídeo, efectos más marcados, ▶ del corte arreglado en Windows y registro de cierres nativos.
 
 #### [v6.1.0] — 2026-10-28 (Tu marca de agua en el vídeo y sin movimiento lateral)

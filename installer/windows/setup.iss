@@ -14,6 +14,9 @@
 #if Edition == "basic"
   #define EditionCap "Basic"
   #define AppIdStr "A1B2C3D4-0000-0000-0000-111111111111"
+#elif Edition == "demo"
+  #define EditionCap "Demo"
+  #define AppIdStr "D3A0E5B1-7C2F-4A86-9B1D-5E0F6A2C4D88"
 #else
   #define EditionCap "Plus"
   #define AppIdStr "C789218F-A362-4C61-9E89-E8652D027F11"

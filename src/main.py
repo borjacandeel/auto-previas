@@ -310,6 +310,14 @@ def run_selftest() -> int:
         assert _lic.LicenseStatus.TERM_ENDED == "term_ended" and _lic.days_left() is None
         print("  ✓ Licencias de 3 y 12 meses: menú de caducada y panel de activación construidos sin crash")
 
+        # AutoPrevias Demo: pantalla de fin de demo y estado local (con HOME aislado en el autotest no deja rastro)
+        from src.ui.demo_dialog import DemoEndedDialog as _DED
+        for _st in ("expired", "clock", "tampered"):
+            _DED(status=_st).deleteLater()
+        from src.licensing import demo as _demo
+        assert _demo.DEMO_DAYS == 7 and _demo._valid(_demo._record(1, 2, "ab" * 32), "ab" * 32)
+        print("  ✓ AutoPrevias Demo: pantalla de fin de demo y sellos del almacén construidos sin crash")
+
         # Funciones 3.1: idioma, presets, historial, licencia y modo promo (panel de resultados real)
         from src import i18n as _i18n, presets as _pre
         from src.engine.effects import promo_tag_times
@@ -593,6 +601,47 @@ def _reverify_expired_blocking(app) -> str:
     return check_license()[0]
 
 
+def _check_demo_on_startup() -> bool:
+    """AutoPrevias Demo: 7 días gratis por equipo. Pasados (o si se manipula), pantalla de compra y la app no arranca."""
+    try:
+        from src import i18n
+        i18n.init_from_config()
+        i18n.install_auto_translate()
+        from src.licensing.demo import check_demo
+        st = check_demo(online=False)
+        _log_startup(f"Demo: {st.status} (quedan {st.days_left} días)")
+        if st.ok:
+            _start_demo_sync()
+            return True
+        from PySide6.QtWidgets import QApplication
+        QApplication.instance() or QApplication(sys.argv)
+        from src.ui.demo_dialog import DemoEndedDialog
+        DemoEndedDialog(status=st.status).exec()
+        return False
+    except Exception as ex:
+        _log_startup(f"Error en la comprobación de la demo: {ex}")
+        return False        # la demo nunca falla en abierto
+
+
+def _start_demo_sync() -> None:
+    """Hilo en segundo plano: consulta al servidor (el primer arranque de este equipo no se puede reiniciar) cada 6 h."""
+    try:
+        import threading
+        import time as _t
+
+        def _run():
+            while True:
+                try:
+                    from src.licensing.demo import check_demo
+                    check_demo(online=True)
+                except Exception as ex:
+                    _log_startup(f"Sincronización de la demo falló: {ex}")
+                _t.sleep(6 * 3600)
+        threading.Thread(target=_run, name="demo-sync", daemon=True).start()
+    except Exception:
+        pass
+
+
 def _check_license_on_startup() -> bool:
     """
     Comprueba la licencia al arrancar. Muestra la pantalla de activación
@@ -606,6 +655,13 @@ def _check_license_on_startup() -> bool:
             return True
     except Exception:
         return True
+
+    try:
+        from src.config import _get_baked_edition as _gbe
+        if _gbe() == "demo":
+            return _check_demo_on_startup()
+    except Exception:
+        pass
 
     try:
         from src import i18n
@@ -711,7 +767,7 @@ def main():
     for _arg in sys.argv[1:]:
         if _arg.startswith("--edition="):
             _ed = _arg.split("=", 1)[1].strip().lower()
-            if _ed in ("basic", "plus"):
+            if _ed in ("basic", "plus", "demo"):
                 from src.config import set_edition
                 set_edition(_ed)
                 _log_startup(f"Edición forzada por argumento: {_ed}")

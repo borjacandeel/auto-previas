@@ -106,6 +106,21 @@ export default {
     const action = String(body.action || "activate");
     const key = String(body.license_key || "").trim().toUpperCase();
     const device = body.device_id ? String(body.device_id).toLowerCase() : "";
+
+    // — Demo gratuita de AutoPrevias Demo: 7 días por equipo, contados desde el primer arranque (no se reinicia) —
+    if (action === "demo") {
+      if (!/^[0-9a-f]{16,128}$/.test(device)) return fail("bad_request", "Equipo no válido", 400);
+      const dk = "demo:" + device;
+      const t = Date.now();
+      let rec = await env.LICENSES.get(dk, "json");
+      if (!rec || !rec.start) {
+        rec = { start: t };
+        try { await env.LICENSES.put(dk, JSON.stringify(rec)); } catch (_) { /* sin KV: se devuelve el inicio de ahora */ }
+      }
+      const exp = rec.start + Number(env.DEMO_DAYS || 7) * 86400000;
+      return json({ success: true, start: Math.floor(rec.start / 1000), expires_at: Math.floor(exp / 1000), expired: t >= exp });
+    }
+
     if (!KEY_RE.test(key)) return fail("invalid", "Clave no válida");
     const kvKey = "lic:" + (await sha256Hex(key));
     const now = Date.now();

@@ -320,7 +320,7 @@ class LicenseDialog(QDialog):
 
     # ── Contenido dinámico (se vuelve a calcular al cambiar de idioma) ─────────
     def _refresh(self):
-        plan = tr("PLUS") if self._edition == "plus" else tr("BÁSICA")
+        plan = tr("PLUS") if self._edition == "plus" else (tr("DEMO") if self._edition == "demo" else tr("BÁSICA"))
         self._lbl_version.setText(tr("Versión {v}  ·  Edición {ed}", v=self._version, ed=plan))
         self._lbl_support.setText(tr("Soporte: {mail}", mail=SUPPORT_EMAIL))
 
@@ -330,6 +330,16 @@ class LicenseDialog(QDialog):
             self._lbl_state.setStyleSheet(f"font-size: 13px; font-weight: 700; color: {WARN};")
             self._lbl_detail.setText(tr("Esta copia se ejecuta desde el código fuente: no se exige licencia."))
             self._btn_remove.setEnabled(False)
+            return
+        if _get_baked_edition() == "demo":
+            from src.licensing.demo import check_demo
+            st = check_demo(online=False)
+            self._lbl_state.setText(tr("🎁 Demo gratuita"))
+            self._lbl_state.setStyleSheet(f"font-size: 13px; font-weight: 700; color: {GREEN if st.ok else RED};")
+            self._lbl_detail.setText(tr("Quedan {n} días de prueba. Solo MP3 de 128 kbps y 60 s; AutoPrevias elige los cortes.", n=st.days_left)
+                                     if st.ok else tr("La demo ha terminado."))
+            self._btn_remove.setEnabled(False)
+            self._renew_box.setVisible(False)
             return
         from src.licensing.license import GRACE_DAYS, load_local
         info = describe_license(load_local(), grace_days=GRACE_DAYS)

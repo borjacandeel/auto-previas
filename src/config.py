@@ -442,7 +442,7 @@ def _get_baked_edition() -> str | None:
     """
     try:
         from src._edition import BAKED_EDITION  # type: ignore[import]
-        if BAKED_EDITION in ("basic", "plus"):
+        if BAKED_EDITION in ("basic", "plus", "demo"):
             return BAKED_EDITION
     except ImportError:
         pass
@@ -470,7 +470,7 @@ def set_edition(edition: str) -> None:
     sobre la edición real — solo persiste el valor para coherencia con el sistema
     de licencias, que lo usará cuando BAKED_EDITION no esté presente.
     """
-    if edition not in ("basic", "plus"):
+    if edition not in ("basic", "plus", "demo"):
         raise ValueError(f"Edición desconocida: {edition!r}")
     cfg = load()
     cfg["edition"] = edition

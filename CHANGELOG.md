@@ -3,6 +3,12 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [6.3.0] - 2026-11-04
+
+### Añadido
+- **AutoPrevias Demo, una app aparte y gratuita.** Nuevo instalador «AutoPrevias Demo» (macOS y Windows) para probar durante **7 días**: AutoPrevias elige los cortes y genera una previa de **60 s en MP3 de 128 kbps**, sin vídeo, sin efectos ni edición. Al pasar los 7 días la app se bloquea y solo ofrece comprar Plus o Basic.
+- **La demo no se puede reiniciar borrando una carpeta:** la cuenta de los 7 días se guarda a la vez en varios sitios del equipo con un sello ligado a ese ordenador (y, si hay conexión, el servidor recuerda el primer arranque de ese equipo). Si se manipula o se cambia la fecha del equipo hacia atrás, la demo se bloquea.
+
 ## [6.2.0] - 2026-11-03
 
 ### Cambiado

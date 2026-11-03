@@ -3041,6 +3041,9 @@ class ResultPanel(QWidget):
         """Opciones del modo promo. Con el modo activo solo se exporta MP3 128 kbps."""
         on = bool(self._chk_promo.isChecked()) and get_edition() == "plus"
         opts = {"promo_mode": on, "promo_interval_sec": int(self._spin_promo.value())}
+        if get_edition() == "demo":                 # AutoPrevias Demo: solo MP3 de 128 kbps, nunca vídeo
+            opts.update({"export_wav": False, "export_flac": False, "export_mp3": True, "mp3_kbps": 128, "export_video": False})
+            return opts
         if on:
             opts.update({"export_wav": False, "export_flac": False, "export_mp3": True, "mp3_kbps": 128})
         return opts
@@ -5125,6 +5128,32 @@ class ResultPanel(QWidget):
             if lay is not None:
                 lay.insertWidget(max(0, lay.count() - 2), self._badge_basic)
 
+        if get_edition() == "demo":
+            self._apply_demo_limits()
+
+    def _apply_demo_limits(self):
+        """AutoPrevias Demo: lo mínimo para probar. AutoPrevias elige los cortes; solo MP3 de 128 kbps y 60 s; sin vídeo ni edición."""
+        self._chk_wav.setChecked(False); self._chk_flac.setChecked(False)
+        self._chk_mp3.setChecked(True); self._chk_mp3.setEnabled(False)
+        i18n.set_text(self._chk_mp3, "MP3 128k (demo)")
+        self._chk_video.setChecked(False)
+        for w in (self._chk_video, self._combo_vend, self._row_look_widget, self._lbl_vbasic, self._btn_vlock,
+                  self._chk_advanced, self._btn_adv, self._card_startend):
+            w.setVisible(False)
+        for name in ("_detail_card", "_btn_quick_cut", "_fx_palette", "_card_video", "_card_formats_video"):
+            w = getattr(self, name, None)
+            if w is not None:
+                w.setVisible(False)
+        self._btn_p120.setVisible(False)
+        try:
+            self._apply_duration_preset(60)
+        except Exception:
+            pass
+        try:
+            self._badge_basic.setText(tr("  DEMO GRATUITA  ·  7 días  ·  MP3 · 60 s  "))
+        except Exception:
+            pass
+
 
 # ── Helpers de tabla ──────────────────────────────────────────────────────────
 
@@ -5723,6 +5752,13 @@ class MainWindow(QMainWindow):
             from src.config import _get_baked_edition
             if _get_baked_edition() is None:        # en desarrollo no hay licencia
                 return
+            if _get_baked_edition() == "demo":      # AutoPrevias Demo: cuenta atrás de 7 días
+                self._demo_timer = QTimer(self)
+                self._demo_timer.setInterval(30_000)
+                self._demo_timer.timeout.connect(self._check_demo_watch)
+                self._demo_timer.start()
+                QTimer.singleShot(1500, self._check_demo_watch)
+                return
         except Exception:
             return
         self._license_timer = QTimer(self)
@@ -5730,6 +5766,27 @@ class MainWindow(QMainWindow):
         self._license_timer.timeout.connect(self._check_license_watch)
         self._license_timer.start()
         QTimer.singleShot(5000, self._warn_license_expiring)
+
+    def _check_demo_watch(self):
+        """Demo: muestra los días que quedan y, al terminar (o si se manipula el reloj), cierra la app tras la pantalla de compra."""
+        from src.licensing.demo import check_demo
+        st = check_demo(online=False)
+        if st.ok:
+            try:
+                n = st.days_left
+                self._results._badge_basic.setText(tr("  DEMO GRATUITA  ·  quedan {n} días  ·  MP3 · 60 s  ", n=n) if n != 1
+                                                   else tr("  DEMO GRATUITA  ·  queda 1 día  ·  MP3 · 60 s  "))
+            except Exception:
+                pass
+            return
+        worker = getattr(self, "_export_worker", None)
+        if worker is not None and worker.isRunning():
+            return                                  # no cortar una exportación en curso
+        self._demo_timer.stop()
+        from PySide6.QtWidgets import QApplication
+        from src.ui.demo_dialog import DemoEndedDialog
+        DemoEndedDialog(self, status=st.status).exec()
+        QApplication.quit()
 
     def _check_license_watch(self):
         """Si el servidor revocó la licencia (otro equipo, reembolso…) o una licencia temporal caducó,
