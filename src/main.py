@@ -34,6 +34,14 @@ def _log_startup(msg: str):
         print(formatted, flush=True)
     except Exception:
         pass
+    if sys.platform == "darwin":
+        try:
+            _ld = Path.home() / "Library" / "Logs" / "AutoPrevias"
+            _ld.mkdir(parents=True, exist_ok=True)
+            with open(_ld / "startup.log", "a", encoding="utf-8", errors="replace") as _f:
+                _f.write(formatted + "\n")
+        except Exception:
+            pass
     if sys.platform == "win32":
         # Escribir a dos ubicaciones seguras: TEMP y LOCALAPPDATA
         targets = []

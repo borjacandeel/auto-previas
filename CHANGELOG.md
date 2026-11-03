@@ -3,6 +3,13 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [6.3.1] - 2026-11-05
+
+### Cambiado
+- **AutoPrevias Demo ya no se mezcla con la app normal:** en Windows se instala en su propia carpeta (**AutoPreviasDEMO**) y guarda sus ajustes y su caché aparte (en Mac y Windows), así no pisa ni comparte nada con AutoPrevias Basic o Plus.
+- En la Demo, la etiqueta de la cabecera y el aviso de la pantalla de la previa dicen **DEMO** (antes ponía «BÁSICA»), y la ventana se llama «AutoPrevias Demo».
+- En Mac, AutoPrevias guarda un registro de arranque en `~/Library/Logs/AutoPrevias/startup.log` para poder diagnosticar si una app tarda o no abre.
+
 ## [6.3.0] - 2026-11-04
 
 ### Añadido

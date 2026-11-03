@@ -5145,6 +5145,8 @@ class ResultPanel(QWidget):
             if w is not None:
                 w.setVisible(False)
         self._btn_p120.setVisible(False)
+        if HAS_WAVEFORM:
+            self._waveform.set_locked(True)              # los cortes los elige AutoPrevias: no se pueden mover ni estirar
         try:
             self._apply_duration_preset(60)
         except Exception:
@@ -5261,7 +5263,7 @@ class MainWindow(QMainWindow):
             def _log_startup(msg): pass
 
         _log_startup("MainWindow: configurando título y dimensiones...")
-        self.setWindowTitle("AutoPrevias — Radical Records")
+        self.setWindowTitle("AutoPrevias Demo — Radical Records" if get_edition() == "demo" else "AutoPrevias — Radical Records")
         self.setMinimumSize(980, 640)
 
         # Adaptación de pantalla: objetivo 1600x900 adaptado para todo tipo de pantallas
@@ -5580,6 +5582,9 @@ class MainWindow(QMainWindow):
         if _ed == "plus":
             _ed_text = "✦  PLUS"
             self._badge_is_plus = True
+        elif _ed == "demo":
+            _ed_text = "◈  DEMO"
+            self._badge_is_plus = False
         else:
             _ed_text = "◈  BÁSICA"
             self._badge_is_plus = False

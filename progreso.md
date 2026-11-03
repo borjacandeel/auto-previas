@@ -2292,3 +2292,9 @@ AutoPrevias/
 - **Límite honesto:** si alguien borra TODAS las copias locales y no hay conexión al servidor, la demo se reinicia; con el Worker desplegado y red, el servidor lo impide por equipo.
 - Tests: `tests/test_demo.py` (9). Pendiente del usuario: desplegar el Worker (`worker/autoprevias-license.js`) y decidir dónde publicar el instalador Demo.
 
+
+
+## Sesión 78 — v6.3.1: la Demo separada de la app normal (2026-11-05)
+- Pedido: instalación en carpeta propia «AutoPreviasDEMO» y que no solape con la normal; en Mac «AutoPrevias Demo» tardaba/saltaba en el Dock; rótulo DEMO en lugar de BÁSICA.
+- Hecho: `setup.iss` → `DefaultDirName={autopf}\AutoPreviasDEMO` en la edición demo; `config._app_dir_name()` → datos y caché en `AutoPreviasDEMO` (Mac/Windows/Linux); badge de cabecera «◈ DEMO», título de ventana «AutoPrevias Demo»; registro de arranque también en macOS (`~/Library/Logs/AutoPrevias/startup.log`) para diagnosticar el salto del Dock (la causa no se pudo reproducir en el contenedor: en la captura del usuario la app acaba abriendo; si persiste, pedir ese log).
+

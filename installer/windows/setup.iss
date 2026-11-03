@@ -30,7 +30,11 @@ AppVerName=AutoPrevias {#EditionCap} {#AppVersion}
 AppPublisher=Radical Records
 AppPublisherURL=mailto:radicalrecordsvlc@gmail.com
 AppSupportURL=mailto:radicalrecordsvlc@gmail.com
+#if Edition == "demo"
+DefaultDirName={autopf}\AutoPreviasDEMO
+#else
 DefaultDirName={autopf}\AutoPrevias {#EditionCap}
+#endif
 DefaultGroupName=AutoPrevias {#EditionCap}
 AllowNoIcons=yes
 OutputDir=..\..\dist

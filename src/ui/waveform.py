@@ -759,7 +759,7 @@ class WaveformWidget(QWidget):
                 values=(s_start, s_end),
                 brush=pg.mkBrush(color=(*rgba[:3], 45)),
                 pen=pen_border,
-                movable=True,
+                movable=not getattr(self, "_locked", False),     # AutoPrevias Demo: los cortes los elige el programa
                 hoverBrush=pg.mkBrush(color=(*rgba[:3], 70)),
             )
             hl.setZValue(6)
@@ -816,6 +816,11 @@ class WaveformWidget(QWidget):
             act.setPos((s_start + s_end) / 2.0, CUT_ACT_Y)
             self._plot.addItem(act, ignoreBounds=True)
             self._cut_actions.append(act)
+            if getattr(self, "_locked", False):
+                for ln in hl.lines:
+                    ln.setMovable(False)
+                    ln.setCursor(Qt.ArrowCursor)
+                act.setVisible(False)
 
         # 2. ZONAS FUERA DE PREVIA (OMITIDAS / NO INCLUIDAS)
         self._draw_omitted_masks()
@@ -1090,8 +1095,27 @@ class WaveformWidget(QWidget):
         if self._fx_selected is not None:
             self._remove_fx(self._fx_selected)
 
+    def set_locked(self, locked: bool = True):
+        """AutoPrevias Demo: los cortes quedan fijos (no se pueden mover, estirar, ni añadir efectos) y se ocultan los botones ▶ ✕."""
+        self._locked = bool(locked)
+        for hl in getattr(self, "_plan_highlights", []):
+            try:
+                hl.setMovable(not self._locked)
+                for ln in hl.lines:
+                    ln.setMovable(not self._locked)
+                    ln.setCursor(Qt.ArrowCursor if self._locked else Qt.SizeHorCursor)
+            except RuntimeError:
+                pass
+        for a in getattr(self, "_cut_actions", []):
+            try:
+                a.setVisible(not self._locked)
+            except RuntimeError:
+                pass
+
     def _add_fx(self, kind: str, t: float):
         """Pone un efecto nuevo con su duración habitual a partir de `t` (se ajusta al pulso más cercano)."""
+        if getattr(self, "_locked", False):
+            return None
         if self._duration <= 0 or len(self._fx_events) >= MAX_EVENTS:
             return None
         d = min(DEFAULT_DURATION.get(kind, 6.0), self._duration)

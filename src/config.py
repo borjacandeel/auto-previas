@@ -68,23 +68,31 @@ _DEFAULTS = {
 }
 
 
+def _app_dir_name() -> str:
+    """Nombre de la carpeta de datos: la edición Demo usa la suya («AutoPreviasDEMO») para no mezclarse con la app normal."""
+    try:
+        return "AutoPreviasDEMO" if _get_baked_edition() == "demo" else "AutoPrevias"
+    except Exception:
+        return "AutoPrevias"
+
+
 def get_user_data_dir() -> Path:
     """Devuelve el directorio de datos de usuario con permisos de escritura."""
     if sys.platform == "darwin":
-        base = Path.home() / "Library" / "Application Support" / "AutoPrevias"
+        base = Path.home() / "Library" / "Application Support" / _app_dir_name()
     elif sys.platform == "win32":
         appdata = os.environ.get("APPDATA")
         if appdata:
-            base = Path(appdata) / "AutoPrevias"
+            base = Path(appdata) / _app_dir_name()
         else:
-            base = Path(os.environ.get("LOCALAPPDATA", tempfile.gettempdir())) / "AutoPrevias"
+            base = Path(os.environ.get("LOCALAPPDATA", tempfile.gettempdir())) / _app_dir_name()
     else:
         xdg_config = os.environ.get("XDG_CONFIG_HOME")
-        base = Path(xdg_config) / "autoprevias" if xdg_config else Path.home() / ".config" / "autoprevias"
+        base = Path(xdg_config) / _app_dir_name().lower() if xdg_config else Path.home() / ".config" / _app_dir_name().lower()
     try:
         base.mkdir(parents=True, exist_ok=True)
     except Exception:
-        base = Path(tempfile.gettempdir()) / "AutoPrevias"
+        base = Path(tempfile.gettempdir()) / _app_dir_name()
         base.mkdir(parents=True, exist_ok=True)
     return base
 
@@ -92,20 +100,20 @@ def get_user_data_dir() -> Path:
 def get_cache_dir() -> Path:
     """Devuelve el directorio de caché para archivos temporales de audio/exportación."""
     if sys.platform == "darwin":
-        base = Path.home() / "Library" / "Caches" / "AutoPrevias"
+        base = Path.home() / "Library" / "Caches" / _app_dir_name()
     elif sys.platform == "win32":
         localappdata = os.environ.get("LOCALAPPDATA")
         if localappdata:
-            base = Path(localappdata) / "AutoPrevias" / "Cache"
+            base = Path(localappdata) / _app_dir_name() / "Cache"
         else:
-            base = Path(tempfile.gettempdir()) / "AutoPrevias" / "Cache"
+            base = Path(tempfile.gettempdir()) / _app_dir_name() / "Cache"
     else:
         xdg_cache = os.environ.get("XDG_CACHE_HOME")
-        base = Path(xdg_cache) / "autoprevias" if xdg_cache else Path.home() / ".cache" / "autoprevias"
+        base = Path(xdg_cache) / _app_dir_name().lower() if xdg_cache else Path.home() / ".cache" / _app_dir_name().lower()
     try:
         base.mkdir(parents=True, exist_ok=True)
     except Exception:
-        base = Path(tempfile.gettempdir()) / "AutoPrevias" / "Cache"
+        base = Path(tempfile.gettempdir()) / _app_dir_name() / "Cache"
         base.mkdir(parents=True, exist_ok=True)
     return base
 

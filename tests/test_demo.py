@@ -95,3 +95,14 @@ def test_pantalla_de_fin_de_demo_y_edicion_demo(monkeypatch):
     from src import config
     monkeypatch.setattr(config, "_get_baked_edition", lambda: "demo")
     assert config.get_edition() == "demo"
+
+
+def test_en_la_demo_los_cortes_estan_bloqueados(monkeypatch):
+    pytest.importorskip("pyqtgraph")
+    from PySide6.QtWidgets import QApplication
+    QApplication.instance() or QApplication([])
+    from src.ui.waveform import WaveformWidget
+    w = WaveformWidget()
+    w.set_locked(True)
+    assert w._locked is True and w._add_fx("flanger", 3.0) is None
+    w.deleteLater()

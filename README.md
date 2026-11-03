@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v6.3.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v6.3.1-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -327,7 +327,10 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v6.3.0] — 2026-11-04 (AutoPrevias Demo gratuita)
+#### 🟢 [v6.3.1] — 2026-11-05 (La Demo, separada de la app normal)
+- AutoPrevias Demo se instala en su propia carpeta (AutoPreviasDEMO), guarda sus ajustes aparte y se rotula como DEMO.
+
+#### [v6.3.0] — 2026-11-04 (AutoPrevias Demo gratuita)
 - Nueva app aparte **AutoPrevias Demo** (macOS y Windows): 7 días gratis, AutoPrevias elige los cortes, previa de 60 s en MP3 128k, sin vídeo ni edición; pasados los 7 días se bloquea y ofrece comprar. La cuenta atrás va ligada al equipo y no se reinicia borrando carpetas.
 
 #### [v6.2.0] — 2026-11-03 (Más directo y más simple)
