@@ -104,12 +104,12 @@ def test_todos_los_pasos_tienen_traduccion_inglesa(monkeypatch, edition):
     if edition == "basic":
         assert not {"presets", "avanzado", "arranque", "efectos", "voice_drop", "modo_promo",
                     "firma", "personalizar", "titulo", "imagen"} & set(keys)
-        assert {"herramientas", "ayuda", "pasos", "destino"} <= set(keys)
-        assert {"herramientas", "ayuda", "pasos", "destino"} <= set(keys)
+        assert {"herramientas", "ayuda", "pasos"} <= set(keys)
+        assert {"herramientas", "ayuda", "pasos"} <= set(keys)
         assert "cortes" in keys                                   # Basic también ordena y mueve los cortes
         assert "efectos_onda" in keys                             # y coloca efectos arrastrándolos a la onda
     else:
-        assert {"herramientas", "ayuda", "pasos", "destino", "presets", "avanzado", "arranque", "efectos", "voice_drop", "modo_promo",
+        assert {"herramientas", "ayuda", "pasos", "presets", "avanzado", "arranque", "efectos", "voice_drop", "modo_promo",
                 "firma", "personalizar", "efectos_onda"} <= set(keys)
         assert "cortes" not in keys
     _cerrar(w)

@@ -284,11 +284,10 @@ def s_interfaz(ed: str, plus: bool, im: dict) -> str:
         l2 = [("Forma de onda", "tu track con las secciones coloreadas, los cortes y los efectos que arrastres."),
               ("Reproductor", "escucha la pista original o la previa generada (A/B)."),
               ("Datos del tema", "duración, BPM (doble clic para corregirlo), tonalidad y drops."),
-              ("¿Cuánto debe durar?", "15 s, 30 s, 60 s o 2 min."),
+              ("¿Cuánto debe durar?", "60 s o 2 min."),
               ("Cómo suena el principio y el final", "interruptores para el arranque y el frenazo de vinilo."),
               ("Retocar con más detalle", "cortes exactos, orden, variación de BPM, estructura, presets y los segundos del vinilo."),
-              ("Siguiente: elegir formatos", "pasa al paso ③ Exportar."),
-              ("Cambiar destino", "vuelve a la pantalla de destinos.")]
+              ("Siguiente: elegir formatos", "pasa al paso ③ Exportar.")]
         l3 = [("MP3 320k", "formato ligero para correo y redes."), ("WAV · FLAC", "máxima calidad para sellos y masters."),
               ("Vídeo para redes", "vídeo animado con carátula; elige 9:16, 1:1 o 16:9."),
               ("Modo promo", "tu firma de voz repetida y MP3 128 kbps."),
@@ -300,10 +299,9 @@ def s_interfaz(ed: str, plus: bool, im: dict) -> str:
         l2 = [("Forma de onda", "tu track con las secciones coloreadas, los cortes y los efectos que arrastres."),
               ("Reproductor", "escucha la pista original o la previa generada (A/B)."),
               ("Datos del tema", "duración, BPM (doble clic para corregirlo), tonalidad y drops."),
-              ("¿Cuánto debe durar?", "15 s, 30 s, 60 s o 2 min."),
+              ("¿Cuánto debe durar?", "60 s o 2 min."),
               ("Retocar con más detalle", "ordena y mueve los cortes y elige dónde empieza la previa."),
-              ("Siguiente: elegir formatos", "pasa al paso ③ Exportar."),
-              ("Cambiar destino", "vuelve a la pantalla de destinos.")]
+              ("Siguiente: elegir formatos", "pasa al paso ③ Exportar.")]
         l3 = [("MP3 320k", "formato ligero con metadatos."),
               ("Vídeo para redes", "vídeo animado con marca de agua; elige 9:16, 1:1 o 16:9."),
               ("Nombre y carpeta", "cómo se llama la previa y dónde se guarda."),
@@ -316,20 +314,6 @@ def s_interfaz(ed: str, plus: bool, im: dict) -> str:
 <h3>Pantalla de inicio</h3>
 {fig(im.get('01_bienvenida_anot',''), 'Pantalla de inicio de AutoPrevias')}
 {legend(l1)}
-<section class="flow" style="break-before:page">
-<h3>Elegir el destino</h3>
-<p>Al terminar el análisis, AutoPrevias te pregunta <b>para qué es la previa</b>. Con un clic deja listas la duración, los formatos, el vídeo y, en Plus, el arranque y el frenazo de vinilo.
-Después puedes cambiar lo que quieras. Si no lo necesitas, pulsa <b>Saltar este paso</b> o marca <b>No volver a mostrar esta pantalla</b>.</p>
-{fig(im.get('03a_destino_anot',''), 'Pantalla «¿Para qué es esta previa?»')}
-{legend(ldest)}
-<table><tr><th>Destino</th><th>Qué prepara</th></tr>
-<tr><td><b>📱 Redes sociales</b></td><td>15 s · MP3 y vídeo vertical 9:16</td></tr>
-<tr><td><b>📻 Radio y promotores</b></td><td>30 s · MP3</td></tr>
-<tr><td><b>🏷 Sellos y A&amp;R</b></td><td>60 s · {'WAV 24 bit y MP3' if plus else 'MP3 320k'}</td></tr>
-<tr><td><b>🎧 DJ y club</b></td><td>2 min · {'FLAC y MP3, con arranque y frenazo de vinilo' if plus else 'MP3 320k'}</td></tr>
-<tr><td><b>🛡 Envío seguro</b></td><td>{'30 s · Modo promo (MP3 128k con tu voz repetida; necesita tu firma de voz)' if plus else '🔒 Solo en Plus'}</td></tr>
-<tr><td><b>🎛 Lo monto yo</b></td><td>No cambia nada y abre «Retocar con más detalle»</td></tr></table>
-</section>
 <section class="flow" style="break-before:page">
 <h3>Paso ② · Tu previa</h3>
 {fig(im.get('03_cargada_anot',''), 'Paso ②: la previa lista para revisar')}
@@ -420,10 +404,8 @@ def s_onda(ed: str, plus: bool, im: dict) -> str:
 <p><b>BPM</b> y <b>Clave / Camelot</b> te sirven para mezclar y catalogar. Si el BPM detectado no es el correcto (por ejemplo, el doble o la mitad),
 <b>haz doble clic en la etiqueta BPM</b> e introduce el valor real: la previa se recalcula con el nuevo tempo.</p>
 <h3>La duración de la previa</h3>
-{fig(im.get('z_presets',''), 'Cuatro duraciones para elegir con un clic')}
+{fig(im.get('z_presets',''), 'Dos duraciones para elegir con un clic')}
 <table><tr><th>Opción</th><th>Para qué sirve</th></tr>
-<tr><td><b>15 s · Teaser para redes</b></td><td>Avance muy corto para redes sociales o historias.</td></tr>
-<tr><td><b>30 s · Promo para radio</b></td><td>Formato clásico de promoción para promotores y radios.</td></tr>
 <tr><td><b>60 s · Para sellos y A&amp;R</b></td><td>Más recorrido del tema, ideal para sellos y A&amp;R.</td></tr>
 <tr><td><b>2 min · Club</b></td><td>Previa de dos minutos con intro, subida y drops.</td></tr></table>
 <h3>Modo Estudio (para quien ya domina la app)</h3>

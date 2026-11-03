@@ -301,7 +301,23 @@ if HAS_PG:
                 ev.ignore()
                 return
             ev.accept()
-            if self._hit(ev.pos().x()) == "play":
+            # ▶ solo reproduce y ✕ solo quita: un doble clic (o un segundo clic rápido, p. ej. si la onda se movió al
+            # empezar a sonar) nunca convierte un «oír» en «quitar».
+            import time as _t
+            now = _t.monotonic()
+            if hasattr(ev, "double") and ev.double():
+                return
+            x = ev.pos().x()
+            kx = self._scales()[0]
+            which = "play" if x < 0 else ("del" if x > 3 * kx else "")
+            if not which:
+                return
+            last = getattr(self.owner, "_cut_act_last", {})
+            if now - last.get(which, 0.0) < 0.5:         # el mismo botón dos veces seguidas = un solo clic
+                return
+            last[which] = now
+            self.owner._cut_act_last = last
+            if which == "play":
                 self.owner.cut_play_requested.emit(self.index)
             else:
                 self.owner.cut_remove_requested.emit(self.index)

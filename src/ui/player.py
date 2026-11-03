@@ -690,6 +690,25 @@ class PlayerWidget(QWidget):
             self._lbl_time.setText(f"{_fmt(ms)} / {_fmt(self._dur_ms)}")
         self.position_changed.emit(ms / 1000.0)
 
+    def play_from(self, time_sec: float):
+        """Reproduce desde `time_sec`. Si el archivo aún se está cargando (Windows ignora el salto mientras carga),
+        el salto y el «play» se aplican en cuanto el medio está listo."""
+        if not HAS_MEDIA or not self._current_path:
+            return
+        MS = QMediaPlayer.MediaStatus
+        st = self._player.mediaStatus()
+        if st in (MS.LoadedMedia, MS.BufferedMedia, MS.EndOfMedia):
+            self._pending_seek = None
+            self.seek(time_sec)
+            self._player.play()
+            ms = int(time_sec * 1000)
+            # Windows (WMF): un salto justo antes de «play» a veces se pierde; se repite si no ha llegado
+            QTimer.singleShot(120, lambda ms=ms: (abs(self._player.position() - ms) > 400 and self._player.position() < ms)
+                              and self._player.setPosition(ms))
+        else:
+            self._pending_seek = float(time_sec)
+            self._autoplay = True
+
     def is_playing(self) -> bool:
         if not HAS_MEDIA:
             return False
@@ -800,6 +819,10 @@ class PlayerWidget(QWidget):
             self._slider.setEnabled(True)
             if self._autoplay:
                 self._autoplay = False
+                ps = getattr(self, "_pending_seek", None)
+                self._pending_seek = None
+                if ps is not None:
+                    self.seek(ps)
                 self._player.play()
             else:
                 tag = "Pista original lista" if self.is_playing_source() else "Previa lista"

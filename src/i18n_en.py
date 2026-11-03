@@ -736,9 +736,11 @@ EN_TOUR = {
     "Archivo, BPM, tonalidad (en Camelot, para mezclar en armonía), duración, número de drops y duración estimada de la previa. Si el BPM no es correcto, haz doble clic en la tarjeta BPM y corrígelo.":
         "File, BPM, key (in Camelot, to mix harmonically), duration, number of drops and estimated preview length. If the BPM is wrong, double-click the BPM card and correct it.",
     "Duración de la previa": "Preview length",
-    "Elige 15 s (teaser), 30 s (promo), 60 s (extendida) o 120 s (club). Los cortes se recalculan al instante y siempre caen en compás.":
-        "Pick 15 s (teaser), 30 s (promo), 60 s (extended) or 120 s (club). The cuts are recalculated instantly and always land on the beat.",
-    "Para TikTok o Reels usa 15 o 30 s; para mandar al promotor, 120 s.": "For TikTok or Reels use 15 or 30 s; to send to a promoter, 120 s.",
+    "Elige 60 s (extendida) o 120 s (club). Los cortes se recalculan al instante y siempre caen en compás.":
+        "Pick 60 s (extended) or 120 s (club). The cuts are recalculated instantly and always land on the beat.",
+    "Para mandar al promotor, 120 s; para un avance más corto, 60 s.": "To send to a promoter, 120 s; for a shorter teaser, 60 s.",
+    "Carpeta predeterminada donde se guardan las previas: {p}": "Default folder where previews are saved: {p}",
+    "📁 Carpeta de previas": "📁 Previews folder",
     "Mis presets (Plus)": "My presets (Plus)",
     "Guarda tu firma, formatos y estilo de vídeo con un nombre y vuélvelos a aplicar con un clic. Los presets son archivos: puedes copiarlos a otro ordenador.":
         "Save your signature, formats and video style under a name and apply them again with one click. Presets are files: you can copy them to another computer.",

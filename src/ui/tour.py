@@ -171,11 +171,6 @@ def build_steps(win) -> list:
         "Arriba ves la cinta de pasos: ① Tu tema (ya cargado y analizado), ② Tu previa (duración, cortes, efectos) y ③ Exportar "
         "(formatos, vídeo y GENERAR). Puedes pulsar cualquier paso para ir y volver sin perder nada.",
         lambda: R._stepper, page=2)
-    add("destino", "¿Para qué es esta previa?",
-        "Tras analizar tu tema, AutoPrevias te pregunta para qué es la previa —redes, radio, sellos, DJ, envío seguro— y deja listos "
-        "la duración, los formatos, el vídeo y, en Plus, el arranque y el frenazo de vinilo. Si cambias de idea, «Cambiar destino» "
-        "vuelve a esa pantalla.",
-        lambda: R._btn_change_dest, page=2, example="Para TikTok o Reels: «Redes sociales» → 15 s, MP3 y vídeo vertical.")
     add("onda", "La forma de onda",
         "Aquí ves la estructura del tema: intro, subida, drop, descanso… AutoPrevias la detecta sola. "
         "Haz clic para escuchar desde ese punto y arrastra los marcadores para retocar dónde se corta.",
@@ -195,9 +190,9 @@ def build_steps(win) -> list:
         "Si el BPM no es correcto, haz doble clic en la tarjeta BPM y corrígelo.",
         lambda: R._chips_row, page=2)
     add("duracion", "Duración de la previa",
-        "Elige 15 s (teaser), 30 s (promo), 60 s (extendida) o 120 s (club). Los cortes se recalculan al instante "
-        "y siempre caen en compás.", lambda: [R._btn_p15, R._btn_p30, R._btn_p60, R._btn_p120], page=2,
-        example="Para TikTok o Reels usa 15 o 30 s; para mandar al promotor, 120 s.")
+        "Elige 60 s (extendida) o 120 s (club). Los cortes se recalculan al instante "
+        "y siempre caen en compás.", lambda: [R._btn_p60, R._btn_p120], page=2,
+        example="Para mandar al promotor, 120 s; para un avance más corto, 60 s.")
     if plus:
         add("presets", "Mis presets (Plus)",
             "Guarda tu firma, formatos y estilo de vídeo con un nombre y vuélvelos a aplicar con un clic. "

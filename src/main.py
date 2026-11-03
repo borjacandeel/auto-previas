@@ -52,6 +52,23 @@ def _log_startup(msg: str):
             except Exception:
                 pass
 
+# Cierres nativos (access violation, etc.): faulthandler escribe la pila de Python en un archivo de registro, así un cierre
+# «silencioso» deja pistas de dónde ocurrió (Windows: %LOCALAPPDATA%\AutoPrevias\crash.log · Mac: ~/Library/Logs/AutoPrevias).
+try:
+    import faulthandler
+    if sys.platform == "win32":
+        _fh_dir = Path(os.environ.get("LOCALAPPDATA") or Path.home()) / "AutoPrevias"
+    elif sys.platform == "darwin":
+        _fh_dir = Path.home() / "Library" / "Logs" / "AutoPrevias"
+    else:
+        _fh_dir = Path.home() / ".local" / "share" / "autoprevias"
+    _fh_dir.mkdir(parents=True, exist_ok=True)
+    _fh_file = open(_fh_dir / "crash.log", "a", encoding="utf-8", buffering=1)
+    _fh_file.write(f"\n===== {time.strftime('%Y-%m-%d %H:%M:%S')} arranque pid={os.getpid()} =====\n")
+    faulthandler.enable(file=_fh_file, all_threads=True)
+except Exception:
+    pass
+
 # Configuración defensiva de renderizado en Windows (Software OpenGL garantizado para x64 y ARM64 Parallels)
 if sys.platform == "win32":
     os.environ["QT_OPENGL"] = "software"

@@ -17,6 +17,7 @@ except ImportError:                                           # pragma: no cover
 
 class FxAuditioner(QObject):
     state_changed = Signal(bool)                              # True = sonando
+    position_changed = Signal(float)                          # segundo del TEMA ORIGINAL que suena (para mover el cursor de la onda)
 
     def __init__(self, parent=None, tmp_dir: Path | None = None):
         super().__init__(parent)
@@ -24,6 +25,7 @@ class FxAuditioner(QObject):
         self._player = None
         self._out = None
         self._tmp_dir = tmp_dir
+        self._t0 = 0.0
         if HAS_MEDIA:
             try:
                 self._out = QAudioOutput(self)
@@ -31,6 +33,7 @@ class FxAuditioner(QObject):
                 self._player = QMediaPlayer(self)
                 self._player.setAudioOutput(self._out)
                 self._player.playbackStateChanged.connect(self._on_state)
+                self._player.positionChanged.connect(lambda ms: self.position_changed.emit(self._t0 + ms / 1000.0))
             except Exception:
                 self._player = None
 
@@ -55,6 +58,7 @@ class FxAuditioner(QObject):
         import soundfile as sf
         self.stop()
         audio, sr = render_effect_preview(source_path, ev)
+        self._t0 = max(0.0, float(ev["start"]) - 2.0)          # el trozo empieza 2 s antes del efecto (ver render_effect_preview)
         if self._player is None or audio.shape[1] < int(0.1 * sr):
             return False
         out = self._path()

@@ -181,6 +181,22 @@ def get_ffmpeg_path() -> str | None:
         root_dir / "bin" / "ffmpeg.exe",
     ]
 
+    # Carpetas extra donde puede estar la app instalada (Nuitka/Windows: sys.executable, argv[0] y la carpeta de la app de Qt)
+    extra_dirs = []
+    try:
+        extra_dirs.append(Path(os.path.abspath(sys.argv[0])).parent)
+    except Exception:
+        pass
+    try:
+        from PySide6.QtCore import QCoreApplication
+        if QCoreApplication.instance() is not None:
+            extra_dirs.append(Path(QCoreApplication.applicationDirPath()))
+    except Exception:
+        pass
+    extra_dirs.append(root_dir)
+    for d in extra_dirs:
+        for name in ("ffmpeg_bin/ffmpeg.exe", "ffmpeg.exe", "ffmpeg_bin/ffmpeg", "ffmpeg"):
+            bundle_candidates.append(d / name)
     for cand in bundle_candidates:
         if cand.exists() and cand.is_file():
             if sys.platform != "win32":
@@ -194,6 +210,23 @@ def get_ffmpeg_path() -> str | None:
     system_ffmpeg = shutil.which("ffmpeg")
     if system_ffmpeg:
         return system_ffmpeg
+
+    # 2 bis. Último recurso en Windows: cualquier ffmpeg.exe dentro de la carpeta de la app (dos niveles)
+    if sys.platform == "win32":
+        for d in extra_dirs + [exe_dir]:
+            try:
+                for hit in list(d.glob("ffmpeg*.exe")) + list(d.glob("*/ffmpeg*.exe")):
+                    if hit.is_file() and hit.name.lower() == "ffmpeg.exe":
+                        return str(hit.resolve())
+            except Exception:
+                pass
+        try:                                   # deja un registro para poder diagnosticarlo si de verdad falta
+            import tempfile
+            with open(Path(tempfile.gettempdir()) / "autoprevias_ffmpeg.log", "a", encoding="utf-8") as f:
+                f.write(f"FFmpeg no encontrado. exe={sys.executable} argv0={sys.argv[0]} root={root_dir}\n")
+                f.write("  buscado en: " + "; ".join(str(c) for c in bundle_candidates[:20]) + "\n")
+        except Exception:
+            pass
 
     # 3. Rutas estándar en macOS (Homebrew)
     if sys.platform == "darwin":
@@ -264,6 +297,13 @@ def get_output_dir(source_file: str | Path, cfg: dict | None = None) -> Path:
             return p
         except Exception:
             pass
+    # Carpeta predeterminada única: «Música/Previas» (en vez de una subcarpeta junto a cada tema)
+    try:
+        d = Path.home() / "Music" / "Previas"
+        d.mkdir(parents=True, exist_ok=True)
+        return d
+    except Exception:
+        pass
     if source_file and str(source_file).strip():
         p_src = Path(source_file)
         src_parent = p_src if p_src.is_dir() else p_src.parent

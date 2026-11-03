@@ -2279,3 +2279,8 @@ AutoPrevias/
 - Textos EN, paso del recorrido («Personalizar el vídeo») y manual (apartado Estilo del vídeo + «Más formatos») actualizados.
 - **Tests:** `tests/test_video_logo.py` (normalización, volteo/giro/escala/opacidad, posición, todo el vídeo y fundido, Basic lo ignora, sin temblor de carátula/bandas del drop/vaivén de imagen) y `tests/test_video_logo_ui.py` (controles, arrastre, rueda, reabrir). `test_el_zoom_lento_mueve_la_imagen` ajustado (antes se apoyaba en el vaivén). 470 tests OK (sin `test_structure.py`).
 
+## Sesión 76 — v6.2.0: lista de mejoras del usuario (2026-11-03)
+- Hecho: sin pantalla de destinos (`app.py` va a la página 2; «Cambiar destino» oculto; paso del recorrido y manual quitados); sin presets 15/30 s (app, `v5_layout`, recorrido, EN, manual); `get_output_dir` → `~/Music/Previas` por defecto + botón «📁 Carpeta de previas» en la cabecera; «✂ + Corte» rojo y grande; `_pick_images_for_formats` (selector de imagen por formato al elegir un look con foto); efectos más marcados (`fx_events`: flanger depth 5.5/fb 0.84/mix≥0.55, filter orden 4 y tope 5 kHz a 0.75; el recorte de picos ya no escala todo el trozo); `FxAuditioner.position_changed` → `set_playhead` (cursor sobre la onda); `CutActionItem` solo ▶ reproduce / ✕ quita (antirrebote por botón, ignora doble clic) + `Player.play_from` (espera a que cargue el medio y reintenta el salto: Windows); `faulthandler` → `crash.log`; `get_ffmpeg_path` con más rutas + `autoprevias_ffmpeg.log`.
+- Plan pedido (sin implementar): modo DEMO de 7 días bloqueado por equipo (ver respuesta del chat).
+- Tests: 470 OK (tests de recorrido y de looks adaptados).
+

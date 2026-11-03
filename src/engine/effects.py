@@ -105,6 +105,7 @@ def apply_filter_sweep(
     end_freq: float = 2800.0,
     kind: str = "highpass",
     hard_stop: bool = False,
+    order: int = 2,
 ) -> np.ndarray:
     """
     Aplica un barrido de filtro progresivo para acumular tensión en la subida antes del drop.
@@ -135,7 +136,7 @@ def apply_filter_sweep(
         norm_cutoff = np.clip(cutoff / nyq, 0.005, 0.95)
 
         try:
-            sos = signal.butter(2, norm_cutoff, btype=kind, output="sos")
+            sos = signal.butter(int(order), norm_cutoff, btype=kind, output="sos")
             for ch in range(channels):
                 out[ch, i0:i1] = signal.sosfilt(sos, block_audio[ch])
         except Exception:

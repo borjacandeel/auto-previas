@@ -90,6 +90,7 @@ def _step2(R, plus: bool):
     R._btn_change_dest.setToolTip("Volver a elegir para qué es la previa: redes, radio, sello, club…")
     R._btn_change_dest.clicked.connect(lambda _=False: R.change_destination_requested.emit())
     head.addWidget(R._btn_change_dest, 0, Qt.AlignTop)
+    R._btn_change_dest.setVisible(False)          # v6.2: sin pantalla de destinos
     L.addLayout(head)
 
     # — aviso de «previa generada»: al terminar de exportar se vuelve aquí para VER y OÍR la previa —
@@ -148,9 +149,14 @@ def _step2(R, plus: bool):
     hint_row.addWidget(hint, 1)
     # botón rápido: un corte nuevo con un clic, sin abrir «Retocar con más detalle» (Basic y Plus)
     R._btn_quick_cut = QPushButton("✂  + Corte")
-    R._btn_quick_cut.setFixedHeight(32)
+    R._btn_quick_cut.setFixedHeight(40)
+    R._btn_quick_cut.setMinimumWidth(150)
     R._btn_quick_cut.setCursor(Qt.PointingHandCursor)
-    R._btn_quick_cut.setStyleSheet(T.ghost_css(16, 12))
+    # v6.2: bien visible (botón rojo lleno), es la acción principal bajo la onda
+    R._btn_quick_cut.setStyleSheet(
+        f"QPushButton {{ background: {T.ACCENT}; color: #ffffff; border: none; border-radius: 20px;"
+        " font-size: 14px; font-weight: 800; padding: 0 22px; }"
+        "QPushButton:hover { background: #ff3e55; }")
     R._btn_quick_cut.setToolTip("Añade un corte de 16 s donde está el cursor de reproducción (o en el primer hueco libre). "
                                 "Luego arrástralo y estíralo en la onda.")
     R._btn_quick_cut.clicked.connect(lambda _=False: R.quick_add_cut())
@@ -172,14 +178,14 @@ def _step2(R, plus: bool):
     R._preset_buttons = []
     grp = QButtonGroup(dur)
     grp.setExclusive(True)
-    for i, sec in enumerate((15, 30, 60, 120)):
+    for i, sec in enumerate((60, 120)):                 # v6.2: sin plantillas de 15 s ni 30 s
         t = T.Tile(tr(PRESET_TITLES[sec]), tr(PRESET_SUBS[sec]), min_h=70)
         t.setChecked(sec == getattr(R, "_active_preset_sec", 120))
         grp.addButton(t)
         t.clicked.connect(lambda _c=False, s=sec: R._apply_duration_preset(s))
         grid.addWidget(t, i // 2, i % 2)
         R._preset_buttons.append((t, sec))
-        setattr(R, {15: "_btn_p15", 30: "_btn_p30", 60: "_btn_p60", 120: "_btn_p120"}[sec], t)
+        setattr(R, {60: "_btn_p60", 120: "_btn_p120"}[sec], t)
     dv.addLayout(grid)
     R._lbl_simple_desc.setParent(dur)
     R._lbl_simple_desc.setStyleSheet(f"color: {T.TEXT_DIM}; font-size: 10.5px; {T._T}")

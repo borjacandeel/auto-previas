@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v6.1.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v6.2.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -325,7 +325,10 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v6.1.0] — 2026-10-28 (Tu marca de agua en el vídeo y sin movimiento lateral)
+#### 🟢 [v6.2.0] — 2026-11-03 (Más directo y más simple)
+- Sin pantalla de destinos (directo a crear la previa), sin plantillas de 15/30 s, botón «✂ + Corte» muy visible, carpeta de previas fija (Música/Previas) con botón arriba, selector de imagen por formato para el vídeo, efectos más marcados, ▶ del corte arreglado en Windows y registro de cierres nativos.
+
+#### [v6.1.0] — 2026-10-28 (Tu marca de agua en el vídeo y sin movimiento lateral)
 - **Plus:** marca de agua propia (PNG/JPG) de principio a fin: se arrastra sobre la vista previa, se redimensiona (rueda del ratón), se gira, se voltea y se le baja la opacidad. La imagen del vídeo ya no se mueve de lado a lado: la carátula solo hace el empuje del kick.
 
 #### [v6.0.4] — 2026-10-26 (Revisión de errores de Windows y macOS)

@@ -451,7 +451,7 @@ def test_tarjeta_de_video_formato_con_botones_y_looks(monkeypatch, tmp_path):
     assert p.selected_aspects() == ["1:1"] and not p._aspect_btns["16:9"].isChecked()
     # look: sin imagen pide una; con imagen se aplica y el selector lo refleja
     img = _img_file(tmp_path, "sq.png", (1000, 1000))
-    monkeypatch.setattr(p, "_bg_image_from_user", lambda path="": img)
+    monkeypatch.setattr("PySide6.QtWidgets.QFileDialog.getOpenFileName", staticmethod(lambda *a, **k: (img, "")))
     p._combo_look.setCurrentIndex(p._combo_look.findData("circle"))
     p._on_look_chosen(0)
     o = p.get_export_options()["video_custom"]
@@ -461,7 +461,7 @@ def test_tarjeta_de_video_formato_con_botones_y_looks(monkeypatch, tmp_path):
     assert p.get_export_options()["video_custom"]["style"] == "neon" and p._combo_look.currentData() == "neon"
     # cancelar la elección de imagen deja el look como estaba
     p._video_custom = vn_norm(None)
-    monkeypatch.setattr(p, "_bg_image_from_user", lambda path="": "")
+    monkeypatch.setattr("PySide6.QtWidgets.QFileDialog.getOpenFileName", staticmethod(lambda *a, **k: ("", "")))
     p._combo_look.setCurrentIndex(p._combo_look.findData("photo")); p._on_look_chosen(0)
     assert p._combo_look.currentData() == "neon" and p._video_custom["style"] == "neon"
 

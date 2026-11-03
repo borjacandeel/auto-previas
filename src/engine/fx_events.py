@@ -75,13 +75,14 @@ def apply_event_to_chunk(chunk: np.ndarray, sr: int, ev: dict) -> np.ndarray:
     amt = float(ev.get("amount", DEFAULT_AMOUNT))
     kind = ev["type"]
     if kind == "flanger":
-        wet = effects.apply_flanger(chunk, sr, rate_hz=0.65, depth_ms=3.8, base_delay_ms=1.0, feedback=0.74,
-                                    mix=min(0.95, max(0.1, amt)), ramp_in_sec=min(0.8, n / (sr * 3.0)),
+        # v6.2: más marcado (más profundidad, más realimentación y mezcla mínima del 55 %) para que se note en cualquier tema
+        wet = effects.apply_flanger(chunk, sr, rate_hz=0.5, depth_ms=5.5, base_delay_ms=1.0, feedback=0.84,
+                                    mix=min(0.97, max(0.55, amt + 0.15)), ramp_in_sec=min(0.8, n / (sr * 3.0)),
                                     hard_stop=False)
     else:
-        top = float(min(9000.0, 400.0 * (2800.0 / 400.0) ** (amt / 0.75)))      # amt 0.75 ≙ 2800 Hz (como antes)
+        top = float(min(9000.0, 500.0 * 10.0 ** (amt / 0.75)))                   # amt 0.75 ≙ 5 kHz: se nota mucho más que antes (2,8 kHz)
         lo, hi = (60.0, top) if kind == "filter_up" else (top, 60.0)
-        wet = effects.apply_filter_sweep(chunk, sr, start_freq=lo, end_freq=hi, kind="highpass", hard_stop=False)
+        wet = effects.apply_filter_sweep(chunk, sr, start_freq=lo, end_freq=hi, kind="highpass", hard_stop=False, order=4)
     # entrada y salida suaves para que no haya clics en los bordes del efecto
     k = min(int(EDGE_FADE_SEC * sr), n // 4)
     if k > 1:
@@ -152,7 +153,7 @@ def render_effect_preview(source_path: str, ev: dict, pad: float = 2.0):
         audio[:, a:b] = apply_event_to_chunk(audio[:, a:b], sr, ev)
     peak = float(np.max(np.abs(audio))) if audio.size else 0.0
     if peak > 0.98:
-        audio *= 0.98 / peak
+        np.clip(audio, -0.98, 0.98, out=audio)            # solo recorta los picos: no cambia el volumen de lo que suena antes y después
     k = min(int(0.02 * sr), audio.shape[1] // 4)
     if k > 1:
         audio[:, :k] *= np.linspace(0.0, 1.0, k, dtype=np.float32)

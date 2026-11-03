@@ -3,6 +3,22 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [6.2.0] - 2026-11-03
+
+### Cambiado
+- **Sin pantalla intermedia.** Al cargar un tema, AutoPrevias va directo a crear la previa (ya no pregunta «¿Para qué es esta previa?»).
+- **Se quitan las plantillas de 15 s y 30 s.** Quedan 60 s y 2 min.
+- **Carpeta de previas siempre a mano:** nuevo botón **📁 Carpeta de previas** arriba. Por defecto se guarda todo en **Música/Previas** (en vez de una carpeta junto a cada tema).
+- **Botón «✂ + Corte» mucho más visible** (rojo y grande bajo la onda).
+- **Más simple elegir la imagen del vídeo (Plus):** al elegir un look con foto, AutoPrevias abre el selector una vez por cada formato marcado (9:16, 1:1, 16:9) y te dice para cuál es.
+- **Los efectos se notan más:** Flanger más marcado y Filter Sweep más intenso.
+- **Al oír un efecto**, el cursor de la onda recorre el efecto mientras suena.
+
+### Corregido
+- **Botón ▶ de cada corte en Windows:** con un clic ahora suena (antes no empezaba hasta que cargaba el tema) y ya no se puede quitar el corte pulsando dos veces: ▶ solo reproduce y ✕ solo quita.
+- **Cierres inesperados en Windows:** AutoPrevias ahora guarda un registro de errores nativos (`%LOCALAPPDATA%\AutoPrevias\crash.log`) para poder localizarlos.
+- **«FFmpeg no encontrado» en la vista previa del vídeo en Windows:** la app busca FFmpeg en más sitios y deja un registro (`%TEMP%\autoprevias_ffmpeg.log`) si de verdad falta.
+
 ## [6.1.0] - 2026-10-28
 
 ### Añadido

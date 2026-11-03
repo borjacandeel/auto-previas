@@ -1688,9 +1688,10 @@ class ResultPanel(QWidget):
         self._btn_p60  = QPushButton("🚀 60s (Extended)")
         self._btn_p120 = QPushButton("🔥 120s / 2 Min (Club · Defecto)")
 
+        # v6.2: ya no hay plantillas de 15 s ni 30 s (solo 60 s y 2 min)
+        self._btn_p15.setVisible(False)
+        self._btn_p30.setVisible(False)
         self._preset_buttons = [
-            (self._btn_p15, 15),
-            (self._btn_p30, 30),
             (self._btn_p60, 60),
             (self._btn_p120, 120),
         ]
@@ -2644,7 +2645,7 @@ class ResultPanel(QWidget):
         self._fill_structure(analysis)
         self._fill_plan(plan)
         self._animate_stat_cards()
-        _anim.stagger_fade_in([self._btn_p15, self._btn_p30, self._btn_p60, self._btn_p120], step_ms=60, ms=240)
+        _anim.stagger_fade_in([self._btn_p60, self._btn_p120], step_ms=60, ms=240)
 
         # Waveform
         if HAS_WAVEFORM:
@@ -2730,6 +2731,7 @@ class ResultPanel(QWidget):
             from src.ui.fx_audition import FxAuditioner
             aud = FxAuditioner(self)
             aud.state_changed.connect(lambda on: self._waveform.set_fx_playing(on) if HAS_WAVEFORM else None)
+            aud.position_changed.connect(lambda t: self._waveform.set_playhead(t) if HAS_WAVEFORM else None)   # el cursor recorre el efecto
             self._fx_aud = aud
         return aud
 
@@ -3204,14 +3206,47 @@ class ResultPanel(QWidget):
             self._open_video_custom()
             return
         if key != "neon" and not self._video_custom.get("bg"):
-            path = self._bg_image_from_user()
-            if not path:
+            # v6.2: se pide la imagen para CADA formato de vídeo marcado (9:16, 1:1, 16:9), una tras otra
+            if not self._pick_images_for_formats():
                 self._sync_look_combo()
                 return
-            self._use_background_image(path)
         self._video_custom = apply_look(self._video_custom, key)
         self._save_video_custom()
         self._sync_look_combo()
+
+    def _pick_images_for_formats(self) -> bool:
+        """Abre el selector de imagen una vez por cada formato de vídeo marcado, con el formato en el título.
+        La del primero es obligatoria; si se cancela otro, ese formato usará la imagen general (recortada o con fondo desenfocado)."""
+        from src.engine.video_neon import image_size
+        asps = self.selected_aspects()
+        got = {}
+        for n, asp in enumerate(asps):
+            title = tr("Imagen para el vídeo {a}", a=asp) + (f"  ({n + 1}/{len(asps)})" if len(asps) > 1 else "")
+            while True:
+                path, _ = QFileDialog.getOpenFileName(self, title, "", tr("Imágenes (*.png *.jpg *.jpeg *.webp *.bmp)"))
+                if not path:
+                    break
+                sz = image_size(path)
+                if sz is None:
+                    QMessageBox.warning(self, tr("Elegir imagen"), tr("No se ha podido abrir esa imagen. Prueba con un PNG o JPG."))
+                    continue
+                if match_aspect(*sz) != asp:
+                    from src.engine.video_neon import describe_ratio
+                    from src.ui.video_custom import ask_format_mismatch
+                    if ask_format_mismatch(self, [("fondo", path, describe_ratio(*sz))], asp) == "change":
+                        continue
+                got[asp] = path
+                break
+            if asp == asps[0] and asp not in got:
+                return False
+        bg = dict(self._video_custom.get("bg") or {})
+        bg.update(got)
+        if len(asps) > 1:
+            bg.setdefault("default", got[asps[0]])           # los formatos sin imagen propia usan la primera
+        c = normalize_custom({**self._video_custom, "bg": bg, "style": "image"})
+        self._video_custom = apply_look(c, "bars")
+        self._save_video_custom()
+        return True
 
     def _on_video_image_dropped(self, path: str):
         if get_edition() != "plus":
@@ -3521,7 +3556,7 @@ class ResultPanel(QWidget):
             self._waveform.set_fx_events(st["fx_events"], emit=True)
         sec = st.get("duration_sec")
         if sec in (15, 30, 60, 120):
-            self._apply_duration_preset(int(sec))
+            self._apply_duration_preset(60 if int(sec) < 60 else int(sec))
         start = st.get("start") or {}
         if plus and start:
             self._set_start_mode(start.get("mode", "vinyl"))
@@ -4299,10 +4334,13 @@ class ResultPanel(QWidget):
             if pl._current_path != pl._source_path and pl._source_path:
                 pl._switch_to_source(autoplay=False)
         self._audition_end = float(end)
-        pl.seek(float(start))
-        if not pl.is_playing():
-            pl.toggle_play()
         self._audition_pos = float(start)
+        if hasattr(pl, "play_from"):
+            pl.play_from(float(start))          # también en Windows: espera a que el tema esté cargado antes de saltar
+        else:
+            pl.seek(float(start))
+            if not pl.is_playing():
+                pl.toggle_play()
 
     def _on_audition_tick(self, pos: float):
         """Al llegar al final del corte que se está escuchando, pausa."""
@@ -5861,9 +5899,8 @@ class MainWindow(QMainWindow):
 
         # v5: tras analizar se pregunta «¿Para qué es esta previa?» (salvo en el recorrido, al reabrir un proyecto, en modo
         # Estudio o si el usuario marcó «No volver a mostrar»); si no, directo a los resultados (índice 2)
-        ask = not (self._tour_demo or self._pending_project is not None or load_cfg().get("always_studio")
-                   or load_cfg().get("skip_destination"))
-        self._fade_to_page(3 if ask else 2)
+        # v6.2: ya no se pregunta «¿Para qué es esta previa?»: se va directo a crear la previa (paso ②)
+        self._fade_to_page(2)
 
         try:
             self._results.set_beat_times(getattr(grid, "beat_times", []))
@@ -5971,6 +6008,10 @@ class MainWindow(QMainWindow):
         if folder:
             self._cfg["output_dir"] = folder
             save_cfg(self._cfg)
+            try:
+                self._btn_prev_folder.setToolTip(tr("Carpeta predeterminada donde se guardan las previas: {p}", p=str(get_output_dir("", self._cfg))))
+            except Exception:
+                pass
             if self._current_file:
                 self._results.update_folder(self._current_file, self._cfg)
 
@@ -6242,6 +6283,15 @@ class MainWindow(QMainWindow):
                 a.triggered.connect(lambda _=False: self._results._open_plus_page())
         self._btn_tools.setMenu(self._tools_menu)
         logo_row.addWidget(self._btn_tools)
+
+        # — Carpeta de previas (siempre visible arriba): dónde se guardan TODAS las previas —
+        self._btn_prev_folder = QPushButton("📁 Carpeta de previas")
+        self._btn_prev_folder.setFixedHeight(26)
+        self._btn_prev_folder.setCursor(Qt.PointingHandCursor)
+        self._btn_prev_folder.setStyleSheet(btn_css)
+        self._btn_prev_folder.clicked.connect(lambda _=False: self._set_folder())
+        self._btn_prev_folder.setToolTip(tr("Carpeta predeterminada donde se guardan las previas: {p}", p=str(get_output_dir("", self._cfg))))
+        logo_row.addWidget(self._btn_prev_folder)
 
         # — Ayuda —
         self._btn_help = QPushButton("❓ Ayuda  ▾")
