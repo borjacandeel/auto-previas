@@ -365,6 +365,8 @@ def _step3(R, plus: bool):
     R._card_f_video = _fmt_card(R, "video", "🎬", tr("Con onda animada y carátula, listo para TikTok, Reels y YouTube"),
                                 [R._chk_video], extra=asp)
     fr.addWidget(R._card_f_video)
+    from src.config import VIDEO_ENABLED
+    R._card_f_video.setVisible(VIDEO_ENABLED)          # v6.4: sin vídeos en ninguna edición
     # modo promo (Plus)
     promo_extra = QWidget()
     promo_extra.setStyleSheet("background: transparent;")
@@ -383,7 +385,7 @@ def _step3(R, plus: bool):
     fr.addWidget(R._card_f_promo)
     L.addLayout(fr)
     if not plus:                                          # Basic: invitación discreta a Plus
-        R._btn_plus_formats = QPushButton("🔒  WAV, FLAC, vídeo sin marca de agua y modo promo: solo en Plus")
+        R._btn_plus_formats = QPushButton("🔒  WAV, FLAC y modo promo: solo en Plus")
         R._btn_plus_formats.setFixedHeight(34)
         R._btn_plus_formats.setCursor(Qt.PointingHandCursor)
         R._btn_plus_formats.setStyleSheet(f"QPushButton {{ background: transparent; color: #c4b5fd; border: 1px dashed #6d28d9;"
@@ -394,6 +396,7 @@ def _step3(R, plus: bool):
 
     # detalles del vídeo (aparecen al marcarlo)
     L.addWidget(R._row_video_title_widget)
+    R._row_video_title_widget.setVisible(VIDEO_ENABLED)
 
     # — nombre y carpeta | firma y carátula —
     row = QHBoxLayout()

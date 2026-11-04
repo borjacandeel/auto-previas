@@ -185,7 +185,7 @@ def test_estado_firma_y_estilo_ida_y_vuelta(tmp_path, monkeypatch):
     state = p.get_state()
     q = _panel(monkeypatch)
     q.apply_state(state)
-    assert not q._chk_fx_master.isChecked() and q._chk_video.isChecked() and q._spin_promo.value() == 35
+    assert not q._chk_fx_master.isChecked() and not q._chk_video.isChecked() and q._spin_promo.value() == 35   # v6.4: sin vídeos
     assert q._voice_drop_path == p._voice_drop_path
     assert q._branding_card._edit_artist.text() == "DJ Test" and q._branding_card._edit_label.text() == "Radical"
     # aplicar solo la firma no toca el estilo
@@ -292,18 +292,13 @@ def test_boton_vista_previa_presente(monkeypatch):
     p._open_video_preview()          # sin pista cargada no hace nada ni falla
 
 
-def test_basic_tiene_video_con_marca_y_sin_opciones_plus(monkeypatch):
-    p = _panel(monkeypatch, "basic")
-    assert not p._chk_video.isHidden()                 # Basic ya puede generar vídeo
-    p._chk_video.setChecked(True)
-    assert p._row_video_title_widget.isVisibleTo(p) and p._lbl_vbasic.isVisibleTo(p)
-    assert not p._edit_promo.isVisibleTo(p) and not p._btn_vcustom.isVisibleTo(p)
-    assert p._combo_vend.isVisibleTo(p)                                    # Basic elige: firma o fundido a negro
-    assert [p._combo_vend.itemData(i) for i in range(p._combo_vend.count())] == ["brand", "fade"]
-    o = p.get_export_options()
-    assert o["export_video"] and o["export_mp3"] and o["video_end"] == "brand" and o["video_custom"] is None
-    p._set_combo_by_data(p._combo_vend, "fade")
-    assert p.get_export_options()["video_end"] == "fade"
+def test_sin_videos_en_ninguna_edicion(monkeypatch):
+    """v6.4 (decisión del usuario): la opción de vídeo desaparece en Basic, Plus y Demo y nunca se exporta."""
+    for ed in ("basic", "plus"):
+        p = _panel(monkeypatch, ed)
+        assert p._chk_video.isHidden() and not p._chk_video.isChecked()
+        p._chk_video.setChecked(True)                      # aunque se marcara por código, no se exporta
+        assert p.get_export_options()["export_video"] is False
 
 
 def test_plus_elige_el_final_del_video(monkeypatch):

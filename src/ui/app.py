@@ -2998,7 +2998,7 @@ class ResultPanel(QWidget):
             "export_wav": self._chk_wav.isChecked(),
             "export_mp3": self._chk_mp3.isChecked() or self._chk_video.isChecked(),   # sin previa no hay vídeo
             "export_flac": self._chk_flac.isChecked(),
-            "export_video": self._chk_video.isChecked(),
+            "export_video": self._chk_video.isChecked() and _video_enabled(),
             "fx_flanger": False,                         # el efecto automático antes del drop ya no existe
             "fx_filter_sweep": False,
             "fx_events": self._waveform.fx_events() if HAS_WAVEFORM else [],
@@ -5060,7 +5060,11 @@ class ResultPanel(QWidget):
             self._chk_wav.setChecked(False)
 
         # Vídeo: Basic lo tiene con marca de agua + cierre con firma obligatorios; Plus sin marca y con final a elegir
-        self._chk_video.setVisible(True)
+        from src.config import VIDEO_ENABLED
+        self._chk_video.setVisible(VIDEO_ENABLED)
+        if not VIDEO_ENABLED:                       # v6.4: los vídeos se retiran en todas las ediciones
+            self._chk_video.setChecked(False)
+            self._chk_video.setEnabled(False)
         self._refresh_vend_items(plus)
         self._combo_vend.setVisible(True)          # Basic: firma o fundido a negro · Plus: todas las opciones
         self._row_look_widget.setVisible(plus)     # looks, «Personalizar…» y banner propio: solo Plus
@@ -5155,6 +5159,11 @@ class ResultPanel(QWidget):
             self._badge_basic.setText(tr("  DEMO GRATUITA  ·  7 días  ·  MP3 · 60 s  "))
         except Exception:
             pass
+
+
+def _video_enabled() -> bool:
+    from src.config import VIDEO_ENABLED
+    return bool(VIDEO_ENABLED)
 
 
 # ── Helpers de tabla ──────────────────────────────────────────────────────────
@@ -6439,6 +6448,11 @@ class MainWindow(QMainWindow):
     def maybe_start_onboarding(self):
         """Primera vez: ofrece el recorrido («Hacer el recorrido» / «Omitir»). Después no vuelve a preguntar."""
         from src.ui import tour
+        if sys.platform == "win32":
+            # v6.4: en Windows la primera apertura se cerraba en algunos equipos al lanzar el recorrido con la pista de
+            # ejemplo (reproductor + análisis nada más abrir). La guía sigue disponible en «❓ Ayuda → Guía de 2 minutos».
+            tour.mark_onboarding_done(self._cfg)
+            return
         if not tour.should_offer_onboarding(load_cfg()):
             return
         dlg = tour.WelcomeDialog(self)

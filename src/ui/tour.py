@@ -243,40 +243,42 @@ def build_steps(win) -> list:
     add("formatos", "Nombre y formatos",
         "El nombre del archivo ya viene puesto («PREVIA - tu tema»), pero puedes cambiarlo. "
         + ("Marca los formatos que quieres: WAV 24 bit, MP3 320k y FLAC." if plus else
-           "Se exporta MP3 320k (con vídeo siempre se genera también el MP3)."),
+           "Se exporta MP3 320k."),
         lambda: _vis(*[getattr(R, n, None) for n in ("_card_f_mp3", "_card_f_wav", "_card_name")]) or
         _vis(R._edit_name, R._chk_wav, R._chk_mp3, R._chk_flac), page=2,
         example="Usa WAV para el promotor, MP3 para las redes y FLAC si quieres calidad sin pérdidas.")
-    add("video", "Vídeo animado",
-        "Marca esta casilla y aparece la tarjeta del vídeo: AutoPrevias crea un vídeo animado que late con la música, "
-        "listo para TikTok, Reels y YouTube. Todo el vídeo se configura en esa tarjeta.", lambda: R._chk_video, page=2,
-        before=lambda: R._chk_video.setChecked(True))
-    add("formato_video", "Formato del vídeo",
-        "9:16 vertical (TikTok, Reels, Shorts), 1:1 cuadrado (feed de Instagram) o 16:9 horizontal (YouTube). "
-        "Marca uno, dos o los tres a la vez: se genera un vídeo por cada formato marcado.", lambda: list(R._aspect_btns.values()), page=2)
-    add("paleta", "Estilo y colores",
-        ("Elige la paleta de colores y, con «Look», cinco aspectos listos para usar: Neón clásico, foto + barras, "
-         "foto + círculo, foto y título o solo la foto." if plus else
-         "Elige la paleta de colores de la plantilla Neón: Radical, Rave, Carmesí, Ámbar o Cyber."),
-        lambda: _vis(R._combo_video_pal, R._combo_look), page=2)
-    if plus:
-        add("titulo", "Título y banner (Plus)",
-            "El título es lo que sale en el vídeo (si lo dejas vacío usa el nombre de la pista) y el banner es tu frase "
-            "de sello encima del vídeo.", lambda: [R._edit_vtitle, R._edit_promo], page=2,
-            example="Título: MIDNIGHT GROOVE · Banner: RADICAL RECORDS · PROMO EXCLUSIVA")
-        add("personalizar", "Personalizar el vídeo (Plus)",
-            "Aquí eliges todo: tu imagen de fondo para cada formato, la onda de sonido (barras, línea o círculo, su posición y color), "
-            "qué textos salen y dónde, tu propia marca de agua (logo) que colocas donde quieras, y el final del vídeo. Tiene vista previa en vivo.", lambda: R._btn_vcustom, page=2)
-        add("imagen", "Tu propia imagen de fondo",
-            "Arrastra una foto sobre la tarjeta para usarla de fondo. Debe ser 9:16, 1:1 o 16:9: si no lo es, la app te avisa y te "
-            "enseña ejemplos de formatos válidos.", lambda: R._lbl_vdrop, page=2)
-    add("final", "Final del vídeo",
-        ("Elige cómo acaba: firma AutoPrevias, fundido a negro, sin cierre o tu propia imagen con texto." if plus else
-         "Elige cómo acaba: firma «Generado por AutoPrevias» o fundido a negro. La marca de agua pequeña se quita con Plus."),
-        lambda: _vis(R._combo_vend, R._lbl_vbasic, R._btn_vlock), page=2)
-    add("vista_previa", "Vista previa del vídeo",
-        "Antes de generar, mira un fragmento real del vídeo con tus ajustes. Si no te convence, cámbialo y vuelve a verlo.",
-        lambda: R._btn_vprev, page=2)
+    from src.config import VIDEO_ENABLED
+    if VIDEO_ENABLED:                                  # v6.4: vídeos retirados
+        add("video", "Vídeo animado",
+            "Marca esta casilla y aparece la tarjeta del vídeo: AutoPrevias crea un vídeo animado que late con la música, "
+            "listo para TikTok, Reels y YouTube. Todo el vídeo se configura en esa tarjeta.", lambda: R._chk_video, page=2,
+            before=lambda: R._chk_video.setChecked(True))
+        add("formato_video", "Formato del vídeo",
+            "9:16 vertical (TikTok, Reels, Shorts), 1:1 cuadrado (feed de Instagram) o 16:9 horizontal (YouTube). "
+            "Marca uno, dos o los tres a la vez: se genera un vídeo por cada formato marcado.", lambda: list(R._aspect_btns.values()), page=2)
+        add("paleta", "Estilo y colores",
+            ("Elige la paleta de colores y, con «Look», cinco aspectos listos para usar: Neón clásico, foto + barras, "
+             "foto + círculo, foto y título o solo la foto." if plus else
+             "Elige la paleta de colores de la plantilla Neón: Radical, Rave, Carmesí, Ámbar o Cyber."),
+            lambda: _vis(R._combo_video_pal, R._combo_look), page=2)
+        if plus:
+            add("titulo", "Título y banner (Plus)",
+                "El título es lo que sale en el vídeo (si lo dejas vacío usa el nombre de la pista) y el banner es tu frase "
+                "de sello encima del vídeo.", lambda: [R._edit_vtitle, R._edit_promo], page=2,
+                example="Título: MIDNIGHT GROOVE · Banner: RADICAL RECORDS · PROMO EXCLUSIVA")
+            add("personalizar", "Personalizar el vídeo (Plus)",
+                "Aquí eliges todo: tu imagen de fondo para cada formato, la onda de sonido (barras, línea o círculo, su posición y color), "
+                "qué textos salen y dónde, tu propia marca de agua (logo) que colocas donde quieras, y el final del vídeo. Tiene vista previa en vivo.", lambda: R._btn_vcustom, page=2)
+            add("imagen", "Tu propia imagen de fondo",
+                "Arrastra una foto sobre la tarjeta para usarla de fondo. Debe ser 9:16, 1:1 o 16:9: si no lo es, la app te avisa y te "
+                "enseña ejemplos de formatos válidos.", lambda: R._lbl_vdrop, page=2)
+        add("final", "Final del vídeo",
+            ("Elige cómo acaba: firma AutoPrevias, fundido a negro, sin cierre o tu propia imagen con texto." if plus else
+             "Elige cómo acaba: firma «Generado por AutoPrevias» o fundido a negro. La marca de agua pequeña se quita con Plus."),
+            lambda: _vis(R._combo_vend, R._lbl_vbasic, R._btn_vlock), page=2)
+        add("vista_previa", "Vista previa del vídeo",
+            "Antes de generar, mira un fragmento real del vídeo con tus ajustes. Si no te convence, cámbialo y vuelve a verlo.",
+            lambda: R._btn_vprev, page=2)
     if plus:
         add("efectos", "Master LUFS y Voice Drop (Plus)",
             "Master LUFS deja la previa al volumen estándar de las plataformas. Los efectos Flanger y Filter Sweep ya no son "

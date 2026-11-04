@@ -50,7 +50,6 @@ TOOLS = (
     ("efectos", "🎛", "Efectos", True),
     ("tempo", "⚡", "Tempo", True),
     ("firma", "🏷", "Firma", True),
-    ("video", "🎬", "Vídeo", False),
     ("presets", "💾", "Presets", True),
 )
 
@@ -211,7 +210,9 @@ class StudioView(QWidget):
         R._edit_name.setMinimumWidth(220)
         R._btn_generate.setMinimumWidth(240)
         R._btn_generate.setFixedHeight(44)
-        R._row_video_title_widget.setVisible(R._chk_video.isChecked())
+        from src.config import VIDEO_ENABLED
+        R._row_video_title_widget.setVisible(VIDEO_ENABLED and R._chk_video.isChecked())
+        R._chk_video.setVisible(VIDEO_ENABLED)
         R._card_startend.setVisible(R._studio_plus)
         R._card_startend_simple.setVisible(R._studio_plus)
         R._branding_card.setVisible(True)

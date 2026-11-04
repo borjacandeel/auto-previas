@@ -768,8 +768,8 @@ EN_TOUR = {
     "① Nombre y formatos": "① Name and formats",
     "El nombre del archivo ya viene puesto («PREVIA - tu tema»), pero puedes cambiarlo. Marca los formatos que quieres: WAV 24 bit, MP3 320k y FLAC.":
         "The file name is already filled in (“PREVIA - your track”) but you can change it. Tick the formats you want: 24-bit WAV, MP3 320k and FLAC.",
-    "El nombre del archivo ya viene puesto («PREVIA - tu tema»), pero puedes cambiarlo. Se exporta MP3 320k (con vídeo siempre se genera también el MP3).":
-        "The file name is already filled in (“PREVIA - your track”) but you can change it. MP3 320k is exported (with video, the MP3 is always generated too).",
+    "El nombre del archivo ya viene puesto («PREVIA - tu tema»), pero puedes cambiarlo. Se exporta MP3 320k.":
+        "The file name is already filled in (“PREVIA - your track”) but you can change it. MP3 320k is exported.",
     "Usa WAV para el promotor, MP3 para las redes y FLAC si quieres calidad sin pérdidas.":
         "Use WAV for the promoter, MP3 for social media and FLAC if you want lossless quality.",
     "② Vídeo animado": "② Animated video",

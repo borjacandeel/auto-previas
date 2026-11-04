@@ -784,32 +784,51 @@ class PlayerWidget(QWidget):
                 self._vu_timer.stop()
 
     def _get_or_load_vu(self, path: str):
+        """Perfil del vúmetro. v6.4: se calcula en segundo plano (antes decodificaba el tema entero en el hilo de la
+        interfaz y la ventana se quedaba congelada unos segundos al cargar, sobre todo en Windows)."""
         if path in self._vu_cache:
             self._vu_peaks_L, self._vu_peaks_R = self._vu_cache[path]
             return
-        self._build_vu_profile(path)
-        if self._vu_peaks_L is not None and self._vu_peaks_R is not None:
-            self._vu_cache[path] = (self._vu_peaks_L, self._vu_peaks_R)
+        self._vu_peaks_L = self._vu_peaks_R = None
+        self._vu_target = path
+        import threading
+
+        def _work(p=path):
+            peaks = self._compute_vu_profile(p)
+            if peaks is None:
+                return
+            self._vu_cache[p] = peaks
+            if getattr(self, "_vu_target", None) == p:            # sigue siendo la pista cargada
+                self._vu_peaks_L, self._vu_peaks_R = peaks
+        threading.Thread(target=_work, name="vu-profile", daemon=True).start()
 
     def _build_vu_profile(self, path: str):
+        """Versión síncrona (se mantiene para pruebas y usos puntuales)."""
+        peaks = self._compute_vu_profile(path)
+        self._vu_peaks_L, self._vu_peaks_R = peaks if peaks else (None, None)
+
+    def _compute_vu_profile(self, path: str):
         try:
-            from src.engine.audio_io import load_audio_file
-            y, sr = load_audio_file(path, sr=22050, mono=False, dtype=np.float32)
+            import soundfile as sf
+            try:
+                data, sr = sf.read(path, dtype="float32", always_2d=True)     # rápido y sin resamplear
+                y = data.T
+            except Exception:
+                from src.engine.audio_io import load_audio_file
+                y, sr = load_audio_file(path, sr=22050, mono=False, dtype=np.float32)
             if y.ndim == 1:
                 y = np.stack([y, y])
+            elif y.shape[0] == 1:
+                y = np.repeat(y, 2, axis=0)
             hop = int(sr / self._vu_fps)
             n_frames = y.shape[1] // max(1, hop)
-            if n_frames > 0:
-                y_l = y[0, :n_frames * hop].reshape(n_frames, hop)
-                y_r = y[1, :n_frames * hop].reshape(n_frames, hop)
-                self._vu_peaks_L = np.max(np.abs(y_l), axis=1)
-                self._vu_peaks_R = np.max(np.abs(y_r), axis=1)
-            else:
-                self._vu_peaks_L = None
-                self._vu_peaks_R = None
+            if n_frames <= 0:
+                return None
+            y_l = y[0, :n_frames * hop].reshape(n_frames, hop)
+            y_r = y[1, :n_frames * hop].reshape(n_frames, hop)
+            return np.max(np.abs(y_l), axis=1), np.max(np.abs(y_r), axis=1)
         except Exception:
-            self._vu_peaks_L = None
-            self._vu_peaks_R = None
+            return None
 
     def _on_media_status(self, status):
         MS = QMediaPlayer.MediaStatus

@@ -98,6 +98,31 @@ def apply_flanger(
     return np.clip(out, -1.0, 1.0).astype(np.float32)
 
 
+def fast_flanger(audio: np.ndarray, sr: int, amount: float = 0.75) -> np.ndarray:
+    """Flanger rápido (motor nativo de pedalboard, ~40× más rápido que el bucle de Python: en Windows el «▶ Oír» y la
+    exportación ya no se quedan colgados). Barrido marcado: retardo corto, profundidad alta y mucha realimentación.
+    Si pedalboard no está disponible, usa el flanger de Python de siempre."""
+    if audio.ndim == 1:
+        audio = np.stack([audio, audio])
+    amt = float(min(1.0, max(0.1, amount)))
+    mix = min(0.95, max(0.55, amt + 0.15))
+    try:
+        from pedalboard import Chorus
+        x = np.ascontiguousarray(audio, dtype=np.float32)
+        out = Chorus(rate_hz=0.5, depth=min(1.0, 0.55 + 0.45 * amt), centre_delay_ms=2.5, feedback=0.82, mix=mix)(x, sr)
+        out = np.asarray(out, dtype=np.float32)
+        if out.shape != audio.shape:
+            raise ValueError("forma inesperada")
+        n_r = min(int(0.8 * sr), audio.shape[1] // 3)            # entrada suave del efecto
+        if n_r > 1:
+            r = np.linspace(0.0, 1.0, n_r, dtype=np.float32) ** 1.5
+            out[:, :n_r] = audio[:, :n_r] * (1 - r) + out[:, :n_r] * r
+        return np.clip(out, -1.0, 1.0)
+    except Exception:
+        return apply_flanger(audio, sr, rate_hz=0.5, depth_ms=5.5, base_delay_ms=1.0, feedback=0.84, mix=mix,
+                             ramp_in_sec=min(0.8, audio.shape[1] / (sr * 3.0)), hard_stop=False)
+
+
 def apply_filter_sweep(
     audio: np.ndarray,
     sr: int,
@@ -120,25 +145,29 @@ def apply_filter_sweep(
     if n_samples < 256:
         return audio
 
-    num_blocks = 32
-    block_len = n_samples // num_blocks
+    # v6.4: barrido continuo. Antes eran 32 tramos y el filtro se reiniciaba en cada uno (clics y saltos audibles,
+    # sobre todo en Windows con buffers cortos); ahora son tramos de ~10 ms y el estado del filtro pasa de uno a otro.
+    num_blocks = int(max(32, min(4000, n_samples // max(1, int(0.010 * sr)))))
+    block_len = max(1, n_samples // num_blocks)
     out = np.zeros_like(audio, dtype=np.float32)
 
     freqs = np.geomspace(max(30.0, start_freq), min(sr * 0.45, end_freq), num_blocks)
-
+    nyq = sr * 0.5
+    zi = [None] * channels
     for b in range(num_blocks):
         i0 = b * block_len
         i1 = n_samples if b == num_blocks - 1 else (b + 1) * block_len
+        if i1 <= i0:
+            continue
         block_audio = audio[:, i0:i1]
-
-        cutoff = freqs[b]
-        nyq = sr * 0.5
-        norm_cutoff = np.clip(cutoff / nyq, 0.005, 0.95)
-
+        norm_cutoff = float(np.clip(freqs[b] / nyq, 0.005, 0.95))
         try:
             sos = signal.butter(int(order), norm_cutoff, btype=kind, output="sos")
             for ch in range(channels):
-                out[ch, i0:i1] = signal.sosfilt(sos, block_audio[ch])
+                if zi[ch] is None:
+                    zi[ch] = signal.sosfilt_zi(sos) * float(block_audio[ch, 0])
+                y, zi[ch] = signal.sosfilt(sos, block_audio[ch], zi=zi[ch])
+                out[ch, i0:i1] = y
         except Exception:
             out[:, i0:i1] = block_audio
 

@@ -76,9 +76,7 @@ def apply_event_to_chunk(chunk: np.ndarray, sr: int, ev: dict) -> np.ndarray:
     kind = ev["type"]
     if kind == "flanger":
         # v6.2: más marcado (más profundidad, más realimentación y mezcla mínima del 55 %) para que se note en cualquier tema
-        wet = effects.apply_flanger(chunk, sr, rate_hz=0.5, depth_ms=5.5, base_delay_ms=1.0, feedback=0.84,
-                                    mix=min(0.97, max(0.55, amt + 0.15)), ramp_in_sec=min(0.8, n / (sr * 3.0)),
-                                    hard_stop=False)
+        wet = effects.fast_flanger(chunk, sr, amount=amt)
     else:
         top = float(min(9000.0, 500.0 * 10.0 ** (amt / 0.75)))                   # amt 0.75 ≙ 5 kHz: se nota mucho más que antes (2,8 kHz)
         lo, hi = (60.0, top) if kind == "filter_up" else (top, 60.0)

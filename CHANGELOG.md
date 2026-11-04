@@ -3,6 +3,16 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [6.4.0] - 2026-11-06
+
+### Cambiado
+- **Se retira la creación de vídeos en todas las ediciones** (Basic, Plus y Demo). AutoPrevias se centra en la previa de audio: el paso de exportar es más sencillo y la app más ligera.
+- **Efectos más fiables y rápidos, sobre todo en Windows:** el Flanger usa ahora un motor nativo (unas 40 veces más rápido, sin que la app se quede pensando al pulsar «▶ Oír» o al exportar) y el Filter Sweep hace un barrido continuo, sin clics ni saltos.
+- **La app ya no se congela al cargar un tema:** el medidor de volumen del reproductor se prepara en segundo plano.
+
+### Corregido
+- **Cierre en la primera apertura en Windows:** el recorrido de bienvenida ya no se lanza solo al abrir por primera vez en Windows (cargaba una pista de ejemplo y el reproductor nada más arrancar, y en algunos equipos la app se cerraba). Sigue disponible en **❓ Ayuda → Guía de 2 minutos**.
+
 ## [6.3.1] - 2026-11-05
 
 ### Cambiado

@@ -110,7 +110,8 @@ def test_todos_los_pasos_tienen_traduccion_inglesa(monkeypatch, edition):
         assert "efectos_onda" in keys                             # y coloca efectos arrastrándolos a la onda
     else:
         assert {"herramientas", "ayuda", "pasos", "presets", "avanzado", "arranque", "efectos", "voice_drop", "modo_promo",
-                "firma", "personalizar", "efectos_onda"} <= set(keys)
+                "firma", "efectos_onda"} <= set(keys)
+        assert not {"video", "personalizar", "formato_video", "final"} & set(keys)        # v6.4: sin vídeos
         assert "cortes" not in keys
     _cerrar(w)
 

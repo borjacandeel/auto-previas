@@ -2298,3 +2298,11 @@ AutoPrevias/
 - Pedido: instalación en carpeta propia «AutoPreviasDEMO» y que no solape con la normal; en Mac «AutoPrevias Demo» tardaba/saltaba en el Dock; rótulo DEMO en lugar de BÁSICA.
 - Hecho: `setup.iss` → `DefaultDirName={autopf}\AutoPreviasDEMO` en la edición demo; `config._app_dir_name()` → datos y caché en `AutoPreviasDEMO` (Mac/Windows/Linux); badge de cabecera «◈ DEMO», título de ventana «AutoPrevias Demo»; registro de arranque también en macOS (`~/Library/Logs/AutoPrevias/startup.log`) para diagnosticar el salto del Dock (la causa no se pudo reproducir en el contenedor: en la captura del usuario la app acaba abriendo; si persiste, pedir ese log).
 
+## Sesión 79 — v6.4.0: sin vídeos, efectos rápidos y arreglos de Windows (2026-11-06)
+- Pedido (quejas de clientes): quitar vídeos en todos los planes, optimizar, buscar bugs, optimizar para Windows, crash en la primera apertura en Windows, efectos que van mal en Windows y menú más sencillo.
+- **Vídeos retirados:** `config.VIDEO_ENABLED = False` (el motor sigue en el código). Ocultos casilla/tarjeta/fila de vídeo (asistente, Estudio sin herramienta «Vídeo», recorrido sin pasos de vídeo), `get_export_options()["export_video"]` siempre False. Manual, README y tests adaptados.
+- **Crash en la 1.ª apertura de Windows (hipótesis principal):** el recorrido de bienvenida se lanzaba solo 1,2 s después de abrir y generaba/analizaba una pista de ejemplo y la cargaba en el reproductor (QMediaPlayer/WMF): en Windows ya no se lanza solo (`maybe_start_onboarding`). Desde la v6.2 hay `crash.log` (faulthandler) para confirmar si vuelve a pasar.
+- **Efectos:** `effects.fast_flanger` (pedalboard `Chorus` con retardo corto y realimentación alta; ~0,03 s frente a ~1,3 s del bucle de Python para 8 s de audio; respaldo al flanger antiguo); `apply_filter_sweep` con tramos de ~10 ms y estado del filtro encadenado (`sosfilt` con `zi`) → sin clics.
+- **Rendimiento:** el perfil del vúmetro del reproductor se calcula en un hilo (`Player._get_or_load_vu`), con `soundfile` sin remuestrear.
+- Tests: suites de recorrido, interfaz y asistente adaptadas (sin vídeo); 480 OK.
+

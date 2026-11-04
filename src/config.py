@@ -68,6 +68,11 @@ _DEFAULTS = {
 }
 
 
+# v6.4 (decisión del usuario, 2026-11-04): la creación de vídeos queda retirada en todas las ediciones.
+# El motor sigue en el código (src/engine/video_neon.py) por si se reactiva: basta con poner True.
+VIDEO_ENABLED = False
+
+
 def _app_dir_name() -> str:
     """Nombre de la carpeta de datos: la edición Demo usa la suya («AutoPreviasDEMO») para no mezclarse con la app normal."""
     try:

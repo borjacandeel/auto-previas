@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v6.3.1-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v6.4.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -190,8 +190,8 @@ Si Windows muestra la pantalla azul con el mensaje *"Windows protegió su PC"* d
   - **MP3 de Difusión:** 320 kbps codificado mediante FFmpeg integrado de alto rendimiento, con carátula oficial incrustada de Radical Records y metadatos ID3v2.3 (título, artista, álbum, año y comentarios de estudio).
 - 🛡️ **Modo Promo Antifugas (Plus):**
   Repite tu firma de voz cada pocos segundos sobre toda la previa y la exporta solo en MP3 128 kbps con la marca «PROMO — NO DISTRIBUIR», para que el audio no se pueda reutilizar sin tu firma.
-- 🎬 **Vídeo Animado «Radical Neón» para Redes (Basic y Plus):**
-  MP4 en **9:16, 1:1 y 16:9** con tu carátula, analizador de espectro y destellos al ritmo del bombo, con **vista previa** antes de generar y título propio. **Basic** lleva una marca de agua pequeña y elige el final (firma con enlace o fundido a negro). **Plus** no lleva marca de agua y personaliza todo: **tu propia imagen de fondo** (una por formato, que puedes arrastrar sobre la tarjeta), **looks de un clic** (Neón clásico, foto + barras, foto + círculo, foto y título, solo la foto), **onda de sonido** en barras, línea o círculo con su posición, qué textos se ven, **tu propia marca de agua (logo)** colocada donde quieras (se arrastra, se redimensiona, se gira y se voltea) y un **final con tu imagen**. Avisa si la imagen no tiene el formato del vídeo y enseña ejemplos; la ventana «Personalizar…» tiene vista previa en vivo.
+- 🎬 ~~**Vídeo Animado «Radical Neón» para Redes**~~ — **retirado en v6.4.0** (la app se centra en la previa de audio).
+  
 - 🧭 **Panel de Exportación Ordenado en Pasos:**
   ① Nombre y formatos, ② Vídeo animado (tarjeta única con botones de formato) y ③ Opciones avanzadas plegables (efectos, Voice Drop, Modo promo y firma, que se abren solas al activarlas), con una línea de **resumen** sobre «Generar previa» que dice qué se va a crear.
 - 🚀 **Rendimiento Adaptado a tu Equipo:**
@@ -257,12 +257,6 @@ Cada clave se puede usar en **un solo equipo a la vez**. Si ya está activa en u
 | Modo promo antifugas | ❌ | ✅ |
 | Exportación WAV 24-bit | ❌ | ✅ |
 | Exportación FLAC y AIFF | ❌ | ✅ |
-| Vídeo animado MP4 (TikTok / Reels / YouTube), con vista previa | ✅ con marca de agua | ✅ sin marca de agua |
-| Final del vídeo a elegir | ✅ firma con enlace o fundido a negro | ✅ firma, fundido a negro, sin cierre o **tu imagen** |
-| Vídeo con tu propia imagen de fondo (una por formato), looks de un clic y vista previa en vivo | 🔒 | ✅ |
-| Onda de sonido del vídeo (barras, línea, círculo), posición y textos a elegir, «solo la foto» | 🔒 | ✅ |
-| Tu propia marca de agua (logo PNG/JPG) en el vídeo: posición libre, tamaño, giro, volteo y opacidad | 🔒 | ✅ |
-| Aviso de formato de imagen (9:16, 1:1, 16:9) con ejemplos | — | ✅ |
 | Ajuste de Rendimiento (Automático / Ahorro / Máximo) | ✅ | ✅ |
 | Recorrido de bienvenida interactivo (primera vez, omitible) | ✅ | ✅ (con las funciones de Plus) |
 | Cortes con nombre («Corte 1…»), orden con ▲ ▼ y punto de inicio (inicio / mitad / arrastrando) | ✅ | ✅ |
@@ -270,12 +264,10 @@ Cada clave se puede usar en **un solo equipo a la vez**. Si ya está activa en u
 | 🖋 Firmar temas enteros (carátula + etiquetas, FLAC/WAV a máxima calidad, sin tocar el audio) | ❌ | ✅ |
 | Notificaciones con logo que abren la carpeta al pulsarlas | ✅ | ✅ |
 | Asistente de 3 pasos, pantalla de destinos, atajos de teclado y deshacer/rehacer | ✅ | ✅ |
-| Modo Estudio con menú lateral (Basic: Cortes y Vídeo · Plus: Cortes, Efectos, Tempo, Firma, Vídeo y Presets) | ✅ | ✅ |
 | Destino «Envío seguro» (modo promo en un clic) | 🔒 | ✅ |
 | Firma vocal / Voice Drop | ❌ | ✅ |
 | Sección de Firma y Carátula (Branding) | ❌ | ✅ |
 | Temas de la app (Original, One Dark, Claro) y transiciones fluidas | ✅ | ✅ |
-| Botón «✂ + Corte» (corte nuevo con un clic) y los tres formatos de vídeo a la vez (un vídeo por formato) | ✅ | ✅ |
 | Efectos Flanger y Filter Sweep arrastrables a la onda (tú eliges dónde y cuánto dura), con «▶ Oír» para escucharlos sueltos | ✅ | ✅ |
 | Master LUFS (−9 LUFS, nivel de club) | ❌ | ✅ |
 | Corrección manual de BPM | ❌ | ✅ |
@@ -327,7 +319,10 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v6.3.1] — 2026-11-05 (La Demo, separada de la app normal)
+#### 🟢 [v6.4.0] — 2026-11-06 (Más sencilla y estable)
+- Se retiran los vídeos en todas las ediciones; Flanger nativo (≈40× más rápido) y Filter Sweep continuo; sin congelaciones al cargar; corregido el cierre en la primera apertura en Windows.
+
+#### [v6.3.1] — 2026-11-05 (La Demo, separada de la app normal)
 - AutoPrevias Demo se instala en su propia carpeta (AutoPreviasDEMO), guarda sus ajustes aparte y se rotula como DEMO.
 
 #### [v6.3.0] — 2026-11-04 (AutoPrevias Demo gratuita)
