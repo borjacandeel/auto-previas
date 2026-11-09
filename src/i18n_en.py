@@ -1169,3 +1169,26 @@ EN.update({
     "Gris pizarra suave inspirado en Atom One Dark, con acento azul.": "Soft slate grey inspired by Atom One Dark, with a blue accent.",
     "Fondo blanco roto para trabajar con mucha luz, con el mismo acento carmesí.": "Off-white background for working in bright light, with the same crimson accent.",
 })
+
+# ── v6.5.0: variación de BPM en un clic, tarjeta de vídeo sencilla ─────────────────────────────────────────
+EN.update({
+    "Variación de BPM": "BPM variation", "Cuánto cambia el tempo para que no se pueda pinchar": "How much the tempo changes so it can't be DJ-mixed",
+    "Sin variación": "None", "Suave": "Soft", "Media": "Medium", "Marcada": "Strong", "Sin cambios de tempo": "No tempo changes",
+    "Elige cómo EMPIEZA la previa (con el efecto de vinilo, de 0 al tempo del tema en los segundos que quieras, o directamente a los BPM originales) y cómo ACABA (con el frenazo de vinilo hasta parar, o a los BPM originales, sin efecto). En «Variación de BPM» eliges con un clic cuánto cambia el tempo: sin variación, suave, media o marcada.":
+        "Choose how the preview STARTS (with the vinyl effect, from 0 to the track tempo in the seconds you want, or straight at the original BPM) and how it ENDS (with the vinyl slow-down to a stop, or at the original BPM, with no effect). In “BPM variation” you choose in one click how much the tempo changes: none, soft, medium or strong.",
+    "🎬 VÍDEO": "🎬 VIDEO", "FONDO": "BACKGROUND", "Color": "Colour", "Final": "Ending",
+    "🎨 Animado": "🎨 Animated", "🖼 Mi foto…": "🖼 My photo…", "🔒 Mi foto (Plus)": "🔒 My photo (Plus)",
+    "👁 Ver cómo queda": "👁 See how it looks", "Más opciones ▾": "More options ▾", "Menos opciones ▴": "Fewer options ▴",
+    "Fondo animado con tu carátula que late con la música. No tienes que hacer nada más.":
+        "Animated background with your artwork pulsing to the music. Nothing else to do.",
+    "Usa tu propia foto de fondo (te la pide para cada formato marcado). Solo en Plus.":
+        "Use your own background photo (asked for each ticked format). Plus only.",
+    "Color, título, final del vídeo y ajustes a medida": "Colour, title, video ending and custom settings",
+    "Fondo del vídeo": "Video background", "Más opciones del vídeo": "More video options",
+    "«Animado» usa tu carátula, que late con la música: no tienes que hacer nada más. «Mi foto…» te pide una imagen para cada formato marcado.":
+        "“Animated” uses your artwork, pulsing to the music: nothing else to do. “My photo…” asks for an image for each ticked format.",
+    "«Animado» usa tu carátula, que late con la música: no tienes que hacer nada más. Usar tu propia foto es de Plus.":
+        "“Animated” uses your artwork, pulsing to the music: nothing else to do. Using your own photo is a Plus feature.",
+    "Solo si quieres afinar: el color, el título que sale en el vídeo y cómo acaba.":
+        "Only if you want to fine-tune: the colour, the title shown in the video and how it ends.",
+})

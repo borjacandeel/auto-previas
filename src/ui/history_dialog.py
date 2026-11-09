@@ -18,7 +18,7 @@ from src.ui.dialog_style import DIALOG_QSS, GREEN, TEXT2, WARN
 
 try:
     from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
-    HAS_MM = True
+    HAS_MM = __import__("os").environ.get("AUTOPREVIAS_NO_MEDIA") != "1"   # modo seguro de Windows
 except Exception:                                   # pragma: no cover - entorno sin QtMultimedia
     HAS_MM = False
 

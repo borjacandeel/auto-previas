@@ -50,6 +50,7 @@ TOOLS = (
     ("efectos", "🎛", "Efectos", True),
     ("tempo", "⚡", "Tempo", True),
     ("firma", "🏷", "Firma", True),
+    ("video", "🎬", "Vídeo", False),
     ("presets", "💾", "Presets", True),
 )
 

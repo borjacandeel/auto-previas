@@ -2080,7 +2080,7 @@ class ResultPanel(QWidget):
 
         # fila 1: título de la tarjeta + formato (3 botones) + color
         r1 = QHBoxLayout(); r1.setSpacing(6)
-        lbl_vopt = QLabel("🎬 AJUSTES DEL VÍDEO")
+        lbl_vopt = QLabel("🎬 VÍDEO")
         lbl_vopt.setStyleSheet(_lblv)
         r1.addWidget(lbl_vopt)
         r1.addSpacing(8)
@@ -2119,9 +2119,55 @@ class ResultPanel(QWidget):
         self._combo_video_pal.addItem("🟡 Ámbar Gold & Solar", "amber")
         self._combo_video_pal.addItem("🟣 Cyber Violet", "cyber")
         self._combo_video_pal.setToolTip("Paleta de color neón del vídeo animado Radical Neón (carátula, barras, destellos)")
-        r1.addSpacing(6)
-        r1.addWidget(self._combo_video_pal, stretch=1)
+        r1.addStretch()
         vlay.addLayout(r1)
+
+        # v6.5 — fila FONDO: dos botones grandes y nada más (lo demás, plegado en «Más opciones»)
+        rb = QHBoxLayout(); rb.setSpacing(6)
+        lbl_bg = QLabel("FONDO")
+        lbl_bg.setFixedWidth(52); lbl_bg.setStyleSheet(_lblv)
+        rb.addWidget(lbl_bg)
+        _bg_style = (f"QPushButton {{ background:{BG3}; color:{TEXT}; border:1px solid {BORDER}; border-radius:7px; padding:0 12px; font-size:11.5px; font-weight:800; }}"
+                     f"QPushButton:hover {{ border-color:{ACCENT}; }}"
+                     f"QPushButton:checked {{ background:{ACCENT}; color:#ffffff; border-color:{ACCENT}; }}")
+        self._btn_bg_anim = QPushButton("🎨 Animado")
+        self._btn_bg_anim.setToolTip("Fondo animado con tu carátula que late con la música. No tienes que hacer nada más.")
+        self._btn_bg_photo = QPushButton("🖼 Mi foto…")
+        self._btn_bg_photo.setToolTip("Usa tu propia foto de fondo (te la pide para cada formato marcado). Solo en Plus.")
+        self._bg_group = QButtonGroup(self)
+        self._bg_group.setExclusive(True)
+        for b_ in (self._btn_bg_anim, self._btn_bg_photo):
+            b_.setCheckable(True)
+            b_.setFixedHeight(30)
+            b_.setCursor(Qt.PointingHandCursor)
+            b_.setStyleSheet(_bg_style)
+            self._bg_group.addButton(b_)
+            rb.addWidget(b_)
+        self._btn_bg_anim.setChecked(True)
+        self._btn_bg_anim.clicked.connect(lambda _c=False: self._set_video_background("neon"))
+        self._btn_bg_photo.clicked.connect(lambda _c=False: self._set_video_background("photo"))
+        rb.addStretch()
+        self._btn_vmore = QPushButton()
+        self._btn_vmore.setCursor(Qt.PointingHandCursor)
+        self._btn_vmore.setFixedHeight(26)
+        self._btn_vmore.setStyleSheet(f"QPushButton {{ background: transparent; color:{TEXT_MID}; border:none; font-size:10.5px; font-weight:700; padding:0 4px; }}"
+                                      f"QPushButton:hover {{ color:{TEXT}; }}")
+        self._btn_vmore.setToolTip("Color, título, final del vídeo y ajustes a medida")
+        self._btn_vmore.clicked.connect(lambda _c=False: self._set_video_more(not self._vmore_open))
+        rb.addWidget(self._btn_vmore)
+        vlay.addLayout(rb)
+
+        # «Más opciones» (plegado por defecto): color, look, título, final y ayuda
+        self._vmore_open = False
+        self._vmore_widget = QWidget()
+        self._vmore_widget.setStyleSheet("background: transparent;")
+        mlay = QVBoxLayout(self._vmore_widget); mlay.setContentsMargins(0, 2, 0, 0); mlay.setSpacing(5)
+        rc = QHBoxLayout(); rc.setSpacing(6)
+        lbl_col = QLabel("Color")
+        lbl_col.setFixedWidth(52); lbl_col.setStyleSheet(_lblv)
+        rc.addWidget(lbl_col)
+        rc.addWidget(self._combo_video_pal, stretch=1)
+        mlay.addLayout(rc)
 
         # fila 2 (Plus): look de un clic + personalizar + banner
         self._row_look_widget = QWidget()
@@ -2153,7 +2199,7 @@ class ResultPanel(QWidget):
         r2.addWidget(self._combo_look, stretch=1)
         r2.addWidget(self._btn_vcustom)
         r2.addWidget(self._edit_promo, stretch=1)
-        vlay.addWidget(self._row_look_widget)
+        mlay.addWidget(self._row_look_widget)
         self._combo_look.activated.connect(self._on_look_chosen)
 
         # fila 3: título + final + vista previa
@@ -2182,9 +2228,16 @@ class ResultPanel(QWidget):
         self._btn_vprev.clicked.connect(self._open_video_preview)
         r3.addWidget(lbl_vt)
         r3.addWidget(self._edit_vtitle, stretch=1)
-        r3.addWidget(self._combo_vend)
-        r3.addWidget(self._btn_vprev)
-        vlay.addLayout(r3)
+        mlay.addLayout(r3)
+        r3b = QHBoxLayout(); r3b.setSpacing(6)
+        lbl_fin = QLabel("Final")
+        lbl_fin.setFixedWidth(52); lbl_fin.setStyleSheet(_lblv)
+        r3b.addWidget(lbl_fin)
+        r3b.addWidget(self._combo_vend, stretch=1)
+        mlay.addLayout(r3b)
+        self._btn_vprev.setText("👁 Ver cómo queda")
+        self._btn_vprev.setFixedHeight(26)
+        r1.addWidget(self._btn_vprev)                 # siempre a mano, arriba a la derecha
 
         # fila 4: ayuda (Plus: arrastrar imagen) o candado (Basic)
         self._lbl_vdrop = QLabel("💡 Arrastra una imagen sobre esta tarjeta para usarla de fondo del vídeo")
@@ -2199,10 +2252,12 @@ class ResultPanel(QWidget):
                                       "QPushButton:hover { background:#2a1a4a; }")
         self._btn_vlock.setToolTip("La edición Plus añade vídeo sin marca de agua, con tu propia imagen, onda de sonido a elegir y final a medida. Pulsa para ver cómo conseguirla.")
         self._btn_vlock.clicked.connect(self._open_plus_page)
+        mlay.addWidget(self._lbl_vdrop)
         r4 = QHBoxLayout(); r4.setSpacing(8)
-        r4.addWidget(self._lbl_vdrop, stretch=1)
         r4.addWidget(self._lbl_vbasic)
-        r4.addWidget(self._btn_vlock)
+        r4.addStretch()
+        mlay.addWidget(self._btn_vlock, 0, Qt.AlignLeft)
+        vlay.addWidget(self._vmore_widget)
         vlay.addLayout(r4)
 
         self._row_video_title_widget.setVisible(False)
@@ -3021,6 +3076,9 @@ class ResultPanel(QWidget):
             "start_spin_sec": float(self._spin_start.value()) if get_edition() == "plus" else 1.0,
             "end_mode": self._end_mode if get_edition() == "plus" else "vinyl",
             "end_spin_sec": float(self._spin_end.value()) if get_edition() == "plus" else 1.0,
+            # Variación de BPM (Plus elige; Basic usa la suave de siempre)
+            "tempo_min_pct": 0.0,
+            "tempo_max_pct": self.get_bpm_var_pct() if get_edition() == "plus" else 3.0,
             **self._promo_options(),
         }
 
@@ -3164,6 +3222,7 @@ class ResultPanel(QWidget):
         elif look != "custom" and idx >= 0:
             cb.removeItem(idx)
         self._set_combo_by_data(cb, look)
+        self._refresh_video_simple()
 
     def _bg_image_from_user(self, path: str = "") -> str:
         """Pide (si no se da) y valida una imagen de fondo: avisa si no tiene el formato del vídeo. '' = cancelado."""
@@ -3216,6 +3275,37 @@ class ResultPanel(QWidget):
         self._video_custom = apply_look(self._video_custom, key)
         self._save_video_custom()
         self._sync_look_combo()
+
+    # — v6.5: tarjeta de vídeo sencilla (formato · fondo · ver cómo queda; lo demás en «Más opciones») —
+    def _set_video_more(self, open_: bool):
+        self._vmore_open = bool(open_)
+        self._refresh_video_simple()
+
+    def _refresh_video_simple(self):
+        if not hasattr(self, "_vmore_widget"):
+            return
+        plus = get_edition() == "plus"
+        self._vmore_widget.setVisible(self._vmore_open)
+        i18n.set_text(self._btn_vmore, "Menos opciones ▴" if self._vmore_open else "Más opciones ▾")
+        i18n.set_text(self._btn_bg_photo, "🖼 Mi foto…" if plus else "🔒 Mi foto (Plus)")
+        photo = self._video_custom.get("style") == "image" and bool(self._video_custom.get("bg"))
+        (self._btn_bg_photo if (photo and plus) else self._btn_bg_anim).setChecked(True)
+
+    def _set_video_background(self, kind: str):
+        """«Animado» = plantilla Neón con la carátula · «Mi foto…» = pide la imagen de cada formato (Plus)."""
+        if kind == "photo":
+            if get_edition() != "plus":
+                self._btn_bg_anim.setChecked(True)
+                self._open_plus_page()
+                return
+            if not self._pick_images_for_formats():
+                self._refresh_video_simple()
+                return
+        else:
+            self._video_custom = apply_look(self._video_custom, "neon")
+            self._save_video_custom()
+        self._sync_look_combo()
+        self._refresh_video_simple()
 
     def _pick_images_for_formats(self) -> bool:
         """Abre el selector de imagen una vez por cada formato de vídeo marcado, con el formato en el título.
@@ -3515,6 +3605,7 @@ class ResultPanel(QWidget):
                 "promo": {"enabled": self._chk_promo.isChecked(), "interval_sec": int(self._spin_promo.value())},
                 "start": {"mode": self._start_mode, "sec": float(self._spin_start.value())},
                 "end": {"mode": self._end_mode, "sec": float(self._spin_end.value())},
+                "bpm_var_pct": self.get_bpm_var_pct(),
                 "video": {"palette": self._combo_video_pal.currentData(), "aspect": self._combo_aspect.currentData(),
                           "aspects": self.selected_aspects(),
                           "banner": self._edit_promo.text().strip(), "end": self._combo_vend.currentData(),
@@ -3565,6 +3656,11 @@ class ResultPanel(QWidget):
             self._set_start_mode(start.get("mode", "vinyl"))
             try:
                 self._spin_start.setValue(float(start.get("sec", 1.0)))
+            except Exception:
+                pass
+        if plus and st.get("bpm_var_pct") is not None:
+            try:
+                self.set_bpm_var_pct(float(st["bpm_var_pct"]))
             except Exception:
                 pass
         end = st.get("end") or {}
@@ -5019,7 +5115,7 @@ class ResultPanel(QWidget):
         else:
             seed = self._spin_seed.value() if hasattr(self, "_spin_seed") else 42
             from src.engine.variations import make_rate_envelope
-            sim_rate, _ = make_rate_envelope(400, 10, min_rate=0.98, max_rate=1.06, seed=seed)
+            sim_rate, _ = make_rate_envelope(400, 10, min_rate=1.0, max_rate=1.0 + self.get_bpm_var_pct() / 100.0, seed=seed)
             t_arr = np.linspace(0, dur, 400)
             bpm_arr = base_bpm * sim_rate
             color = "#ff7b2b"
@@ -5040,6 +5136,33 @@ class ResultPanel(QWidget):
                     vb.setLimits(xMin=0.0, xMax=dur, minXRange=min(5.0, dur), maxXRange=dur)
                 vb.setYRange(min_y, max_y, padding=0.05)
                 vb.setXRange(0, dur, padding=0.02)
+
+    # ── Variación de BPM en un clic (Plus, paso ②) ─────────────────────────────
+    BPM_VAR_LEVELS = (("Sin variación", 0.0), ("Suave", 3.0), ("Media", 6.0), ("Marcada", 10.0))
+
+    def get_bpm_var_pct(self) -> float:
+        v = getattr(self, "_bpm_var_pct", None)
+        if v is None:
+            try:
+                v = float(load_cfg().get("tempo_max_pct", 3.0))
+            except Exception:
+                v = 3.0
+            self._bpm_var_pct = v
+        return float(v)
+
+    def set_bpm_var_pct(self, pct: float):
+        """Elegir un nivel vuelve al modo automático (los presets de la pestaña BPM siguen ahí para quien los quiera)."""
+        self._bpm_var_pct = float(pct)
+        for b, v in getattr(self, "_bpm_var_buttons", []):
+            b.blockSignals(True)
+            b.setChecked(abs(v - pct) < 0.01)
+            b.blockSignals(False)
+        if self._tempo_mode != "auto":
+            self._set_tempo_mode("auto")
+        try:
+            self._update_tempo_plot()
+        except Exception:
+            pass
 
     def get_tempo_mode(self) -> str:
         return self._tempo_mode
@@ -5074,6 +5197,7 @@ class ResultPanel(QWidget):
         self._edit_promo.setVisible(plus)          # el banner propio es de Plus
         if not plus:
             self._edit_promo.clear()
+        self._refresh_video_simple()
 
         # Siempre modo Vinyl — _speed_mode ya es "vinyl", sin combo que gestionar.
 

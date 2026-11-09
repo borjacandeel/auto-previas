@@ -764,6 +764,17 @@ def main():
     if "--selftest" in sys.argv:
         sys.exit(run_selftest())
 
+    # Windows: arranque seguro. Si la vez anterior la app se cerró de golpe (cierre nativo), se cambia el motor de audio
+    # de Qt y, si vuelve a pasar, se arranca en modo seguro. Se marca como correcto al salir con normalidad (atexit).
+    if sys.platform == "win32":
+        try:
+            import atexit
+            from src import winguard
+            winguard.prepare(log=_log_startup)
+            atexit.register(winguard.mark_ok, None, _log_startup)
+        except Exception as _e:
+            _log_startup(f"Arranque seguro no aplicado: {_e}")
+
     # Tema elegido en ⚙ Licencia y ajustes (Original / One Dark / Claro): debe instalarse ANTES de importar la interfaz
     try:
         from src import themes as _themes

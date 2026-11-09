@@ -111,7 +111,7 @@ def test_todos_los_pasos_tienen_traduccion_inglesa(monkeypatch, edition):
     else:
         assert {"herramientas", "ayuda", "pasos", "presets", "avanzado", "arranque", "efectos", "voice_drop", "modo_promo",
                 "firma", "efectos_onda"} <= set(keys)
-        assert not {"video", "personalizar", "formato_video", "final"} & set(keys)        # v6.4: sin vídeos
+        assert {"video", "personalizar", "formato_video", "final"} <= set(keys)           # v6.5: los vídeos vuelven
         assert "cortes" not in keys
     _cerrar(w)
 

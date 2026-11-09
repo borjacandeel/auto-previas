@@ -132,7 +132,7 @@ def test_modo_estudio_en_basic_solo_ofrece_cortes_y_video(monkeypatch):
     p = _panel(monkeypatch, "basic")
     p.show()
     p.set_studio(True)
-    assert set(p._studio_view.side_btns) == {"cortes"}          # v6.4: sin vídeo
+    assert set(p._studio_view.side_btns) == {"cortes", "video"}
     p.set_studio(False)
     _cerrar(p)
 

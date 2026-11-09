@@ -6,11 +6,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import os
 from PySide6.QtCore import QObject, QUrl, Signal
 
 try:
     from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
-    HAS_MEDIA = True
+    HAS_MEDIA = os.environ.get("AUTOPREVIAS_NO_MEDIA") != "1"   # modo seguro de Windows (src/winguard.py)
 except ImportError:                                           # pragma: no cover
     HAS_MEDIA = False
 

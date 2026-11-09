@@ -15,6 +15,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
+import os
 from PySide6.QtCore import Qt, Signal, QUrl, QTimer
 
 from src import i18n
@@ -26,7 +27,7 @@ from PySide6.QtWidgets import (
 
 try:
     from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
-    HAS_MEDIA = True
+    HAS_MEDIA = os.environ.get("AUTOPREVIAS_NO_MEDIA") != "1"   # modo seguro de Windows (src/winguard.py)
 except ImportError:
     HAS_MEDIA = False
 

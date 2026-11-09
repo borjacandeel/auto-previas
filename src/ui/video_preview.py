@@ -11,7 +11,7 @@ from src.i18n import tr
 
 try:
     from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
-    HAS_MM = True
+    HAS_MM = __import__("os").environ.get("AUTOPREVIAS_NO_MEDIA") != "1"   # modo seguro de Windows
 except Exception:  # pragma: no cover
     HAS_MM = False
 

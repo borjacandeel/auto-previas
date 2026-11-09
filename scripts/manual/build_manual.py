@@ -180,9 +180,9 @@ def indice(plus: bool) -> str:
 
 def s_intro(ed: str, plus: bool) -> str:
     inc = ("Exportación en <b>MP3 320 kbps</b> con metadatos, análisis de BPM y tonalidad, previas de 60 s y 2 min, "
-           "forma de onda con cortes ajustables, <b>efectos Flanger y Filter Sweep</b> que colocas tú sobre la onda, reproductor A/B y actualizaciones automáticas." if not plus else
+           "<b>vídeo animado Radical Neón</b> (con marca de agua), forma de onda con cortes ajustables, <b>efectos Flanger y Filter Sweep</b> que colocas tú sobre la onda, reproductor A/B y actualizaciones automáticas." if not plus else
            "Todo lo de Basic y además: exportación <b>WAV 24 bit / FLAC / MP3</b>, editor avanzado de cortes y BPM, efectos en la onda y Master LUFS, "
-           "<b>Voice Drop</b>, <b>Modo promo antifugas</b>, firma y carátula, presets propios, historial y lote.")
+           "<b>Voice Drop</b>, <b>Modo promo antifugas</b>, firma y carátula, presets propios, historial, lote y vídeo animado Radical Neón <b>sin marca de agua</b>, con tu propia imagen, onda de sonido y final a tu elección.")
     return f"""
 <section><h1>1. Qué es AutoPrevias</h1>
 <p><b>AutoPrevias</b> es la herramienta de <b>Radical Records</b> para crear <b>previas profesionales</b> de tus temas. Arrastras un track, la
@@ -203,7 +203,7 @@ promotores, sellos, DJs o redes sociales.</p>
 <table><tr><th>Sistema</th><th>Requisito</th></tr>
 <tr><td>macOS</td><td>Mac con chip Apple Silicon (M1, M2, M3, M4) — macOS 12 o superior</td></tr>
 <tr><td>Windows</td><td>Windows 10 u 11 de 64 bits</td></tr>
-<tr><td>Procesador</td><td>Cuantos más núcleos, más rápido analiza (4 o más recomendados). El ajuste <b>⚙ → Rendimiento</b> controla cuántos usa.</td></tr>
+<tr><td>Procesador</td><td>Cuantos más núcleos, más rápido analiza y genera vídeo (4 o más recomendados). El ajuste <b>⚙ → Rendimiento</b> controla cuántos usa.</td></tr>
 <tr><td>Memoria y espacio</td><td>8 GB de RAM recomendados · 600 MB de espacio libre</td></tr>
 <tr><td>Internet</td><td>Solo para activar la licencia, la verificación automática (al abrir la app y cada pocas horas; puedes trabajar hasta 14 días sin conexión) y buscar actualizaciones</td></tr></table>
 </section>"""
@@ -285,10 +285,11 @@ def s_interfaz(ed: str, plus: bool, im: dict) -> str:
               ("Reproductor", "escucha la pista original o la previa generada (A/B)."),
               ("Datos del tema", "duración, BPM (doble clic para corregirlo), tonalidad y drops."),
               ("¿Cuánto debe durar?", "60 s o 2 min."),
-              ("Cómo suena el principio y el final", "interruptores para el arranque y el frenazo de vinilo."),
+              ("Cómo suena el principio y el final", "interruptores para el arranque y el frenazo de vinilo, y la <b>Variación de BPM</b> en un clic."),
               ("Retocar con más detalle", "cortes exactos, orden, variación de BPM, estructura, presets y los segundos del vinilo."),
               ("Siguiente: elegir formatos", "pasa al paso ③ Exportar.")]
         l3 = [("MP3 320k", "formato ligero para correo y redes."), ("WAV · FLAC", "máxima calidad para sellos y masters."),
+              ("Vídeo para redes", "vídeo animado: elige formato, fondo (animado o tu foto) y «Ver cómo queda»."),
               ("Modo promo", "tu firma de voz repetida y MP3 128 kbps."),
               ("Nombre y carpeta", "cómo se llama la previa y dónde se guarda."),
               ("Firma y carátula", "artista, sello y portada incrustados; «Editar» abre todos los datos."),
@@ -302,13 +303,14 @@ def s_interfaz(ed: str, plus: bool, im: dict) -> str:
               ("Retocar con más detalle", "ordena y mueve los cortes y elige dónde empieza la previa."),
               ("Siguiente: elegir formatos", "pasa al paso ③ Exportar.")]
         l3 = [("MP3 320k", "formato ligero con metadatos."),
+              ("Vídeo para redes", "vídeo animado con marca de agua: elige formato y «Ver cómo queda»."),
               ("Nombre y carpeta", "cómo se llama la previa y dónde se guarda."),
               ("GENERAR PREVIA", "resumen de lo que se creará y botón para exportar."),
               ("Volver a la previa", "regresa al paso ②.")]
     return f"""
 <section><h1>4. Recorrido por la interfaz</h1>
 <p>AutoPrevias te guía en <b>tres pasos</b>: <b>① Tu tema</b> (cargarlo y analizarlo), <b>② Tu previa</b> (duración, cortes, efectos) y
-<b>③ Exportar</b> (formatos y GENERAR). Arriba ves siempre una cinta con los pasos; puedes pulsar cualquiera para ir y volver sin perder nada.</p>
+<b>③ Exportar</b> (formatos, vídeo y GENERAR). Arriba ves siempre una cinta con los pasos; puedes pulsar cualquiera para ir y volver sin perder nada.</p>
 <h3>Pantalla de inicio</h3>
 {fig(im.get('01_bienvenida_anot',''), 'Pantalla de inicio de AutoPrevias')}
 {legend(l1)}
@@ -333,7 +335,7 @@ def s_primera(ed: str, plus: bool, im: dict) -> str:
         "<b>Elige para qué es.</b> Pulsa un destino (<b>Redes sociales</b>, <b>Radio</b>, <b>Sellos</b>, <b>DJ y club</b>…) o <b>Saltar este paso</b>.",
         "<b>Revisa tu previa (paso ②).</b> En la forma de onda aparecen coloreados los fragmentos que formarán la previa; arriba ves BPM, tonalidad, drops y la duración estimada. Si quieres otra duración, pulsa <b>15 s</b>, <b>30 s</b>, <b>60 s</b> o <b>2 min</b>; los cortes se recalculan al instante." + extra,
         "<b>Escúchala (opcional).</b> Con el reproductor puedes oír la pista original y, tras generarla, la previa.",
-        "<b>Pulsa «Siguiente: elegir formatos».</b> En el paso ③ marca lo que quieres crear (MP3, WAV…), revisa el nombre y la carpeta.",
+        "<b>Pulsa «Siguiente: elegir formatos».</b> En el paso ③ marca lo que quieres crear (MP3, vídeo para redes…), revisa el nombre y la carpeta.",
         "<b>Pulsa GENERAR PREVIA.</b> AutoPrevias construye la previa y la exporta; al terminar te avisa con una tarjeta y una notificación.",
         "<b>Listo.</b> Pulsa <b>Abrir carpeta</b> para ver los archivos o <b>Generar otra previa</b> para continuar."])}
 {fig(im.get('02_analisis',''), 'Durante el análisis aparece una pantalla de progreso', 'mid')}
@@ -421,9 +423,11 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
     if plus:
         fmts = ("<li><b>WAV 24 bit</b> — máxima calidad, con firma y carátula incrustadas.</li>"
                 "<li><b>MP3 320 kbps</b> — ligero y compatible con todo (128 kbps en Modo promo).</li>"
-                "<li><b>FLAC</b> — sin pérdidas y más pequeño que el WAV.</li>")
+                "<li><b>FLAC</b> — sin pérdidas y más pequeño que el WAV.</li>"
+                "<li><b>Vídeo animado Radical Neón</b> — MP4 con tu carátula (o tu foto), onda de sonido y destellos al ritmo del bombo, en formato vertical 9:16 (TikTok / Reels), cuadrado 1:1 o horizontal 16:9 (YouTube).</li>")
     else:
-        fmts = ("<li><b>MP3 320 kbps</b> — máxima calidad MP3, con metadatos, compatible con cualquier reproductor.</li>")
+        fmts = ("<li><b>MP3 320 kbps</b> — máxima calidad MP3, con metadatos, compatible con cualquier reproductor.</li>"
+                "<li><b>Vídeo animado Radical Neón</b> — MP4 hecho a partir de tu previa en MP3, en 9:16, 1:1 o 16:9. En la edición Basic lleva una marca de agua pequeña y termina con «Generado por AutoPrevias · Radical Records» o con un fundido a negro, como prefieras.</li>")
     banner_txt = " y un <b>texto de banner</b> (por ejemplo, <i>RADICAL RECORDS · PROMO EXCLUSIVA</i>)" if plus else ""
     video_section = (
         "<h3>Vídeo animado Radical Neón</h3>"
@@ -431,11 +435,13 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
         "el título, artista, BPM y tonalidad, un <b>analizador de espectro</b> que baila con la música y destellos que golpean con el bombo, con un golpe "
         "especial cuando entra el drop. Elige el formato —<b>9:16</b> (TikTok / Reels), <b>1:1</b> (Instagram) o <b>16:9</b> (YouTube)—, la <b>paleta de color</b>"
         + banner_txt + ".</p>"
-        "<p>Elige el <b>formato</b> con las tres pastillas de la propia tarjeta (<b>9:16</b>, <b>1:1</b> o <b>16:9</b>): puedes marcar <b>uno, dos o los tres a la vez</b> y se genera <b>un vídeo por cada formato</b> (el nombre lleva el formato, por ejemplo «… 9x16.mp4»); al marcarla aparece debajo la tarjeta "
-        "<b>Ajustes del vídeo</b> con el <b>color</b>, el <b>título</b>, el <b>final</b> y la <b>vista previa</b>.</p>"
+        "<p>La tarjeta del vídeo es muy sencilla: elige el <b>formato</b> con las tres pastillas (<b>9:16</b>, <b>1:1</b> o <b>16:9</b>; puedes marcar <b>uno, dos o los tres a la vez</b> y se genera "
+        "<b>un vídeo por cada formato</b>, por ejemplo «… 9x16.mp4»), elige el <b>FONDO</b> —<b>🎨 Animado</b> (tu carátula late con la música, no tienes que hacer nada más)"
+        + (" o <b>🖼 Mi foto…</b> (te pide una imagen para cada formato marcado)" if plus else "; usar tu propia foto es de Plus") +
+        "— y pulsa <b>👁 Ver cómo queda</b>. Todo lo demás (<b>color</b>, <b>título</b> y <b>final</b>) está plegado en <b>Más opciones ▾</b>, solo si quieres afinar.</p>"
         + fig(im.get('z_video', ''), 'Ajustes del vídeo' + (' (edición Plus)' if plus else ' (edición Basic, con las opciones de Plus bloqueadas)')) +
-        "<p>En el campo <b>Título</b> escribes el nombre que sale en el centro del vídeo; si lo dejas vacío se usa el nombre de la pista. Pulsa "
-        "<b>👁 Vista previa</b> para ver unos segundos del vídeo (con sonido y a baja resolución) con tus ajustes antes de generarlo. Como el vídeo se hace "
+        "<p>En <b>Más opciones</b>, en el campo <b>Título</b> escribes el nombre que sale en el centro del vídeo; si lo dejas vacío se usa el nombre de la pista. Pulsa "
+        "<b>👁 Ver cómo queda</b> para ver unos segundos del vídeo (con sonido y a baja resolución) con tus ajustes antes de generarlo. Como el vídeo se hace "
         "a partir de la previa, al marcarlo el <b>MP3 se exporta siempre</b>.</p>"
     )
     if plus:
@@ -447,7 +453,7 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
             "<li><b>Sin cierre</b> — el vídeo acaba cortado a la vez que el audio.</li>"
             "<li><b>Mi imagen</b> — el vídeo termina con la imagen que elijas (tu logo, el cartel del sello…) y un texto opcional debajo.</li></ul>"
             "<h3>Estilo del vídeo: tu propia imagen</h3>"
-            "<p>Con el selector <b>Look</b> eliges un aspecto listo con un clic: <b>Neón clásico</b>, <b>Foto + barras abajo</b>, <b>Foto + círculo en el centro</b>, "
+            "<p>En <b>Más opciones</b>, con el selector <b>Look</b> eliges un aspecto listo con un clic: <b>Neón clásico</b>, <b>Foto + barras abajo</b>, <b>Foto + círculo en el centro</b>, "
             "<b>Foto y título</b> o <b>Solo la foto</b>. Con los looks de foto, AutoPrevias te pide tu imagen, o puedes <b>arrastrar una imagen sobre la tarjeta</b> del vídeo "
             "y se usa de fondo al instante (si la imagen es de otro formato válido, cambia solo a ese formato).</p>"
             "<p>Pulsa <b>⚙ Personalizar…</b> para ajustarlo todo, con una <b>vista previa en vivo</b> que cambia al tocar cada opción y que puedes ver en los tres formatos. Es una función exclusiva de Plus:</p>"
@@ -461,7 +467,7 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
             "Se aplica a los tres formatos y se guarda en tus presets.</li>"
             "<li><b>Formato de la imagen:</b> los vídeos son <b>9:16, 1:1 o 16:9</b>. Si eliges una imagen con otra proporción, AutoPrevias te avisa de que el formato no es correcto y te muestra ejemplos de los tres formatos (botón <b>📐 Ver formatos válidos</b>); puedes cambiarla o usarla igualmente. Junto a cada imagen ves si el formato es correcto y si la resolución es baja.</li>"
             "<li><b>Final con tu imagen:</b> elige la imagen y un texto opcional; después selecciona «Final: mi imagen» en el selector de final.</li></ul>"
-            "<p>La <b>👁 Vista previa</b> muestra el resultado con tus ajustes. Los ajustes se recuerdan y se guardan también en tus presets de estilo.</p>"
+            "<p>El botón <b>👁 Ver cómo queda</b> muestra el resultado con tus ajustes. Los ajustes se recuerdan y se guardan también en tus presets de estilo.</p>"
             + fig(im.get('z_video_imagen', ''), 'Tras arrastrar una imagen: el vídeo cambia a su formato (aquí 16:9) y aplica el look «Foto + barras abajo»')
             + fig(im.get('16_estilo_video', ''), 'Ventana «Estilo del vídeo» (solo Plus)', 'tiny')
         )
@@ -474,7 +480,6 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
             "La edición <b>Plus</b> elimina la marca de agua y te deja personalizar el vídeo con tu propia imagen, tu propio logo, la onda de sonido y el final.</p>"
             "<p>En la tarjeta del vídeo verás esas opciones de Plus <b>bloqueadas con un candado</b> (🔒) para que sepas qué ganas al pasar a Plus; al pulsarlo se abre la página de compra.</p>"
         )
-    video_section = ""                     # v6.4: la creación de vídeos se retiró en todas las ediciones
     return f"""
 <section><h1>7. Ajustes de exportación (paso ③)</h1>
 {fig(im.get('z_export',''), 'Tarjetas de formato' + (' de la edición Plus' if plus else ' de la edición Basic'))}
@@ -486,9 +491,9 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
 <h3>Lo que verás en el paso ③</h3>
 <p>El paso ③ se llama <b>¿Qué quieres crear?</b> y muestra los formatos como tarjetas grandes: pulsa una tarjeta (o su casilla) para marcarla. Lo más habitual ya viene marcado.
 Debajo están <b>Nombre y carpeta</b>{' y <b>Firma y carátula</b>' if plus else ''}, y las <b>Opciones avanzadas</b>{' (Master LUFS y Voice Drop)' if plus else ''} plegadas.
-Al final, una barra con el <b>resumen</b> de lo que se va a crear (formatos, duración de la previa y carpeta) y el botón <b>GENERAR PREVIA</b>, para que no haya sorpresas.</p>
+Al final, una barra con el <b>resumen</b> de lo que se va a crear (formatos, vídeo, duración de la previa y carpeta) y el botón <b>GENERAR PREVIA</b>, para que no haya sorpresas.</p>
 
-{'' if plus else tip('La edición Plus añade WAV 24 bit, FLAC, firma y carátula personalizadas, efectos de estudio y mucho más. Mira el capítulo «Pasar a la edición Plus».')}
+{'' if plus else tip('La edición Plus añade WAV 24 bit, FLAC, vídeo animado sin marca de agua, con tu propia imagen y el final a tu elección, firma y carátula personalizadas, efectos de estudio y mucho más. Mira el capítulo «Pasar a la edición Plus».')}
 <h3>Carpeta de destino</h3>
 <p>En <b>Nombre y carpeta</b>, pulsa <b>Cambiar</b> para elegir dónde se guardan las previas y <b>Abrir</b> para ver esa carpeta en el Finder / Explorador. La carpeta se recuerda para la próxima vez.</p>
 <h3>Variante (seed) y «Regenerar con seed»</h3>
@@ -521,6 +526,7 @@ def s_plus_editor(im: dict) -> str:
 {legend([("Automático", "micro-variaciones orgánicas de tempo según la seed. Suena natural pero impide mezclar la previa sin permiso."),
          ("Manual (Presets DJ)", "tú decides las subidas de BPM."),
          ("Curva de tempo", "muestra cómo cambia la velocidad a lo largo de la previa.")])}
+<p><b>La forma más fácil:</b> en el paso ②, en la tarjeta «Cómo suena el principio y el final», la fila <b>Variación de BPM</b> tiene cuatro botones —<b>Sin variación</b>, <b>Suave</b> (por defecto), <b>Media</b> y <b>Marcada</b>— para elegir con un clic cuánto cambia el tempo. Esta pestaña es para quien quiera controlarlo al detalle.</p>
 <p>Es la <b>protección anti-retoque por tempo</b>: al variar ligeramente la velocidad, nadie puede pinchar ni sincronizar la previa con otro tema sin pasar por ti.
 En modo manual dispones de presets: <b>+5 BPM en Drops</b>, <b>+8 % Rampa</b>, <b>±4 BPM Vaivén</b>, <b>+3 BPM Fijo</b> y <b>0 BPM</b>, además de <b>➕ Momento</b> para añadir cambios exactos.</p>
 <h3>Pestaña «Estructura Musical»</h3>
@@ -617,7 +623,7 @@ def s_basic_upsell() -> str:
 <section><h1>9. Pasar a la edición Plus</h1>
 <p>Si necesitas más control, la <b>edición Plus</b> de AutoPrevias añade:</p>
 <div class="cols">
-<div class="card"><h4>🎚 Más formatos</h4><p>Exportación <b>WAV 24 bit</b> y <b>FLAC</b> a máxima calidad, con firma y carátula incrustadas.</p></div>
+<div class="card"><h4>🎚 Más formatos</h4><p>Exportación <b>WAV 24 bit</b> y <b>FLAC</b>, y <b>vídeo animado sin marca de agua</b> (MP4 9:16, 1:1 o 16:9) con tu propia imagen de fondo (una por formato), tu <b>marca de agua (logo)</b> colocada donde quieras, onda de sonido en barras, línea o círculo y el final a tu elección: firma AutoPrevias, fundido a negro, tu imagen o sin cierre.</p></div>
 <div class="card"><h4>✂ Editor avanzado</h4><p>Controla la variación de BPM, elige si la previa arranca con el efecto de vinilo o a los BPM originales y consulta la estructura musical detallada.</p></div>
 <div class="card"><h4>🖋 Firmar temas enteros</h4><p>Mete carátula y etiquetas a canciones completas y guárdalas en FLAC o WAV a máxima calidad, sin tocar el audio.</p></div>
 <div class="card"><h4>🔊 Master LUFS</h4><p>Nivel de club (−9 LUFS) con limitador transparente. Los efectos Flanger y Filter Sweep ya los tienes también en Basic.</p></div>
@@ -657,7 +663,7 @@ def s_updates(ed: str, plus: bool, im: dict, n: int) -> str:
 <li><b>Buscar actualizaciones</b> lanza la comprobación al momento.</li>
 <li><b>Tema de la app</b>: elige entre <b>Original</b> (el oscuro de siempre, con acento carmesí), <b>One Dark</b> (gris pizarra con acento azul) y <b>Claro</b> (fondo blanco roto para trabajar con mucha luz). Al elegir uno, AutoPrevias ofrece <b>reiniciarse</b> para aplicarlo en toda la interfaz; vendrán más temas.</li>
 <li><b>Abrir siempre en modo Estudio</b> sustituye el asistente por la vista única del Estudio cada vez que cargas un tema.</li>
-<li><b>Rendimiento</b> elige cuántos recursos del equipo usa AutoPrevias al analizar: <b>Automático</b> (recomendado; se adapta a tu equipo y deja un núcleo libre para que la app siga fluida), <b>Ahorro de recursos</b> (portátil con batería, equipo antiguo u otros programas abiertos) o <b>Máximo rendimiento</b> (todos los núcleos, para terminar antes). Debajo ves cuántos núcleos y cuánta memoria detecta la app.</li>
+<li><b>Rendimiento</b> elige cuántos recursos del equipo usa AutoPrevias al analizar y generar vídeo: <b>Automático</b> (recomendado; se adapta a tu equipo y deja un núcleo libre para que la app siga fluida), <b>Ahorro de recursos</b> (portátil con batería, equipo antiguo u otros programas abiertos) o <b>Máximo rendimiento</b> (todos los núcleos, para terminar antes). Debajo ves cuántos núcleos y cuánta memoria detecta la app.</li>
 <li>Si tu licencia es de 3 o 12 meses, ves <b>cuándo caduca y cuántos días quedan</b> y los botones <b>Renovar</b>.</li>
 <li><b>Desactivar licencia en este equipo</b> libera la clave en el servidor para poder usarla en otro ordenador (necesita conexión).</li>
 <li><b>Idioma</b>: Español (por defecto) o English. También puedes alternarlo con el botón <b>ES / EN</b> de la cabecera; todo se traduce al instante.</li>
@@ -696,7 +702,8 @@ def s_faq(ed: str, plus: bool, n: int) -> str:
 <tr><td>Windows muestra «Windows protegió su PC»</td><td>Pulsa <b>Más información → Ejecutar de todas formas</b>.</td></tr>
 <tr><td>«Clave no válida» al activar</td><td>Comprueba que has copiado la clave completa, sin espacios, y que es de la edición {cap}. Necesitas Internet. Si persiste, escríbenos.</td></tr>
 <tr><td>«Esta clave es de AutoPrevias Basic/Plus y estás usando…»</td><td>Tu clave corresponde a la otra edición. Descarga e instala la edición que compraste; la clave no se queda ligada a ningún equipo.</td></tr>
-<tr><td>El análisis tarda mucho, o el equipo va justo</td><td>Abre <b>⚙ → Rendimiento</b>. <b>Automático</b> se adapta a tu equipo; <b>Máximo rendimiento</b> usa todos los núcleos para terminar antes; <b>Ahorro de recursos</b> usa pocos si trabajas con otros programas o con batería. Cierra otros programas pesados mientras generas el vídeo.</td></tr>
+<tr><td>El análisis o el vídeo tardan mucho, o el equipo va justo</td><td>Abre <b>⚙ → Rendimiento</b>. <b>Automático</b> se adapta a tu equipo; <b>Máximo rendimiento</b> usa todos los núcleos para terminar antes; <b>Ahorro de recursos</b> usa pocos si trabajas con otros programas o con batería. Cierra otros programas pesados mientras generas el vídeo.</td></tr>
+{"<tr><td>«El formato de la imagen no es correcto»</td><td>Los vídeos son 9:16, 1:1 o 16:9. Cambia la imagen por una con esa proporción (pulsa <b>📐 Ver formatos válidos</b> para ver ejemplos) o elige «Imagen entera con fondo desenfocado».</td></tr>" if plus else ""}
 <tr><td>«Esta licencia ya está activada en otro equipo»</td><td>Tu clave solo puede estar en un ordenador. Desactívala en el otro (<b>⚙ → Desactivar licencia en este equipo</b>) o escribe a soporte si ese equipo ya no está disponible.</td></tr>
 <tr><td>«Tu licencia ha caducado»</td><td>Tu licencia de 3 o 12 meses llegó a su fecha. Compra otra en Payhip desde el propio menú, pulsa <b>Ya tengo una clave nueva</b> e introdúcela.</td></tr>
 <tr><td>«No se pudo conectar con el servidor de licencias»</td><td>Comprueba tu conexión a Internet, desactiva la VPN y prueba con otra red; revisa que la fecha y la hora del equipo sean correctas. Si el aviso habla de <b>certificados</b>, actualiza Windows (Windows Update). Si sigue igual, escribe a soporte indicando el aviso.</td></tr>

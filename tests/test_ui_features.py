@@ -185,7 +185,7 @@ def test_estado_firma_y_estilo_ida_y_vuelta(tmp_path, monkeypatch):
     state = p.get_state()
     q = _panel(monkeypatch)
     q.apply_state(state)
-    assert not q._chk_fx_master.isChecked() and not q._chk_video.isChecked() and q._spin_promo.value() == 35   # v6.4: sin vídeos
+    assert not q._chk_fx_master.isChecked() and q._chk_video.isChecked() and q._spin_promo.value() == 35
     assert q._voice_drop_path == p._voice_drop_path
     assert q._branding_card._edit_artist.text() == "DJ Test" and q._branding_card._edit_label.text() == "Radical"
     # aplicar solo la firma no toca el estilo
@@ -287,23 +287,69 @@ def test_vista_previa_del_video_abre_y_cierra(tmp_path, monkeypatch):
 
 def test_boton_vista_previa_presente(monkeypatch):
     p = _panel(monkeypatch)
-    assert p._btn_vprev.text().endswith("Vista previa")
+    assert p._btn_vprev.text().endswith("Ver cómo queda")
     p._source_path = ""
     p._open_video_preview()          # sin pista cargada no hace nada ni falla
 
 
-def test_sin_videos_en_ninguna_edicion(monkeypatch):
-    """v6.4 (decisión del usuario): la opción de vídeo desaparece en Basic, Plus y Demo y nunca se exporta."""
-    for ed in ("basic", "plus"):
-        p = _panel(monkeypatch, ed)
-        assert p._chk_video.isHidden() and not p._chk_video.isChecked()
-        p._chk_video.setChecked(True)                      # aunque se marcara por código, no se exporta
-        assert p.get_export_options()["export_video"] is False
+def test_basic_tiene_video_con_marca_y_sin_opciones_plus(monkeypatch):
+    p = _panel(monkeypatch, "basic")
+    assert not p._chk_video.isHidden()                 # v6.5: los vídeos vuelven (Basic con marca de agua)
+    p._chk_video.setChecked(True)
+    assert p._row_video_title_widget.isVisibleTo(p) and p._lbl_vbasic.isVisibleTo(p)
+    assert not p._combo_vend.isVisibleTo(p)            # tarjeta sencilla: lo demás va plegado en «Más opciones»
+    p._set_video_more(True)
+    assert not p._edit_promo.isVisibleTo(p) and not p._btn_vcustom.isVisibleTo(p)
+    assert p._combo_vend.isVisibleTo(p)                                    # Basic elige: firma o fundido a negro
+    assert [p._combo_vend.itemData(i) for i in range(p._combo_vend.count())] == ["brand", "fade"]
+    o = p.get_export_options()
+    assert o["export_video"] and o["export_mp3"] and o["video_end"] == "brand" and o["video_custom"] is None
+    p._set_combo_by_data(p._combo_vend, "fade")
+    assert p.get_export_options()["video_end"] == "fade"
+
+
+def test_tarjeta_de_video_sencilla(monkeypatch):
+    """v6.5: formato · fondo (Animado / Mi foto) · Ver cómo queda; color, título y final en «Más opciones»."""
+    import src.ui.app as A
+    p = _panel(monkeypatch, "plus")
+    p._chk_video.setChecked(True)
+    assert p._btn_bg_anim.isVisibleTo(p) and p._btn_bg_photo.isVisibleTo(p) and p._btn_vprev.isVisibleTo(p)
+    assert p._btn_bg_anim.isChecked() and not p._vmore_widget.isVisibleTo(p)
+    monkeypatch.setattr(p, "_pick_images_for_formats", lambda: (p.__setattr__(
+        "_video_custom", A.apply_look(A.normalize_custom({"style": "image", "bg": {"default": "x.jpg"}}), "bars")), True)[1])
+    p._btn_bg_photo.click()
+    assert p._btn_bg_photo.isChecked() and p.get_export_options()["video_custom"]["style"] == "image"
+    p._btn_bg_anim.click()
+    assert p._btn_bg_anim.isChecked() and p.get_export_options()["video_custom"]["style"] == "neon"
+    p._btn_vmore.click()
+    assert p._vmore_widget.isVisibleTo(p) and p._combo_video_pal.isVisibleTo(p)
+    b = _panel(monkeypatch, "basic")
+    abierto = []
+    monkeypatch.setattr(b, "_open_plus_page", lambda: abierto.append(1))
+    b._chk_video.setChecked(True)
+    b._btn_bg_photo.click()                              # Basic: «Mi foto» lleva a Plus y deja el fondo animado
+    assert abierto and b._btn_bg_anim.isChecked()
+
+
+def test_variacion_de_bpm_en_un_clic(monkeypatch):
+    p = _panel(monkeypatch, "plus")
+    assert [v for _, v in p.BPM_VAR_LEVELS] == [0.0, 3.0, 6.0, 10.0]
+    assert p.get_export_options()["tempo_max_pct"] == 3.0
+    for b, v in p._bpm_var_buttons:
+        if v == 10.0:
+            b.click()
+    o = p.get_export_options()
+    assert o["tempo_max_pct"] == 10.0 and o["tempo_min_pct"] == 0.0 and p.get_tempo_mode() == "auto"
+    assert p.get_state(False, True)["style"]["bpm_var_pct"] == 10.0
+    b = _panel(monkeypatch, "basic")
+    assert b.get_export_options()["tempo_max_pct"] == 3.0
+    assert not b._card_startend_simple.isVisibleTo(b)
 
 
 def test_plus_elige_el_final_del_video(monkeypatch):
     p = _panel(monkeypatch, "plus")
     p._chk_video.setChecked(True)
+    p._set_video_more(True)
     assert p._combo_vend.isVisibleTo(p) and not p._lbl_vbasic.isVisibleTo(p)
     assert p.get_export_options()["video_end"] == "brand"
     p._set_combo_by_data(p._combo_vend, "fade")
@@ -343,6 +389,7 @@ def test_plus_ajustes_de_video_y_final_con_imagen(monkeypatch, tmp_path):
     from src.engine.video_neon import normalize_custom
     p = _panel(monkeypatch, "plus")
     p._chk_video.setChecked(True)
+    p._set_video_more(True)
     assert p._btn_vcustom.isVisibleTo(p)
     assert [p._combo_vend.itemData(i) for i in range(p._combo_vend.count())] == ["brand", "fade", "none", "image"]
     img = tmp_path / "a.png"; Image.new("RGB", (64, 64), (200, 30, 30)).save(img)
@@ -435,6 +482,7 @@ def _img_file(tmp_path, name, size):
 def test_tarjeta_de_video_formato_con_botones_y_looks(monkeypatch, tmp_path):
     p = _panel(monkeypatch, "plus")
     p._chk_video.setChecked(True)
+    p._set_video_more(True)
     assert p._row_video_title_widget.isVisibleTo(p) and p._row_look_widget.isVisibleTo(p) and not p._btn_vlock.isVisibleTo(p)
     # los botones de formato controlan el selector interno (y al revés)
     assert p._aspect_btns["9:16"].isChecked()
@@ -489,6 +537,7 @@ def test_arrastrar_una_imagen_a_la_tarjeta(monkeypatch, tmp_path):
 def test_basic_ve_las_opciones_plus_bloqueadas_y_no_arrastra(monkeypatch, tmp_path):
     p = _panel(monkeypatch, "basic")
     p._chk_video.setChecked(True)
+    p._set_video_more(True)
     assert p._btn_vlock.isVisibleTo(p) and not p._row_look_widget.isVisibleTo(p) and not p._lbl_vdrop.isVisibleTo(p)
     assert not p._btn_adv.isVisibleTo(p)
     shown = []

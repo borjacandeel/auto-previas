@@ -3,6 +3,15 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [6.5.0] - 2026-11-09
+
+### Añadido
+- **Vuelven los vídeos para redes, mucho más fáciles de usar** (Basic con marca de agua, Plus sin ella). La tarjeta del vídeo ahora solo pide lo básico: el **formato** (9:16, 1:1 o 16:9), el **fondo** —**🎨 Animado** (tu carátula late con la música, sin hacer nada más) o **🖼 Mi foto…** (Plus)— y el botón **👁 Ver cómo queda**. El color, el título y el final están plegados en **Más opciones**, solo para quien quiera afinar.
+- **Variación de BPM en un clic (Plus):** en el paso ②, cuatro botones —**Sin variación**, **Suave**, **Media** y **Marcada**— para elegir cuánto cambia el tempo de la previa, sin entrar en el editor avanzado.
+
+### Corregido
+- **Cierre al abrir en Windows:** si AutoPrevias se cierra de golpe al arrancar, la siguiente vez se abre con otro motor de audio y, si vuelve a pasar, en **modo seguro** (sin animaciones ni reproductor) para que siempre puedas trabajar. Cada paso queda anotado en el registro de arranque para encontrar la causa.
+
 ## [6.4.0] - 2026-11-06
 
 ### Cambiado

@@ -226,6 +226,41 @@ def _step2(R, plus: bool):
     sep.setStyleSheet(f"background: {T.BORDER}; border: none;")
     sv.addWidget(sep)
     sv.addLayout(r2)
+    # Variación de BPM en un clic (Plus): cuánto cambia el tempo a lo largo de la previa (antes solo en la pestaña BPM)
+    sep2 = QFrame()
+    sep2.setFixedHeight(1)
+    sep2.setStyleSheet(f"background: {T.BORDER}; border: none;")
+    sv.addWidget(sep2)
+    vt = QLabel(tr("Variación de BPM"))
+    vt.setStyleSheet(f"color: {T.TEXT}; font-size: 14px; font-weight: 800; {T._T}")
+    sv.addWidget(vt)
+    vs = QLabel(tr("Cuánto cambia el tempo para que no se pueda pinchar"))
+    vs.setStyleSheet(f"color: {T.TEXT_MID}; font-size: 11px; {T._T}")
+    vs.setWordWrap(True)
+    sv.addWidget(vs)
+    vrow = QHBoxLayout()
+    vrow.setSpacing(4)
+    vgrp = QButtonGroup(se)
+    vgrp.setExclusive(True)
+    R._bpm_var_buttons = []
+    cur = R.get_bpm_var_pct()
+    for label, pct in R.BPM_VAR_LEVELS:
+        b = QPushButton(tr(label))
+        b.setCheckable(True)
+        b.setChecked(abs(pct - cur) < 0.01)
+        b.setCursor(Qt.PointingHandCursor)
+        b.setMinimumHeight(30)
+        b.setToolTip(tr("Sin cambios de tempo") if pct == 0 else f"±{pct:g} %")
+        b.setStyleSheet(
+            f"QPushButton {{ background: {T.CARD2}; color: {T.TEXT_MID}; border: 1px solid {T.BORDER}; border-radius: 8px;"
+            f" padding: 4px 8px; font-size: 11.5px; font-weight: 700; }}"
+            f"QPushButton:hover {{ border-color: {T.ACCENT}; color: {T.TEXT}; }}"
+            f"QPushButton:checked {{ background: {T.ACCENT}; color: white; border-color: {T.ACCENT}; }}")
+        b.clicked.connect(lambda _c=False, v=pct: R.set_bpm_var_pct(v))
+        vgrp.addButton(b)
+        vrow.addWidget(b, 1)
+        R._bpm_var_buttons.append((b, pct))
+    sv.addLayout(vrow)
     sv.addStretch()
     se.setVisible(plus)
     row.addWidget(se, 2)
@@ -396,7 +431,7 @@ def _step3(R, plus: bool):
 
     # detalles del vídeo (aparecen al marcarlo)
     L.addWidget(R._row_video_title_widget)
-    R._row_video_title_widget.setVisible(VIDEO_ENABLED)
+    R._row_video_title_widget.setVisible(VIDEO_ENABLED and R._chk_video.isChecked())
 
     # — nombre y carpeta | firma y carátula —
     row = QHBoxLayout()

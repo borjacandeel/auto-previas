@@ -68,9 +68,9 @@ _DEFAULTS = {
 }
 
 
-# v6.4 (decisión del usuario, 2026-11-04): la creación de vídeos queda retirada en todas las ediciones.
-# El motor sigue en el código (src/engine/video_neon.py) por si se reactiva: basta con poner True.
-VIDEO_ENABLED = False
+# v6.4 retiró los vídeos; v6.5 (decisión del usuario, 2026-11-09) los recupera con una tarjeta mucho más sencilla.
+# Poner False los oculta en todas las ediciones sin tocar nada más.
+VIDEO_ENABLED = True
 
 
 def _app_dir_name() -> str:
