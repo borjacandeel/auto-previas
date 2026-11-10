@@ -2133,7 +2133,7 @@ class ResultPanel(QWidget):
         self._btn_bg_anim = QPushButton("🎨 Animado")
         self._btn_bg_anim.setToolTip("Fondo animado con tu carátula que late con la música. No tienes que hacer nada más.")
         self._btn_bg_photo = QPushButton("🖼 Mi foto…")
-        self._btn_bg_photo.setToolTip("Usa tu propia foto de fondo (te la pide para cada formato marcado). Solo en Plus.")
+        self._btn_bg_photo.setToolTip("Usa tu propia foto de fondo: una sola para todos los formatos (si no encaja, se ve entera). Solo en Plus.")
         self._bg_group = QButtonGroup(self)
         self._bg_group.setExclusive(True)
         for b_ in (self._btn_bg_anim, self._btn_bg_photo):
@@ -3268,7 +3268,7 @@ class ResultPanel(QWidget):
             self._open_video_custom()
             return
         if key != "neon" and not self._video_custom.get("bg"):
-            # v6.2: se pide la imagen para CADA formato de vídeo marcado (9:16, 1:1, 16:9), una tras otra
+            # v6.5.2: una sola foto para todos los formatos (se ve entera si no encaja)
             if not self._pick_images_for_formats():
                 self._sync_look_combo()
                 return
@@ -3308,37 +3308,29 @@ class ResultPanel(QWidget):
         self._refresh_video_simple()
 
     def _pick_images_for_formats(self) -> bool:
-        """Abre el selector de imagen una vez por cada formato de vídeo marcado, con el formato en el título.
-        La del primero es obligatoria; si se cancela otro, ese formato usará la imagen general (recortada o con fondo desenfocado)."""
+        """v6.5.2: una sola foto para todos los formatos, sin avisos. Si encaja en todos los formatos marcados se usa
+        a pantalla completa; si no, se ve entera sobre su propio fondo desenfocado (nunca se corta)."""
+        path, _ = QFileDialog.getOpenFileName(self, tr("Elige tu foto para el vídeo"), "",
+                                              tr("Imágenes (*.png *.jpg *.jpeg *.webp *.bmp)"))
+        if not path:
+            return False
+        return self._set_single_background(path)
+
+    def _set_single_background(self, path: str) -> bool:
         from src.engine.video_neon import image_size
-        asps = self.selected_aspects()
-        got = {}
-        for n, asp in enumerate(asps):
-            title = tr("Imagen para el vídeo {a}", a=asp) + (f"  ({n + 1}/{len(asps)})" if len(asps) > 1 else "")
-            while True:
-                path, _ = QFileDialog.getOpenFileName(self, title, "", tr("Imágenes (*.png *.jpg *.jpeg *.webp *.bmp)"))
-                if not path:
-                    break
-                sz = image_size(path)
-                if sz is None:
-                    QMessageBox.warning(self, tr("Elegir imagen"), tr("No se ha podido abrir esa imagen. Prueba con un PNG o JPG."))
-                    continue
-                if match_aspect(*sz) != asp:
-                    from src.engine.video_neon import describe_ratio
-                    from src.ui.video_custom import ask_format_mismatch
-                    if ask_format_mismatch(self, [("fondo", path, describe_ratio(*sz))], asp) == "change":
-                        continue
-                got[asp] = path
-                break
-            if asp == asps[0] and asp not in got:
-                return False
-        bg = dict(self._video_custom.get("bg") or {})
-        bg.update(got)
-        if len(asps) > 1:
-            bg.setdefault("default", got[asps[0]])           # los formatos sin imagen propia usan la primera
-        c = normalize_custom({**self._video_custom, "bg": bg, "style": "image"})
-        self._video_custom = apply_look(c, "bars")
+        sz = image_size(path)
+        if sz is None:
+            QMessageBox.warning(self, tr("Elegir imagen"), tr("No se ha podido abrir esa imagen. Prueba con un PNG o JPG."))
+            return False
+        m = match_aspect(*sz)
+        fits_all = bool(m) and all(a == m for a in self.selected_aspects())
+        c = normalize_custom({**self._video_custom, "bg": {"default": path}, "style": "image",
+                              "fit": "crop" if fits_all else "blur"})
+        if self._video_custom.get("style") != "image":
+            c = apply_look(c, "bars")
+        self._video_custom = c
         self._save_video_custom()
+        self._sync_look_combo()
         return True
 
     def _on_video_image_dropped(self, path: str):
@@ -3346,10 +3338,8 @@ class ResultPanel(QWidget):
             QMessageBox.information(self, tr("Tu imagen de fondo"),
                                     tr("Usar tu propia imagen como fondo del vídeo es una función de la edición Plus."))
             return
-        ok = self._bg_image_from_user(path)
-        if ok:
+        if self._set_single_background(path):
             self._chk_video.setChecked(True)
-            self._use_background_image(ok)
 
     def _open_plus_page(self):
         try:

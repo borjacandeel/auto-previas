@@ -123,7 +123,7 @@ def _img(tmp_path, name="f.png", size=(300, 200), color=(40, 90, 200)):
 def test_normalize_custom_valida_y_completa():
     c = vn.normalize_custom({"style": "raro", "wave_style": "zigzag", "wave_pos": "abajo", "bg": {"9:16": "a.jpg", "1:1": ""}})
     assert c["style"] == "neon" and c["wave_style"] == "bars" and c["wave_pos"] == "bottom" and c["bg"] == {"9:16": "a.jpg"}
-    assert vn.normalize_custom(None)["texts"] is True and vn.normalize_custom(None)["fit"] == "crop"
+    assert vn.normalize_custom(None)["texts"] is True and vn.normalize_custom(None)["fit"] == "blur"
 
 
 def test_imagen_por_formato_manda_sobre_la_general(tmp_path):
@@ -220,7 +220,7 @@ def test_proporcion_legible():
 
 def test_avisa_de_imagenes_con_otro_formato(tmp_path):
     ok = _img(tmp_path, "ok.png", (1080, 1920)); mal = _img(tmp_path, "mal.png", (1600, 1200))
-    c = {"style": "image", "bg": {"default": mal}, "end_image": ok}
+    c = {"style": "image", "bg": {"default": mal}, "end_image": ok, "fit": "crop"}     # solo «recortar» avisa
     assert vn.image_format_problems(c, "9:16") == [("fondo", mal, "4:3")]
     assert vn.image_format_problems({**c, "bg": {"default": ok}}, "9:16") == []
     assert vn.image_format_problems({**c, "bg": {"1:1": mal, "default": ok}}, "1:1") == [("fondo", mal, "4:3"), ("final", ok, "9:16")]

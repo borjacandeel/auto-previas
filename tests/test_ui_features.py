@@ -415,34 +415,21 @@ def test_dialogo_ajustes_de_video(monkeypatch, tmp_path):
     _cerrar(d)
 
 
-def test_dialogo_avisa_del_formato_y_muestra_ejemplos(monkeypatch, tmp_path):
+def test_dialogo_acepta_cualquier_foto_sin_avisos(monkeypatch, tmp_path):
+    """v6.5.2: cualquier foto vale (si no encaja se ve entera); lo de una por formato va plegado."""
     from PySide6.QtWidgets import QApplication, QFileDialog
     import src.ui.video_custom as VC
     QApplication.instance() or QApplication([])
-    ok = tmp_path / "ok.png"; Image.new("RGB", (1080, 1920)).save(ok)
     mal = tmp_path / "mal.png"; Image.new("RGB", (1600, 1200)).save(mal)
     d = VC.VideoCustomDialog({"style": "image"})
-    pk = d._bg["9:16"]
-    # imagen correcta: se acepta sin preguntar
-    monkeypatch.setattr(QFileDialog, "getOpenFileName", staticmethod(lambda *a, **k: (str(ok), "")))
+    assert not d._chk_per_fmt.isChecked() and not d._bg["9:16"].isVisibleTo(d)
     monkeypatch.setattr(VC, "ask_format_mismatch", lambda *a, **k: (_ for _ in ()).throw(AssertionError("no debía avisar")))
-    pk._pick()
-    assert pk.path() == str(ok) and pk._status.text().startswith("✓")
-    # imagen 4:3 para 9:16: avisa; «cambiar» no la guarda (y vuelve a abrir el selector); «usarla igualmente» sí
-    asked = []
-    answers = iter(["change", "continue"])
-    monkeypatch.setattr(VC, "ask_format_mismatch", lambda parent, rows, asp="": (asked.append((rows, asp)), next(answers))[1])
     monkeypatch.setattr(QFileDialog, "getOpenFileName", staticmethod(lambda *a, **k: (str(mal), "")))
-    pk.set_path("")
-    pk._pick()
-    assert len(asked) == 2 and asked[0][0][0][2] == "4:3" and asked[0][1] == "9:16"
-    assert pk.path() == str(mal) and pk._status.text().startswith("⚠")
-    # imagen general: acepta cualquiera de los tres formatos sin avisar; una 4:3 sí avisa
     g = d._bg["default"]
-    monkeypatch.setattr(VC, "ask_format_mismatch", lambda *a, **k: (_ for _ in ()).throw(AssertionError("no debía avisar")))
-    monkeypatch.setattr(QFileDialog, "getOpenFileName", staticmethod(lambda *a, **k: (str(ok), "")))
     g._pick()
-    assert g.path() == str(ok)
+    assert g.path() == str(mal) and g._status.text().startswith("✓")
+    d._chk_per_fmt.setChecked(True)
+    assert d._bg["9:16"].isVisibleTo(d)
     ej = VC.FormatExamplesDialog(None, "16:9")
     _cerrar(ej, d)
 
@@ -469,8 +456,9 @@ def test_dialogo_solo_la_foto_y_textos(monkeypatch, tmp_path):
 def test_exportar_avisa_si_la_imagen_no_tiene_el_formato(monkeypatch, tmp_path):
     from src.engine.video_neon import image_format_problems
     mal = tmp_path / "mal.png"; Image.new("RGB", (1600, 1200)).save(mal)
-    c = {"style": "image", "bg": {"default": str(mal)}}
+    c = {"style": "image", "bg": {"default": str(mal)}, "fit": "crop"}
     assert image_format_problems(c, "16:9") == [("fondo", str(mal), "4:3")]
+    assert image_format_problems({**c, "fit": "blur"}, "16:9") == []                 # por defecto se ve entera: sin aviso
 
 
 def _img_file(tmp_path, name, size):
@@ -498,7 +486,7 @@ def test_tarjeta_de_video_formato_con_botones_y_looks(monkeypatch, tmp_path):
     p._combo_look.setCurrentIndex(p._combo_look.findData("circle"))
     p._on_look_chosen(0)
     o = p.get_export_options()["video_custom"]
-    assert o["style"] == "image" and o["wave_style"] == "circle" and o["bg"]["1:1"] == img
+    assert o["style"] == "image" and o["wave_style"] == "circle" and o["bg"] == {"default": img} and o["fit"] == "crop"
     assert p._combo_look.currentData() == "circle"
     p._combo_look.setCurrentIndex(p._combo_look.findData("neon")); p._on_look_chosen(0)
     assert p.get_export_options()["video_custom"]["style"] == "neon" and p._combo_look.currentData() == "neon"
@@ -515,23 +503,18 @@ def vn_norm(c):
 
 
 def test_arrastrar_una_imagen_a_la_tarjeta(monkeypatch, tmp_path):
+    """v6.5.2: la foto arrastrada vale para todos los formatos, sin avisos; si no encaja, se ve entera."""
     p = _panel(monkeypatch, "plus")
-    ok = _img_file(tmp_path, "h.png", (1920, 1080))
+    ok = _img_file(tmp_path, "v.png", (1080, 1920))
     p._on_video_image_dropped(ok)
     c = p.get_export_options()["video_custom"]
-    assert p._chk_video.isChecked() and c["style"] == "image" and c["bg"] == {"16:9": ok}
-    assert p._combo_aspect.currentData() == "16:9" and p._combo_look.currentData() == "bars"       # cambia al formato de la imagen
-    # imagen con otra proporción: avisa y, si el usuario la quiere cambiar, no se guarda
+    assert p._chk_video.isChecked() and c["style"] == "image" and c["bg"] == {"default": ok} and c["fit"] == "crop"
+    assert p._combo_look.currentData() == "bars"
     mal = _img_file(tmp_path, "m.png", (1600, 1200))
     import src.ui.video_custom as VC
-    monkeypatch.setattr(VC, "ask_format_mismatch", lambda *a, **k: "change")
-    p._video_custom = vn_norm(None)
-    monkeypatch.setattr("PySide6.QtWidgets.QFileDialog.getOpenFileName", staticmethod(lambda *a, **k: ("", "")))
+    monkeypatch.setattr(VC, "ask_format_mismatch", lambda *a, **k: (_ for _ in ()).throw(AssertionError("no debía avisar")))
     p._on_video_image_dropped(mal)
-    assert p._video_custom["style"] == "neon"
-    monkeypatch.setattr(VC, "ask_format_mismatch", lambda *a, **k: "continue")
-    p._on_video_image_dropped(mal)
-    assert p._video_custom["bg"] == {"default": mal} and p._video_custom["style"] == "image"
+    assert p._video_custom["bg"] == {"default": mal} and p._video_custom["fit"] == "blur"
 
 
 def test_basic_ve_las_opciones_plus_bloqueadas_y_no_arrastra(monkeypatch, tmp_path):

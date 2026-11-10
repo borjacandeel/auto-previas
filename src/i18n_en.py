@@ -1181,12 +1181,12 @@ EN.update({
     "👁 Ver cómo queda": "👁 See how it looks", "Más opciones ▾": "More options ▾", "Menos opciones ▴": "Fewer options ▴",
     "Fondo animado con tu carátula que late con la música. No tienes que hacer nada más.":
         "Animated background with your artwork pulsing to the music. Nothing else to do.",
-    "Usa tu propia foto de fondo (te la pide para cada formato marcado). Solo en Plus.":
-        "Use your own background photo (asked for each ticked format). Plus only.",
+    "Usa tu propia foto de fondo: una sola para todos los formatos (si no encaja, se ve entera). Solo en Plus.":
+        "Use your own background photo: one for every format (if it doesn't fit, it's shown whole). Plus only.",
     "Color, título, final del vídeo y ajustes a medida": "Colour, title, video ending and custom settings",
     "Fondo del vídeo": "Video background", "Más opciones del vídeo": "More video options",
-    "«Animado» usa tu carátula, que late con la música: no tienes que hacer nada más. «Mi foto…» te pide una imagen para cada formato marcado.":
-        "“Animated” uses your artwork, pulsing to the music: nothing else to do. “My photo…” asks for an image for each ticked format.",
+    "«Animado» usa tu carátula, que late con la música: no tienes que hacer nada más. «Mi foto…» te pide una sola foto para todos los formatos.":
+        "“Animated” uses your artwork, pulsing to the music: nothing else to do. “My photo…” asks for a single photo for every format.",
     "«Animado» usa tu carátula, que late con la música: no tienes que hacer nada más. Usar tu propia foto es de Plus.":
         "“Animated” uses your artwork, pulsing to the music: nothing else to do. Using your own photo is a Plus feature.",
     "Solo si quieres afinar: el color, el título que sale en el vídeo y cómo acaba.":

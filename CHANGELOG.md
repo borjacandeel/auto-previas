@@ -3,6 +3,14 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [6.5.2] - 2026-11-10
+
+### Corregido
+- **«No se pudo crear la vista previa: [WinError 6] Controlador no válido» en Windows:** la vista previa del vídeo (y la creación del vídeo) fallaba en algunos equipos con Windows. Ya funciona.
+
+### Cambiado
+- **Tu foto para el vídeo, mucho más fácil:** «🖼 Mi foto…» pide **una sola foto** para todos los formatos, sin avisos. Si la foto no tiene la forma del vídeo, se ve **entera sobre un fondo desenfocado** (nunca se corta). En «Personalizar…» lo de poner una foto distinta para cada formato queda como opción plegada.
+
 ## [6.5.1] - 2026-11-10
 
 ### Corregido

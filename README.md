@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v6.5.1-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v6.5.2-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -328,7 +328,10 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v6.5.1] — 2026-11-10 (FFmpeg incluido en Windows)
+#### 🟢 [v6.5.2] — 2026-11-10 (Vista previa en Windows y foto más fácil)
+- Corregido «[WinError 6]» en la vista previa del vídeo en Windows; «Mi foto» pide una sola foto y nunca la corta.
+
+#### [v6.5.1] — 2026-11-10 (FFmpeg incluido en Windows)
 - Corregido «no se encuentra FFmpeg» al crear vídeos en Windows: viene en el instalador y, si faltara, se descarga solo.
 
 #### [v6.5.0] — 2026-11-09 (Vuelven los vídeos, más fáciles)

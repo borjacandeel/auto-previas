@@ -60,6 +60,14 @@ def _silence_console_windows() -> bool:
     def _init(self, *args, **kwargs):
         if not kwargs.get("creationflags"):
             kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+        # Una app gráfica de Windows no tiene consola: heredar stdin/stdout/stderr da «[WinError 6] Controlador no
+        # válido» al lanzar FFmpeg (vista previa y exportación de vídeo). Lo que no se pide se manda a NUL.
+        if len(args) < 4 and kwargs.get("stdin") is None:
+            kwargs["stdin"] = subprocess.DEVNULL
+        if len(args) < 5 and kwargs.get("stdout") is None:
+            kwargs["stdout"] = subprocess.DEVNULL
+        if len(args) < 6 and kwargs.get("stderr") is None:
+            kwargs["stderr"] = subprocess.DEVNULL
         _orig_init(self, *args, **kwargs)
 
     subprocess.Popen.__init__ = _init

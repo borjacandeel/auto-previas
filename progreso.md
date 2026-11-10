@@ -2323,3 +2323,9 @@ AutoPrevias/
 
 - CI run 100: el paso nuevo fallaba en falso (`| Select-Object -First 1` corta la tubería y deja `$LASTEXITCODE` ≠ 0 aunque ffmpeg arranca); ahora se guarda la salida y luego se mira el código. Se relanza v6.5.1 (no llegó a publicarse).
 - **v6.5.1 PUBLICADA (run 101, 2026-11-10):** 12 instaladores + SHA256SUMS + 2 PDF; FFmpeg comprobado dentro del bundle de Windows y Mac.
+
+## Sesión 82 — v6.5.2: [WinError 6] en la vista previa de Windows y foto del vídeo más fácil (2026-11-10)
+- Vídeo de un cliente (Windows): «No se pudo crear la vista previa: [WinError 6] Controlador no válido» y diálogo «Personalizar…» lleno de avisos «1254×1254 · 1:1 — no es 9:16: cámbiala o se recortará».
+- Causa del WinError 6: la app gráfica de Windows no tiene consola, y los `subprocess` que no daban `stdin` (p. ej. `subprocess.run([ffmpeg…], capture_output=True)`) heredaban un manejador inválido. Arreglo global en `src/compat.py` (`_silence_console_windows`): en Windows, todo `Popen` sin `stdin/stdout/stderr` explícitos los recibe como `DEVNULL` (además de `CREATE_NO_WINDOW`). Test `tests/test_compat_winerror6.py`.
+- Foto del vídeo: `ResultPanel._pick_images_for_formats` ahora pide UNA foto (`_set_single_background`): `bg={"default": foto}`, `fit="crop"` si encaja en todos los formatos marcados y `"blur"` si no; sin diálogos de formato. Arrastrar una imagen usa lo mismo. `CUSTOM_DEFAULTS["fit"] = "blur"` (nunca corta). En `VideoCustomDialog` el selector sin avisos, «Tu foto» + casilla «Usar una foto distinta para cada formato» (plegado) y ajuste «Foto entera / Recortar». Textos del recorrido, EN y manual actualizados.
+

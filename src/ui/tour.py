@@ -258,8 +258,8 @@ def build_steps(win) -> list:
             "9:16 vertical (TikTok, Reels, Shorts), 1:1 cuadrado (feed de Instagram) o 16:9 horizontal (YouTube). "
             "Marca uno, dos o los tres a la vez: se genera un vídeo por cada formato marcado.", lambda: list(R._aspect_btns.values()), page=2)
         add("fondo", "Fondo del vídeo",
-            ("«Animado» usa tu carátula, que late con la música: no tienes que hacer nada más. «Mi foto…» te pide una imagen "
-             "para cada formato marcado." if plus else
+            ("«Animado» usa tu carátula, que late con la música: no tienes que hacer nada más. «Mi foto…» te pide una sola "
+             "foto para todos los formatos." if plus else
              "«Animado» usa tu carátula, que late con la música: no tienes que hacer nada más. Usar tu propia foto es de Plus."),
             lambda: [R._btn_bg_anim, R._btn_bg_photo], page=2)
         add("vista_previa", "Vista previa del vídeo",

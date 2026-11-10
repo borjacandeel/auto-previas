@@ -157,14 +157,7 @@ class _ImagePicker(QWidget):
             if sz is None:
                 QMessageBox.warning(self, tr("Elegir imagen"), tr("No se ha podido abrir esa imagen. Prueba con un PNG o JPG."))
                 continue
-            m = match_aspect(*sz)
-            bad = (m != self._target) if self._target else (m is None)
-            if bad:
-                ans = ask_format_mismatch(self, [(self._role, p, describe_ratio(*sz))], self._target or "")
-                if ans == "change":
-                    start = str(Path(p).parent)
-                    continue
-            self.set_path(p)
+            self.set_path(p)               # v6.5.2: sin avisos; si no encaja, se ve entera con fondo desenfocado
             return
 
     def set_path(self, p: str):
@@ -187,14 +180,7 @@ class _ImagePicker(QWidget):
         m, ratio = match_aspect(*sz), describe_ratio(*sz)
         info = f"{sz[0]}×{sz[1]} · {ratio}"
         low = min(sz) < _MIN_SHORT_SIDE
-        if self._target:
-            ok = (m == self._target)
-            txt = (f"✓ {info} — " + tr("formato correcto")) if ok else (f"⚠ {info} — " + tr("no es {fmt}: cámbiala o se recortará", fmt=self._target))
-        elif m:
-            txt = f"✓ {info} — " + tr("encaja en {fmt}; en los otros formatos se recortará o se adaptará", fmt=m)
-        else:
-            txt = f"⚠ {info} — " + tr("no es ni 9:16, 1:1 ni 16:9: se recortará o se adaptará")
-            ok = False
+        txt = f"✓ {info}"                  # v6.5.2: cualquier imagen vale (si no encaja, se ve entera)
         good = txt.startswith("✓")
         if low:
             txt += " · " + tr("resolución baja, puede verse borrosa")
@@ -411,14 +397,29 @@ class VideoCustomDialog(QDialog):
         form.setContentsMargins(0, 0, 0, 0)
         form.setLabelAlignment(Qt.AlignLeft)
         self._bg = {}
+        self._per_fmt_rows = []
         for key, label in _FORMATS:
             self._bg[key] = _ImagePicker((c["bg"] or {}).get(key, ""), None if key == "default" else key)
-            form.addRow(QLabel(tr(label)), self._bg[key])
-        self._fit = _combo((("Recortar para rellenar la pantalla", "crop"),
-                            ("Imagen entera con fondo desenfocado", "blur")), c["fit"])
-        form.addRow(QLabel(tr("Si la imagen no encaja")), self._fit)
-        hint = QLabel(tr("Usa una imagen con la proporción de cada formato (9:16, 1:1 o 16:9). Pon una por formato o una sola en "
-                         "«Todos los formatos»: se usa la del formato elegido y, si no hay, la general."))
+            lab = QLabel(tr("Tu foto") if key == "default" else tr(label))
+            form.addRow(lab, self._bg[key])
+            if key == "default":
+                # v6.5.2: por defecto una sola foto para todo; lo de una por formato queda plegado
+                self._chk_per_fmt = QCheckBox(tr("Usar una foto distinta para cada formato"))
+                self._chk_per_fmt.setChecked(any((c["bg"] or {}).get(k) for k in ("9:16", "1:1", "16:9")))
+                form.addRow(self._chk_per_fmt)
+            else:
+                self._per_fmt_rows.append((lab, self._bg[key]))
+        self._fit = _combo((("Foto entera (con fondo desenfocado si no encaja)", "blur"),
+                            ("Recortar para llenar la pantalla", "crop")), c["fit"])
+        form.addRow(QLabel(tr("Cómo se ajusta")), self._fit)
+
+        def _per_fmt_vis(on):
+            for lab_, pk in self._per_fmt_rows:
+                lab_.setVisible(on)
+                pk.setVisible(on)
+        self._chk_per_fmt.toggled.connect(_per_fmt_vis)
+        _per_fmt_vis(self._chk_per_fmt.isChecked())
+        hint = QLabel(tr("Vale cualquier foto: si no tiene la forma del vídeo, se ve entera sobre un fondo desenfocado."))
         hint.setWordWrap(True)
         hint.setStyleSheet(f"color:{TEXT2}; font-size:10.5px;")
         form.addRow(hint)
@@ -760,7 +761,8 @@ class VideoCustomDialog(QDialog):
     def _collect(self) -> dict:
         return normalize_custom({
             "style": self._style.currentData(),
-            "bg": {k: w.path() for k, w in self._bg.items()},
+            "bg": {k: w.path() for k, w in self._bg.items()
+                   if k == "default" or self._chk_per_fmt.isChecked()},
             "fit": self._fit.currentData(),
             "only_photo": self._only.isChecked(),
             "wave": self._wave.isChecked(),

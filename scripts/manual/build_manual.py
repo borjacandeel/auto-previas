@@ -437,7 +437,7 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
         + banner_txt + ".</p>"
         "<p>La tarjeta del vídeo es muy sencilla: elige el <b>formato</b> con las tres pastillas (<b>9:16</b>, <b>1:1</b> o <b>16:9</b>; puedes marcar <b>uno, dos o los tres a la vez</b> y se genera "
         "<b>un vídeo por cada formato</b>, por ejemplo «… 9x16.mp4»), elige el <b>FONDO</b> —<b>🎨 Animado</b> (tu carátula late con la música, no tienes que hacer nada más)"
-        + (" o <b>🖼 Mi foto…</b> (te pide una imagen para cada formato marcado)" if plus else "; usar tu propia foto es de Plus") +
+        + (" o <b>🖼 Mi foto…</b> (te pide una sola foto para todos los formatos; si no tiene la forma del vídeo, se ve entera sobre un fondo desenfocado)" if plus else "; usar tu propia foto es de Plus") +
         "— y pulsa <b>👁 Ver cómo queda</b>. Todo lo demás (<b>color</b>, <b>título</b> y <b>final</b>) está plegado en <b>Más opciones ▾</b>, solo si quieres afinar.</p>"
         + fig(im.get('z_video', ''), 'Ajustes del vídeo' + (' (edición Plus)' if plus else ' (edición Basic, con las opciones de Plus bloqueadas)')) +
         "<p>En <b>Más opciones</b>, en el campo <b>Título</b> escribes el nombre que sale en el centro del vídeo; si lo dejas vacío se usa el nombre de la pista. Pulsa "
@@ -455,17 +455,17 @@ def s_export(ed: str, plus: bool, im: dict) -> str:
             "<h3>Estilo del vídeo: tu propia imagen</h3>"
             "<p>En <b>Más opciones</b>, con el selector <b>Look</b> eliges un aspecto listo con un clic: <b>Neón clásico</b>, <b>Foto + barras abajo</b>, <b>Foto + círculo en el centro</b>, "
             "<b>Foto y título</b> o <b>Solo la foto</b>. Con los looks de foto, AutoPrevias te pide tu imagen, o puedes <b>arrastrar una imagen sobre la tarjeta</b> del vídeo "
-            "y se usa de fondo al instante (si la imagen es de otro formato válido, cambia solo a ese formato).</p>"
+            "y se usa de fondo al instante en todos los formatos.</p>"
             "<p>Pulsa <b>⚙ Personalizar…</b> para ajustarlo todo, con una <b>vista previa en vivo</b> que cambia al tocar cada opción y que puedes ver en los tres formatos. Es una función exclusiva de Plus:</p>"
-            "<ul><li><b>Fondo:</b> la plantilla Neón de siempre o <b>Mi imagen</b>, tu foto de fondo con un zoom lento. Puedes poner <b>una imagen distinta para cada formato</b> "
-            "(9:16, 1:1 y 16:9) o una sola para todos, y elegir si se <b>recorta</b> para rellenar la pantalla o se muestra <b>entera sobre un fondo desenfocado</b>.</li>"
+            "<ul><li><b>Fondo:</b> la plantilla Neón de siempre o <b>Mi imagen</b>, tu foto de fondo con un zoom lento. Basta con <b>una sola foto</b> para todo; si quieres, marca «Usar una foto distinta para cada formato» "
+            "(9:16, 1:1 y 16:9). Puedes elegir si se <b>recorta</b> para rellenar la pantalla o se muestra <b>entera sobre un fondo desenfocado</b>.</li>"
             "<li><b>Onda de sonido:</b> mostrarla o no; en <b>barras</b>, <b>línea</b> o <b>círculo</b>; abajo, en el centro o arriba; con los colores de la paleta Neón o en blanco.</li>"
             "<li><b>Textos:</b> elige cuáles se ven (título, artista, BPM y tonalidad, etiqueta «Previa exclusiva»), arriba, en el centro o abajo. Con <b>Solo la foto</b> se muestra únicamente tu imagen, sin textos, onda ni banner.</li>"
             "<li><b>Tu marca de agua (logo):</b> pulsa <b>Elegir logo…</b> y escoge un <b>PNG</b> (mejor con fondo transparente) o un <b>JPG</b>. Se ve <b>de principio a fin</b> del vídeo. "
             "Arrástralo con el ratón sobre la <b>vista previa</b> para colocarlo donde quieras y usa la <b>rueda del ratón</b> para cambiar su tamaño. "
             "También puedes ajustar el <b>tamaño</b>, la <b>opacidad</b> y el <b>giro</b>, <b>voltearlo</b> en horizontal o en vertical, girarlo 90° o usar la <b>posición rápida</b> (esquinas y centro). "
             "Se aplica a los tres formatos y se guarda en tus presets.</li>"
-            "<li><b>Formato de la imagen:</b> los vídeos son <b>9:16, 1:1 o 16:9</b>. Si eliges una imagen con otra proporción, AutoPrevias te avisa de que el formato no es correcto y te muestra ejemplos de los tres formatos (botón <b>📐 Ver formatos válidos</b>); puedes cambiarla o usarla igualmente. Junto a cada imagen ves si el formato es correcto y si la resolución es baja.</li>"
+            "<li><b>Cualquier foto vale:</b> si no tiene la forma del vídeo (9:16, 1:1 o 16:9), se ve <b>entera sobre un fondo desenfocado</b>, sin cortes ni avisos. Si prefieres que llene la pantalla, elige «Recortar para llenar la pantalla».</li>"
             "<li><b>Final con tu imagen:</b> elige la imagen y un texto opcional; después selecciona «Final: mi imagen» en el selector de final.</li></ul>"
             "<p>El botón <b>👁 Ver cómo queda</b> muestra el resultado con tus ajustes. Los ajustes se recuerdan y se guardan también en tus presets de estilo.</p>"
             + fig(im.get('z_video_imagen', ''), 'Tras arrastrar una imagen: el vídeo cambia a su formato (aquí 16:9) y aplica el look «Foto + barras abajo»')

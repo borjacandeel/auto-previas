@@ -41,7 +41,7 @@ BG = (5, 6, 10)
 CUSTOM_DEFAULTS = {
     "style": "neon",          # "neon" (plantilla) | "image" (imagen propia)
     "bg": {},                 # {"default": ruta, "9:16": ruta, "1:1": ruta, "16:9": ruta}
-    "fit": "crop",            # "crop" (rellena recortando) | "blur" (imagen entera con fondo desenfocado)
+    "fit": "blur",            # "blur" (imagen entera con fondo desenfocado: nunca corta la foto) | "crop" (rellena recortando)
     "wave": True,
     "wave_style": "bars",     # "bars" | "line" | "circle"
     "wave_pos": "bottom",     # "top" | "center" | "bottom"
