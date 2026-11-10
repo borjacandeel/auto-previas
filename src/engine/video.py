@@ -380,7 +380,9 @@ def render_social_video(
         if progress_cb:
             progress_cb(pct, msg)
 
-    ffmpeg_bin = get_ffmpeg_path()
+    from src.ffmpeg_fetch import ensure_ffmpeg   # si falta, se descarga solo
+
+    ffmpeg_bin = ensure_ffmpeg()
     if not ffmpeg_bin:
         raise RuntimeError("FFmpeg no encontrado. No es posible generar el vídeo social.")
 

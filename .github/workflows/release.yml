@@ -134,6 +134,14 @@ jobs:
       - name: Empaquetar dependencias runtime adicionales
         run: python scripts/bundle_runtime_deps.py "dist/AutoPrevias.app/Contents/MacOS"
 
+      - name: Copiar y comprobar FFmpeg en el bundle
+        run: |
+          D=dist/AutoPrevias.app/Contents/MacOS/ffmpeg_bin
+          mkdir -p "$D"
+          cp -f ffmpeg_bin/ffmpeg "$D/ffmpeg"
+          chmod +x "$D/ffmpeg"
+          "$D/ffmpeg" -version | head -1
+
       - name: Ejecutar Selftest sobre binario compilado
         run: PYTHONDONTWRITEBYTECODE=1 dist/AutoPrevias.app/Contents/MacOS/AutoPrevias --selftest
 
@@ -332,6 +340,17 @@ jobs:
               exit 1
             }
           }
+
+      - name: Copiar y comprobar FFmpeg en el bundle
+        shell: pwsh
+        run: |
+          # Nuitka no copia ejecutables (.exe) de --include-data-dir: se copia a mano y se comprueba
+          $dest = "dist\AutoPrevias.dist\ffmpeg_bin"
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+          Copy-Item "ffmpeg_bin\ffmpeg.exe" $dest -Force
+          if (-not (Test-Path "$dest\ffmpeg.exe")) { Write-Host "[ERROR] falta ffmpeg.exe en el bundle"; exit 1 }
+          & "$dest\ffmpeg.exe" -version | Select-Object -First 1
+          if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] ffmpeg.exe no arranca"; exit 1 }
 
       - name: Ejecutar Selftest sobre binario compilado
         shell: cmd

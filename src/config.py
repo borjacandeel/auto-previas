@@ -219,6 +219,14 @@ def get_ffmpeg_path() -> str | None:
                     pass
             return str(cand.resolve())
 
+    # 1 bis. Copia descargada por la propia app (src/ffmpeg_fetch.py) si el instalador no lo trajo
+    try:
+        _cached = get_cache_dir() / "ffmpeg" / ("ffmpeg.exe" if sys.platform == "win32" else "ffmpeg")
+        if _cached.is_file() and _cached.stat().st_size > 1_000_000:
+            return str(_cached)
+    except Exception:
+        pass
+
     # 2. PATH del sistema
     system_ffmpeg = shutil.which("ffmpeg")
     if system_ffmpeg:

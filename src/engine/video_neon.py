@@ -1074,9 +1074,11 @@ def render_neon_video(
         if progress_cb:
             progress_cb(int(p), m)
 
-    ffmpeg = get_ffmpeg_path()
+    from src.ffmpeg_fetch import ensure_ffmpeg   # si falta, se descarga solo
+
+    ffmpeg = ensure_ffmpeg()
     if not ffmpeg:
-        raise RuntimeError("FFmpeg no encontrado. No es posible generar el vídeo social.")
+        raise RuntimeError("No se ha podido preparar FFmpeg para crear el vídeo. Conéctate a Internet y vuelve a intentarlo (se descarga solo una vez).")
     if aspect_ratio not in ASPECTS:
         aspect_ratio = "9:16"
 
@@ -1150,7 +1152,9 @@ def render_preview(
         if progress_cb:
             progress_cb(int(p), m)
 
-    ffmpeg = get_ffmpeg_path()
+    from src.ffmpeg_fetch import ensure_ffmpeg   # si falta, se descarga solo
+
+    ffmpeg = ensure_ffmpeg()
     if not ffmpeg:
         raise RuntimeError("FFmpeg no encontrado.")
     if aspect_ratio not in ASPECTS:

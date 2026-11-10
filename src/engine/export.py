@@ -533,9 +533,10 @@ def export_files(
         # Si ya tenemos el WAV exportado, usar FFmpeg con Xing headers y carátula ID3
         import subprocess
         import os
-        from src.config import get_ffmpeg_path, get_cache_dir
+        from src.config import get_cache_dir
+        from src.ffmpeg_fetch import ensure_ffmpeg
 
-        ffmpeg_bin = get_ffmpeg_path()
+        ffmpeg_bin = ensure_ffmpeg()                  # si falta, se descarga solo (red de seguridad)
 
         src_wav = str(paths["wav"]) if "wav" in paths and Path(paths["wav"]).exists() else None
         if not src_wav:

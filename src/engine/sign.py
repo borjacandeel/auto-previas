@@ -344,7 +344,9 @@ def sign_track(
         if progress_cb:
             progress_cb(p, m)
 
-    ffmpeg = get_ffmpeg_path()
+    from src.ffmpeg_fetch import ensure_ffmpeg   # si falta, se descarga solo
+
+    ffmpeg = ensure_ffmpeg()
     if not ffmpeg:
         raise RuntimeError("Falta FFmpeg: sin él no se puede incrustar la carátula.")
     meta = dict(metadata or {})

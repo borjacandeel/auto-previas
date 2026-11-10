@@ -2315,3 +2315,9 @@ AutoPrevias/
 - Tests: `test_ui_features` (vídeo Basic, tarjeta sencilla, variación de BPM), `test_tour`, `test_wizard_v5` adaptados. Selftests plus/basic/demo OK.
 - **CI de la v6.5.0 (run 98):** los 3 trabajos de macOS se cancelaban al instante con `macos-14` (imagen retirada) y la Release no se publicaba (por eso no llegaba la actualización). Cambiado a `runs-on: macos-15` con `MACOSX_DEPLOYMENT_TARGET=12.0`; se relanza el CI con el mismo `tag_name` v6.5.0 (nunca llegó a publicarse).
 - **v6.5.0 PUBLICADA (run 99, 2026-11-09):** 12 instaladores (Basic/Plus/Demo × Mac/Windows, con alias) + `SHA256SUMS.txt` + 2 PDF. macOS en `macos-15` OK.
+
+## Sesión 81 — v6.5.1: FFmpeg en Windows (2026-11-10)
+- Queja de cliente: «al crear el vídeo dice que no se encuentra el ffmpeg» (Windows).
+- Causa: Nuitka no copia ejecutables (`.exe`) desde `--include-data-dir`, así que `ffmpeg_bin\ffmpeg.exe` nunca entraba en `AutoPrevias.dist` (el log de Inno Setup de la v6.5.0 no lo comprime). En Mac sí entraba.
+- Arreglo: paso de CI «Copiar y comprobar FFmpeg en el bundle» (Windows: `Copy-Item` a `dist\AutoPrevias.dist\ffmpeg_bin` + `ffmpeg.exe -version`; Mac: copia a `Contents/MacOS/ffmpeg_bin`). El selftest falla si en un binario con edición horneada no hay FFmpeg. Red de seguridad `src/ffmpeg_fetch.py`: `ensure_ffmpeg()` (vídeo Neón/clásico, MP3, firmar tema) y `prefetch_in_background()` al abrir la app descargan FFmpeg (Tyrrrz FFmpegBin 9.0.2) a `caché/ffmpeg/` si falta, con User-Agent propio y plan B de certificados; `get_ffmpeg_path()` busca también ahí. Log en `%TEMP%\autoprevias_ffmpeg.log`. Tests `tests/test_ffmpeg_fetch.py` (4).
+

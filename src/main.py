@@ -212,6 +212,13 @@ def run_selftest() -> int:
         print(f"  ✓ Librosa: {librosa_ver}")
         print(f"  ✓ Qt: {QtCore.qVersion()} (PySide6)")
         print(f"  ✓ FFmpeg binario: {ffmpeg_bin or 'No detectado (se usará fallback interno)'}")
+        try:                                   # en el binario compilado FFmpeg es obligatorio (vídeo, MP3, carátulas)
+            from src.config import _get_baked_edition
+            _baked = _get_baked_edition()
+        except Exception:
+            _baked = None
+        if _baked and not ffmpeg_bin:
+            raise RuntimeError("FFmpeg no está dentro del binario compilado")
         print(f"  ✓ Directorio assets: {assets_dir}")
         print(f"  ✓ Directorio caché: {cache_dir}")
 

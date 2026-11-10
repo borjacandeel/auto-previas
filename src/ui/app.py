@@ -6842,6 +6842,11 @@ def launch(initial_file: str = ""):
     win.show()
     QTimer.singleShot(80, splash.close)
     QTimer.singleShot(1200, win.maybe_start_onboarding)      # bienvenida: solo en instalaciones nuevas
+    try:                                   # si al instalador le faltara FFmpeg, se descarga solo en segundo plano
+        from src import ffmpeg_fetch
+        ffmpeg_fetch.prefetch_in_background()
+    except Exception:
+        pass
 
     _log_startup("Ventana principal visible. Ejecutando app.exec()...")
     sys.exit(app.exec())

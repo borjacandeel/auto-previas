@@ -3,6 +3,11 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [6.5.1] - 2026-11-10
+
+### Corregido
+- **«No se encuentra FFmpeg» al crear vídeos en Windows:** el instalador de Windows no llevaba FFmpeg dentro. Ahora viene incluido y se comprueba antes de publicar cada versión. Y si en algún equipo faltara (por ejemplo, porque un antivirus lo borra), AutoPrevias lo **descarga solo** la primera vez que lo necesita, sin que tengas que instalar nada.
+
 ## [6.5.0] - 2026-11-09
 
 ### Añadido
