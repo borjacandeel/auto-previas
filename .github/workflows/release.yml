@@ -349,8 +349,10 @@ jobs:
           New-Item -ItemType Directory -Force -Path $dest | Out-Null
           Copy-Item "ffmpeg_bin\ffmpeg.exe" $dest -Force
           if (-not (Test-Path "$dest\ffmpeg.exe")) { Write-Host "[ERROR] falta ffmpeg.exe en el bundle"; exit 1 }
-          & "$dest\ffmpeg.exe" -version | Select-Object -First 1
-          if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] ffmpeg.exe no arranca"; exit 1 }
+          $out = & "$dest\ffmpeg.exe" -version 2>&1
+          $code = $LASTEXITCODE
+          Write-Host ($out | Select-Object -First 1)
+          if ($code -ne 0) { Write-Host "[ERROR] ffmpeg.exe no arranca (código $code)"; exit 1 }
 
       - name: Ejecutar Selftest sobre binario compilado
         shell: cmd
