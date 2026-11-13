@@ -2330,3 +2330,9 @@ AutoPrevias/
 - Foto del vídeo: `ResultPanel._pick_images_for_formats` ahora pide UNA foto (`_set_single_background`): `bg={"default": foto}`, `fit="crop"` si encaja en todos los formatos marcados y `"blur"` si no; sin diálogos de formato. Arrastrar una imagen usa lo mismo. `CUSTOM_DEFAULTS["fit"] = "blur"` (nunca corta). En `VideoCustomDialog` el selector sin avisos, «Tu foto» + casilla «Usar una foto distinta para cada formato» (plegado) y ajuste «Foto entera / Recortar». Textos del recorrido, EN y manual actualizados.
 
 - **v6.5.2 PUBLICADA (run 102, 2026-11-10):** 12 instaladores + SHA256SUMS + 2 PDF.
+
+## PENDIENTE — peticiones de clientes (2026-11-13, solo anotado, sin implementar)
+Del grupo «RadicalRec Estudio» (Miquel Bortek, Mario Chispi):
+1. **Botón «▶ Oír» de los efectos:** si se pulsa play en el efecto y en la canción, suenan los dos a la vez. Propuesta de los clientes: **quitar el botón «Oír»** y que el efecto **se oiga directamente al reproducir la previa** (play normal con los efectos aplicados).
+2. **Efectos progresivos:** que los efectos vayan progresivos en subidas y bajadas (entrada/salida graduales, no de golpe).
+3. Hay además una nota de voz del usuario (WhatsApp, 2026-11-13 10:38) con más peticiones: no transcrita todavía; pedírsela en texto o transcribirla al retomar.
