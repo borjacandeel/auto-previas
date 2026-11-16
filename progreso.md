@@ -2331,8 +2331,16 @@ AutoPrevias/
 
 - **v6.5.2 PUBLICADA (run 102, 2026-11-10):** 12 instaladores + SHA256SUMS + 2 PDF.
 
-## PENDIENTE — peticiones de clientes (2026-11-13, solo anotado, sin implementar)
+## Peticiones de clientes (2026-11-13) — puntos 1 y 2 HECHOS en v6.6.0 (sesión 83)
 Del grupo «RadicalRec Estudio» (Miquel Bortek, Mario Chispi):
 1. **Botón «▶ Oír» de los efectos:** si se pulsa play en el efecto y en la canción, suenan los dos a la vez. Propuesta de los clientes: **quitar el botón «Oír»** y que el efecto **se oiga directamente al reproducir la previa** (play normal con los efectos aplicados).
 2. **Efectos progresivos:** que los efectos vayan progresivos en subidas y bajadas (entrada/salida graduales, no de golpe).
 3. Hay además una nota de voz del usuario (WhatsApp, 2026-11-13 10:38) con más peticiones: no transcrita todavía; pedírsela en texto o transcribirla al retomar.
+
+## Sesión 83 — v6.6.0: efectos al darle al play (sin «▶ Oír») y progresivos (2026-11-16)
+- Pedido (clientes, ver arriba): quitar «▶ Oír» (sonaban efecto y canción a la vez) y que el efecto se oiga al reproducir; efectos progresivos.
+- `src/ui/fx_monitor.py` (`FxMonitor`): al cambiar los efectos (`waveform.fx_changed`, 450 ms de espera) prepara en un hilo una copia del tema ORIGINAL con los efectos en su sitio (`fx_events.apply_events_to_source`, mismos tiempos) en `caché/fx_monitor_*.wav` (PCM16); el audio decodificado se guarda en memoria una vez por tema. `ResultPanel._on_fx_monitor_ready` → `PlayerWidget.set_source_play_file(ruta|None)`: el modo «pista original» suena esa copia sin perder la posición ni el play (`_pending_seek` + `_keep_pending` si estaba en pausa); sin efectos vuelve al original. Los archivos viejos se borran 1,5 s después (Windows). El ▶ de cada corte usa el reproductor, así que también suena con efectos.
+- `fx_lane.FxInspector.btn_play` oculto (el `FxAuditioner` sigue en el código, sin uso visible).
+- Progresivos: `fx_events.progressive_envelope` (curva coseno, rampas por tipo en `RAMPS`: flanger 30 %/30 %, filter_up 25 %/10 %, filter_down 10 %/25 %, máx. 4 s) y `apply_event_to_chunk(..., t0, ev_len)` para que un efecto partido entre dos cortes tenga una sola subida/bajada. Afecta también a la previa exportada.
+- Tests: `tests/test_fx_monitor.py` (envolvente, efectos sobre el original, monitor) y ajuste de `test_fx_events` (ventana antes de la salida progresiva). Recorrido, EN, manual, README y CHANGELOG actualizados.
+

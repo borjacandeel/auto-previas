@@ -1614,7 +1614,12 @@ class ResultPanel(QWidget):
             self._waveform.cut_play_requested.connect(self._audition_cut)      # ▶ sobre cada corte de la onda
             self._waveform.cut_remove_requested.connect(self._remove_cut)      # ✕ sobre cada corte de la onda
             self._waveform.voice_drop_moved.connect(self._on_voice_drop_marker_moved)
-            self._waveform.fx_audition_requested.connect(self._audition_fx)      # ▶ Oír el efecto seleccionado
+            self._waveform.fx_audition_requested.connect(self._audition_fx)      # (botón «▶ Oír» oculto desde v6.5.3)
+            # v6.5.3: los efectos se oyen al reproducir el tema (sin botón «Oír»): se prepara una copia con efectos
+            from src.ui.fx_monitor import FxMonitor
+            self._fx_monitor = FxMonitor(self)
+            self._fx_monitor.ready.connect(self._on_fx_monitor_ready)
+            self._waveform.fx_changed.connect(self._fx_monitor.set_events)
             wave_lay.addWidget(self._waveform)
         else:
             placeholder = QLabel("Instala pyqtgraph para ver la forma de onda")
@@ -2710,6 +2715,10 @@ class ResultPanel(QWidget):
         # Reproductor: cargar el track original inmediatamente
         if self._player:
             self._player.set_source_track(file_path)
+        if getattr(self, "_fx_monitor", None) is not None:
+            self._fx_monitor.set_source(file_path)
+            if HAS_WAVEFORM and self._waveform.fx_events():
+                self._fx_monitor.set_events(self._waveform.fx_events())
 
         self._active_preset_sec = 120
         self._update_preset_styles(120)
@@ -2778,6 +2787,14 @@ class ResultPanel(QWidget):
             _anim.snapshot_transition(self, _switch, direction=(1 if n == 3 else -1), ms=320)   # fotos: estable a 60 fps
         else:
             _switch()
+
+    def _on_fx_monitor_ready(self, tok: int, path: str):
+        """La copia del tema con los efectos está lista: el reproductor la usa (sin perder la posición)."""
+        mon = getattr(self, "_fx_monitor", None)
+        if mon is None or not mon.is_current(tok) or not self._player:
+            return
+        self._player.set_source_play_file(path or None)
+        QTimer.singleShot(1500, lambda p=path: mon.cleanup(keep=p))
 
     # ── ▶ Oír efecto ───────────────────────────────────────────────────────
     def _fx_auditioner(self):

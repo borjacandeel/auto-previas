@@ -3,6 +3,12 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [6.6.0] - 2026-11-16
+
+### Cambiado
+- **Los efectos se oyen al darle al play** (petición de clientes): ya no hay botón «▶ Oír» aparte. Al colocar o cambiar un Flanger o un Filter Sweep en la onda, el reproductor (y el ▶ de cada corte) suena ya con el efecto aplicado en su sitio, sin generar la previa. Así nunca suenan dos cosas a la vez.
+- **Efectos progresivos:** cada efecto entra y sale poco a poco (subida y bajada suaves) en vez de aparecer de golpe. El Filter Sweep ↗ sigue llegando arriba del todo y el ↘ empieza ya abierto.
+
 ## [6.5.2] - 2026-11-10
 
 ### Corregido

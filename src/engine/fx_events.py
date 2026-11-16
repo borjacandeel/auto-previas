@@ -66,8 +66,33 @@ def normalize_events(events: Iterable[dict] | None, duration: float | None = Non
     return out
 
 
-def apply_event_to_chunk(chunk: np.ndarray, sr: int, ev: dict) -> np.ndarray:
-    """Aplica un efecto a un trozo de audio estéreo (2, N) con entrada y salida suaves."""
+RAMP_FRACTION = 0.3            # v6.5.3: el efecto entra y sale de forma progresiva (30 % del efecto en cada extremo)
+RAMP_MAX_SEC = 4.0
+# Cuánto de cada extremo es rampa, por tipo: el barrido ↗ debe llegar arriba (sale más corto); el ↘ entra más directo
+RAMPS = {"flanger": (0.3, 0.3), "filter_up": (0.25, 0.1), "filter_down": (0.1, 0.25)}
+
+
+def progressive_envelope(n: int, sr: int, t0: float = 0.0, ev_len: float | None = None,
+                         ramp_in: float = RAMP_FRACTION, ramp_out: float = RAMP_FRACTION) -> np.ndarray:
+    """Peso del efecto (0→1→0) para un trozo de `n` muestras que empieza `t0` s después del inicio del efecto.
+
+    Sube suave al principio y baja suave al final (curva coseno), así el efecto «entra» y «sale» poco a poco."""
+    ev_len = float(ev_len) if ev_len else n / float(sr)
+    t = t0 + np.arange(n, dtype=np.float64) / float(sr)
+    r_in = max(EDGE_FADE_SEC, min(RAMP_MAX_SEC, ramp_in * ev_len))
+    r_out = max(EDGE_FADE_SEC, min(RAMP_MAX_SEC, ramp_out * ev_len))
+    up = np.clip(t / r_in, 0.0, 1.0)
+    down = np.clip((ev_len - t) / r_out, 0.0, 1.0)
+    w = np.minimum(up, down)
+    return (0.5 - 0.5 * np.cos(np.pi * w)).astype(np.float32)
+
+
+def apply_event_to_chunk(chunk: np.ndarray, sr: int, ev: dict, t0: float = 0.0,
+                         ev_len: float | None = None) -> np.ndarray:
+    """Aplica un efecto a un trozo de audio estéreo (2, N) con entrada y salida progresivas.
+
+    `t0` = segundos desde el inicio del efecto hasta el inicio del trozo; `ev_len` = duración total del efecto
+    (por defecto, el propio trozo). Así, si el efecto cae en dos cortes, la subida y la bajada siguen siendo una sola."""
     from src.engine import effects
     n = chunk.shape[1]
     if n < int(0.05 * sr):
@@ -81,14 +106,9 @@ def apply_event_to_chunk(chunk: np.ndarray, sr: int, ev: dict) -> np.ndarray:
         top = float(min(9000.0, 500.0 * 10.0 ** (amt / 0.75)))                   # amt 0.75 ≙ 5 kHz: se nota mucho más que antes (2,8 kHz)
         lo, hi = (60.0, top) if kind == "filter_up" else (top, 60.0)
         wet = effects.apply_filter_sweep(chunk, sr, start_freq=lo, end_freq=hi, kind="highpass", hard_stop=False, order=4)
-    # entrada y salida suaves para que no haya clics en los bordes del efecto
-    k = min(int(EDGE_FADE_SEC * sr), n // 4)
-    if k > 1:
-        w = np.ones(n, dtype=np.float32)
-        w[:k] = np.linspace(0.0, 1.0, k, dtype=np.float32)
-        w[-k:] = np.linspace(1.0, 0.0, k, dtype=np.float32)
-        return (chunk * (1.0 - w) + wet * w).astype(np.float32)
-    return wet
+    r_in, r_out = RAMPS.get(kind, (RAMP_FRACTION, RAMP_FRACTION))
+    w = progressive_envelope(n, sr, t0, ev_len, r_in, r_out)
+    return (chunk * (1.0 - w) + wet * w).astype(np.float32)
 
 
 def apply_events_to_blocks(block_audios: List[np.ndarray], blocks: List[List[float]], sr: int,
@@ -114,7 +134,7 @@ def apply_events_to_blocks(block_audios: List[np.ndarray], blocks: List[List[flo
             if i1 - i0 < int(0.05 * sr):
                 continue
             a = a.copy()
-            a[:, i0:i1] = apply_event_to_chunk(a[:, i0:i1], sr, ev)
+            a[:, i0:i1] = apply_event_to_chunk(a[:, i0:i1], sr, ev, t0=lo - ev["start"], ev_len=ev["end"] - ev["start"])
             out[i] = a
     return out
 
@@ -157,3 +177,24 @@ def render_effect_preview(source_path: str, ev: dict, pad: float = 2.0):
         audio[:, :k] *= np.linspace(0.0, 1.0, k, dtype=np.float32)
         audio[:, -k:] *= np.linspace(1.0, 0.0, k, dtype=np.float32)
     return audio, sr
+
+
+def apply_events_to_source(audio: np.ndarray, sr: int, events: Iterable[dict] | None) -> np.ndarray:
+    """v6.5.3: el tema ORIGINAL entero con los efectos aplicados en su sitio (para oírlos al reproducir, sin «▶ Oír»).
+
+    `audio` es estéreo (2, N); devuelve una copia del mismo tamaño (los tiempos no cambian)."""
+    out = audio
+    copied = False
+    for ev in normalize_events(events, audio.shape[1] / float(sr)):
+        i0 = max(0, int(round(ev["start"] * sr)))
+        i1 = min(audio.shape[1], int(round(ev["end"] * sr)))
+        if i1 - i0 < int(0.05 * sr):
+            continue
+        if not copied:
+            out = audio.copy()
+            copied = True
+        out[:, i0:i1] = apply_event_to_chunk(out[:, i0:i1], sr, ev)
+    if copied:
+        np.clip(out, -0.999, 0.999, out=out)
+    return out
+

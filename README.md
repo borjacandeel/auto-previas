@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v6.5.2-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v6.6.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -276,7 +276,7 @@ Cada clave se puede usar en **un solo equipo a la vez**. Si ya está activa en u
 | Sección de Firma y Carátula (Branding) | ❌ | ✅ |
 | Temas de la app (Original, One Dark, Claro) y transiciones fluidas | ✅ | ✅ |
 | Botón «✂ + Corte» (corte nuevo con un clic) y los tres formatos de vídeo a la vez (un vídeo por formato) | ✅ | ✅ |
-| Efectos Flanger y Filter Sweep arrastrables a la onda (tú eliges dónde y cuánto dura), con «▶ Oír» para escucharlos sueltos | ✅ | ✅ |
+| Efectos Flanger y Filter Sweep arrastrables a la onda (tú eliges dónde y cuánto dura), que se oyen al darle al play y entran y salen poco a poco | ✅ | ✅ |
 | Master LUFS (−9 LUFS, nivel de club) | ❌ | ✅ |
 | Variación de BPM en un clic (sin variación, suave, media o marcada) | ❌ (suave) | ✅ |
 | Corrección manual de BPM | ❌ | ✅ |
@@ -328,7 +328,10 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v6.5.2] — 2026-11-10 (Vista previa en Windows y foto más fácil)
+#### 🟢 [v6.6.0] — 2026-11-16 (Efectos al darle al play y progresivos)
+- Sin botón «▶ Oír»: los efectos suenan al reproducir el tema; entran y salen poco a poco.
+
+#### [v6.5.2] — 2026-11-10 (Vista previa en Windows y foto más fácil)
 - Corregido «[WinError 6]» en la vista previa del vídeo en Windows; «Mi foto» pide una sola foto y nunca la corta.
 
 #### [v6.5.1] — 2026-11-10 (FFmpeg incluido en Windows)

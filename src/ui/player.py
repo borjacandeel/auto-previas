@@ -570,6 +570,7 @@ class PlayerWidget(QWidget):
     def set_source_track(self, path: str, autoplay: bool = False):
         """Asigna y carga el track original subido por el usuario."""
         self._source_path = path
+        self._source_play_path = None
         self._btn_mode_source.setEnabled(True)
         self._switch_to_source(autoplay=autoplay)
 
@@ -583,7 +584,7 @@ class PlayerWidget(QWidget):
         if not self._source_path:
             return
         self._update_mode_buttons_style(is_source=True)
-        self.load_file(self._source_path, autoplay=autoplay)
+        self.load_file(getattr(self, "_source_play_path", None) or self._source_path, autoplay=autoplay)
         self.track_switched.emit("source")
 
     def _switch_to_preview(self, autoplay: bool = False):
@@ -716,7 +717,29 @@ class PlayerWidget(QWidget):
         return self._player.playbackState() == QMediaPlayer.PlaybackState.PlayingState
 
     def is_playing_source(self) -> bool:
-        return self._current_path == self._source_path
+        cur = self._current_path
+        if not cur:
+            return False
+        for p in (self._source_path, getattr(self, "_source_play_path", None)):
+            if p and (cur == p or str(Path(p).resolve()) == cur):
+                return True
+        return False
+
+    def set_source_play_file(self, path: str | None):
+        """v6.5.3: cambia el archivo que suena como «pista original» (el tema con los efectos ya aplicados) sin perder
+        la posición ni el play. `None` vuelve al archivo original."""
+        self._source_play_path = path or None
+        if not HAS_MEDIA or not self._source_path or not self.is_playing_source():
+            return
+        new = str(Path(path or self._source_path).resolve())
+        if new == self._current_path:
+            return
+        pos = self.get_position_seconds()
+        playing = self.is_playing()
+        self.load_file(new, autoplay=playing)
+        self._pending_seek = pos
+        if not playing:
+            self._keep_pending = True
 
     # ── Callbacks de eventos ──────────────────────────────────────────────────
 
@@ -845,6 +868,11 @@ class PlayerWidget(QWidget):
                     self.seek(ps)
                 self._player.play()
             else:
+                ps = getattr(self, "_pending_seek", None)
+                if ps is not None and getattr(self, "_keep_pending", False):
+                    self._pending_seek = None
+                    self._keep_pending = False
+                    self.seek(ps)
                 tag = "Pista original lista" if self.is_playing_source() else "Previa lista"
                 self._set_status(f"✅ {tag}", _GREEN)
         elif status == MS.LoadingMedia:

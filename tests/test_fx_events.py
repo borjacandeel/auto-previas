@@ -85,7 +85,7 @@ def test_el_filtro_ascendente_quita_graves_cada_vez_mas():
     out = apply_events_to_blocks(auds, blocks, sr, [{"id": 1, "type": "filter_up", "start": 12.0, "end": 20.0, "amount": 0.75}])
     seg = lambda a, t0, t1: float(np.sqrt((a[:, int(t0 * sr):int(t1 * sr)] ** 2).mean()))
     ini = seg(out[0], 2.2, 3.2) / seg(auds[0], 2.2, 3.2)
-    fin = seg(out[0], 9.0, 9.9) / seg(auds[0], 9.0, 9.9)
+    fin = seg(out[0], 8.4, 9.2) / seg(auds[0], 8.4, 9.2)       # antes de la salida progresiva (v6.5.3)
     assert fin < ini < 1.05 and fin < 0.6
 
 

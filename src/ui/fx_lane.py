@@ -526,6 +526,7 @@ class FxInspector(QFrame):
         self.btn_play.setToolTip(tr("Escucha solo este efecto sobre el tema original, con 2 s antes y 2 s después"))
         self.btn_play.setStyleSheet(_BTN)
         lay.addWidget(self.btn_play)
+        self.btn_play.setVisible(False)            # v6.5.3: los efectos se oyen al reproducir el tema (petición de clientes)
         self.btn_del = QPushButton(tr("🗑 Quitar"))
         self.btn_del.setFixedHeight(24)
         self.btn_del.setCursor(Qt.PointingHandCursor)
