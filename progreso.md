@@ -2344,3 +2344,4 @@ Del grupo «RadicalRec Estudio» (Miquel Bortek, Mario Chispi):
 - Progresivos: `fx_events.progressive_envelope` (curva coseno, rampas por tipo en `RAMPS`: flanger 30 %/30 %, filter_up 25 %/10 %, filter_down 10 %/25 %, máx. 4 s) y `apply_event_to_chunk(..., t0, ev_len)` para que un efecto partido entre dos cortes tenga una sola subida/bajada. Afecta también a la previa exportada.
 - Tests: `tests/test_fx_monitor.py` (envolvente, efectos sobre el original, monitor) y ajuste de `test_fx_events` (ventana antes de la salida progresiva). Recorrido, EN, manual, README y CHANGELOG actualizados.
 
+- **v6.6.0 PUBLICADA (run 103, 2026-11-16):** 12 instaladores + SHA256SUMS + 2 PDF.
