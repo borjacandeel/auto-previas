@@ -2358,3 +2358,8 @@ Del grupo «RadicalRec Estudio» (Miquel Bortek, Mario Chispi):
 - Vídeo `marketing/videos/specs/n06_demo_gratis.py` (con voz de Ximena): el panel de la Demo incluye «Plantillas de 15 s, 30 s, 1 y 2 min».
 
 - **v6.7.0 PUBLICADA (run 104, 2026-11-26):** 12 instaladores + SHA256SUMS + 2 PDF. Windows Demo falló una vez por un cierre nativo de Qt en `test_modo_estudio_en_basic_solo_ofrece_cortes_y_video` (runner sin audio); pasó al reintentar.
+
+## PENDIENTE (2026-11-26, solo anotado): en Windows el reproductor dice «PySide6.QtMultimedia no está disponible en este entorno»
+- Captura del usuario (v6.6/6.7, Windows): paso ② con la onda y los cortes bien, pero el reproductor sin audio y ese aviso.
+- Causas posibles a revisar: (1) el arranque seguro (`src/winguard.py`) entró en **modo seguro** tras 2 cierres seguidos y puso `AUTOPREVIAS_NO_MEDIA=1` (el aviso sale de `HAS_MEDIA=False` en `src/ui/player.py`); el modo seguro es «pegajoso» y no hay forma de salir; (2) faltan DLL/plugins de Qt Multimedia en el instalador (import fallido).
+- Para diagnosticar: pedir `%LOCALAPPDATA%\AutoPrevias\startup_state.json`, `startup.log` y `crash.log`. Ideas de arreglo: mensaje claro cuando es modo seguro + botón para reintentar con audio; que el modo seguro caduque tras N arranques correctos; comprobar en CI que `PySide6/qt-plugins/multimedia` y `QtMultimedia*.dll` están en el bundle.
