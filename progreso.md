@@ -2357,3 +2357,4 @@ Del grupo «RadicalRec Estudio» (Miquel Bortek, Mario Chispi):
 - Test `tests/test_demo_plantillas.py` (4 plantillas, duración creciente, cortes bloqueados; Basic/Plus con 2).
 - Vídeo `marketing/videos/specs/n06_demo_gratis.py` (con voz de Ximena): el panel de la Demo incluye «Plantillas de 15 s, 30 s, 1 y 2 min».
 
+- **v6.7.0 PUBLICADA (run 104, 2026-11-26):** 12 instaladores + SHA256SUMS + 2 PDF. Windows Demo falló una vez por un cierre nativo de Qt en `test_modo_estudio_en_basic_solo_ofrece_cortes_y_video` (runner sin audio); pasó al reintentar.
