@@ -2345,3 +2345,8 @@ Del grupo «RadicalRec Estudio» (Miquel Bortek, Mario Chispi):
 - Tests: `tests/test_fx_monitor.py` (envolvente, efectos sobre el original, monitor) y ajuste de `test_fx_events` (ventana antes de la salida progresiva). Recorrido, EN, manual, README y CHANGELOG actualizados.
 
 - **v6.6.0 PUBLICADA (run 103, 2026-11-16):** 12 instaladores + SHA256SUMS + 2 PDF.
+
+## Sesión 84 — Worker con la Demo desplegado (2026-11-26)
+- Con un token de Cloudflare que el usuario pegó en el chat (no guardado en ningún archivo) se subió `worker/autoprevias-license.js` al Worker `autoprevias-license` (`PUT …/workers/scripts/autoprevias-license/content`, módulo principal `worker.js`; se conservan los 8 bindings: KV `LICENSES` y los secrets). La versión en vivo solo difería en el bloque `action:"demo"`.
+- Comprobado en vivo: `action:"demo"` devuelve `start/expires_at` (7 días) y repite el mismo inicio para el mismo equipo; `activate` con clave falsa sigue respondiendo `invalid`; `demo.server_start()` de la app lo lee bien. Clave de prueba `demo:c1a0de…` borrada del KV.
+- La Demo ya no se reinicia aunque se borren todos los datos locales (si hay Internet). El usuario debería revocar el token de Cloudflare.
