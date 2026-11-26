@@ -14,11 +14,11 @@ SPEC = dict(
              lines=[dict(t="PRUEBA", size=190), dict(t="AUTOPREVIAS", size=170), dict(t="DEMO", cls="red", size=300, big=True)]),
         # 3 · Qué incluye la Demo
         dict(type="compare", dur=5.2, vo_at=0.3,
-             vos=[dict(t="Siete días gratis.", at=0.3), dict(t="Arrastras tu tema, elige los mejores cortes"),
-                  dict(t="y te da una previa de un minuto, lista para Instagram.")],
-             panels=[dict(name="DEMO · GRATIS", cls="demo big", top=420, at=0.2, items_at=["v1+0.2", "v2", "v2+1.2", "v3", "v3+1.3"],
-                          items=["7 días gratis", "Arrastras tu tema y listo", "Elige solo los mejores cortes", "Previa de 60 s en MP3",
-                                 "Lista para subir a Instagram"])]),
+             vos=[dict(t="Siete días gratis.", at=0.3), dict(t="Arrastras tu tema y elige los mejores cortes."),
+                  dict(t="Elige la plantilla: quince, treinta segundos, uno o dos minutos,"), dict(t="y lista para Instagram.")],
+             panels=[dict(name="DEMO · GRATIS", cls="demo big", top=420, at=0.2, items_at=["v1+0.2", "v2", "v2+1.2", "v3", "v4"],
+                          items=["7 días gratis", "Arrastras tu tema y listo", "Elige solo los mejores cortes",
+                                 "15 s · 30 s · 1 min · 2 min", "Lista para subir a Instagram"])]),
         # 4 · ¿Quieres más?
         dict(type="words", dur=2.4, bars=True, top=640, gap=0.5, vo="¿Quieres más?",
              lines=[dict(t="¿QUIERES", size=200), dict(t="MÁS?", cls="red", size=300, big=True)]),

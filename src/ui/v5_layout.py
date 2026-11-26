@@ -178,14 +178,21 @@ def _step2(R, plus: bool):
     R._preset_buttons = []
     grp = QButtonGroup(dur)
     grp.setExclusive(True)
-    for i, sec in enumerate((60, 120)):                 # v6.2: sin plantillas de 15 s ni 30 s
+    try:
+        from src.config import get_edition as _ge
+        _demo = _ge() == "demo"
+    except Exception:
+        _demo = False
+    # v6.2: Basic/Plus sin plantillas de 15 s ni 30 s · v6.7: la Demo tiene las 4 (15 s, 30 s, 1 min y 2 min)
+    secs = (15, 30, 60, 120) if _demo else (60, 120)
+    for i, sec in enumerate(secs):
         t = T.Tile(tr(PRESET_TITLES[sec]), tr(PRESET_SUBS[sec]), min_h=70)
         t.setChecked(sec == getattr(R, "_active_preset_sec", 120))
         grp.addButton(t)
         t.clicked.connect(lambda _c=False, s=sec: R._apply_duration_preset(s))
         grid.addWidget(t, i // 2, i % 2)
         R._preset_buttons.append((t, sec))
-        setattr(R, {60: "_btn_p60", 120: "_btn_p120"}[sec], t)
+        setattr(R, {15: "_btn_p15", 30: "_btn_p30", 60: "_btn_p60", 120: "_btn_p120"}[sec], t)
     dv.addLayout(grid)
     R._lbl_simple_desc.setParent(dur)
     R._lbl_simple_desc.setStyleSheet(f"color: {T.TEXT_DIM}; font-size: 10.5px; {T._T}")

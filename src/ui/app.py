@@ -2728,6 +2728,11 @@ class ResultPanel(QWidget):
         self._btn_generate.setEnabled(True)
         self._apply_generate_style(True)
         self._btn_generate.start_shimmer()
+        if get_edition() == "demo":                   # Demo: empieza en 1 min; puede cambiar a 15 s, 30 s o 2 min
+            try:
+                self._apply_duration_preset(60)
+            except Exception:
+                pass
         self._update_tempo_plot()
 
     def _animate_stat_cards(self):
@@ -5267,7 +5272,8 @@ class ResultPanel(QWidget):
             self._apply_demo_limits()
 
     def _apply_demo_limits(self):
-        """AutoPrevias Demo: lo mínimo para probar. AutoPrevias elige los cortes; solo MP3 de 128 kbps y 60 s; sin vídeo ni edición."""
+        """AutoPrevias Demo: lo mínimo para probar. AutoPrevias elige los cortes (no se pueden mover); solo MP3 de 128 kbps;
+        v6.7: el usuario elige la plantilla de duración (15 s, 30 s, 1 min o 2 min); sin vídeo ni edición."""
         self._chk_wav.setChecked(False); self._chk_flac.setChecked(False)
         self._chk_mp3.setChecked(True); self._chk_mp3.setEnabled(False)
         i18n.set_text(self._chk_mp3, "MP3 128k (demo)")
@@ -5279,7 +5285,6 @@ class ResultPanel(QWidget):
             w = getattr(self, name, None)
             if w is not None:
                 w.setVisible(False)
-        self._btn_p120.setVisible(False)
         if HAS_WAVEFORM:
             self._waveform.set_locked(True)              # los cortes los elige AutoPrevias: no se pueden mover ni estirar
         try:
@@ -5287,7 +5292,7 @@ class ResultPanel(QWidget):
         except Exception:
             pass
         try:
-            self._badge_basic.setText(tr("  DEMO GRATUITA  ·  7 días  ·  MP3 · 60 s  "))
+            self._badge_basic.setText(tr("  DEMO GRATUITA  ·  7 días  ·  MP3 · 15 s a 2 min  "))
         except Exception:
             pass
 
@@ -5919,8 +5924,8 @@ class MainWindow(QMainWindow):
         if st.ok:
             try:
                 n = st.days_left
-                self._results._badge_basic.setText(tr("  DEMO GRATUITA  ·  quedan {n} días  ·  MP3 · 60 s  ", n=n) if n != 1
-                                                   else tr("  DEMO GRATUITA  ·  queda 1 día  ·  MP3 · 60 s  "))
+                self._results._badge_basic.setText(tr("  DEMO GRATUITA  ·  quedan {n} días  ·  MP3 · 15 s a 2 min  ", n=n) if n != 1
+                                                   else tr("  DEMO GRATUITA  ·  queda 1 día  ·  MP3 · 15 s a 2 min  "))
             except Exception:
                 pass
             return

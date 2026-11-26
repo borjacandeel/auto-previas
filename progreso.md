@@ -2350,3 +2350,10 @@ Del grupo «RadicalRec Estudio» (Miquel Bortek, Mario Chispi):
 - Con un token de Cloudflare que el usuario pegó en el chat (no guardado en ningún archivo) se subió `worker/autoprevias-license.js` al Worker `autoprevias-license` (`PUT …/workers/scripts/autoprevias-license/content`, módulo principal `worker.js`; se conservan los 8 bindings: KV `LICENSES` y los secrets). La versión en vivo solo difería en el bloque `action:"demo"`.
 - Comprobado en vivo: `action:"demo"` devuelve `start/expires_at` (7 días) y repite el mismo inicio para el mismo equipo; `activate` con clave falsa sigue respondiendo `invalid`; `demo.server_start()` de la app lo lee bien. Clave de prueba `demo:c1a0de…` borrada del KV.
 - La Demo ya no se reinicia aunque se borren todos los datos locales (si hay Internet). El usuario debería revocar el token de Cloudflare.
+
+## Sesión 85 — v6.7.0: AutoPrevias Demo con 4 plantillas + vídeo n06 (2026-11-26)
+- Pedido: en la Demo, 4 plantillas (15 s, 30 s, 1 min, 2 min) que se apliquen al generar, sin poder ajustar los cortes; y meterlo en el vídeo nuevo.
+- `v5_layout._step2`: con `get_edition()=="demo"` la tarjeta «¿Cuánto debe durar?» muestra 4 tiles (15/30/60/120; atributos `_btn_p15/_btn_p30/_btn_p60/_btn_p120`); Basic/Plus siguen con 60 y 2 min. `ResultPanel._apply_demo_limits` ya no oculta 2 min ni fuerza 60 al arrancar; al cargar un tema la Demo empieza en 1 min (`_apply_duration_preset(60)`). La onda sigue bloqueada (`set_locked`). Rótulo «DEMO GRATUITA · … · MP3 · 15 s a 2 min» (ES/EN).
+- Test `tests/test_demo_plantillas.py` (4 plantillas, duración creciente, cortes bloqueados; Basic/Plus con 2).
+- Vídeo `marketing/videos/specs/n06_demo_gratis.py` (con voz de Ximena): el panel de la Demo incluye «Plantillas de 15 s, 30 s, 1 y 2 min».
+

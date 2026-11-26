@@ -3,6 +3,11 @@
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [6.7.0] - 2026-11-26
+
+### Añadido
+- **AutoPrevias Demo: 4 plantillas de duración.** Al preparar la previa, la Demo deja elegir entre **15 s, 30 s, 1 min y 2 min** con un clic, y la previa se monta con esa duración. Los cortes los sigue eligiendo AutoPrevias (en la Demo no se pueden mover ni estirar).
+
 ## [6.6.0] - 2026-11-16
 
 ### Cambiado

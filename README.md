@@ -4,7 +4,7 @@
   # AutoPrevias
   ### Sistema Automatizado e Inteligente de Generación de Previas Musicales de Estudio
 
-  [![Release](https://img.shields.io/badge/Release-v6.6.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
+  [![Release](https://img.shields.io/badge/Release-v6.7.0-crimson.svg?style=for-the-badge&logo=github)](https://github.com/borjacandeel/auto-previas/releases/latest)
   [![Platform](https://img.shields.io/badge/Plataformas-macOS%20%7C%20Windows%20(x64%20%2B%20ARM64)-blue.svg?style=for-the-badge&logo=apple)](https://github.com/borjacandeel/auto-previas/releases)
   [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Qt](https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt%206-41CD52.svg?style=for-the-badge&logo=qt)](https://www.qt.io/)
@@ -328,7 +328,10 @@ AutoPrevias implementa rigurosamente el estándar internacional [Semantic Versio
 
 ---
 
-#### 🟢 [v6.6.0] — 2026-11-16 (Efectos al darle al play y progresivos)
+#### 🟢 [v6.7.0] — 2026-11-26 (Demo con 4 plantillas)
+- AutoPrevias Demo: elige la duración de la previa entre 15 s, 30 s, 1 min y 2 min (los cortes los elige AutoPrevias).
+
+#### [v6.6.0] — 2026-11-16 (Efectos al darle al play y progresivos)
 - Sin botón «▶ Oír»: los efectos suenan al reproducir el tema; entran y salen poco a poco.
 
 #### [v6.5.2] — 2026-11-10 (Vista previa en Windows y foto más fácil)
